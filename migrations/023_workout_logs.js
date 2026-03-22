@@ -1,9 +1,9 @@
 export function up(knex) {
   return knex.schema
     .createTable('workout_logs', (t) => {
-      t.increments('id').primary();
-      t.integer('member_id').references('id').inTable('members').notNullable().onDelete('CASCADE');
-      t.integer('gym_id').references('id').inTable('gyms').notNullable().onDelete('CASCADE');
+      t.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+      t.uuid('member_id').references('id').inTable('members').notNullable().onDelete('CASCADE');
+      t.uuid('gym_id').references('id').inTable('gyms').notNullable().onDelete('CASCADE');
       t.date('log_date').notNullable().defaultTo(knex.fn.now());
       t.string('workout_type', 50).notNullable(); // strength, cardio, hiit, yoga, crossfit, functional, other
       t.integer('duration_minutes').notNullable();
