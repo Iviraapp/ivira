@@ -152,14 +152,24 @@ export default function AppLanding() {
             }}>
               Member Login
             </Link>
-            <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
-              background: IVIRA_BLUE, color: '#FFFFFF', border: 'none', borderRadius: 8,
-              padding: '8px 18px', fontSize: 14, fontWeight: 600, fontFamily: FONT_BODY,
-              textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              {platform === 'android' ? 'Get APK' : 'Demo APK'}
-            </a>
+            {platform === 'android' ? (
+              <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
+                background: IVIRA_BLUE, color: '#FFFFFF', border: 'none', borderRadius: 8,
+                padding: '8px 18px', fontSize: 14, fontWeight: 600, fontFamily: FONT_BODY,
+                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Get APK
+              </a>
+            ) : (
+              <Link to="/member/login" style={{
+                background: IVIRA_BLUE, color: '#FFFFFF', border: 'none', borderRadius: 8,
+                padding: '8px 18px', fontSize: 14, fontWeight: 600, fontFamily: FONT_BODY,
+                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                Open Web App
+              </Link>
+            )}
             {/* Theme toggle */}
             <button onClick={cycleTheme} style={{
               background: 'none', border: `1px solid ${t.borderCard}`, borderRadius: 8,
@@ -222,15 +232,26 @@ export default function AppLanding() {
           variants={fadeUp} initial="hidden" animate={heroVisible ? 'visible' : 'hidden'} custom={3}
           style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}
         >
-          <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
-            background: IVIRA_BLUE, color: '#FFFFFF', border: 'none', borderRadius: 10,
-            padding: '14px 28px', fontSize: 15, fontWeight: 600, fontFamily: FONT_BODY,
-            textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
-            transition: 'transform 0.2s',
-          }}>
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download Demo APK
-          </a>
+          {platform === 'android' ? (
+            <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
+              background: IVIRA_BLUE, color: '#FFFFFF', border: 'none', borderRadius: 10,
+              padding: '14px 28px', fontSize: 15, fontWeight: 600, fontFamily: FONT_BODY,
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
+              transition: 'transform 0.2s',
+            }}>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download APK (Beta)
+            </a>
+          ) : (
+            <Link to="/member/login" style={{
+              background: IVIRA_BLUE, color: '#FFFFFF', border: 'none', borderRadius: 10,
+              padding: '14px 28px', fontSize: 15, fontWeight: 600, fontFamily: FONT_BODY,
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
+              transition: 'transform 0.2s',
+            }}>
+              Open Member Hub
+            </Link>
+          )}
           <button
             onClick={() => navigate('/member/login')}
             style={{
@@ -455,23 +476,34 @@ export default function AppLanding() {
             variants={fadeUp} initial="hidden" animate={dlVisible ? 'visible' : 'hidden'} custom={1}
             style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}
           >
-            <a
-              href="https://api.ivira.app/downloads/ivira-latest.apk"
-              download
-              style={{
+            {platform === 'android' ? (
+              <a
+                href="https://api.ivira.app/downloads/ivira-latest.apk"
+                download
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 10,
+                  background: IVIRA_BLUE, color: '#FFFFFF', borderRadius: 12,
+                  padding: '14px 28px', fontSize: 15, fontWeight: 600,
+                  fontFamily: FONT_BODY, textDecoration: 'none', transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download APK (Beta)
+              </a>
+            ) : (
+              <Link to="/member/login" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 10,
                 background: IVIRA_BLUE, color: '#FFFFFF', borderRadius: 12,
                 padding: '14px 28px', fontSize: 15, fontWeight: 600,
                 fontFamily: FONT_BODY, textDecoration: 'none', transition: 'opacity 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-            >
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download Demo APK
-            </a>
+              }}>
+                Open Member Hub
+              </Link>
+            )}
 
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,

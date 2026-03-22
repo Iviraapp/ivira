@@ -1290,16 +1290,27 @@ export default function Landing() {
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 28 }}>
-                  <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
-                    fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700,
-                    background: '#22C55E', color: '#FFFFFF', border: 'none', borderRadius: 10,
-                    padding: '12px 20px', cursor: 'pointer', transition: 'opacity 0.2s', flex: 1,
-                    textDecoration: 'none', textAlign: 'center',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  }}>
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download APK
-                  </a>
+                  {isMobile && platform === 'android' ? (
+                    <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
+                      fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700,
+                      background: '#22C55E', color: '#FFFFFF', border: 'none', borderRadius: 10,
+                      padding: '12px 20px', cursor: 'pointer', transition: 'opacity 0.2s', flex: 1,
+                      textDecoration: 'none', textAlign: 'center',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}>
+                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      Download APK
+                    </a>
+                  ) : (
+                    <button onClick={() => navigate('/member/login')} style={{
+                      fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700,
+                      background: '#22C55E', color: '#FFFFFF', border: 'none', borderRadius: 10,
+                      padding: '12px 20px', cursor: 'pointer', transition: 'opacity 0.2s', flex: 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}>
+                      Open Web App
+                    </button>
+                  )}
                   <button onClick={() => navigate('/member/login')} style={{
                     fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600,
                     background: 'transparent', color: t.text, flex: 1,
@@ -1918,36 +1929,68 @@ export default function Landing() {
                 }}>Coming Soon</span>
               </a>
 
-              {/* Download APK - Active */}
-              <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
-                background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
-                border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
-                borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
-                display: 'flex', alignItems: 'center',
-                gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
-                boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
-                position: 'relative',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10,
-                  background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                </div>
-                <div style={{ textAlign: 'left' }}>
-                  <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: ACCENT, fontWeight: 600, display: 'block' }}>Try the Beta</span>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: t.text }}>Download APK</span>
-                </div>
-                <span style={{
-                  position: 'absolute', top: -8, right: -8,
-                  fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700,
-                  color: WHITE, background: '#22C55E',
-                  padding: '3px 10px', borderRadius: 6,
-                }}>Available</span>
-              </a>
+              {/* Download APK - mWeb Android only */}
+              {isMobile && platform === 'android' ? (
+                <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
+                  background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
+                  border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
+                  borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center',
+                  gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
+                  boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
+                  position: 'relative',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: ACCENT, fontWeight: 600, display: 'block' }}>Try the Beta</span>
+                    <span style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: t.text }}>Download APK</span>
+                  </div>
+                  <span style={{
+                    position: 'absolute', top: -8, right: -8,
+                    fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700,
+                    color: WHITE, background: '#22C55E',
+                    padding: '3px 10px', borderRadius: 6,
+                  }}>Available</span>
+                </a>
+              ) : !isMobile && (
+                <a href="/member/login" style={{
+                  background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
+                  border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
+                  borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center',
+                  gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
+                  boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
+                  position: 'relative',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M8 12h8M12 8v8" /></svg>
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: ACCENT, fontWeight: 600, display: 'block' }}>Try it now</span>
+                    <span style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: t.text }}>Open Web App</span>
+                  </div>
+                  <span style={{
+                    position: 'absolute', top: -8, right: -8,
+                    fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700,
+                    color: WHITE, background: '#22C55E',
+                    padding: '3px 10px', borderRadius: 6,
+                  }}>Live</span>
+                </a>
+              )}
             </div>
 
             {/* Feedback prompt */}
