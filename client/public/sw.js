@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'gymos-v1';
+const CACHE_VERSION = 'ivira-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 

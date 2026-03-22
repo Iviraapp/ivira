@@ -722,7 +722,7 @@ function MemberDetailSlideOver({ member, open, onClose, gymId, onManualCheckin, 
 }
 
 /* ══ CSV/Excel Import Modal ══ */
-const GYMOS_FIELDS = [
+const IVIRA_FIELDS = [
   { key: 'name', label: 'Name', required: true },
   { key: 'phone', label: 'Phone', required: true },
   { key: 'email', label: 'Email', required: false },
@@ -1086,7 +1086,7 @@ function ImportMembersModal({ gymId, plans, onClose, onSuccess }) {
                           color: mapping[idx] ? theme.text : theme.textTer,
                         }}
                       >
-                        {GYMOS_FIELDS.map((f) => (
+                        {IVIRA_FIELDS.map((f) => (
                           <option key={f.key} value={f.key}>{f.label}{f.required ? ' *' : ''}</option>
                         ))}
                       </select>
