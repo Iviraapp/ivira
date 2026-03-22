@@ -51,15 +51,6 @@ export async function up(knex) {
       t.text('rarity').defaultTo('common').checkIn(['common', 'rare', 'epic', 'legendary']);
       t.timestamp('created_at').defaultTo(knex.fn.now());
     })
-    // member_achievements already created in migration 021
-    // Add achievement_id column if not present
-    .then(() => knex.schema.hasColumn('member_achievements', 'achievement_id').then(exists => {
-      if (!exists) {
-        return knex.schema.alterTable('member_achievements', t => {
-          t.uuid('achievement_id').references('id').inTable('achievements').onDelete('CASCADE');
-        });
-      }
-    }))
     // Recipes
     .createTable('recipes', t => {
       t.uuid('id').primary().defaultTo(knex.fn.uuid());
@@ -114,6 +105,14 @@ export async function up(knex) {
       t.date('date').notNullable().defaultTo(knex.fn.now());
       t.timestamp('created_at').defaultTo(knex.fn.now());
     });
+
+  // Add achievement_id to member_achievements if not present (table created in 021)
+  const hasCol = await knex.schema.hasColumn('member_achievements', 'achievement_id');
+  if (!hasCol) {
+    await knex.schema.alterTable('member_achievements', t => {
+      t.uuid('achievement_id').references('id').inTable('achievements').onDelete('CASCADE');
+    });
+  }
 
   // --- SEED: Default Challenges ---
   await knex('challenges').insert([
