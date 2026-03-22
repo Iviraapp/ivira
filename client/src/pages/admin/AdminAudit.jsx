@@ -7,14 +7,14 @@ const FONT_M = "'JetBrains Mono', 'Fira Code', monospace"
 const N = {
   bg: '#0A0F1E', card: '#141C33', border: '#1E2A4A',
   text: '#E2E8F0', textSec: '#94A3B8', textTer: '#64748B',
-  accent: '#7C3AED', green: '#22C55E', red: '#EF4444', amber: '#F59E0B',
+  accent: '#1A3A8F', green: '#22C55E', red: '#EF4444', amber: '#F59E0B',
 }
 
 const ACTION_COLORS = {
   login_as_owner: '#F59E0B',
   suspend_gym: '#EF4444',
   activate_gym: '#22C55E',
-  toggle_feature: '#7C3AED',
+  toggle_feature: '#1A3A8F',
   create_ad_campaign: '#3B82F6',
   end_proxy_session: '#94A3B8',
 }

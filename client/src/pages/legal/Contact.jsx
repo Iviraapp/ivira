@@ -1,47 +1,50 @@
 import LegalLayout from '../../components/LegalLayout'
+import { useTheme } from '../../context/ThemeContext'
 
 const FONT = "'Inter', -apple-system, sans-serif"
 
-const cardStyle = {
-  background: '#121212',
-  border: '1px solid #1F1F1F',
-  borderRadius: 12,
-  padding: '24px 28px',
-}
-
-const cardTitle = {
-  fontSize: 16,
-  fontWeight: 600,
-  color: '#EDEDED',
-  margin: '0 0 14px',
-  fontFamily: FONT,
-}
-
-const cardText = {
-  fontSize: 14,
-  color: '#EDEDED',
-  lineHeight: 1.7,
-  margin: '0 0 6px',
-  fontFamily: FONT,
-}
-
-const cardLink = {
-  color: '#7C3AED',
-  textDecoration: 'none',
-  fontSize: 14,
-  fontFamily: FONT,
-}
-
-const cardLabel = {
-  fontSize: 12,
-  color: '#666666',
-  margin: '0 0 2px',
-  fontFamily: FONT,
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-}
-
 export default function Contact() {
+  const { isDark } = useTheme()
+
+  const cardStyle = {
+    background: isDark ? '#121212' : '#FFFFFF',
+    border: `1px solid ${isDark ? '#1F1F1F' : '#E5E7EB'}`,
+    borderRadius: 12,
+    padding: '24px 28px',
+  }
+
+  const cardTitle = {
+    fontSize: 16,
+    fontWeight: 600,
+    color: isDark ? '#EDEDED' : '#111111',
+    margin: '0 0 14px',
+    fontFamily: FONT,
+  }
+
+  const cardText = {
+    fontSize: 14,
+    color: isDark ? '#EDEDED' : '#333333',
+    lineHeight: 1.7,
+    margin: '0 0 6px',
+    fontFamily: FONT,
+  }
+
+  const cardLink = {
+    color: '#1A3A8F',
+    textDecoration: 'none',
+    fontSize: 14,
+    fontFamily: FONT,
+  }
+
+  const cardLabel = {
+    fontSize: 12,
+    color: isDark ? '#666666' : '#888888',
+    margin: '0 0 2px',
+    fontFamily: FONT,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  }
+
   return (
     <LegalLayout title="Contact Us" documentTitle="Contact Us | IVIRA">
       <div style={{
@@ -64,7 +67,7 @@ export default function Contact() {
           <h3 style={cardTitle}>Support</h3>
           <p style={{ ...cardLabel, marginTop: 0 }}>Email</p>
           <p style={cardText}>
-            <a href="mailto:hello@ivira.app" style={cardLink}>hello@ivira.app</a>
+            <a href="mailto:admin@ivira.app" style={cardLink}>admin@ivira.app</a>
           </p>
           <p style={cardLabel}>WhatsApp</p>
           <p style={cardText}>
@@ -82,7 +85,7 @@ export default function Contact() {
           </p>
           <p style={cardLabel}>Account Issues</p>
           <p style={cardText}>
-            <a href="mailto:account@ivira.app" style={cardLink}>account@ivira.app</a>
+            <a href="mailto:admin@ivira.app" style={cardLink}>admin@ivira.app</a>
           </p>
         </div>
 
@@ -91,7 +94,7 @@ export default function Contact() {
           <h3 style={cardTitle}>Report a Vulnerability</h3>
           <p style={cardLabel}>Security Issues</p>
           <p style={cardText}>
-            <a href="mailto:security@ivira.app" style={cardLink}>security@ivira.app</a>
+            <a href="mailto:admin@ivira.app" style={cardLink}>admin@ivira.app</a>
           </p>
           <p style={cardText}>We follow responsible disclosure practices.</p>
           <p style={cardText}>Response within 48 hours.</p>
@@ -100,11 +103,9 @@ export default function Contact() {
         {/* DPDP Act Grievance Officer */}
         <div style={cardStyle}>
           <h3 style={cardTitle}>DPDP Act Grievance Officer</h3>
-          <p style={cardLabel}>Name</p>
-          <p style={cardText}>Sunil Kumar</p>
           <p style={cardLabel}>Email</p>
           <p style={cardText}>
-            <a href="mailto:grievance@ivira.app" style={cardLink}>grievance@ivira.app</a>
+            <a href="mailto:admin@ivira.app" style={cardLink}>admin@ivira.app</a>
           </p>
           <p style={cardLabel}>Response Time</p>
           <p style={cardText}>Within 30 days as per DPDP Act 2023</p>
@@ -113,13 +114,9 @@ export default function Contact() {
         {/* Business Inquiries */}
         <div style={cardStyle}>
           <h3 style={cardTitle}>Business Inquiries</h3>
-          <p style={cardLabel}>Partnerships</p>
+          <p style={cardLabel}>Partnerships & Enterprise</p>
           <p style={cardText}>
-            <a href="mailto:partners@ivira.app" style={cardLink}>partners@ivira.app</a>
-          </p>
-          <p style={cardLabel}>Enterprise</p>
-          <p style={cardText}>
-            <a href="mailto:enterprise@ivira.app" style={cardLink}>enterprise@ivira.app</a>
+            <a href="mailto:admin@ivira.app" style={cardLink}>admin@ivira.app</a>
           </p>
         </div>
       </div>

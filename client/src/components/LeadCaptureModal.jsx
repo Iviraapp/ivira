@@ -120,7 +120,7 @@ export default function LeadCaptureModal({ open, onClose }) {
                   onClick={handleClose}
                   style={{
                     marginTop: 24, padding: '10px 32px',
-                    background: '#7C3AED', color: '#FFF', border: 'none',
+                    background: '#1A3A8F', color: '#FFF', border: 'none',
                     borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 500,
                   }}
                 >
@@ -218,12 +218,12 @@ export default function LeadCaptureModal({ open, onClose }) {
                       type="checkbox"
                       checked={consent}
                       onChange={e => setConsent(e.target.checked)}
-                      style={{ marginTop: 2, accentColor: '#7C3AED', flexShrink: 0 }}
+                      style={{ marginTop: 2, accentColor: '#1A3A8F', flexShrink: 0 }}
                     />
                     <span>
                       I consent to IVIRA processing my personal data as per the{' '}
-                      <a href="/privacy" target="_blank" style={{ color: '#7C3AED', textDecoration: 'none' }}>Privacy Policy</a>{' '}
-                      and <a href="/terms" target="_blank" style={{ color: '#7C3AED', textDecoration: 'none' }}>Terms of Service</a>,
+                      <a href="/privacy" target="_blank" style={{ color: '#1A3A8F', textDecoration: 'none' }}>Privacy Policy</a>{' '}
+                      and <a href="/terms" target="_blank" style={{ color: '#1A3A8F', textDecoration: 'none' }}>Terms of Service</a>,
                       in compliance with DPDP Act 2023.
                     </span>
                   </label>
@@ -238,7 +238,7 @@ export default function LeadCaptureModal({ open, onClose }) {
                     style={{
                       width: '100%',
                       padding: '14px 0',
-                      background: (!consent || submitting) ? '#5B21B6' : '#7C3AED',
+                      background: (!consent || submitting) ? '#5B21B6' : '#1A3A8F',
                       color: '#FFF',
                       border: 'none',
                       borderRadius: 10,

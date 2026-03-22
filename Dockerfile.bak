@@ -10,7 +10,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Security: run as non-root user
-RUN addgroup -S gymos && adduser -S gymos -G gymos
+RUN addgroup -S ivira && adduser -S ivira -G ivira
 
 # Copy production node_modules from build stage
 COPY --from=build /app/node_modules ./node_modules
@@ -23,9 +23,9 @@ COPY migrations ./migrations
 COPY seeds ./seeds
 
 # Set ownership
-RUN chown -R gymos:gymos /app
+RUN chown -R ivira:ivira /app
 
-USER gymos
+USER ivira
 
 ENV NODE_ENV=production
 EXPOSE 3000

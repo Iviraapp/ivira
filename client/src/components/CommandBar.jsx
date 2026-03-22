@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import api from '../lib/api'
 
 const TYPE_STYLES = {
-  gym: { label: 'GYM', bg: 'rgba(139, 92, 246, 0.15)', color: '#A78BFA' },
+  gym: { label: 'GYM', bg: 'rgba(139, 92, 246, 0.15)', color: '#3B6FD4' },
   member: { label: 'MEMBER', bg: 'rgba(34, 197, 94, 0.15)', color: '#4ADE80' },
   transaction: { label: 'TXN', bg: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24' },
 }
@@ -23,7 +23,7 @@ const ArrowIcon = () => (
 )
 
 const GymIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B6FD4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="4" y="10" width="16" height="4" rx="1" />
     <line x1="2" y1="12" x2="4" y2="12" />
     <line x1="20" y1="12" x2="22" y2="12" />

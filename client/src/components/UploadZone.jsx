@@ -59,7 +59,7 @@ export default function UploadZone({
   const [uploaded, setUploaded] = useState([])
   const inputRef = useRef(null)
 
-  const accent = '#7C3AED'
+  const accent = '#1A3A8F'
 
   const handleFiles = useCallback(async (newFiles) => {
     const valid = Array.from(newFiles).filter(f => {

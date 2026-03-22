@@ -22,9 +22,9 @@ export default function FeaturePulse({ children, active = true, size, onClick })
             width: size || '100%',
             height: size || '100%',
             transform: 'translate(-50%, -50%)',
-            border: '2px solid #7C3AED',
+            border: '2px solid #1A3A8F',
             borderRadius: '50%',
-            boxShadow: '0 0 16px rgba(124,58,237,0.4)',
+            boxShadow: '0 0 16px rgba(26,58,143,0.4)',
             pointerEvents: 'none',
           }}
           animate={{

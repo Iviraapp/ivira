@@ -147,7 +147,7 @@ export default function Affiliate() {
     {
       title: 'Conversions', value: earnings.conversions ?? 0,
       icon: <TrendingUp size={20} color={theme.accent} />,
-      color: theme.accent, bgColor: 'rgba(124,58,237,0.08)',
+      color: theme.accent, bgColor: 'rgba(26,58,143,0.08)',
     },
     {
       title: 'Total Earned', value: formatPaise(earnings.totalEarned ?? 0),
@@ -187,7 +187,7 @@ export default function Affiliate() {
         height: 24,
         borderRadius: 12,
         border: 'none',
-        background: active ? '#7C3AED' : '#333333',
+        background: active ? '#1A3A8F' : '#333333',
         cursor: 'pointer',
         position: 'relative',
         transition: 'background 0.2s ease',
@@ -214,7 +214,7 @@ export default function Affiliate() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
         <div style={{
           width: 40, height: 40, borderRadius: 10,
-          background: 'rgba(124,58,237,0.08)',
+          background: 'rgba(26,58,143,0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <Globe size={20} color={theme.accent} />
@@ -282,8 +282,8 @@ export default function Affiliate() {
             disabled={payoutLoading}
             style={{
               background: 'transparent',
-              color: '#7C3AED',
-              border: '1px solid #7C3AED',
+              color: '#1A3A8F',
+              border: '1px solid #1A3A8F',
               borderRadius: 10,
               padding: '10px 22px',
               fontWeight: 600,
@@ -435,7 +435,7 @@ export default function Affiliate() {
                       <div
                         style={{
                           width: 48, height: 48, borderRadius: '50%',
-                          background: `linear-gradient(135deg, #7C3AED, #4285F4)`,
+                          background: `linear-gradient(135deg, #1A3A8F, #4285F4)`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 20, fontWeight: 700, color: '#FFFFFF',
                           fontFamily: "'Inter', sans-serif",
@@ -504,7 +504,7 @@ export default function Affiliate() {
                       <button
                         onClick={() => openModal(brand)}
                         style={{
-                          background: '#7C3AED',
+                          background: '#1A3A8F',
                           color: '#FFFFFF', border: 'none', borderRadius: 8,
                           padding: '8px 16px', fontWeight: 600, cursor: 'pointer',
                           display: 'flex', alignItems: 'center', gap: 6,
@@ -569,7 +569,7 @@ export default function Affiliate() {
               onClick={handleGenerateLink}
               disabled={generateLinkMutation.isPending}
               style={{
-                background: '#7C3AED', color: '#FFFFFF',
+                background: '#1A3A8F', color: '#FFFFFF',
                 border: 'none', borderRadius: 10,
                 padding: '12px 24px', fontWeight: 600, cursor: 'pointer',
                 width: '100%', fontSize: 14,
@@ -585,7 +585,7 @@ export default function Affiliate() {
               borderRadius: 10, padding: 16,
             }}>
               <div style={{
-                fontSize: 12, fontWeight: 600, color: '#7C3AED', marginBottom: 8,
+                fontSize: 12, fontWeight: 600, color: '#1A3A8F', marginBottom: 8,
                 textTransform: 'uppercase', letterSpacing: '0.5px',
                 fontFamily: "'Inter', sans-serif",
               }}>
@@ -626,7 +626,7 @@ export default function Affiliate() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
           <div style={{
             width: 34, height: 34, borderRadius: 8,
-            background: 'rgba(124,58,237,0.08)',
+            background: 'rgba(26,58,143,0.08)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <MousePointerClick size={18} color="#888888" />

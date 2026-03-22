@@ -765,7 +765,7 @@ function DataPrivacyTab({ gymId, theme, sp }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: sp(28) }}>
           <div style={{
-            width: 34, height: 34, borderRadius: 8, background: 'rgba(124,58,237,0.1)',
+            width: 34, height: 34, borderRadius: 8, background: 'rgba(26,58,143,0.1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Shield size={18} color={theme.accent} />
@@ -777,7 +777,7 @@ function DataPrivacyTab({ gymId, theme, sp }) {
 
         <p style={{ fontSize: 14, color: theme.textSec, marginTop: 0, marginBottom: sp(24), lineHeight: 1.7, fontFamily: "'Inter', -apple-system, sans-serif" }}>
           Under the Digital Personal Data Protection (DPDP) Act 2023, you have the right to access, export, and delete your personal data.
-          For questions, contact <a href="mailto:grievance@ivira.app" style={{ color: theme.accent, textDecoration: 'underline' }}>grievance@ivira.app</a>.
+          For questions, contact <a href="mailto:admin@ivira.app" style={{ color: theme.accent, textDecoration: 'underline' }}>admin@ivira.app</a>.
         </p>
 
         {/* Export Section */}

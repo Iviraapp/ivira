@@ -170,13 +170,13 @@ function DataLawSection({ region }) {
         ))}
       </ul>
       <p style={S.p}>
-        To exercise these rights, visit <strong>Settings &gt; Data &amp; Privacy</strong> in your dashboard, or email <a href="mailto:privacy@ivira.app" style={linkStyle}>privacy@ivira.app</a>.
+        To exercise these rights, visit <strong>Settings &gt; Data &amp; Privacy</strong> in your dashboard, or email <a href="mailto:admin@ivira.app" style={linkStyle}>admin@ivira.app</a>.
       </p>
 
       <h2 style={S.h2}>8. {c.officer}</h2>
       <ul style={S.ul}>
         <li style={S.li}><strong>Name:</strong> IVIRA {c.officer}</li>
-        <li style={S.li}><strong>Email:</strong> privacy@ivira.app</li>
+        <li style={S.li}><strong>Email:</strong> admin@ivira.app</li>
         <li style={S.li}><strong>Response time:</strong> Within {c.response}</li>
         <li style={S.li}><strong>Registered address:</strong> IVIRA Technologies, Bengaluru, Karnataka, India</li>
       </ul>

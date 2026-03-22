@@ -3,7 +3,7 @@ import 'dotenv/config';
 export default {
   development: {
     client: 'pg',
-    connection: process.env.DATABASE_URL || 'postgresql://gymos:gymos@localhost:5432/gymos',
+    connection: process.env.DATABASE_URL || 'postgresql://ivira:ivira@localhost:5432/ivira',
     migrations: { directory: './migrations' },
     seeds: { directory: './seeds' },
   },

@@ -11,8 +11,8 @@ const THEMES = {
     text: '#FFFFFF', textSec: 'rgba(255,255,255,0.6)', textTer: 'rgba(255,255,255,0.4)',
     // Monochrome accent for general UI
     accent: '#FFFFFF', accentSoft: 'rgba(255,255,255,0.08)',
-    // Brand crimson — ONLY for active nav + primary CTA buttons
-    brandAccent: '#DC2626', brandAccentSoft: 'rgba(220,38,38,0.12)',
+    // Brand blue — ONLY for active nav + primary CTA buttons
+    brandAccent: '#1A3A8F', brandAccentSoft: 'rgba(26,58,143,0.15)',
     // Status colors
     green: '#34A853', amber: '#FBBC05', red: '#EA4335', cyan: '#4285F4',
     // Borders
@@ -37,8 +37,8 @@ const THEMES = {
     text: '#000000', textSec: 'rgba(0,0,0,0.6)', textTer: 'rgba(0,0,0,0.4)',
     // Monochrome accent for general UI
     accent: '#000000', accentSoft: 'rgba(0,0,0,0.05)',
-    // Brand crimson — ONLY for active nav + primary CTA buttons
-    brandAccent: '#DC2626', brandAccentSoft: 'rgba(220,38,38,0.08)',
+    // Brand blue — ONLY for active nav + primary CTA buttons
+    brandAccent: '#1A3A8F', brandAccentSoft: 'rgba(26,58,143,0.08)',
     // Status colors
     green: '#34A853', amber: '#FBBC05', red: '#EA4335', cyan: '#4285F4',
     // Borders

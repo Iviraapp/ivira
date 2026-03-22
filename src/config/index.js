@@ -7,7 +7,7 @@ const config = {
   isDev: process.env.NODE_ENV !== 'production',
 
   db: {
-    url: process.env.DATABASE_URL || 'postgresql://gymos:gymos@localhost:5432/gymos',
+    url: process.env.DATABASE_URL || 'postgresql://ivira:ivira@localhost:5432/ivira',
   },
 
   redis: {

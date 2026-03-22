@@ -84,7 +84,7 @@ export async function sendOTPEmail(email, otp) {
             <td align="center" style="padding-bottom:36px;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:360px;">
                 <tr>
-                  <td style="border-top:2px solid #7C3AED;padding:0;">
+                  <td style="border-top:2px solid #1A3A8F;padding:0;">
                   </td>
                 </tr>
                 <tr>

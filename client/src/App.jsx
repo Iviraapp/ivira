@@ -5,6 +5,7 @@ import Skeleton from './components/ui/Skeleton'
 import { useTheme } from './context/ThemeContext'
 import CommandBar from './components/CommandBar'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
+import WellbeingWidget from './components/WellbeingWidget'
 
 // Pages
 import Login from './pages/Login'
@@ -34,6 +35,7 @@ import StaffPerformance from './pages/dashboard/StaffPerformance'
 import LivePulse from './pages/dashboard/LivePulse'
 import MemberOnboarding from './pages/member/MemberOnboarding'
 import Landing from './pages/Landing'
+import AppLanding from './pages/AppLanding'
 import Privacy from './pages/legal/Privacy'
 import Terms from './pages/legal/Terms'
 import Contact from './pages/legal/Contact'
@@ -177,14 +179,18 @@ export default function App() {
 
         {/* Landing */}
         <Route path="/landing" element={<Landing />} />
+        <Route path="/app" element={<AppLanding />} />
 
-        {/* Redirects */}
-        <Route path="/" element={<Landing />} />
+        {/* Redirects — app.ivira.app shows AppLanding, ivira.app shows Landing */}
+        <Route path="/" element={
+          window.location.hostname.startsWith('app.') ? <AppLanding /> : <Landing />
+        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
 
       <CommandBar />
       <PWAInstallPrompt />
+      <WellbeingWidget />
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }

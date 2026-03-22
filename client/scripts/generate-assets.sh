@@ -4,15 +4,15 @@
 
 set -e
 
-PURPLE="#7C3AED"
+BRAND_BLUE="#1A3A8F"
 BLACK="#000000"
 
 echo "Generating IVIRA app assets..."
 
 # Create base icon (1024x1024 for iOS App Store)
-# Purple 'G' on black background
+# IVIRA logo on black background
 convert -size 1024x1024 xc:"$BLACK" \
-  -fill "$PURPLE" -font "Inter-Bold" -pointsize 600 \
+  -fill "$BRAND_BLUE" -font "Inter-Bold" -pointsize 600 \
   -gravity center -annotate 0 "G" \
   assets/icon-base.png 2>/dev/null || echo "ImageMagick not installed. Create icons manually."
 
@@ -37,13 +37,13 @@ done
 # Splash screens
 # iOS (2732x2732 max for iPad Pro)
 convert -size 2732x2732 xc:"$BLACK" \
-  -fill "$PURPLE" -font "Inter-Bold" -pointsize 300 \
+  -fill "$BRAND_BLUE" -font "Inter-Bold" -pointsize 300 \
   -gravity center -annotate 0 "G" \
   "ios/App/App/Assets.xcassets/Splash.imageset/splash-2732x2732.png" 2>/dev/null || true
 
 # Android splash
 convert -size 1920x1920 xc:"$BLACK" \
-  -fill "$PURPLE" -font "Inter-Bold" -pointsize 200 \
+  -fill "$BRAND_BLUE" -font "Inter-Bold" -pointsize 200 \
   -gravity center -annotate 0 "G" \
   "android/app/src/main/res/drawable/splash.png" 2>/dev/null || true
 

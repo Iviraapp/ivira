@@ -704,7 +704,7 @@ const SOURCE_LABELS = {
 const SOURCE_COLORS = {
   membership: '#22C55E',
   class_booking: '#3B82F6',
-  affiliate: '#7C3AED',
+  affiliate: '#1A3A8F',
   store: '#F59E0B',
   ad_revenue: '#06B6D4',
 }

@@ -58,7 +58,7 @@ function CheckinSheet({ open, onClose, gymId, memberId }) {
 /* ────────── ACTION HUB (2x2 TILES) ────────── */
 function ActionHub({ onTabChange }) {
   const actions = [
-    { label: 'Book a Class', icon: Calendar, color: '#7C3AED', bg: '#7C3AED18', tab: 'classes' },
+    { label: 'Book a Class', icon: Calendar, color: '#1A3A8F', bg: '#1A3A8F18', tab: 'classes' },
     { label: 'Find a Trainer', icon: Users, color: '#34A853', bg: '#34A85318', tab: 'classes' },
     { label: 'My Workouts', icon: Dumbbell, color: '#FBBC05', bg: '#FBBC0518', tab: 'health' },
     { label: 'Join a Challenge', icon: Target, color: '#EA4335', bg: '#EA433518', tab: 'rewards' },
@@ -526,7 +526,7 @@ function ProfileTab({ member, onLogout }) {
       }}>
         <div style={{
           width: 72, height: 72, borderRadius: '50%',
-          background: `linear-gradient(135deg, ${M.accent}, #A78BFA)`,
+          background: `linear-gradient(135deg, ${M.accent}, #3B6FD4)`,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           marginBottom: 12, boxShadow: `0 0 30px ${M.accentGlow}`,
         }}>

@@ -50,7 +50,7 @@ const COOLDOWN_MS = 4000
 const QR_LIFETIME = 90
 
 const DEMO_ADS = [
-  { id: 1, brand: 'MuscleBlaze', headline: 'Fuel Your Gains', sub: 'Whey Protein starting at ₹1,499', color: '#7C3AED' },
+  { id: 1, brand: 'MuscleBlaze', headline: 'Fuel Your Gains', sub: 'Whey Protein starting at ₹1,499', color: '#1A3A8F' },
   { id: 2, brand: 'HealthKart', headline: 'Pre-Workout Sale', sub: 'Flat 30% off on all supplements', color: '#34A853' },
   { id: 3, brand: 'Decathlon', headline: 'Gear Up', sub: 'New arrivals in gym wear', color: '#4285F4' },
 ]
@@ -116,9 +116,9 @@ function MilestoneOverlay({ milestone, theme }) {
 
   const configs = {
     century: { headline: 'LEGENDARY', sub: `${milestone.count}th Workout`, color: '#FFD700' },
-    major: { headline: 'CHAMPION', sub: `${milestone.count}th Workout`, color: '#7C3AED' },
+    major: { headline: 'CHAMPION', sub: `${milestone.count}th Workout`, color: '#1A3A8F' },
     streak: { headline: 'ON FIRE', sub: `${milestone.count}-Day Streak`, color: '#FF6B35' },
-    birthday: { headline: 'HAPPY BIRTHDAY', sub: 'Your special day workout', color: '#7C3AED' },
+    birthday: { headline: 'HAPPY BIRTHDAY', sub: 'Your special day workout', color: '#1A3A8F' },
   }
   const cfg = configs[milestone.type] || configs.major
 
@@ -192,12 +192,12 @@ function MilestoneOverlay({ milestone, theme }) {
         {/* Gamification text */}
         {milestone.type === 'streak' && (
           <div style={{
-            fontSize: 12, color: '#7C3AED',
+            fontSize: 12, color: '#1A3A8F',
             fontFamily: "'JetBrains Mono', monospace",
             padding: '6px 16px', borderRadius: 20,
-            border: '1px solid rgba(124,58,237,0.3)',
+            border: '1px solid rgba(26,58,143,0.3)',
             display: 'inline-block',
-            background: 'rgba(124,58,237,0.08)',
+            background: 'rgba(26,58,143,0.08)',
           }}>Top 5% of active members</div>
         )}
 
@@ -232,13 +232,13 @@ function FlashSaleBanner({ sale }) {
   if (!sale) return null
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #7C3AED20, #7C3AED08)',
-      border: '1px solid #7C3AED40',
+      background: 'linear-gradient(135deg, #1A3A8F20, #1A3A8F08)',
+      border: '1px solid #1A3A8F40',
       borderRadius: 12, padding: '14px 20px',
       marginTop: 16, textAlign: 'center',
       animation: 'flashSlide 0.5s ease-out',
     }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 4, fontFamily: FONT }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#1A3A8F', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 4, fontFamily: FONT }}>
         LIMITED OFFER
       </div>
       <div style={{ fontSize: 15, fontWeight: 600, color: '#EDEDED', fontFamily: FONT }}>
@@ -665,8 +665,8 @@ export default function CheckinPage() {
           <div style={{
             width: 96, height: 96, borderRadius: '50%',
             background: isSuccess ? `${theme.green}18` : `${theme.red}18`,
-            border: `3px solid ${isSuccess ? '#7C3AED' : theme.red}`,
-            boxShadow: isSuccess ? '0 0 40px rgba(124,58,237,0.4)' : undefined,
+            border: `3px solid ${isSuccess ? '#1A3A8F' : theme.red}`,
+            boxShadow: isSuccess ? '0 0 40px rgba(26,58,143,0.4)' : undefined,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 24px',
             animation: 'checkinPop 0.4s ease-out',
@@ -698,11 +698,11 @@ export default function CheckinPage() {
           {/* Streak display */}
           {isSuccess && streakCount > 0 && (
             <div style={{
-              fontSize: 13, color: '#7C3AED', fontFamily: FONT_M,
+              fontSize: 13, color: '#1A3A8F', fontFamily: FONT_M,
               marginTop: 4, marginBottom: 8,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
               </svg>
               {streakCount}-day streak
@@ -712,12 +712,12 @@ export default function CheckinPage() {
           {/* Birthday greeting */}
           {isSuccess && isBirthday && !milestone && (
             <div style={{
-              fontSize: 14, color: '#7C3AED', fontWeight: 600,
+              fontSize: 14, color: '#1A3A8F', fontWeight: 600,
               marginTop: 8, fontFamily: FONT,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
               Happy Birthday!
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" /><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1" />
                 <path d="M2 21h20" /><path d="M7 8v2" /><path d="M12 8v2" /><path d="M17 8v2" />
                 <path d="M7 4h.01" /><path d="M12 4h.01" /><path d="M17 4h.01" />
@@ -1002,7 +1002,7 @@ function IdleScreen({ ad, gymName, theme, onWake }) {
         fontFamily: FONT, display: 'flex', alignItems: 'center', gap: 8,
       }}>
         <div style={{
-          width: 8, height: 8, borderRadius: '50%', background: '#7C3AED',
+          width: 8, height: 8, borderRadius: '50%', background: '#1A3A8F',
           animation: 'spPulse 2s ease-in-out infinite',
         }} />
         Tap anywhere to check in

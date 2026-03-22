@@ -14,7 +14,7 @@ import {
 const FONT = "'Inter', -apple-system, sans-serif"
 
 const TYPE_BADGES = {
-  trainer: { label: 'Trainer', bg: 'rgba(124,58,237,0.12)', color: '#7C3AED' },
+  trainer: { label: 'Trainer', bg: 'rgba(26,58,143,0.12)', color: '#1A3A8F' },
   dietitian: { label: 'Dietitian', bg: 'rgba(52,168,83,0.12)', color: '#34A853' },
   physio: { label: 'Physio', bg: 'rgba(66,133,244,0.12)', color: '#4285F4' },
 }
@@ -65,7 +65,7 @@ const cardSty = (theme) => ({
 const btnPrimary = {
   display: 'inline-flex', alignItems: 'center', gap: 8,
   padding: '10px 20px', borderRadius: 10, border: 'none',
-  background: '#7C3AED', color: '#fff', fontSize: 14, fontWeight: 600,
+  background: '#1A3A8F', color: '#fff', fontSize: 14, fontWeight: 600,
   cursor: 'pointer', fontFamily: FONT, transition: 'all 0.3s',
 }
 
@@ -122,7 +122,7 @@ function TrainerAvatar({ name, photo_url, size = 56 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
+      background: 'linear-gradient(135deg, #1A3A8F, #5B21B6)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: size * 0.4, fontWeight: 700, color: '#fff',
       fontFamily: FONT, flexShrink: 0,
@@ -138,7 +138,7 @@ function SpecChip({ label, removable, onRemove }) {
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
       padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
-      background: 'rgba(124,58,237,0.1)', color: '#A78BFA',
+      background: 'rgba(26,58,143,0.1)', color: '#3B6FD4',
       fontFamily: FONT, whiteSpace: 'nowrap',
     }}>
       {label}
@@ -346,7 +346,7 @@ export default function Trainers() {
           style={btnPrimary}
           onClick={() => { setEditingTrainer(null); setForm({ ...EMPTY_TRAINER }); setStep(1); setShowTrainerModal(true) }}
           onMouseEnter={e => e.currentTarget.style.background = '#6D28D9'}
-          onMouseLeave={e => e.currentTarget.style.background = '#7C3AED'}
+          onMouseLeave={e => e.currentTarget.style.background = '#1A3A8F'}
         >
           <Plus size={18} />
           Add Trainer
@@ -359,7 +359,7 @@ export default function Trainers() {
         gap: 16, marginBottom: 28,
       }}>
         {[
-          { label: 'Total Trainers', value: totalTrainers, icon: User, color: '#7C3AED' },
+          { label: 'Total Trainers', value: totalTrainers, icon: User, color: '#1A3A8F' },
           { label: 'Active Services', value: activeServices, icon: Activity, color: '#34A853' },
           { label: 'Bookings This Month', value: bookingsThisMonth, icon: Calendar, color: '#4285F4' },
           { label: 'Revenue This Month', value: formatPrice(revenueThisMonth), icon: IndianRupee, color: '#FBBF24' },
@@ -404,7 +404,7 @@ export default function Trainers() {
             ...inputSty(theme), paddingLeft: 40,
             background: '#121212', border: '1px solid #1F1F1F',
           }}
-          onFocus={e => e.target.style.borderColor = '#7C3AED'}
+          onFocus={e => e.target.style.borderColor = '#1A3A8F'}
           onBlur={e => e.target.style.borderColor = '#1F1F1F'}
         />
       </div>
@@ -441,7 +441,7 @@ export default function Trainers() {
           <p style={{ color: theme.textTer, fontSize: 13, marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             {!searchQuery && (
               <>
-                <Plus size={14} color="#7C3AED" />
+                <Plus size={14} color="#1A3A8F" />
                 <span>Click "Add Trainer" to get started</span>
               </>
             )}
@@ -523,7 +523,7 @@ export default function Trainers() {
                   <button
                     style={btnOutline(theme)}
                     onClick={() => openEdit(trainer)}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = '#7C3AED'}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = '#1A3A8F'}
                     onMouseLeave={e => e.currentTarget.style.borderColor = theme.border}
                   >
                     <Eye size={14} />
@@ -532,7 +532,7 @@ export default function Trainers() {
                   <button
                     style={btnOutline(theme)}
                     onClick={() => openEdit(trainer)}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = '#7C3AED'}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = '#1A3A8F'}
                     onMouseLeave={e => e.currentTarget.style.borderColor = theme.border}
                   >
                     <Edit3 size={14} />
@@ -561,7 +561,7 @@ export default function Trainers() {
             style={btnPrimary}
             onClick={() => { setServiceForm({ ...EMPTY_SERVICE }); setShowServiceModal(true) }}
             onMouseEnter={e => e.currentTarget.style.background = '#6D28D9'}
-            onMouseLeave={e => e.currentTarget.style.background = '#7C3AED'}
+            onMouseLeave={e => e.currentTarget.style.background = '#1A3A8F'}
           >
             <Plus size={16} />
             Create Service
@@ -585,7 +585,7 @@ export default function Trainers() {
             </div>
             <p style={{ color: theme.textSec, fontSize: 15, fontWeight: 600, margin: 0 }}>No services created yet</p>
             <p style={{ color: theme.textTer, fontSize: 12, marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              <Plus size={13} color="#7C3AED" />
+              <Plus size={13} color="#1A3A8F" />
               <span>Create a service to start earning</span>
             </p>
           </div>
@@ -623,8 +623,8 @@ export default function Trainers() {
                   {svcType && (
                     <span style={{
                       padding: '4px 12px', borderRadius: 16, fontSize: 11,
-                      fontWeight: 600, background: 'rgba(124,58,237,0.1)',
-                      color: '#A78BFA', textTransform: 'uppercase', letterSpacing: 0.3,
+                      fontWeight: 600, background: 'rgba(26,58,143,0.1)',
+                      color: '#3B6FD4', textTransform: 'uppercase', letterSpacing: 0.3,
                     }}>
                       {svcType.label}
                     </span>
@@ -665,7 +665,7 @@ export default function Trainers() {
           {[1, 2, 3].map(s => (
             <div key={s} style={{
               flex: 1, height: 4, borderRadius: 4,
-              background: s <= step ? '#7C3AED' : '#1F1F1F',
+              background: s <= step ? '#1A3A8F' : '#1F1F1F',
               transition: 'background 0.2s',
             }} />
           ))}
@@ -741,9 +741,9 @@ export default function Trainers() {
                       onClick={() => toggleSpecialty(spec)}
                       style={{
                         padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                        border: selected ? '1px solid #7C3AED' : '1px solid #1F1F1F',
-                        background: selected ? 'rgba(124,58,237,0.15)' : 'transparent',
-                        color: selected ? '#A78BFA' : theme.textSec,
+                        border: selected ? '1px solid #1A3A8F' : '1px solid #1F1F1F',
+                        background: selected ? 'rgba(26,58,143,0.15)' : 'transparent',
+                        color: selected ? '#3B6FD4' : theme.textSec,
                         cursor: 'pointer', fontFamily: FONT, transition: 'all 0.15s',
                       }}
                     >

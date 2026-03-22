@@ -153,6 +153,20 @@ export async function buildApp(opts = {}) {
   await fastify.register(foodScanRoutes, { prefix: '/api/v1' });
   await fastify.register(sleepRoutes, { prefix: '/api/v1' });
   await fastify.register(conciergeRoutes, { prefix: '/api/v1' });
+  // APK download route with proper headers
+  fastify.get('/downloads/ivira-latest.apk', async (request, reply) => {
+    const fs = await import('fs');
+    const filePath = join(__dirname, '..', 'public', 'downloads', 'ivira-latest.apk');
+    if (!fs.existsSync(filePath)) {
+      return reply.code(404).send({ error: 'APK not found' });
+    }
+    const stream = fs.createReadStream(filePath);
+    return reply
+      .header('Content-Type', 'application/vnd.android.package-archive')
+      .header('Content-Disposition', 'attachment; filename="ivira-latest.apk"')
+      .send(stream);
+  });
+
   // Root-level redirect for affiliate click tracking (short URLs)
   fastify.get('/r/:clickToken', async (request, reply) => {
     const { trackClick } = await import('./services/affiliate.service.js');

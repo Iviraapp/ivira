@@ -1,7 +1,7 @@
 export const M = {
   bg: '#050505', card: '#121212', cardSec: '#0A0A0A', border: '#1F1F1F',
   text: '#FFFFFF', textSec: 'rgba(255,255,255,0.6)', textTer: 'rgba(255,255,255,0.35)',
-  accent: '#7C3AED', accentSoft: 'rgba(124,58,237,0.12)', accentGlow: 'rgba(124,58,237,0.3)',
+  accent: '#1A3A8F', accentSoft: 'rgba(26,58,143,0.12)', accentGlow: 'rgba(26,58,143,0.3)',
   green: '#34A853', red: '#EA4335', amber: '#FBBC05',
   bronze: '#CD7F32', silver: '#C0C0C0', gold: '#FFD700',
 }

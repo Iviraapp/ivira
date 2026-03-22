@@ -5,8 +5,20 @@ import AuthLayout, { useAuthTheme } from '../../components/auth/AuthLayout'
 import PinInput from '../../components/auth/PinInput'
 import api from '../../lib/api'
 
+function isMobileDevice() {
+  return typeof window !== 'undefined' && /Android|iPhone|iPad|iPod|webOS|BlackBerry|Opera Mini|IEMobile/i.test(navigator.userAgent)
+}
+
+function getMobilePlatform() {
+  if (typeof window === 'undefined') return 'unknown'
+  const ua = navigator.userAgent
+  if (/iPhone|iPad|iPod/i.test(ua)) return 'ios'
+  if (/Android/i.test(ua)) return 'android'
+  return 'unknown'
+}
+
 export default function MemberLogin() {
-  const [step, setStep] = useState('email')
+  const [step, setStep] = useState(() => isMobileDevice() ? 'app_prompt' : 'email')
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState('')
@@ -110,7 +122,7 @@ export default function MemberLogin() {
       title="IVIRA"
       subtitle="Your fitness journey, one tap away."
       tagline="Track. Train. Transform."
-      backgroundImageUrl="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=60"
+      role="member"
       footerText={footerContent}
     >
       {/* Verifying spinner */}
@@ -127,20 +139,126 @@ export default function MemberLogin() {
         </div>
       )}
 
+      {/* Mobile App Download Prompt — platform-aware */}
+      {step === 'app_prompt' && (() => {
+        const platform = getMobilePlatform()
+        const isAndroid = platform === 'android'
+        const isIOS = platform === 'ios'
+        return (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <img src="/icons/icon-96.png" alt="IVIRA" style={{
+                width: 56, height: 56, borderRadius: 16, marginBottom: 16,
+                boxShadow: '0 0 40px rgba(26,58,143,0.25)', objectFit: 'cover',
+              }} />
+              <h2 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: textPrimary, letterSpacing: '0.2em', fontFamily: ff }}>
+                I V I R A
+              </h2>
+              <p style={{ fontSize: 14, color: textSec, margin: 0, fontFamily: ff }}>Get the App</p>
+            </div>
+
+            <div style={{ marginBottom: 28, textAlign: 'center' }}>
+              <h3 style={{ fontSize: 22, fontWeight: 700, color: textPrimary, margin: '0 0 8px', fontFamily: ff }}>
+                {isIOS ? 'IVIRA for iOS' : 'Download the IVIRA App'}
+              </h3>
+              <p style={{ fontSize: 14, color: textSec, margin: 0, lineHeight: 1.6, fontFamily: ff }}>
+                {isIOS
+                  ? 'The IVIRA iOS app is coming soon. Sign in via web for now.'
+                  : 'Track workouts, find gyms, log nutrition, and more — all from the app.'}
+              </p>
+            </div>
+
+            {/* Android: APK download + Google Play coming soon */}
+            {isAndroid && (
+              <>
+                <a
+                  href="https://api.ivira.app/downloads/ivira-latest.apk"
+                  download
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    width: '100%', padding: '16px 24px', borderRadius: 12,
+                    background: accent, color: '#fff', fontSize: 16, fontWeight: 700,
+                    fontFamily: ff, textDecoration: 'none', textAlign: 'center',
+                    marginBottom: 12, transition: 'opacity 0.2s',
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Download APK
+                </a>
+                <div style={{
+                  padding: '14px', borderRadius: 10,
+                  border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5,
+                  marginBottom: 20,
+                }}>
+                  <div style={{ fontSize: 11, color: textTer, fontFamily: ff }}>Coming Soon</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: textSec, fontFamily: ff }}>Google Play</div>
+                </div>
+              </>
+            )}
+
+            {/* iOS: App Store coming soon */}
+            {isIOS && (
+              <div style={{
+                padding: '20px', borderRadius: 12,
+                border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.6,
+                marginBottom: 20,
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={textSec} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 8 }}>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                  <path d="M8 12l2 2 4-4"/>
+                </svg>
+                <div style={{ fontSize: 12, color: textTer, fontFamily: ff, marginBottom: 4 }}>Coming Soon</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: textSec, fontFamily: ff }}>App Store</div>
+              </div>
+            )}
+
+            {/* Fallback for other mobile devices */}
+            {!isAndroid && !isIOS && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                <div style={{
+                  flex: 1, padding: '12px', borderRadius: 10,
+                  border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5,
+                }}>
+                  <div style={{ fontSize: 11, color: textTer, fontFamily: ff }}>Coming Soon</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: textSec, fontFamily: ff }}>App Store</div>
+                </div>
+                <div style={{
+                  flex: 1, padding: '12px', borderRadius: 10,
+                  border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5,
+                }}>
+                  <div style={{ fontSize: 11, color: textTer, fontFamily: ff }}>Coming Soon</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: textSec, fontFamily: ff }}>Google Play</div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ textAlign: 'center', borderTop: `1px solid ${t.inputBorder}`, paddingTop: 20 }}>
+              <p style={{ fontSize: 13, color: textSec, fontFamily: ff, margin: 0 }}>
+                Already have an account?{' '}
+                <button
+                  onClick={() => setStep('email')}
+                  style={{ background: 'none', border: 'none', color: accent, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: ff }}
+                >
+                  Sign in here
+                </button>
+              </p>
+            </div>
+          </>
+        )
+      })()}
+
       {/* Email step */}
       {step === 'email' && (
         <>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: 16,
-              background: `linear-gradient(135deg, ${accent}, #A78BFA)`,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: 16, boxShadow: '0 0 40px rgba(124,58,237,0.25)',
-            }}>
-              <span style={{ fontSize: 24, fontWeight: 900, color: '#fff', fontFamily: ff }}>G</span>
-            </div>
-            <h2 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: textPrimary, letterSpacing: '-0.02em', fontFamily: ff }}>
-              IVIRA
+            <img src="/icons/icon-96.png" alt="IVIRA" style={{
+              width: 56, height: 56, borderRadius: 16, marginBottom: 16,
+              boxShadow: '0 0 40px rgba(26,58,143,0.25)', objectFit: 'cover',
+            }} />
+            <h2 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: textPrimary, letterSpacing: '0.2em', fontFamily: ff }}>
+              I V I R A
             </h2>
             <p style={{ fontSize: 14, color: textSec, margin: 0, fontFamily: ff }}>Member Hub</p>
           </div>

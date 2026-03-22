@@ -68,7 +68,7 @@ export default function FeatureLockedCard({ featureSlug, packageType = 'standard
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         margin: '0 auto 16px',
       }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
@@ -79,7 +79,7 @@ export default function FeatureLockedCard({ featureSlug, packageType = 'standard
       </h3>
       <p style={{ color: '#777', fontSize: 13, margin: '0 0 20px', lineHeight: 1.5 }}>
         This feature is available with the{' '}
-        <span style={{ color: '#7C3AED', fontWeight: 500, textTransform: 'capitalize' }}>
+        <span style={{ color: '#1A3A8F', fontWeight: 500, textTransform: 'capitalize' }}>
           {targetPackage}
         </span>{' '}
         package.
@@ -95,7 +95,7 @@ export default function FeatureLockedCard({ featureSlug, packageType = 'standard
           disabled={requesting}
           style={{
             padding: '10px 24px',
-            background: '#7C3AED',
+            background: '#1A3A8F',
             color: '#FFF',
             border: 'none',
             borderRadius: 8,

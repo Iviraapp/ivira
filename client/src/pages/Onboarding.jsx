@@ -38,7 +38,7 @@ const HOURS = Array.from({ length: 24 }, (_, i) => {
 const ESTIMATED_MEMBERS_OPTIONS = ['1-50', '50-100', '100-250', '250-500', '500+']
 
 const ACCENT_COLORS = [
-  '#7C3AED', '#2563EB', '#DC2626', '#16A34A',
+  '#1A3A8F', '#2563EB', '#DC2626', '#16A34A',
   '#F59E0B', '#EC4899', '#06B6D4', '#000000',
 ]
 
@@ -78,7 +78,7 @@ export default function Onboarding() {
   // Step 2: Branding
   const [logoBase64, setLogoBase64] = useState('')
   const [logoFileName, setLogoFileName] = useState('')
-  const [accentColor, setAccentColor] = useState('#7C3AED')
+  const [accentColor, setAccentColor] = useState('#1A3A8F')
 
   // Step 3: Address & Location
   const [address, setAddress] = useState(gym?.address || '')
@@ -300,7 +300,7 @@ export default function Onboarding() {
     padding: '28px',
   }
 
-  const brandGlow = `rgba(124,58,237,0.35)`
+  const brandGlow = `rgba(26,58,143,0.35)`
 
   const renderProgressBar = () => (
     <div style={{ marginBottom: 32 }}>
@@ -756,7 +756,7 @@ export default function Onboarding() {
                 display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
                 borderRadius: 10, cursor: 'pointer',
                 border: `1px solid ${paymentGateway === gw.value ? theme.brandAccent : theme.border}`,
-                background: paymentGateway === gw.value ? (isDark ? 'rgba(124,58,237,0.1)' : 'rgba(124,58,237,0.05)') : 'transparent',
+                background: paymentGateway === gw.value ? (isDark ? 'rgba(26,58,143,0.1)' : 'rgba(26,58,143,0.05)') : 'transparent',
                 transition: 'all 0.2s ease',
               }}
             >
@@ -772,7 +772,7 @@ export default function Onboarding() {
               {gw.tag && (
                 <span style={{
                   fontSize: 11, fontWeight: 500, color: theme.brandAccent,
-                  background: isDark ? 'rgba(124,58,237,0.15)' : 'rgba(124,58,237,0.1)',
+                  background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.1)',
                   padding: '2px 8px', borderRadius: 4,
                 }}>
                   {gw.tag}
@@ -935,8 +935,8 @@ export default function Onboarding() {
     }}>
       <style>{`
         @keyframes glowPulse {
-          0%, 100% { box-shadow: 0 0 20px ${brandGlow}, 0 0 40px rgba(124,58,237,0.15); }
-          50% { box-shadow: 0 0 30px ${brandGlow}, 0 0 60px rgba(124,58,237,0.25); }
+          0%, 100% { box-shadow: 0 0 20px ${brandGlow}, 0 0 40px rgba(26,58,143,0.15); }
+          50% { box-shadow: 0 0 30px ${brandGlow}, 0 0 60px rgba(26,58,143,0.25); }
         }
         @keyframes waPulse {
           0% { box-shadow: 0 0 0 0 rgba(37,211,102,0.5); }

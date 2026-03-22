@@ -95,7 +95,7 @@ export default function TrainerClients() {
           >
             <div style={{
               width: 44, height: 44, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${theme.brandAccent}, #A78BFA)`,
+              background: `linear-gradient(135deg, ${theme.brandAccent}, #3B6FD4)`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>
@@ -139,7 +139,7 @@ export default function TrainerClients() {
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
               <div style={{
                 width: 72, height: 72, borderRadius: '50%',
-                background: `linear-gradient(135deg, ${theme.brandAccent}, #A78BFA)`,
+                background: `linear-gradient(135deg, ${theme.brandAccent}, #3B6FD4)`,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 marginBottom: 12,
               }}>

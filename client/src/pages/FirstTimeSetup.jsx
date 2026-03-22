@@ -15,7 +15,7 @@ const COLORS = {
   text: '#FFFFFF',
   textSec: 'rgba(255,255,255,0.6)',
   textTer: 'rgba(255,255,255,0.4)',
-  brandAccent: '#7C3AED',
+  brandAccent: '#1A3A8F',
   border: '#262626',
   borderCard: '#1F1F1F',
   borderStrong: '#333333',
@@ -23,7 +23,7 @@ const COLORS = {
   red: '#EA4335',
 }
 
-const SWATCHES = ['#7C3AED', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6', '#06B6D4']
+const SWATCHES = ['#1A3A8F', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6', '#06B6D4']
 
 const STEP_LABELS = ['Identity', 'Hardware Sync', 'Revenue Check']
 
@@ -364,7 +364,7 @@ export default function FirstTimeSetup() {
   const [loading, setLoading] = useState(false)
 
   // Step 1 state
-  const [accentColor, setAccentColor] = useState('#7C3AED')
+  const [accentColor, setAccentColor] = useState('#1A3A8F')
 
   // Step 2 state
   const pairingCode = useMemo(() => Math.floor(1000 + Math.random() * 9000), [])
@@ -422,7 +422,7 @@ export default function FirstTimeSetup() {
       {/* Background glow */}
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.08) 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse at center, rgba(26,58,143,0.08) 0%, transparent 70%)',
       }} />
 
       {/* Content */}

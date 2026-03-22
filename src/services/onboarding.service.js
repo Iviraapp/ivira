@@ -46,7 +46,7 @@ export async function sendWelcomeNotification(member, gym) {
 <tr><td align="center" style="padding-bottom:24px;font-family:'Helvetica Neue',sans-serif;font-size:18px;font-weight:600;color:#FFF;">Welcome, ${member.name}!</td></tr>
 <tr><td align="center" style="padding-bottom:32px;font-family:'Helvetica Neue',sans-serif;font-size:15px;color:rgba(255,255,255,0.6);line-height:1.6;">Your Member Hub is ready. Check in with QR codes, browse the marketplace, and track your progress.</td></tr>
 <tr><td align="center" style="padding-bottom:32px;">
-<a href="${loginUrl}" style="display:inline-block;padding:14px 40px;background:#7C3AED;color:#FFF;font-family:'Helvetica Neue',sans-serif;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Open Member Hub</a>
+<a href="${loginUrl}" style="display:inline-block;padding:14px 40px;background:#1A3A8F;color:#FFF;font-family:'Helvetica Neue',sans-serif;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Open Member Hub</a>
 </td></tr>
 <tr><td style="height:1px;background:#1F1F1F;"></td></tr>
 <tr><td align="center" style="padding-top:20px;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#374151;">Powered by IVIRA</td></tr>

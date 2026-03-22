@@ -140,11 +140,11 @@ export default function AdminPayouts() {
 
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7C3AED' }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#1A3A8F' }} />
             <span style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>1% of subscriptions</span>
           </div>
           <div style={{ fontSize: 13, color: '#A1A1AA', marginBottom: 4 }}>Subscription Platform Fee</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#7C3AED' }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#1A3A8F' }}>
             {formatPaise(subscriptionPlatformFee)}
           </div>
         </div>
@@ -201,14 +201,14 @@ export default function AdminPayouts() {
         {/* Next Payout */}
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7C3AED' }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#1A3A8F' }} />
             <span style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>Scheduled</span>
           </div>
           <div style={{ fontSize: 13, color: '#A1A1AA', marginBottom: 4 }}>Next Payout</div>
           <div style={{ fontSize: 24, fontWeight: 700, color: '#FFFFFF' }}>
             {formatPaise(d.next_payout_paise)}
           </div>
-          <div style={{ fontSize: 12, color: '#7C3AED', marginTop: 4, fontWeight: 600 }}>
+          <div style={{ fontSize: 12, color: '#1A3A8F', marginTop: 4, fontWeight: 600 }}>
             {formatDate(d.next_payout_date)}
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function AdminPayouts() {
             left: 36,
             width: `${(activeStep / (timelineNodes.length - 1)) * (100 - (72 / (typeof window !== 'undefined' ? window.innerWidth : 800)) * 100)}%`,
             height: 2,
-            background: '#7C3AED',
+            background: '#1A3A8F',
             zIndex: 1,
           }} />
 
@@ -259,8 +259,8 @@ export default function AdminPayouts() {
                 width: 24,
                 height: 24,
                 borderRadius: '50%',
-                background: node.active ? '#7C3AED' : '#1F1F1F',
-                border: node.active ? '2px solid #7C3AED' : '2px solid #333',
+                background: node.active ? '#1A3A8F' : '#1F1F1F',
+                border: node.active ? '2px solid #1A3A8F' : '2px solid #333',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -280,7 +280,7 @@ export default function AdminPayouts() {
                 {node.label}
               </span>
               {i === 2 && (
-                <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, marginTop: 4 }}>
+                <span style={{ fontSize: 11, color: '#1A3A8F', fontWeight: 600, marginTop: 4 }}>
                   {formatDate(d.next_payout_date)}
                 </span>
               )}
@@ -302,7 +302,7 @@ export default function AdminPayouts() {
               width: 200,
               height: 200,
               borderRadius: '50%',
-              background: `conic-gradient(#7C3AED 0deg ${subscriptionAngle}deg, #22C55E ${subscriptionAngle}deg 360deg)`,
+              background: `conic-gradient(#1A3A8F 0deg ${subscriptionAngle}deg, #22C55E ${subscriptionAngle}deg 360deg)`,
               position: 'relative',
               marginBottom: 24,
             }}>
@@ -332,7 +332,7 @@ export default function AdminPayouts() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#7C3AED' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#1A3A8F' }} />
                   <span style={{ fontSize: 13, color: '#A1A1AA' }}>SaaS Subscriptions</span>
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF' }}>
@@ -391,7 +391,7 @@ export default function AdminPayouts() {
                       <td style={{ padding: '12px', fontSize: 14, color: '#22C55E', fontWeight: 500, fontFamily: font }}>
                         {formatPaise(row.fees)}
                       </td>
-                      <td style={{ padding: '12px', fontSize: 14, color: '#7C3AED', fontWeight: 500, fontFamily: font }}>
+                      <td style={{ padding: '12px', fontSize: 14, color: '#1A3A8F', fontWeight: 500, fontFamily: font }}>
                         {formatPaise(subRevPerMonth)}
                       </td>
                       <td style={{ padding: '12px', fontSize: 14, color: '#FFFFFF', fontWeight: 600, fontFamily: font }}>

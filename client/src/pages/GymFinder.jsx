@@ -20,13 +20,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-// SVG map icons are module-level so they can't use theme — hardcoded with brand purple #7C3AED
+// SVG map icons are module-level so they can't use theme — hardcoded with brand purple #1A3A8F
 const accentIcon = L.divIcon({
   className: '',
   html: `<svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 26 16 26s16-14 16-26C32 7.163 24.837 0 16 0z" fill="#7C3AED"/>
+    <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 26 16 26s16-14 16-26C32 7.163 24.837 0 16 0z" fill="#1A3A8F"/>
     <circle cx="16" cy="16" r="7" fill="#fff"/>
-    <circle cx="16" cy="16" r="4" fill="#7C3AED"/>
+    <circle cx="16" cy="16" r="4" fill="#1A3A8F"/>
   </svg>`,
   iconSize: [32, 42],
   iconAnchor: [16, 42],
@@ -48,9 +48,9 @@ const googleIcon = L.divIcon({
 const selectedIcon = L.divIcon({
   className: '',
   html: `<svg width="40" height="52" viewBox="0 0 40 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 0C8.954 0 0 8.954 0 20c0 15 20 32 20 32s20-17 20-32C40 8.954 31.046 0 20 0z" fill="#7C3AED"/>
+    <path d="M20 0C8.954 0 0 8.954 0 20c0 15 20 32 20 32s20-17 20-32C40 8.954 31.046 0 20 0z" fill="#1A3A8F"/>
     <circle cx="20" cy="20" r="9" fill="#fff"/>
-    <circle cx="20" cy="20" r="5" fill="#7C3AED"/>
+    <circle cx="20" cy="20" r="5" fill="#1A3A8F"/>
   </svg>`,
   iconSize: [40, 52],
   iconAnchor: [20, 52],
@@ -392,7 +392,7 @@ export default function GymFinder() {
                 })
               }
             },
-            theme: { color: '#7C3AED' },
+            theme: { color: '#1A3A8F' },
           })
           rzp.open()
         }
