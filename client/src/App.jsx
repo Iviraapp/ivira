@@ -48,6 +48,12 @@ import TrainerClients from './pages/trainer/TrainerClients'
 import TrainerEarnings from './pages/trainer/TrainerEarnings'
 import TrainerSchedule from './pages/trainer/TrainerSchedule'
 
+// Vira AI (Health/Wellness)
+import ViraLayout from './pages/vira/ViraLayout'
+
+// Care Compass
+import CareCompass from './pages/dashboard/CareCompass'
+
 // Admin pages
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminLayout from './pages/admin/AdminLayout'
@@ -130,6 +136,7 @@ export default function App() {
           <Route path="members/:memberId" element={<MemberProfile />} />
           <Route path="staff-performance" element={<StaffPerformance />} />
           <Route path="pulse" element={<LivePulse />} />
+          <Route path="care-compass" element={<CareCompass />} />
         </Route>
 
         {/* Super Admin */}
@@ -165,6 +172,9 @@ export default function App() {
           <Route path="earnings" element={<TrainerEarnings />} />
           <Route path="schedule" element={<TrainerSchedule />} />
         </Route>
+
+        {/* Vira AI Health Portal */}
+        <Route path="/vira" element={<ViraLayout />} />
 
         {/* Public pages */}
         <Route path="/find-gym" element={<GymFinder />} />
