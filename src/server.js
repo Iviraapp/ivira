@@ -3,16 +3,12 @@ import { buildApp } from './app.js';
 
 const start = async () => {
   try {
-    // Run migrations on startup in production
+    // Run pending migrations on startup in production
     if (process.env.NODE_ENV === 'production') {
       const knex = (await import('./config/database.js')).default;
-      console.log('Running database migrations...');
-      await knex.raw('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
-      console.log('Clean schema created');
+      console.log('Checking for pending migrations...');
       await knex.migrate.latest();
-      console.log('Migrations complete');
-      await knex.seed.run();
-      console.log('Seeds complete');
+      console.log('Migrations up to date');
     }
 
     const app = await buildApp();
