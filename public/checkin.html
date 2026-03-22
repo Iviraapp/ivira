@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IVIRA | Check-In</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #ffffff;
+      color: #1e1e2f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      color: #4f46e5;
+      margin-top: 32px;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #6b7280;
+      margin-bottom: 40px;
+    }
+
+    /* Step 1: Phone Input */
+    #step-phone {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .input-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      align-self: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .phone-input-group {
+      display: flex;
+      width: 100%;
+      border: 2px solid #d1d5db;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .phone-input-group:focus-within {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .phone-prefix {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      background: #f9fafb;
+      font-size: 16px;
+      font-weight: 500;
+      color: #374151;
+      border-right: 1px solid #e5e7eb;
+      user-select: none;
+    }
+
+    .phone-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 16px 14px;
+      font-size: 18px;
+      letter-spacing: 1px;
+      background: transparent;
+    }
+
+    .phone-input::placeholder {
+      color: #9ca3af;
+      letter-spacing: 0;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, opacity 0.2s;
+      margin-top: 16px;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #4338ca;
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #4f46e5;
+      border: 2px solid #4f46e5;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #eef2ff;
+    }
+
+    /* Step 2: QR Display */
+    #step-qr {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .greeting {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e1e2f;
+      margin-bottom: 24px;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .qr-wrapper {
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #qr-canvas {
+      display: block;
+    }
+
+    .timer {
+      margin-top: 20px;
+      font-size: 40px;
+      font-weight: 700;
+      color: #4f46e5;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer.warning {
+      color: #dc2626;
+    }
+
+    .timer-label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .expired-msg {
+      font-size: 16px;
+      font-weight: 600;
+      color: #dc2626;
+      margin-top: 20px;
+    }
+
+    #btn-regenerate {
+      display: none;
+      margin-top: 16px;
+    }
+
+    #btn-change-phone {
+      margin-top: 12px;
+    }
+
+    /* Error display */
+    .error-area {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .error-msg {
+      display: none;
+      padding: 12px 16px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      color: #dc2626;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .footer span {
+      font-weight: 600;
+      color: #4f46e5;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo" style="letter-spacing: 2px;">IVIRA</div>
+    <div class="subtitle">Member Check-In</div>
+
+    <!-- Step 1: Phone Input -->
+    <div id="step-phone">
+      <label class="input-label" for="phone">Enter your phone number</label>
+      <div class="phone-input-group">
+        <div class="phone-prefix">+91</div>
+        <input
+          type="tel"
+          id="phone"
+          class="phone-input"
+          placeholder="10-digit number"
+          maxlength="10"
+          inputmode="numeric"
+          autocomplete="tel-national"
+        >
+      </div>
+      <button id="btn-generate" class="btn btn-primary" disabled>Get QR Code</button>
+    </div>
+
+    <!-- Step 2: QR Display -->
+    <div id="step-qr">
+      <div class="greeting" id="greeting"></div>
+      <div class="qr-wrapper" id="qr-wrapper">
+        <canvas id="qr-canvas"></canvas>
+      </div>
+      <div class="timer" id="timer"></div>
+      <div class="timer-label" id="timer-label">seconds remaining</div>
+      <div class="expired-msg" id="expired-msg" style="display:none;">QR Expired</div>
+      <button id="btn-regenerate" class="btn btn-primary">Generate New Code</button>
+      <button id="btn-change-phone" class="btn btn-secondary">Change Phone Number</button>
+    </div>
+
+    <!-- Error Area -->
+    <div class="error-area">
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+  </div>
+
+  <div class="footer">Powered by <span>IVIRA</span></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // DOM references
+      const stepPhone = document.getElementById('step-phone');
+      const stepQr = document.getElementById('step-qr');
+      const phoneInput = document.getElementById('phone');
+      const btnGenerate = document.getElementById('btn-generate');
+      const btnRegenerate = document.getElementById('btn-regenerate');
+      const btnChangePhone = document.getElementById('btn-change-phone');
+      const greetingEl = document.getElementById('greeting');
+      const qrCanvas = document.getElementById('qr-canvas');
+      const qrWrapper = document.getElementById('qr-wrapper');
+      const timerEl = document.getElementById('timer');
+      const timerLabel = document.getElementById('timer-label');
+      const expiredMsg = document.getElementById('expired-msg');
+      const errorMsg = document.getElementById('error-msg');
+
+      let countdownInterval = null;
+      let gymId = null;
+      let currentPhone = '';
+
+      // Parse gym ID from URL
+      const params = new URLSearchParams(window.location.search);
+      gymId = params.get('gym');
+
+      if (!gymId) {
+        showStep('phone');
+        showError('Invalid link. A gym ID is required in the URL. Please use the link provided by your gym.');
+        btnGenerate.disabled = true;
+        phoneInput.disabled = true;
+        return;
+      }
+
+      // Auto-focus phone input
+      phoneInput.focus();
+
+      // Phone validation: enable button when 10 digits
+      phoneInput.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        btnGenerate.disabled = this.value.length !== 10;
+        hideError();
+      });
+
+      // Enter key submits
+      phoneInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && this.value.length === 10) {
+          e.preventDefault();
+          generateQr();
+        }
+      });
+
+      btnGenerate.addEventListener('click', generateQr);
+      btnRegenerate.addEventListener('click', generateQr);
+      btnChangePhone.addEventListener('click', function () {
+        clearCountdown();
+        showStep('phone');
+        phoneInput.value = '';
+        phoneInput.focus();
+        btnGenerate.disabled = true;
+        hideError();
+      });
+
+      function showStep(step) {
+        if (step === 'phone') {
+          stepPhone.style.display = 'flex';
+          stepQr.style.display = 'none';
+        } else {
+          stepPhone.style.display = 'none';
+          stepQr.style.display = 'flex';
+        }
+      }
+
+      function showError(msg) {
+        errorMsg.textContent = msg;
+        errorMsg.style.display = 'block';
+      }
+
+      function hideError() {
+        errorMsg.style.display = 'none';
+      }
+
+      function clearCountdown() {
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+        }
+      }
+
+      function setLoading(btn, loading) {
+        if (loading) {
+          btn.disabled = true;
+          btn.dataset.originalText = btn.textContent;
+          btn.innerHTML = '<span class="spinner"></span>Generating...';
+        } else {
+          btn.disabled = false;
+          btn.textContent = btn.dataset.originalText || 'Get QR Code';
+        }
+      }
+
+      async function generateQr() {
+        const phone = phoneInput.value.replace(/\D/g, '');
+        if (phone.length !== 10) {
+          showError('Please enter a valid 10-digit phone number.');
+          return;
+        }
+
+        currentPhone = phone;
+        const activeBtn = stepQr.style.display === 'flex' ? btnRegenerate : btnGenerate;
+        hideError();
+        setLoading(activeBtn, true);
+
+        try {
+          const res = await fetch('/api/v1/gyms/' + encodeURIComponent(gymId) + '/qr/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: '+91' + phone }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.message || data.error || 'Failed to generate QR code. Please try again.');
+          }
+
+          setLoading(activeBtn, false);
+          showStep('qr');
+
+          // Greeting
+          const memberName = data.member && data.member.name ? data.member.name : 'Member';
+          greetingEl.textContent = 'Hi ' + memberName + ', show this QR at the gym';
+
+          // Render QR code
+          const token = data.token;
+          const expiresIn = data.expiresIn || 90;
+
+          QRCode.toCanvas(qrCanvas, token, {
+            width: 280,
+            margin: 2,
+            color: {
+              dark: '#1e1e2f',
+              light: '#ffffff',
+            },
+          }, function (err) {
+            if (err) {
+              showError('Could not render QR code. Please try again.');
+            }
+          });
+
+          // Reset QR display state
+          qrWrapper.style.opacity = '1';
+          timerEl.style.display = 'block';
+          timerLabel.style.display = 'block';
+          expiredMsg.style.display = 'none';
+          btnRegenerate.style.display = 'none';
+          timerEl.classList.remove('warning');
+
+          // Countdown
+          startCountdown(expiresIn);
+
+        } catch (err) {
+          setLoading(activeBtn, false);
+          showError(err.message);
+        }
+      }
+
+      function startCountdown(seconds) {
+        clearCountdown();
+        let remaining = seconds;
+        updateTimerDisplay(remaining);
+
+        countdownInterval = setInterval(function () {
+          remaining--;
+
+          if (remaining <= 15) {
+            timerEl.classList.add('warning');
+          }
+
+          if (remaining <= 0) {
+            clearCountdown();
+            onExpired();
+            return;
+          }
+
+          updateTimerDisplay(remaining);
+        }, 1000);
+      }
+
+      function updateTimerDisplay(secs) {
+        var mins = Math.floor(secs / 60);
+        var s = secs % 60;
+        timerEl.textContent = (mins > 0 ? mins + ':' : '') + (mins > 0 && s < 10 ? '0' : '') + s;
+      }
+
+      function onExpired() {
+        qrWrapper.style.opacity = '0.25';
+        timerEl.style.display = 'none';
+        timerLabel.style.display = 'none';
+        expiredMsg.style.display = 'block';
+        btnRegenerate.style.display = 'block';
+      }
+    })();
+  </script>
+</body>
+</html>

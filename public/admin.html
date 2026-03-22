@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IVIRA | Admin Panel</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #111;
+      min-height: 100vh;
+    }
+
+    /* Auth Screen */
+    .auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .auth-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .auth-card h1 { font-size: 24px; margin-bottom: 8px; color: #111; }
+    .auth-card p.subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
+
+    /* Top Bar */
+    .topbar {
+      background: #1e1b4b;
+      color: #fff;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .topbar-brand span { color: #818cf8; }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn-logout {
+      background: rgba(248,113,113,0.15);
+      color: #f87171;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-logout:hover { background: rgba(248,113,113,0.25); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      background: #fff;
+      border-bottom: 2px solid #e5e7eb;
+      padding: 0 32px;
+    }
+    .tab {
+      padding: 14px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab:hover { color: #4f46e5; }
+    .tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+
+    /* Main */
+    .main { padding: 32px; max-width: 1200px; margin: 0 auto; }
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 26px; color: #111; margin-bottom: 4px; }
+    .page-header p { color: #666; font-size: 14px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card h2 { font-size: 18px; margin-bottom: 16px; color: #111; }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    td {
+      padding: 12px;
+      font-size: 14px;
+      border-bottom: 1px solid #f3f4f6;
+      color: #333;
+    }
+    tr:hover td { background: #fafafa; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-gray { background: #f3f4f6; color: #4b5563; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      text-decoration: none;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #4338ca; }
+    .btn-secondary { background: #e5e7eb; color: #333; }
+    .btn-secondary:hover:not(:disabled) { background: #d1d5db; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+    .btn-danger:hover:not(:disabled) { background: #fecaca; }
+    .btn-success { background: #dcfce7; color: #166534; }
+    .btn-success:hover:not(:disabled) { background: #bbf7d0; }
+    .btn-warning { background: #ffedd5; color: #9a3412; }
+    .btn-warning:hover:not(:disabled) { background: #fed7aa; }
+
+    /* Forms */
+    label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #333; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      background: #fff;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #4f46e5; }
+    textarea { resize: vertical; min-height: 80px; }
+    .form-group { margin-bottom: 16px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Feedback */
+    .msg { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; display: none; }
+    .msg-error { background: #fee2e2; color: #991b1b; }
+    .msg-success { background: #dcfce7; color: #166534; }
+    .msg.show { display: block; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      padding: 32px;
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      margin: 16px;
+    }
+    .modal h2 { font-size: 20px; margin-bottom: 20px; color: #111; }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    /* Placeholder */
+    .placeholder {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+    .placeholder svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.4; }
+    .placeholder h3 { font-size: 20px; color: #666; margin-bottom: 8px; }
+    .placeholder p { font-size: 14px; }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #d1d5db;
+      border-radius: 24px;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: #4f46e5; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .topbar { padding: 0 16px; }
+      .tabs { padding: 0 16px; overflow-x: auto; }
+      .tab { padding: 12px 16px; font-size: 13px; white-space: nowrap; }
+      .main { padding: 20px 16px; }
+      .form-row { grid-template-columns: 1fr; }
+      .modal { padding: 24px; margin: 12px; }
+      table { font-size: 13px; }
+      th, td { padding: 8px; }
+    }
+    @media (max-width: 480px) {
+      .toolbar { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <h1 style="letter-spacing: 2px;">IVIRA Admin</h1>
+    <p class="subtitle">Enter admin secret to continue</p>
+    <div class="form-group">
+      <label for="secretInput">Admin Secret</label>
+      <input type="password" id="secretInput" placeholder="Enter admin secret" autocomplete="off">
+    </div>
+    <div id="authError" class="msg msg-error"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="authenticate()">Sign In</button>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" style="display:none">
+  <div class="topbar">
+    <div class="topbar-brand" style="letter-spacing: 2px;">IVIRA Admin</div>
+    <div class="topbar-right">
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="gyms">Gyms</button>
+    <button class="tab" data-tab="brands">Affiliate Brands</button>
+    <button class="tab" data-tab="payouts">Payouts</button>
+  </div>
+
+  <div class="main">
+
+    <!-- Gyms Tab -->
+    <div id="tab-gyms" class="tab-content active">
+      <div class="page-header">
+        <h1>Gyms</h1>
+        <p>Manage registered gyms</p>
+      </div>
+      <div class="card">
+        <div class="placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2 20h20M5 20V8l7-5 7 5v12M9 20v-6h6v6"/>
+          </svg>
+          <h3>Coming Soon</h3>
+          <p>Gym management will be available once the admin gyms endpoint is built.<br>
+          Endpoint: GET /api/v1/admin/gyms</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Brands Tab -->
+    <div id="tab-brands" class="tab-content">
+      <div class="page-header">
+        <h1>Affiliate Brands</h1>
+        <p>Manage affiliate brand partnerships</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="openBrandModal()">+ Add Brand</button>
+      </div>
+      <div id="brandsMsg" class="msg"></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Commission %</th>
+                <th>Flat (INR)</th>
+                <th>Base URL</th>
+                <th>Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="brandsTableBody">
+              <tr><td colspan="7" style="text-align:center;color:#999;padding:40px">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payouts Tab -->
+    <div id="tab-payouts" class="tab-content">
+      <div class="page-header">
+        <h1>Affiliate Payouts</h1>
+        <p>Record affiliate commission payouts to gyms</p>
+      </div>
+      <div class="card">
+        <h2>Record Payout</h2>
+        <div id="payoutMsg" class="msg"></div>
+        <form id="payoutForm" onsubmit="submitPayout(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="payoutGymId">Gym ID</label>
+              <input type="text" id="payoutGymId" required placeholder="UUID of the gym">
+            </div>
+            <div class="form-group">
+              <label for="payoutAmount">Amount (INR)</label>
+              <input type="number" id="payoutAmount" required min="0.01" step="0.01" placeholder="e.g. 1500.00">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="payoutStart">Period Start</label>
+              <input type="date" id="payoutStart" required>
+            </div>
+            <div class="form-group">
+              <label for="payoutEnd">Period End</label>
+              <input type="date" id="payoutEnd" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="payoutNotes">Notes</label>
+            <textarea id="payoutNotes" placeholder="Optional notes about this payout"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" id="payoutSubmitBtn">Record Payout</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Brand Modal -->
+<div id="brandModal" class="modal-overlay" onclick="if(event.target===this)closeBrandModal()">
+  <div class="modal">
+    <h2 id="brandModalTitle">Add Brand</h2>
+    <div id="brandModalMsg" class="msg"></div>
+    <form id="brandForm" onsubmit="submitBrand(event)">
+      <input type="hidden" id="brandEditId" value="">
+      <div class="form-group">
+        <label for="brandName">Brand Name</label>
+        <input type="text" id="brandName" required placeholder="e.g. ProteinCo">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="brandCategory">Category</label>
+          <input type="text" id="brandCategory" placeholder="e.g. supplements, apparel">
+        </div>
+        <div class="form-group">
+          <label for="brandCommission">Commission %</label>
+          <input type="number" id="brandCommission" min="0" max="100" step="0.01" placeholder="e.g. 10">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="brandFlat">Commission Flat (INR)</label>
+          <input type="number" id="brandFlat" min="0" step="0.01" placeholder="e.g. 50.00">
+        </div>
+        <div class="form-group">
+          <label for="brandBaseUrl">Base URL</label>
+          <input type="url" id="brandBaseUrl" placeholder="https://...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="brandLogoUrl">Logo URL</label>
+        <input type="url" id="brandLogoUrl" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label for="brandDescription">Description</label>
+        <textarea id="brandDescription" placeholder="Short description of the brand"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeBrandModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="brandSubmitBtn">Save Brand</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ---- Config ----
+  const API_BASE = window.location.origin;
+
+  // ---- Auth ----
+  function getSecret() {
+    return localStorage.getItem('ivira_admin_secret') || '';
+  }
+
+  function authenticate() {
+    const secret = document.getElementById('secretInput').value.trim();
+    if (!secret) {
+      showMsg('authError', 'Please enter the admin secret.', 'error');
+      return;
+    }
+    localStorage.setItem('ivira_admin_secret', secret);
+    showAdmin();
+  }
+
+  function logout() {
+    localStorage.removeItem('ivira_admin_secret');
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('secretInput').value = '';
+  }
+
+  function showAdmin() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    loadBrands();
+  }
+
+  // Auto-login if secret is stored
+  if (getSecret()) {
+    showAdmin();
+  }
+
+  // ---- Tabs ----
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'brands') loadBrands();
+    });
+  });
+
+  // ---- Utility ----
+  function adminHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'x-admin-secret': getSecret()
+    };
+  }
+
+  function showMsg(elId, text, type) {
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.className = 'msg msg-' + type + ' show';
+    setTimeout(() => el.classList.remove('show'), 6000);
+  }
+
+  function paiseToINR(paise) {
+    return (paise / 100).toFixed(2);
+  }
+
+  function inrToPaise(inr) {
+    return Math.round(parseFloat(inr) * 100);
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ---- Brands ----
+  let brandsData = [];
+
+  async function loadBrands() {
+    try {
+      const res = await fetch(API_BASE + '/api/v1/affiliate/brands');
+      if (!res.ok) throw new Error('Failed to load brands');
+      const data = await res.json();
+      brandsData = data.brands || data.data || data || [];
+      if (!Array.isArray(brandsData)) brandsData = [];
+      renderBrands();
+    } catch (err) {
+      document.getElementById('brandsTableBody').innerHTML =
+        '<tr><td colspan="7" style="text-align:center;color:#991b1b;padding:40px">' +
+        escHtml(err.message) + '</td></tr>';
+    }
+  }
+
+  function renderBrands() {
+    const tbody = document.getElementById('brandsTableBody');
+    if (brandsData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:40px">No brands yet. Click "Add Brand" to create one.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = brandsData.map(b => `
+      <tr>
+        <td><strong>${escHtml(b.name)}</strong></td>
+        <td>${escHtml(b.category || '-')}</td>
+        <td>${b.commission_rate_percent != null ? b.commission_rate_percent + '%' : '-'}</td>
+        <td>${b.commission_flat_paise != null ? '\u20B9' + (b.commission_flat_paise / 100).toFixed(2) : '-'}</td>
+        <td>${b.base_url ? '<a href="' + escHtml(b.base_url) + '" target="_blank" style="color:#4f46e5">' + escHtml(b.base_url) + '</a>' : '-'}</td>
+        <td>
+          <label class="toggle">
+            <input type="checkbox" ${b.is_active !== false ? 'checked' : ''} onchange="toggleBrand('${b.id}', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="editBrand('${b.id}')">Edit</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openBrandModal(brand) {
+    document.getElementById('brandEditId').value = '';
+    document.getElementById('brandModalTitle').textContent = 'Add Brand';
+    document.getElementById('brandForm').reset();
+    document.getElementById('brandModalMsg').className = 'msg';
+    if (brand) {
+      document.getElementById('brandEditId').value = brand.id;
+      document.getElementById('brandModalTitle').textContent = 'Edit Brand';
+      document.getElementById('brandName').value = brand.name || '';
+      document.getElementById('brandCategory').value = brand.category || '';
+      document.getElementById('brandCommission').value = brand.commission_rate_percent || '';
+      document.getElementById('brandFlat').value = brand.commission_flat_paise != null ? (brand.commission_flat_paise / 100).toFixed(2) : '';
+      document.getElementById('brandBaseUrl').value = brand.base_url || '';
+      document.getElementById('brandLogoUrl').value = brand.logo_url || '';
+      document.getElementById('brandDescription').value = brand.description || '';
+    }
+    document.getElementById('brandModal').classList.add('show');
+  }
+
+  function closeBrandModal() {
+    document.getElementById('brandModal').classList.remove('show');
+  }
+
+  function editBrand(id) {
+    const brand = brandsData.find(b => b.id === id);
+    if (brand) openBrandModal(brand);
+  }
+
+  async function submitBrand(e) {
+    e.preventDefault();
+    const editId = document.getElementById('brandEditId').value;
+    const btn = document.getElementById('brandSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const body = {
+      name: document.getElementById('brandName').value.trim(),
+      category: document.getElementById('brandCategory').value.trim() || null,
+      commission_rate_percent: document.getElementById('brandCommission').value ? parseFloat(document.getElementById('brandCommission').value) : null,
+      commission_flat_paise: document.getElementById('brandFlat').value ? inrToPaise(document.getElementById('brandFlat').value) : null,
+      base_url: document.getElementById('brandBaseUrl').value.trim() || null,
+      logo_url: document.getElementById('brandLogoUrl').value.trim() || null,
+      description: document.getElementById('brandDescription').value.trim() || null
+    };
+
+    try {
+      const url = editId
+        ? API_BASE + '/api/v1/admin/affiliate/brands/' + editId
+        : API_BASE + '/api/v1/admin/affiliate/brands';
+      const method = editId ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: adminHeaders(),
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Request failed (' + res.status + ')');
+      }
+
+      closeBrandModal();
+      showMsg('brandsMsg', editId ? 'Brand updated successfully.' : 'Brand created successfully.', 'success');
+      await loadBrands();
+    } catch (err) {
+      showMsg('brandModalMsg', err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Brand';
+    }
+  }
+
+  async function toggleBrand(id, active) {
+    try {
+      const res = await fetch(API_BASE + '/api/v1/admin/affiliate/brands/' + id, {
+        method: 'PATCH',
+        headers: adminHeaders(),
+        body: JSON.stringify({ is_active: active })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to update');
+      }
+      showMsg('brandsMsg', 'Brand ' + (active ? 'activated' : 'deactivated') + '.', 'success');
+      await loadBrands();
+    } catch (err) {
+      showMsg('brandsMsg', err.message, 'error');
+      await loadBrands(); // revert toggle visually
+    }
+  }
+
+  // ---- Payouts ----
+  async function submitPayout(e) {
+    e.preventDefault();
+    const btn = document.getElementById('payoutSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    const gymId = document.getElementById('payoutGymId').value.trim();
+    const amountInr = document.getElementById('payoutAmount').value;
+    const periodStart = document.getElementById('payoutStart').value;
+    const periodEnd = document.getElementById('payoutEnd').value;
+    const notes = document.getElementById('payoutNotes').value.trim();
+
+    if (!gymId) {
+      showMsg('payoutMsg', 'Gym ID is required.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Record Payout';
+      return;
+    }
+
+    const body = {
+      amountPaise: inrToPaise(amountInr),
+      periodStart,
+      periodEnd,
+      notes: notes || null
+    };
+
+    try {
+      const res = await fetch(API_BASE + '/api/v1/admin/affiliate/payouts/' + gymId, {
+        method: 'POST',
+        headers: adminHeaders(),
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Request failed (' + res.status + ')');
+      }
+
+      showMsg('payoutMsg', 'Payout of \u20B9' + parseFloat(amountInr).toFixed(2) + ' recorded for gym ' + gymId + '.', 'success');
+      document.getElementById('payoutForm').reset();
+    } catch (err) {
+      showMsg('payoutMsg', err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Record Payout';
+    }
+  }
+
+  // ---- Keyboard shortcut ----
+  document.getElementById('secretInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') authenticate();
+  });
+</script>
+</body>
+</html>

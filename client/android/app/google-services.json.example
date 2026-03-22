@@ -1,0 +1,15 @@
+{
+  "_comment": "Firebase Configuration for IVIRA Android",
+  "_instructions": [
+    "1. Create a Firebase project at https://console.firebase.google.com",
+    "2. Add an Android app with package name: app.ivira.mobile",
+    "3. Download google-services.json",
+    "4. Replace this file (remove .example extension)",
+    "5. Rebuild the Android project"
+  ],
+  "project_info": {
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "YOUR_PROJECT_ID"
+  },
+  "client": []
+}

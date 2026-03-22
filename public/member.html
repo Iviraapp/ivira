@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>IVIRA | Member Portal</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #ffffff;
+      color: #1e1e2f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      color: #4f46e5;
+      text-align: center;
+      margin-top: 24px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 32px;
+      margin-top: 4px;
+    }
+
+    /* --- Views --- */
+    .view { display: none; width: 100%; }
+    .view.active { display: flex; flex-direction: column; }
+
+    /* --- Login View --- */
+    .input-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      width: 100%;
+      border: 2px solid #d1d5db;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-wrap:focus-within {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .input-wrap input {
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 16px 14px;
+      font-size: 16px;
+      background: transparent;
+    }
+
+    .input-wrap input::placeholder { color: #9ca3af; }
+
+    .otp-input {
+      letter-spacing: 10px;
+      font-size: 22px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, opacity 0.2s;
+      margin-top: 16px;
+    }
+
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-primary { background: #4f46e5; color: #ffffff; }
+    .btn-primary:hover:not(:disabled) { background: #4338ca; }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #4f46e5;
+      border: 2px solid #e5e7eb;
+    }
+    .btn-secondary:hover:not(:disabled) { background: #eef2ff; }
+
+    .btn-danger-outline {
+      background: transparent;
+      color: #dc2626;
+      border: 2px solid #fecaca;
+    }
+    .btn-danger-outline:hover:not(:disabled) { background: #fef2f2; }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      color: #4f46e5;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .otp-sent-text {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* --- Error / Info --- */
+    .error-msg {
+      display: none;
+      padding: 12px 16px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      color: #dc2626;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    /* --- Dashboard View --- */
+    .dash-header {
+      margin-bottom: 24px;
+    }
+
+    .dash-greeting {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e1e2f;
+    }
+
+    .dash-gym-name {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9ca3af;
+      margin-bottom: 12px;
+    }
+
+    .membership-plan {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e1e2f;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-active { background: #dcfce7; color: #16a34a; }
+    .badge-expired { background: #fef2f2; color: #dc2626; }
+
+    .membership-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .detail-item label {
+      display: block;
+      font-size: 12px;
+      color: #9ca3af;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .detail-item span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .no-membership {
+      font-size: 14px;
+      color: #9ca3af;
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    /* --- QR Section --- */
+    .qr-section { align-items: center; }
+
+    .qr-wrapper {
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    #qr-canvas { display: block; }
+
+    .timer {
+      margin-top: 20px;
+      font-size: 40px;
+      font-weight: 700;
+      color: #4f46e5;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+
+    .timer.warning { color: #dc2626; }
+
+    .timer-label {
+      font-size: 13px;
+      color: #6b7280;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .expired-msg {
+      font-size: 16px;
+      font-weight: 600;
+      color: #dc2626;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    /* --- Check-in History --- */
+    .checkin-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .checkin-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .checkin-item:last-child { border-bottom: none; }
+
+    .checkin-date {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .checkin-time {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .checkin-method {
+      font-size: 12px;
+      color: #9ca3af;
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px 0;
+      color: #9ca3af;
+      font-size: 14px;
+    }
+
+    /* --- Footer --- */
+    .footer {
+      padding: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .footer span {
+      font-weight: 600;
+      color: #4f46e5;
+    }
+
+    /* --- Spinner --- */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    .spinner-dark {
+      border-color: rgba(79, 70, 229, 0.2);
+      border-top-color: #4f46e5;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* --- Loading screen --- */
+    .loading-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 0;
+    }
+
+    .loading-screen .spinner {
+      width: 32px;
+      height: 32px;
+      border-width: 3px;
+    }
+
+    /* --- Logout --- */
+    .logout-row {
+      margin-top: 24px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo" style="letter-spacing: 2px;">IVIRA</div>
+    <div class="subtitle">Member Portal</div>
+
+    <!-- Loading View -->
+    <div id="view-loading" class="view active">
+      <div class="loading-screen">
+        <span class="spinner spinner-dark"></span>
+      </div>
+    </div>
+
+    <!-- Login View: Email Step -->
+    <div id="view-login-email" class="view">
+      <label class="input-label" for="email">Enter your email address</label>
+      <div class="input-wrap">
+        <input
+          type="email"
+          id="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          inputmode="email"
+        >
+      </div>
+      <button id="btn-send-otp" class="btn btn-primary" onclick="requestOTP()">Send OTP</button>
+      <div id="error-email" class="error-msg"></div>
+    </div>
+
+    <!-- Login View: OTP Step -->
+    <div id="view-login-otp" class="view">
+      <div class="otp-sent-text" id="otp-sent-msg">Code sent to your email</div>
+      <label class="input-label" for="otp">Enter 6-digit code</label>
+      <div class="input-wrap">
+        <input
+          type="text"
+          id="otp"
+          class="otp-input"
+          maxlength="6"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          autocomplete="one-time-code"
+        >
+      </div>
+      <button id="btn-verify-otp" class="btn btn-primary" onclick="verifyOTP()">Verify & Login</button>
+      <span class="back-link" onclick="showView('view-login-email')">Use a different email</span>
+      <div id="error-otp" class="error-msg"></div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="view-dashboard" class="view">
+      <div class="dash-header">
+        <div class="dash-greeting" id="dash-greeting">Hi there</div>
+        <div class="dash-gym-name" id="dash-gym-name"></div>
+      </div>
+
+      <!-- Membership Card -->
+      <div class="card" id="membership-card">
+        <div class="card-title">Membership</div>
+        <div id="membership-content">
+          <div class="no-membership">Loading...</div>
+        </div>
+      </div>
+
+      <!-- QR Code Section -->
+      <div class="card qr-section" id="qr-card">
+        <div class="card-title">Check-In</div>
+        <button id="btn-generate-qr" class="btn btn-primary" onclick="generateQR()" style="margin-top:0;">Generate QR for Check-In</button>
+        <div id="qr-display" style="display:none; width:100%; flex-direction:column; align-items:center;">
+          <div class="qr-wrapper" id="qr-wrapper">
+            <canvas id="qr-canvas"></canvas>
+          </div>
+          <div class="timer" id="timer"></div>
+          <div class="timer-label" id="timer-label">seconds remaining</div>
+          <div class="expired-msg" id="expired-msg" style="display:none;">QR Expired</div>
+          <button id="btn-regenerate" class="btn btn-secondary" style="display:none;" onclick="generateQR()">Generate New Code</button>
+        </div>
+      </div>
+
+      <!-- Check-in History -->
+      <div class="card">
+        <div class="card-title">Recent Check-ins</div>
+        <div id="checkin-history">
+          <div class="empty-state">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <div class="logout-row">
+        <button class="btn btn-danger-outline" onclick="logout()">Log Out</button>
+      </div>
+    </div>
+
+    <!-- No Gym Error -->
+    <div id="view-error" class="view">
+      <div class="error-msg" style="display:block;">Invalid link. A gym ID is required in the URL. Please use the link provided by your gym.</div>
+    </div>
+  </div>
+
+  <div class="footer">Powered by <span>IVIRA</span></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // --- State ---
+      let gymId = null;
+      let memberToken = null;
+      let memberData = null;
+      let memberPhone = null;
+      let countdownInterval = null;
+
+      // --- Parse gym ID ---
+      const params = new URLSearchParams(window.location.search);
+      gymId = params.get('gym');
+
+      if (!gymId) {
+        showView('view-error');
+        return;
+      }
+
+      // --- Init: check for existing session ---
+      init();
+
+      async function init() {
+        const savedGym = localStorage.getItem('ivira_member_gym');
+        memberToken = localStorage.getItem('ivira_member_token');
+
+        // If gym changed, clear session
+        if (savedGym && savedGym !== gymId) {
+          clearSession();
+        }
+
+        localStorage.setItem('ivira_member_gym', gymId);
+
+        if (memberToken) {
+          try {
+            await loadDashboard();
+          } catch (e) {
+            clearSession();
+            showView('view-login-email');
+            document.getElementById('email').focus();
+          }
+        } else {
+          showView('view-login-email');
+          document.getElementById('email').focus();
+        }
+      }
+
+      // --- View management ---
+      window.showView = function (viewId) {
+        document.querySelectorAll('.view').forEach(function (v) {
+          v.classList.remove('active');
+        });
+        var target = document.getElementById(viewId);
+        if (target) target.classList.add('active');
+
+        // Clear errors when switching views
+        document.querySelectorAll('.error-msg').forEach(function (e) {
+          e.style.display = 'none';
+        });
+      };
+
+      function showError(elementId, msg) {
+        var el = document.getElementById(elementId);
+        el.textContent = msg;
+        el.style.display = 'block';
+      }
+
+      function setLoading(btn, loading, loadingText) {
+        if (loading) {
+          btn.disabled = true;
+          btn.dataset.originalText = btn.textContent;
+          btn.innerHTML = '<span class="spinner"></span>' + (loadingText || 'Loading...');
+        } else {
+          btn.disabled = false;
+          btn.textContent = btn.dataset.originalText || btn.textContent;
+        }
+      }
+
+      // --- Login: Request OTP ---
+      window.requestOTP = async function () {
+        var email = document.getElementById('email').value.trim().toLowerCase();
+        if (!email || !email.includes('@')) {
+          showError('error-email', 'Please enter a valid email address.');
+          return;
+        }
+
+        var btn = document.getElementById('btn-send-otp');
+        setLoading(btn, true, 'Sending...');
+
+        try {
+          var res = await fetch('/api/v1/gyms/' + encodeURIComponent(gymId) + '/members/otp/request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email }),
+          });
+
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Failed to send OTP.');
+
+          document.getElementById('otp-sent-msg').textContent = 'Code sent to ' + email;
+          showView('view-login-otp');
+          document.getElementById('otp').value = '';
+          document.getElementById('otp').focus();
+        } catch (err) {
+          showError('error-email', err.message);
+        } finally {
+          setLoading(btn, false);
+        }
+      };
+
+      // --- Login: Verify OTP ---
+      window.verifyOTP = async function () {
+        var email = document.getElementById('email').value.trim().toLowerCase();
+        var otp = document.getElementById('otp').value.trim();
+        if (!otp || otp.length !== 6) {
+          showError('error-otp', 'Please enter the 6-digit code.');
+          return;
+        }
+
+        var btn = document.getElementById('btn-verify-otp');
+        setLoading(btn, true, 'Verifying...');
+
+        try {
+          var res = await fetch('/api/v1/gyms/' + encodeURIComponent(gymId) + '/members/otp/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, otp: otp }),
+          });
+
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Invalid OTP. Please try again.');
+
+          memberToken = data.token;
+          memberData = data.member;
+
+          localStorage.setItem('ivira_member_token', memberToken);
+          localStorage.setItem('ivira_member_data', JSON.stringify(memberData));
+          localStorage.setItem('ivira_member_gym', gymId);
+
+          await loadDashboard();
+        } catch (err) {
+          showError('error-otp', err.message);
+        } finally {
+          setLoading(btn, false);
+        }
+      };
+
+      // --- Dashboard ---
+      async function loadDashboard() {
+        showView('view-loading');
+
+        var headers = {
+          'Authorization': 'Bearer ' + memberToken,
+          'Content-Type': 'application/json',
+        };
+
+        // Fetch member profile and checkins in parallel
+        var [profileRes, checkinsRes] = await Promise.all([
+          fetch('/api/v1/gyms/' + encodeURIComponent(gymId) + '/members/me', { headers: headers }),
+          fetch('/api/v1/gyms/' + encodeURIComponent(gymId) + '/members/me/checkins', { headers: headers }),
+        ]);
+
+        if (profileRes.status === 401 || profileRes.status === 403) {
+          throw new Error('Session expired');
+        }
+
+        var profileData = await profileRes.json();
+        var checkinsData = await checkinsRes.json();
+
+        if (!profileRes.ok) throw new Error(profileData.message || 'Failed to load profile.');
+
+        memberData = profileData.member;
+        memberPhone = memberData.phone;
+        localStorage.setItem('ivira_member_data', JSON.stringify(memberData));
+
+        var membership = profileData.membership;
+        var checkins = checkinsRes.ok ? (checkinsData.checkins || []) : [];
+
+        renderDashboard(memberData, membership, checkins);
+        showView('view-dashboard');
+      }
+
+      function renderDashboard(member, membership, checkins) {
+        // Header
+        var firstName = (member.name || 'there').split(' ')[0];
+        document.getElementById('dash-greeting').textContent = 'Hi ' + firstName;
+        document.getElementById('dash-gym-name').textContent = member.gym_name || '';
+
+        // Membership card
+        var content = document.getElementById('membership-content');
+        if (membership) {
+          var isActive = membership.status === 'active';
+          var badgeClass = isActive ? 'badge-active' : 'badge-expired';
+          var badgeText = isActive ? 'Active' : 'Expired';
+
+          var startDate = formatDate(membership.start_date);
+          var endDate = formatDate(membership.end_date);
+          var amount = membership.amount != null ? formatCurrency(membership.amount) : '--';
+
+          content.innerHTML =
+            '<div class="membership-plan">' +
+              '<span>' + escapeHtml(membership.plan_name || 'Membership') + '</span>' +
+              '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
+            '</div>' +
+            '<div class="membership-details">' +
+              '<div class="detail-item"><label>Start Date</label><span>' + startDate + '</span></div>' +
+              '<div class="detail-item"><label>End Date</label><span>' + endDate + '</span></div>' +
+              '<div class="detail-item"><label>Amount</label><span>' + amount + '</span></div>' +
+              '<div class="detail-item"><label>Status</label><span>' + badgeText + '</span></div>' +
+            '</div>';
+        } else {
+          content.innerHTML = '<div class="no-membership">No active membership found.</div>';
+        }
+
+        // Reset QR section
+        document.getElementById('qr-display').style.display = 'none';
+        document.getElementById('btn-generate-qr').style.display = 'block';
+
+        // Checkin history
+        renderCheckins(checkins);
+      }
+
+      function renderCheckins(checkins) {
+        var container = document.getElementById('checkin-history');
+        if (!checkins || checkins.length === 0) {
+          container.innerHTML = '<div class="empty-state">No check-ins yet.</div>';
+          return;
+        }
+
+        var html = '<ul class="checkin-list">';
+        checkins.slice(0, 10).forEach(function (c) {
+          var dt = new Date(c.checked_in_at || c.created_at);
+          var dateStr = dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+          var timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+          var method = c.method || c.check_in_method || '';
+
+          html +=
+            '<li class="checkin-item">' +
+              '<div>' +
+                '<div class="checkin-date">' + dateStr + '</div>' +
+                '<div class="checkin-time">' + timeStr + '</div>' +
+              '</div>' +
+              (method ? '<span class="checkin-method">' + escapeHtml(method) + '</span>' : '') +
+            '</li>';
+        });
+        html += '</ul>';
+        container.innerHTML = html;
+      }
+
+      // --- QR Code Generation ---
+      window.generateQR = async function () {
+        if (!memberPhone) {
+          // Try to get phone from stored member data
+          var stored = localStorage.getItem('ivira_member_data');
+          if (stored) {
+            try {
+              var parsed = JSON.parse(stored);
+              memberPhone = parsed.phone;
+            } catch (e) {}
+          }
+          if (!memberPhone) {
+            alert('Phone number not available. Please log out and log in again.');
+            return;
+          }
+        }
+
+        var btnGenerate = document.getElementById('btn-generate-qr');
+        var btnRegenerate = document.getElementById('btn-regenerate');
+        var activeBtn = btnRegenerate.style.display !== 'none' ? btnRegenerate : btnGenerate;
+
+        setLoading(activeBtn, true, 'Generating...');
+        clearCountdown();
+
+        try {
+          var res = await fetch('/api/v1/gyms/' + encodeURIComponent(gymId) + '/qr/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + memberToken,
+            },
+            body: JSON.stringify({ phone: memberPhone }),
+          });
+
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Failed to generate QR code.');
+
+          setLoading(activeBtn, false);
+
+          // Show QR display, hide generate button
+          btnGenerate.style.display = 'none';
+          var qrDisplay = document.getElementById('qr-display');
+          qrDisplay.style.display = 'flex';
+
+          var qrCanvas = document.getElementById('qr-canvas');
+          var qrWrapper = document.getElementById('qr-wrapper');
+          var token = data.token;
+          var expiresIn = data.expiresIn || 90;
+
+          QRCode.toCanvas(qrCanvas, token, {
+            width: 280,
+            margin: 2,
+            color: { dark: '#1e1e2f', light: '#ffffff' },
+          }, function (err) {
+            if (err) alert('Could not render QR code.');
+          });
+
+          // Reset display state
+          qrWrapper.style.opacity = '1';
+          document.getElementById('timer').style.display = 'block';
+          document.getElementById('timer-label').style.display = 'block';
+          document.getElementById('expired-msg').style.display = 'none';
+          btnRegenerate.style.display = 'none';
+          document.getElementById('timer').classList.remove('warning');
+
+          startCountdown(expiresIn);
+        } catch (err) {
+          setLoading(activeBtn, false);
+          alert(err.message);
+        }
+      };
+
+      function startCountdown(seconds) {
+        clearCountdown();
+        var remaining = seconds;
+        updateTimerDisplay(remaining);
+
+        countdownInterval = setInterval(function () {
+          remaining--;
+          if (remaining <= 15) {
+            document.getElementById('timer').classList.add('warning');
+          }
+          if (remaining <= 0) {
+            clearCountdown();
+            onQRExpired();
+            return;
+          }
+          updateTimerDisplay(remaining);
+        }, 1000);
+      }
+
+      function updateTimerDisplay(secs) {
+        var mins = Math.floor(secs / 60);
+        var s = secs % 60;
+        document.getElementById('timer').textContent =
+          (mins > 0 ? mins + ':' : '') + (mins > 0 && s < 10 ? '0' : '') + s;
+      }
+
+      function clearCountdown() {
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+        }
+      }
+
+      function onQRExpired() {
+        document.getElementById('qr-wrapper').style.opacity = '0.25';
+        document.getElementById('timer').style.display = 'none';
+        document.getElementById('timer-label').style.display = 'none';
+        document.getElementById('expired-msg').style.display = 'block';
+        document.getElementById('btn-regenerate').style.display = 'block';
+      }
+
+      // --- Logout ---
+      window.logout = function () {
+        clearSession();
+        showView('view-login-email');
+        document.getElementById('email').value = '';
+        document.getElementById('otp').value = '';
+        document.getElementById('email').focus();
+      };
+
+      function clearSession() {
+        memberToken = null;
+        memberData = null;
+        memberPhone = null;
+        clearCountdown();
+        localStorage.removeItem('ivira_member_token');
+        localStorage.removeItem('ivira_member_data');
+      }
+
+      // --- Helpers ---
+      function formatDate(dateStr) {
+        if (!dateStr) return '--';
+        var d = new Date(dateStr);
+        return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+
+      function formatCurrency(paise) {
+        var rupees = Math.round(paise) / 100;
+        return '\u20B9' + rupees.toLocaleString('en-IN');
+      }
+
+      function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // --- Keyboard shortcuts ---
+      document.getElementById('email').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') requestOTP();
+      });
+
+      document.getElementById('otp').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') verifyOTP();
+      });
+
+      // OTP input: digits only
+      document.getElementById('otp').addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+      });
+    })();
+  </script>
+</body>
+</html>

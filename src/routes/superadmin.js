@@ -1,0 +1,367 @@
+import jwt from 'jsonwebtoken';
+import config from '../config/index.js';
+import db from '../config/database.js';
+import * as superadminService from '../services/superadmin.service.js';
+import * as totpService from '../services/totp.service.js';
+import * as proxyService from '../services/proxy.service.js';
+import * as auditService from '../services/audit.service.js';
+import * as kioskService from '../services/kiosk.service.js';
+import * as featureConfigService from '../services/feature-config.service.js';
+import * as adCampaignService from '../services/ad-campaign.service.js';
+import * as magicLinkService from '../services/magic-link.service.js';
+import * as payoutService from '../services/payout.service.js';
+
+const loginSchema = {
+  body: {
+    type: 'object',
+    required: ['email', 'password'],
+    properties: {
+      email: { type: 'string', format: 'email' },
+      password: { type: 'string', minLength: 6 },
+    },
+  },
+};
+
+const listGymsSchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      page: { type: 'integer', minimum: 1, default: 1 },
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+      search: { type: 'string', default: '' },
+      status: { type: 'string', enum: ['active', 'trial', 'suspended', 'expired', ''], default: '' },
+    },
+  },
+};
+
+const gymIdParams = {
+  params: {
+    type: 'object',
+    required: ['gymId'],
+    properties: {
+      gymId: { type: 'string', format: 'uuid' },
+    },
+  },
+};
+
+const createPackageSchema = {
+  body: {
+    type: 'object',
+    required: ['name', 'slug'],
+    properties: {
+      name: { type: 'string', minLength: 2 },
+      slug: { type: 'string', minLength: 2, pattern: '^[a-z0-9_-]+$' },
+      max_members: { type: 'integer', minimum: 1 },
+      price_monthly: { type: 'integer', minimum: 0 },
+      price_yearly: { type: 'integer', minimum: 0 },
+      features: { type: 'object' },
+    },
+  },
+};
+
+const updatePackageSchema = {
+  params: {
+    type: 'object',
+    required: ['id'],
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+    },
+  },
+  body: {
+    type: 'object',
+    properties: {
+      name: { type: 'string', minLength: 2 },
+      max_members: { type: 'integer', minimum: 1 },
+      price_monthly: { type: 'integer', minimum: 0 },
+      price_yearly: { type: 'integer', minimum: 0 },
+      features: { type: 'object' },
+      is_active: { type: 'boolean' },
+    },
+  },
+};
+
+const revenueChartSchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      period: { type: 'string', enum: ['6months', '12months', '24months'], default: '12months' },
+    },
+  },
+};
+
+export default async function superadminRoutes(fastify) {
+  // Auth middleware for super admin routes
+  async function verifySuperAdmin(request, reply) {
+    const token = request.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      reply.code(401).send({ error: 'Unauthorized' });
+      return reply;
+    }
+    try {
+      const decoded = jwt.verify(token, config.jwt.secret);
+      if (decoded.role !== 'super_admin') throw new Error();
+      request.admin = decoded;
+    } catch {
+      reply.code(401).send({ error: 'Invalid token' });
+      return reply;
+    }
+  }
+
+  // --- Public (no auth) ---
+
+  // POST /super/login
+  fastify.post('/super/login', { schema: loginSchema }, async (request) => {
+    const { email, password } = request.body;
+    const result = await superadminService.loginAdmin(email, password);
+    return { token: result.token, admin: result.admin };
+  });
+
+  // --- Protected routes (require super admin JWT) ---
+
+  // GET /super/stats
+  fastify.get('/super/stats', { preHandler: [verifySuperAdmin] }, async () => {
+    return superadminService.getStats();
+  });
+
+  // GET /super/gyms
+  fastify.get('/super/gyms', { schema: listGymsSchema, preHandler: [verifySuperAdmin] }, async (request) => {
+    const { page, limit, search, status } = request.query;
+    return superadminService.listGyms(page, limit, search, status);
+  });
+
+  // GET /super/gyms/:gymId
+  fastify.get('/super/gyms/:gymId', { schema: gymIdParams, preHandler: [verifySuperAdmin] }, async (request) => {
+    return superadminService.getGymDetail(request.params.gymId);
+  });
+
+  // PATCH /super/gyms/:gymId/suspend
+  fastify.patch('/super/gyms/:gymId/suspend', { schema: gymIdParams, preHandler: [verifySuperAdmin] }, async (request) => {
+    const gym = await superadminService.suspendGym(request.params.gymId);
+    return { message: 'Gym suspended', gym };
+  });
+
+  // PATCH /super/gyms/:gymId/activate
+  fastify.patch('/super/gyms/:gymId/activate', { schema: gymIdParams, preHandler: [verifySuperAdmin] }, async (request) => {
+    const gym = await superadminService.activateGym(request.params.gymId);
+    return { message: 'Gym activated', gym };
+  });
+
+  // GET /super/packages
+  fastify.get('/super/packages', { preHandler: [verifySuperAdmin] }, async () => {
+    return superadminService.listPackages();
+  });
+
+  // POST /super/packages
+  fastify.post('/super/packages', { schema: createPackageSchema, preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const pkg = await superadminService.createPackage(request.body);
+    return reply.code(201).send(pkg);
+  });
+
+  // PUT /super/packages/:id
+  fastify.put('/super/packages/:id', { schema: updatePackageSchema, preHandler: [verifySuperAdmin] }, async (request) => {
+    return superadminService.updatePackage(request.params.id, request.body);
+  });
+
+  // GET /super/revenue
+  fastify.get('/super/revenue', { schema: revenueChartSchema, preHandler: [verifySuperAdmin] }, async (request) => {
+    const { period } = request.query;
+    return superadminService.getRevenueChart(period);
+  });
+
+  // GET /super/search - Global search across gyms, members, transactions
+  fastify.get('/super/search', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { q } = request.query;
+    if (!q || q.length < 2) return { results: { gyms: [], members: [], transactions: [] } };
+
+    const searchTerm = `%${q}%`;
+
+    // Search gyms
+    const gyms = await db('gyms')
+      .where('gym_name', 'ilike', searchTerm)
+      .orWhere('city', 'ilike', searchTerm)
+      .orWhere('owner_email', 'ilike', searchTerm)
+      .select('id', 'gym_name', 'city', 'status', 'owner_email')
+      .limit(5);
+
+    // Search members across all gyms
+    const members = await db('members')
+      .where('name', 'ilike', searchTerm)
+      .orWhere('phone', 'ilike', searchTerm)
+      .orWhere('email', 'ilike', searchTerm)
+      .join('gyms', 'members.gym_id', 'gyms.id')
+      .select('members.id', 'members.name', 'members.phone', 'members.status', 'gyms.gym_name', 'members.gym_id')
+      .limit(5);
+
+    // Search transactions
+    const transactions = await db('payments')
+      .where('razorpay_payment_id', 'ilike', searchTerm)
+      .orWhere('razorpay_order_id', 'ilike', searchTerm)
+      .join('gyms', 'payments.gym_id', 'gyms.id')
+      .leftJoin('members', 'payments.member_id', 'members.id')
+      .select(
+        'payments.id', 'payments.amount_paise', 'payments.status',
+        'payments.razorpay_payment_id', 'gyms.gym_name',
+        'members.name as member_name', 'payments.gym_id'
+      )
+      .limit(5);
+
+    return {
+      results: {
+        gyms: gyms.map(g => ({ ...g, type: 'gym' })),
+        members: members.map(m => ({ ...m, type: 'member' })),
+        transactions: transactions.map(t => ({ ...t, type: 'transaction' })),
+      },
+    };
+  });
+
+  // ===== TOTP 2FA =====
+
+  // POST /super/totp/setup - Generate TOTP secret + QR URI
+  fastify.post('/super/totp/setup', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const result = await totpService.setupTOTP(request.admin.id);
+    return result;
+  });
+
+  // POST /super/totp/verify - Verify TOTP token and enable 2FA
+  fastify.post('/super/totp/verify', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { token } = request.body;
+    if (!token || token.length !== 6) return { valid: false, error: 'Invalid token format' };
+    const result = await totpService.verifyAndEnableTOTP(request.admin.id, token);
+    return result;
+  });
+
+  // POST /super/totp/validate - Validate TOTP during login
+  fastify.post('/super/totp/validate', async (request) => {
+    const { adminId, token } = request.body;
+    if (!adminId || !token) return { valid: false };
+    const result = await totpService.validateTOTP(adminId, token);
+    return result;
+  });
+
+  // ===== PROXY / LOGIN AS OWNER =====
+
+  // POST /super/proxy/start - Start proxy session
+  fastify.post('/super/proxy/start', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { gymId, reason, totpToken } = request.body;
+    if (!gymId || !reason) return { error: 'gymId and reason are required' };
+
+    // Verify 2FA before allowing proxy
+    const hasTOTP = await totpService.hasTOTPEnabled(request.admin.id);
+    if (hasTOTP) {
+      if (!totpToken) return { error: '2FA token required for proxy access' };
+      const totpResult = await totpService.validateTOTP(request.admin.id, totpToken);
+      if (!totpResult.valid) return { error: 'Invalid 2FA token' };
+    }
+
+    const ip = request.headers['x-forwarded-for'] || request.ip;
+    const result = await proxyService.startProxySession(request.admin.id, gymId, reason, ip);
+    return result;
+  });
+
+  // POST /super/proxy/end - End proxy session
+  fastify.post('/super/proxy/end', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { sessionId } = request.body;
+    const session = await proxyService.endProxySession(sessionId, request.admin.id);
+    return { session };
+  });
+
+  // GET /super/proxy/sessions - List proxy sessions
+  fastify.get('/super/proxy/sessions', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { page, limit } = request.query;
+    return proxyService.getProxySessions(page || 1, limit || 20);
+  });
+
+  // GET /super/proxy/sessions/:sessionId/actions - Get actions from a proxy session
+  fastify.get('/super/proxy/sessions/:sessionId/actions', { preHandler: [verifySuperAdmin] }, async (request) => {
+    return proxyService.getSessionActions(request.params.sessionId);
+  });
+
+  // ===== AUDIT LOG =====
+
+  // GET /super/audit - Get audit logs
+  fastify.get('/super/audit', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { page, limit, action, from, to } = request.query;
+    return auditService.getAuditLogs(page || 1, limit || 50, { action, from, to });
+  });
+
+  // ===== FLEET / KIOSK =====
+
+  // GET /super/fleet - Get all gym kiosk statuses
+  fastify.get('/super/fleet', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const heartbeats = await kioskService.getFleetStatus();
+
+    // Also get revenue for each gym
+    const gymIds = heartbeats.map(h => h.gym_id);
+    let revenueMap = {};
+    if (gymIds.length > 0) {
+      const revenues = await db('payments')
+        .whereIn('gym_id', gymIds)
+        .where({ status: 'captured' })
+        .where('created_at', '>=', db.raw("NOW() - INTERVAL '30 days'"))
+        .groupBy('gym_id')
+        .select('gym_id', db.raw('COALESCE(SUM(amount_paise), 0) as monthly_revenue'));
+      for (const r of revenues) revenueMap[r.gym_id] = parseInt(r.monthly_revenue, 10);
+    }
+
+    return heartbeats.map(h => ({
+      ...h,
+      monthly_revenue: revenueMap[h.gym_id] || 0,
+    }));
+  });
+
+  // ===== FEATURE PROVISIONING =====
+
+  // GET /super/gyms/:gymId/features - Get gym feature config
+  fastify.get('/super/gyms/:gymId/features', { preHandler: [verifySuperAdmin] }, async (request) => {
+    return featureConfigService.getGymFeatures(request.params.gymId);
+  });
+
+  // PUT /super/gyms/:gymId/features - Update gym feature toggles
+  fastify.put('/super/gyms/:gymId/features', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const ip = request.headers['x-forwarded-for'] || request.ip;
+    const result = await featureConfigService.updateGymFeatures(
+      request.params.gymId, request.body, request.admin.id, ip
+    );
+    return result;
+  });
+
+  // ===== AD CAMPAIGNS =====
+
+  // POST /super/ads - Create ad campaign
+  fastify.post('/super/ads', { preHandler: [verifySuperAdmin] }, async (request) => {
+    return adCampaignService.createCampaign(request.body, request.admin.id);
+  });
+
+  // GET /super/ads - List ad campaigns
+  fastify.get('/super/ads', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { page, limit, activeOnly } = request.query;
+    return adCampaignService.listCampaigns(page || 1, limit || 20, activeOnly === 'true');
+  });
+
+  // PUT /super/ads/:id - Update ad campaign
+  fastify.put('/super/ads/:id', { preHandler: [verifySuperAdmin] }, async (request) => {
+    return adCampaignService.updateCampaign(request.params.id, request.body);
+  });
+
+  // DELETE /super/ads/:id - Delete ad campaign
+  fastify.delete('/super/ads/:id', { preHandler: [verifySuperAdmin] }, async (request) => {
+    await adCampaignService.deleteCampaign(request.params.id);
+    return { deleted: true };
+  });
+
+  // ===== MAGIC LINK =====
+
+  // POST /super/magic-link - Send magic link (admin can trigger for any user)
+  fastify.post('/super/magic-link', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { email, role } = request.body;
+    return magicLinkService.createMagicLink(email, role || 'owner');
+  });
+
+  // ===== PAYOUT LEDGER =====
+
+  // GET /super/payouts/ledger - Get marketplace payout ledger
+  fastify.get('/super/payouts/ledger', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { gymId, page, limit } = request.query;
+    return payoutService.getPayoutLedger(gymId || null, page || 1, limit || 50);
+  });
+}

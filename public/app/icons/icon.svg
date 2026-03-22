@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="60"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224" fill="#050505"/>
+
+  <!-- Subtle purple radial glow -->
+  <circle cx="512" cy="512" r="400" fill="url(#glow)" filter="url(#blur)"/>
+
+  <!-- G glyph — bold, modern, geometric -->
+  <path d="
+    M 562 262
+    C 430 262 322 370 322 512
+    C 322 654 430 762 562 762
+    C 650 762 726 714 768 644
+    L 768 512
+    L 562 512
+    L 562 582
+    L 690 582
+    L 690 618
+    C 662 680 616 692 562 692
+    C 470 692 396 612 396 512
+    C 396 412 470 332 562 332
+    C 620 332 668 364 696 404
+    L 752 358
+    C 710 300 644 262 562 262
+    Z
+  " fill="#FFFFFF"/>
+</svg>

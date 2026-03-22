@@ -1,0 +1,269 @@
+import jwt from 'jsonwebtoken';
+import db from '../config/database.js';
+import config from '../config/index.js';
+import redis from '../config/redis.js';
+import { NotFoundError, ValidationError, UnauthorizedError } from '../utils/errors.js';
+import { normalizePhone, generateOTP, isValidEmail } from '../utils/validators.js';
+import { sendOTPEmail } from './email.service.js';
+
+export async function registerGym({ ownerName, ownerPhone, ownerEmail, gymName, city, address, latitude, longitude }) {
+  const phone = normalizePhone(ownerPhone);
+  const email = ownerEmail.toLowerCase().trim();
+
+  const existing = await db('gyms').where({ owner_email: email }).first();
+  if (existing) {
+    throw new ValidationError('A gym is already registered with this email');
+  }
+
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + config.app.trialDays);
+
+  const [gym] = await db('gyms')
+    .insert({
+      owner_firebase_uid: email, // use email as unique identifier
+      owner_name: ownerName,
+      owner_phone: phone,
+      owner_email: email,
+      gym_name: gymName,
+      city,
+      address,
+      latitude,
+      longitude,
+      status: 'trial',
+      trial_ends_at: trialEndsAt,
+    })
+    .returning('*');
+
+  return gym;
+}
+
+export async function getGymByFirebaseUid(firebaseUid) {
+  const gym = await db('gyms').where({ owner_firebase_uid: firebaseUid }).first();
+  if (!gym) throw new NotFoundError('Gym');
+  return gym;
+}
+
+export async function getGymById(gymId) {
+  const gym = await db('gyms').where({ id: gymId }).first();
+  if (!gym) throw new NotFoundError('Gym');
+  return gym;
+}
+
+// --- Email OTP Login ---
+
+export async function requestEmailOTP(email) {
+  if (!isValidEmail(email)) {
+    throw new ValidationError('Invalid email address');
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Check gym owner exists with this email
+  const gym = await db('gyms').where({ owner_email: normalizedEmail }).first();
+  if (!gym) {
+    throw new NotFoundError('No gym account found with this email');
+  }
+
+  const otp = generateOTP(6);
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  // Store OTP in PostgreSQL
+  await db('otp_codes').insert({
+    email: normalizedEmail,
+    code: otp,
+    purpose: 'login',
+    used: false,
+    expires_at: expiresAt,
+  });
+
+  // Cache in Redis for fast lookup (5 min TTL)
+  const redisKey = `otp:login:${normalizedEmail}`;
+  await redis.set(redisKey, otp, { EX: 300 });
+
+  // Send OTP via email
+  if (config.gmail.enabled) {
+    await sendOTPEmail(normalizedEmail, otp);
+  } else {
+    // Dev mode: log OTP to console
+    console.log(`[DEV] Email OTP for ${normalizedEmail}: ${otp}`);
+  }
+
+  return { message: 'OTP sent to your email' };
+}
+
+export async function verifyEmailOTP(email, code) {
+  if (!isValidEmail(email)) {
+    throw new ValidationError('Invalid email address');
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  let valid = false;
+
+  // Try Redis first
+  const redisKey = `otp:login:${normalizedEmail}`;
+  const cached = await redis.get(redisKey);
+  if (cached && cached === code) {
+    valid = true;
+    await redis.del(redisKey);
+  }
+
+  // Fallback to PostgreSQL
+  if (!valid) {
+    const otpRecord = await db('otp_codes')
+      .where({
+        email: normalizedEmail,
+        code,
+        purpose: 'login',
+        used: false,
+      })
+      .where('expires_at', '>', new Date())
+      .orderBy('created_at', 'desc')
+      .first();
+
+    if (!otpRecord) {
+      throw new UnauthorizedError('Invalid or expired OTP');
+    }
+    valid = true;
+  }
+
+  // Mark all OTPs for this email as used
+  await db('otp_codes')
+    .where({ email: normalizedEmail, purpose: 'login', used: false })
+    .update({ used: true });
+
+  // Get gym
+  const gym = await db('gyms').where({ owner_email: normalizedEmail }).first();
+  if (!gym) {
+    throw new NotFoundError('Gym');
+  }
+
+  // Generate JWT
+  const token = jwt.sign(
+    { gymId: gym.id, email: normalizedEmail, role: 'owner' },
+    config.jwt.secret,
+    { expiresIn: '7d' }
+  );
+
+  return { token, gym };
+}
+
+// --- B2C Member OTP Login (gym-independent) ---
+
+export async function requestB2CLoginOTP(email) {
+  if (!isValidEmail(email)) {
+    throw new ValidationError('Invalid email address');
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  const otp = generateOTP(6);
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  // Store OTP in PostgreSQL
+  await db('otp_codes').insert({
+    email: normalizedEmail,
+    code: otp,
+    purpose: 'login',
+    used: false,
+    expires_at: expiresAt,
+  });
+
+  // Cache in Redis for fast lookup (5 min TTL)
+  const redisKey = `otp:b2c:${normalizedEmail}`;
+  await redis.set(redisKey, otp, { EX: 300 });
+
+  // Send OTP via email
+  if (config.gmail.enabled) {
+    await sendOTPEmail(normalizedEmail, otp);
+  } else {
+    console.log(`[DEV] B2C OTP for ${normalizedEmail}: ${otp}`);
+  }
+
+  return { message: 'OTP sent to your email' };
+}
+
+export async function verifyB2CLoginOTP(email, code) {
+  if (!isValidEmail(email)) {
+    throw new ValidationError('Invalid email address');
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  let valid = false;
+
+  // Try Redis first
+  const redisKey = `otp:b2c:${normalizedEmail}`;
+  const cached = await redis.get(redisKey);
+  if (cached && cached === code) {
+    valid = true;
+    await redis.del(redisKey);
+  }
+
+  // Fallback to PostgreSQL
+  if (!valid) {
+    const otpRecord = await db('otp_codes')
+      .where({
+        email: normalizedEmail,
+        code,
+        purpose: 'login',
+        used: false,
+      })
+      .where('expires_at', '>', new Date())
+      .orderBy('created_at', 'desc')
+      .first();
+
+    if (!otpRecord) {
+      throw new UnauthorizedError('Invalid or expired OTP');
+    }
+  }
+
+  // Mark all OTPs for this email as used
+  await db('otp_codes')
+    .where({ email: normalizedEmail, purpose: 'login', used: false })
+    .update({ used: true });
+
+  // Check if this email is already a member at any gym
+  const existingMember = await db('members')
+    .where({ email: normalizedEmail })
+    .first();
+
+  let memberId = existingMember?.id;
+  let gymId = existingMember?.gym_id || null;
+
+  // If no member record exists, create a "floating" member (no gym)
+  if (!existingMember) {
+    const [newMember] = await db('members')
+      .insert({
+        email: normalizedEmail,
+        name: normalizedEmail.split('@')[0],
+        status: 'active',
+      })
+      .returning('*');
+    memberId = newMember.id;
+  }
+
+  // Generate JWT
+  const token = jwt.sign(
+    { memberId, gymId, email: normalizedEmail, role: 'member' },
+    config.jwt.secret,
+    { expiresIn: '7d' }
+  );
+
+  const member = existingMember || await db('members').where({ id: memberId }).first();
+
+  return { token, member, gymId };
+}
+
+export async function updateGym(gymId, updates) {
+  const allowed = ['gym_name', 'address', 'latitude', 'longitude', 'logo_url', 'city', 'preferred_language', 'onboarding_step'];
+  const filtered = Object.fromEntries(
+    Object.entries(updates).filter(([key]) => allowed.includes(key))
+  );
+
+  const [gym] = await db('gyms')
+    .where({ id: gymId })
+    .update({ ...filtered, updated_at: new Date() })
+    .returning('*');
+
+  if (!gym) throw new NotFoundError('Gym');
+  return gym;
+}

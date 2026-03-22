@@ -1,0 +1,166 @@
+import db from '../config/database.js';
+
+function calculateSleepScore(durationMinutes, qualityRating) {
+  // Score out of 100 based on duration and quality
+  // Ideal sleep: 420-540 minutes (7-9 hours)
+  let durationScore = 0;
+  if (durationMinutes >= 420 && durationMinutes <= 540) {
+    durationScore = 50; // Perfect duration
+  } else if (durationMinutes >= 360 && durationMinutes < 420) {
+    durationScore = 40; // Slightly short
+  } else if (durationMinutes > 540 && durationMinutes <= 600) {
+    durationScore = 40; // Slightly long
+  } else if (durationMinutes >= 300 && durationMinutes < 360) {
+    durationScore = 25; // Too short
+  } else if (durationMinutes > 600) {
+    durationScore = 30; // Too long
+  } else {
+    durationScore = 10; // Very poor
+  }
+
+  // Quality contributes up to 50 points
+  const qualityScore = (qualityRating / 5) * 50;
+
+  return Math.round(durationScore + qualityScore);
+}
+
+export default async function sleepRoutes(fastify) {
+  const authHooks = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] };
+
+  // POST /gyms/:gymId/members/:memberId/sleep — log sleep
+  fastify.post('/gyms/:gymId/members/:memberId/sleep', authHooks, async (request, reply) => {
+    const { gymId, memberId } = request.params;
+    const { bedtime, wake_time, quality_rating, notes } = request.body || {};
+
+    if (!bedtime || !wake_time) {
+      return reply.code(400).send({ error: 'bedtime and wake_time are required' });
+    }
+
+    const bedtimeDate = new Date(bedtime);
+    const wakeTimeDate = new Date(wake_time);
+
+    if (wakeTimeDate <= bedtimeDate) {
+      return reply.code(400).send({ error: 'wake_time must be after bedtime' });
+    }
+
+    const durationMinutes = Math.round((wakeTimeDate - bedtimeDate) / 60000);
+    const rating = quality_rating ? Math.min(5, Math.max(1, parseInt(quality_rating))) : null;
+    const sleepScore = rating ? calculateSleepScore(durationMinutes, rating) : null;
+
+    // Use wake date as the log date
+    const date = wakeTimeDate.toISOString().split('T')[0];
+
+    const [log] = await db('sleep_logs')
+      .insert({
+        gym_id: gymId,
+        member_id: memberId,
+        bedtime: bedtimeDate,
+        wake_time: wakeTimeDate,
+        duration_minutes: durationMinutes,
+        quality_rating: rating,
+        sleep_score: sleepScore,
+        notes: notes || null,
+        date,
+      })
+      .returning('*');
+
+    return reply.code(201).send({ sleep_log: log });
+  });
+
+  // GET /gyms/:gymId/members/:memberId/sleep/history — get sleep logs
+  fastify.get('/gyms/:gymId/members/:memberId/sleep/history', authHooks, async (request) => {
+    const { gymId, memberId } = request.params;
+    const { days = 30, limit = 30, offset = 0 } = request.query;
+
+    const since = new Date();
+    since.setDate(since.getDate() - parseInt(days));
+
+    const logs = await db('sleep_logs')
+      .where({ gym_id: gymId, member_id: memberId })
+      .where('date', '>=', since.toISOString().split('T')[0])
+      .orderBy('date', 'desc')
+      .limit(parseInt(limit))
+      .offset(parseInt(offset));
+
+    return { sleep_logs: logs };
+  });
+
+  // GET /gyms/:gymId/members/:memberId/sleep/stats — get sleep statistics
+  fastify.get('/gyms/:gymId/members/:memberId/sleep/stats', authHooks, async (request) => {
+    const { gymId, memberId } = request.params;
+    const { days = 30 } = request.query;
+
+    const since = new Date();
+    since.setDate(since.getDate() - parseInt(days));
+
+    const logs = await db('sleep_logs')
+      .where({ gym_id: gymId, member_id: memberId })
+      .where('date', '>=', since.toISOString().split('T')[0])
+      .orderBy('date', 'desc');
+
+    if (logs.length === 0) {
+      return {
+        stats: {
+          total_logs: 0,
+          avg_duration_minutes: null,
+          avg_quality_rating: null,
+          avg_sleep_score: null,
+          avg_bedtime: null,
+          avg_wake_time: null,
+          best_night: null,
+          worst_night: null,
+        },
+      };
+    }
+
+    const totalDuration = logs.reduce((sum, l) => sum + (l.duration_minutes || 0), 0);
+    const qualityLogs = logs.filter(l => l.quality_rating != null);
+    const scoreLogs = logs.filter(l => l.sleep_score != null);
+
+    const avgDuration = Math.round(totalDuration / logs.length);
+    const avgQuality = qualityLogs.length > 0
+      ? +(qualityLogs.reduce((s, l) => s + l.quality_rating, 0) / qualityLogs.length).toFixed(1)
+      : null;
+    const avgScore = scoreLogs.length > 0
+      ? Math.round(scoreLogs.reduce((s, l) => s + l.sleep_score, 0) / scoreLogs.length)
+      : null;
+
+    // Average bedtime/wake time in minutes from midnight
+    const bedtimeMinutes = logs.map(l => {
+      const d = new Date(l.bedtime);
+      let mins = d.getHours() * 60 + d.getMinutes();
+      // If after noon, treat as evening (subtract 24h worth to get negative for averaging)
+      if (mins < 720) mins += 1440; // early morning bedtime, add 24h
+      return mins;
+    });
+    const avgBedtimeMins = Math.round(bedtimeMinutes.reduce((a, b) => a + b, 0) / bedtimeMinutes.length) % 1440;
+    const avgBedtimeH = Math.floor(avgBedtimeMins / 60);
+    const avgBedtimeM = avgBedtimeMins % 60;
+
+    const wakeMinutes = logs.map(l => {
+      const d = new Date(l.wake_time);
+      return d.getHours() * 60 + d.getMinutes();
+    });
+    const avgWakeMins = Math.round(wakeMinutes.reduce((a, b) => a + b, 0) / wakeMinutes.length);
+    const avgWakeH = Math.floor(avgWakeMins / 60);
+    const avgWakeM = avgWakeMins % 60;
+
+    // Best and worst nights by score
+    const sorted = [...scoreLogs].sort((a, b) => b.sleep_score - a.sleep_score);
+
+    return {
+      stats: {
+        total_logs: logs.length,
+        period_days: parseInt(days),
+        avg_duration_minutes: avgDuration,
+        avg_duration_hours: +(avgDuration / 60).toFixed(1),
+        avg_quality_rating: avgQuality,
+        avg_sleep_score: avgScore,
+        avg_bedtime: `${String(avgBedtimeH).padStart(2, '0')}:${String(avgBedtimeM).padStart(2, '0')}`,
+        avg_wake_time: `${String(avgWakeH).padStart(2, '0')}:${String(avgWakeM).padStart(2, '0')}`,
+        best_night: sorted.length > 0 ? { date: sorted[0].date, score: sorted[0].sleep_score } : null,
+        worst_night: sorted.length > 0 ? { date: sorted[sorted.length - 1].date, score: sorted[sorted.length - 1].sleep_score } : null,
+      },
+    };
+  });
+}

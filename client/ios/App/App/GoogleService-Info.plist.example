@@ -1,0 +1,10 @@
+<!--
+  Firebase Configuration for IVIRA iOS
+
+  To enable push notifications:
+  1. Create a Firebase project at https://console.firebase.google.com
+  2. Add an iOS app with bundle ID: app.ivira.mobile
+  3. Download GoogleService-Info.plist
+  4. Replace this file with the downloaded plist
+  5. Enable Push Notifications capability in Xcode
+-->

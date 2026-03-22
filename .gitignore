@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+dist/
+coverage/
+*.log
+.DS_Store
+.expo/
+ios/Pods/
+android/.gradle/
+android/app/build/
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
