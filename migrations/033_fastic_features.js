@@ -51,14 +51,15 @@ export async function up(knex) {
       t.text('rarity').defaultTo('common').checkIn(['common', 'rare', 'epic', 'legendary']);
       t.timestamp('created_at').defaultTo(knex.fn.now());
     })
-    .createTable('member_achievements', t => {
-      t.uuid('id').primary().defaultTo(knex.fn.uuid());
-      t.uuid('gym_id').references('id').inTable('gyms').onDelete('CASCADE');
-      t.uuid('member_id').references('id').inTable('members').onDelete('CASCADE');
-      t.uuid('achievement_id').references('id').inTable('achievements').onDelete('CASCADE');
-      t.timestamp('earned_at').defaultTo(knex.fn.now());
-      t.unique(['member_id', 'achievement_id']);
-    })
+    // member_achievements already created in migration 021
+    // Add achievement_id column if not present
+    .then(() => knex.schema.hasColumn('member_achievements', 'achievement_id').then(exists => {
+      if (!exists) {
+        return knex.schema.alterTable('member_achievements', t => {
+          t.uuid('achievement_id').references('id').inTable('achievements').onDelete('CASCADE');
+        });
+      }
+    }))
     // Recipes
     .createTable('recipes', t => {
       t.uuid('id').primary().defaultTo(knex.fn.uuid());
