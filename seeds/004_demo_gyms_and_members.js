@@ -245,9 +245,9 @@ export async function seed(knex) {
   const plansExist = await knex('gym_plans').where({ gym_id: OWNER_GYM_ID }).first()
   if (!plansExist) {
     const plans = [
-      { gym_id: OWNER_GYM_ID, name: 'Monthly', duration_days: 30, price: 200000, is_active: true },
-      { gym_id: OWNER_GYM_ID, name: 'Quarterly', duration_days: 90, price: 500000, is_active: true },
-      { gym_id: OWNER_GYM_ID, name: 'Annual', duration_days: 365, price: 1500000, is_active: true },
+      { gym_id: OWNER_GYM_ID, name: 'Monthly', duration_months: 1, price_paise: 200000, active: true },
+      { gym_id: OWNER_GYM_ID, name: 'Quarterly', duration_months: 3, price_paise: 500000, active: true },
+      { gym_id: OWNER_GYM_ID, name: 'Annual', duration_months: 12, price_paise: 1500000, active: true },
     ]
     await knex('gym_plans').insert(plans)
   }

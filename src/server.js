@@ -7,7 +7,6 @@ const start = async () => {
     if (process.env.NODE_ENV === 'production') {
       const knex = (await import('./config/database.js')).default;
       console.log('Running database migrations...');
-      // Drop partial state from failed migrations
       await knex.raw('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
       console.log('Clean schema created');
       await knex.migrate.latest();
