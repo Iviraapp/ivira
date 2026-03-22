@@ -30,47 +30,6 @@ export default async function marketplaceRoutes(fastify) {
     return reply.send({ trainers })
   })
 
-  // Member leaderboard
-  fastify.get('/gyms/:gymId/leaderboard', async (request, reply) => {
-    const { gymId } = request.params
-    const { type = 'consistency' } = request.query
-
-    if (type === 'consistency') {
-      // Most check-in days this month
-      const now = new Date()
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)
-
-      const rows = await db('checkins')
-        .where({ gym_id: gymId })
-        .whereBetween('checked_in_at', [startOfMonth, endOfMonth])
-        .join('members', 'checkins.member_id', 'members.id')
-        .select('members.id', 'members.name', 'members.photo_url')
-        .count('* as check_in_days')
-        .groupBy('members.id', 'members.name', 'members.photo_url')
-        .orderBy('check_in_days', 'desc')
-        .limit(20)
-
-      const leaderboard = rows.map((row, i) => ({
-        rank: i + 1,
-        memberId: row.id,
-        name: row.name,
-        photoUrl: row.photo_url,
-        value: parseInt(row.check_in_days, 10),
-        metric: 'check_in_days',
-      }))
-
-      return reply.send({ type, leaderboard })
-    }
-
-    // For strength/points, return placeholder structure
-    return reply.send({
-      type,
-      leaderboard: [],
-      message: `${type} leaderboard coming soon`,
-    })
-  })
-
   // Gym feed / announcements
   fastify.get('/gyms/:gymId/feed', async (request, reply) => {
     // No feed table yet — return demo data
