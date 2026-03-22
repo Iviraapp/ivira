@@ -1,37 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <defs>
-    <radialGradient id="glow" cx="50%" cy="50%" r="40%">
-      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.15"/>
-      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="60"/>
-    </filter>
-  </defs>
+<svg viewBox="0 0 400 410" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:300px;display:block;margin:0 auto">
 
-  <!-- Background -->
-  <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224" fill="#050505"/>
+  <!-- Blue background -->
+  <rect width="400" height="400" rx="86" fill="#1877F2" style="fill:rgb(24, 119, 242);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
 
-  <!-- Subtle purple radial glow -->
-  <circle cx="512" cy="512" r="400" fill="url(#glow)" filter="url(#blur)"/>
+  <!--
+    EXACT same structure as reference:
+    - 4 quadrants, each ~same size
+    - TOP-LEFT:     ring arc quarter (solid filled wedge/donut slice)
+    - TOP-RIGHT:    heart (solid, same dark colour)
+    - BOTTOM-LEFT:  sparkle / 4-pt star (solid)
+    - BOTTOM-RIGHT: ring arc quarter (solid filled donut slice)
+    - CENTRE:       small circle (white, the hub)
 
-  <!-- G glyph — bold, modern, geometric -->
-  <path d="
-    M 562 262
-    C 430 262 322 370 322 512
-    C 322 654 430 762 562 762
-    C 650 762 726 714 768 644
-    L 768 512
-    L 562 512
-    L 562 582
-    L 690 582
-    L 690 618
-    C 662 680 616 692 562 692
-    C 470 692 396 612 396 512
-    C 396 412 470 332 562 332
-    C 620 332 668 364 696 404
-    L 752 358
-    C 710 300 644 262 562 262
-    Z
-  " fill="#FFFFFF"/>
+    All shapes = same white colour, same visual weight
+    No strokes, pure solid fills
+    Tight, balanced, sits perfectly in the square
+  -->
+
+  <!-- TOP-LEFT arc quarter — donut slice shape -->
+  <!-- Outer arc from 180° to 270° (top-left quadrant) -->
+  <path d="&#10;    M 200 200&#10;    L 200 94&#10;    A 106 106 0 0 0 94 200&#10;    Z&#10;  " fill="white" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <!-- Cut inner circle out of it -->
+  <circle cx="200" cy="200" r="52" fill="#1877F2" style="fill:rgb(24, 119, 242);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- BOTTOM-RIGHT arc quarter — donut slice -->
+  <path d="&#10;    M 200 200&#10;    L 200 306&#10;    A 106 106 0 0 0 306 200&#10;    Z&#10;  " fill="white" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <!-- Re-cut inner circle (shared) -->
+  <circle cx="200" cy="200" r="52" fill="#1877F2" style="fill:rgb(24, 119, 242);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- TOP-RIGHT: Heart — bold, same size as the arc quarters -->
+  <!--
+    Heart sits in top-right quadrant: x 210–320, y 80–195
+    Centre around x=265, y=148
+  -->
+  <path d="&#10;    M 265 190&#10;    C 235 168, 208 150, 208 126&#10;    C 208 109, 221 96, 237 96&#10;    C 247 96, 256 101, 265 110&#10;    C 274 101, 283 96, 293 96&#10;    C 309 96, 322 109, 322 126&#10;    C 322 150, 295 168, 265 190 Z&#10;  " fill="white" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- BOTTOM-LEFT: Sparkle / 4-point star — same quadrant size -->
+  <!--
+    Sits in bottom-left: x 78–195, y 210–325
+    Centre around x=136, y=265
+  -->
+  <path d="&#10;    M 136 210&#10;    C 136 210, 126 248, 90 265&#10;    C 126 282, 136 320, 136 320&#10;    C 136 320, 146 282, 182 265&#10;    C 146 248, 136 210, 136 210 Z&#10;  " fill="white" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Centre white circle hub — sits over all 4 shapes -->
+  <circle cx="200" cy="200" r="38" fill="white" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Tiny blue dot in the very centre — makes the hub feel like a connector -->
+  <circle cx="200" cy="200" r="16" fill="#1877F2" style="fill:rgb(24, 119, 242);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
 </svg>

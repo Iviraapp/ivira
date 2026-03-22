@@ -26,7 +26,7 @@ describe('Health', () => {
 })
 
 describe('Auth Flow', () => {
-  const testEmail = `test${Date.now()}@gymos.test`
+  const testEmail = `test${Date.now()}@ivira.test`
   let otp
 
   test('POST /api/v1/auth/register - register gym', async () => {

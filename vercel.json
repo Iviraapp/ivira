@@ -1,0 +1,9 @@
+{
+  "outputDirectory": "public/app",
+  "buildCommand": "cd client && npm install && npm run build",
+  "installCommand": "cd client && npm install",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

@@ -4,8 +4,8 @@
   "description": "Enterprise gym management for high-growth fitness brands",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#050505",
-  "theme_color": "#050505",
+  "background_color": "#1A3A8F",
+  "theme_color": "#1A3A8F",
   "orientation": "portrait-primary",
   "categories": ["business", "fitness", "productivity"],
   "icons": [
