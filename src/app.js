@@ -52,6 +52,7 @@ import achievementRoutes from './routes/achievements.routes.js';
 import recipeRoutes from './routes/recipes.routes.js';
 import foodScanRoutes from './routes/food-scan.routes.js';
 import sleepRoutes from './routes/sleep.routes.js';
+import conciergeRoutes from './routes/concierge.routes.js';
 import multipart from '@fastify/multipart';
 import { startCronJobs } from './cron/scheduler.js';
 import { AppError } from './utils/errors.js';
@@ -151,6 +152,7 @@ export async function buildApp(opts = {}) {
   await fastify.register(recipeRoutes, { prefix: '/api/v1' });
   await fastify.register(foodScanRoutes, { prefix: '/api/v1' });
   await fastify.register(sleepRoutes, { prefix: '/api/v1' });
+  await fastify.register(conciergeRoutes, { prefix: '/api/v1' });
   // Root-level redirect for affiliate click tracking (short URLs)
   fastify.get('/r/:clickToken', async (request, reply) => {
     const { trackClick } = await import('./services/affiliate.service.js');

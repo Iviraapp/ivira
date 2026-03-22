@@ -50,16 +50,18 @@ export default function PWAInstallPrompt() {
       fontFamily: FONT,
       animation: 'pwaSlideUp 0.4s ease-out',
     }}>
-      {/* Icon */}
-      <div style={{
-        width: 40, height: 40, borderRadius: 10,
-        background: '#7C3AED', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, fontSize: 18, fontWeight: 800, color: '#fff',
-      }}>G</div>
+      {/* Icon — IVIRA dumbbell logo */}
+      <img
+        src="/icons/icon-96.png"
+        alt="IVIRA"
+        style={{
+          width: 40, height: 40, borderRadius: 10,
+          flexShrink: 0, objectFit: 'cover',
+        }}
+      />
 
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#EDEDED' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#EDEDED', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Add IVIRA to Home Screen
         </div>
         <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
@@ -69,7 +71,7 @@ export default function PWAInstallPrompt() {
 
       <button onClick={handleInstall} style={{
         padding: '8px 16px', borderRadius: 8, border: 'none',
-        background: '#7C3AED', color: '#fff', fontSize: 13,
+        background: '#1A3A8F', color: '#fff', fontSize: 13,
         fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
         flexShrink: 0,
       }}>Install</button>

@@ -11,15 +11,15 @@ const THEMES = {
     text: '#FFFFFF', textSec: 'rgba(255,255,255,0.6)', textTer: 'rgba(255,255,255,0.4)',
     // Monochrome accent for general UI
     accent: '#FFFFFF', accentSoft: 'rgba(255,255,255,0.08)',
-    // Brand purple — ONLY for active nav + primary CTA buttons
-    brandAccent: '#7C3AED', brandAccentSoft: 'rgba(124,58,237,0.12)',
+    // Brand crimson — ONLY for active nav + primary CTA buttons
+    brandAccent: '#DC2626', brandAccentSoft: 'rgba(220,38,38,0.12)',
     // Status colors
     green: '#34A853', amber: '#FBBC05', red: '#EA4335', cyan: '#4285F4',
     // Borders
     border: '#262626', borderFocus: 'rgba(255,255,255,0.3)',
     borderStrong: '#333333',
     // Brand gradient (logo only)
-    grad: 'linear-gradient(135deg, #7C3AED, #A78BFA)',
+    grad: 'linear-gradient(135deg, #DC2626, #EF4444)',
     // Preview
     previewBg: '#ffffff', previewText: '#333',
     // Navigation
@@ -37,15 +37,15 @@ const THEMES = {
     text: '#000000', textSec: 'rgba(0,0,0,0.6)', textTer: 'rgba(0,0,0,0.4)',
     // Monochrome accent for general UI
     accent: '#000000', accentSoft: 'rgba(0,0,0,0.05)',
-    // Brand purple — ONLY for active nav + primary CTA buttons
-    brandAccent: '#7C3AED', brandAccentSoft: 'rgba(124,58,237,0.08)',
+    // Brand crimson — ONLY for active nav + primary CTA buttons
+    brandAccent: '#DC2626', brandAccentSoft: 'rgba(220,38,38,0.08)',
     // Status colors
     green: '#34A853', amber: '#FBBC05', red: '#EA4335', cyan: '#4285F4',
     // Borders
     border: '#E5E7EB', borderFocus: 'rgba(0,0,0,0.2)',
     borderStrong: '#D1D5DB',
     // Brand gradient (logo only)
-    grad: 'linear-gradient(135deg, #7C3AED, #A78BFA)',
+    grad: 'linear-gradient(135deg, #DC2626, #EF4444)',
     // Preview
     previewBg: '#ffffff', previewText: '#333',
     // Navigation
