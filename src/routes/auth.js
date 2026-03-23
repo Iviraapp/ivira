@@ -132,6 +132,94 @@ export default async function authRoutes(fastify) {
     return reply.send({ gyms })
   })
 
+  // Resolve gym invite code (public — shows gym name for sign-up UI)
+  fastify.get('/auth/resolve-code/:code', async (request, reply) => {
+    const { code } = request.params;
+    if (!code || code.length < 4) return reply.code(400).send({ error: 'Invalid code' });
+    const gym = await db('gyms')
+      .where('invite_code', code.toUpperCase())
+      .select('id', 'gym_name', 'city', 'logo_url')
+      .first();
+    if (!gym) return reply.code(404).send({ error: 'GYM_NOT_FOUND', message: 'Invalid invite code' });
+    return { gymId: gym.id, gymName: gym.gym_name, city: gym.city, logoUrl: gym.logo_url };
+  });
+
+  // B2C: Register new member with name/phone and optional gym invite code
+  fastify.post('/auth/b2c/register', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['name', 'email', 'phone'],
+        properties: {
+          name: { type: 'string', minLength: 2, maxLength: 100 },
+          email: { type: 'string', format: 'email' },
+          phone: { type: 'string', minLength: 10, maxLength: 15 },
+          inviteCode: { type: 'string' },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    const { name, email, phone, inviteCode } = request.body;
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check if member already exists
+    const existing = await db('members').where('email', normalizedEmail).first();
+    if (existing) {
+      return reply.code(409).send({ error: 'ALREADY_EXISTS', message: 'An account with this email already exists. Please sign in instead.' });
+    }
+
+    // Resolve invite code if provided
+    let gymId = null;
+    if (inviteCode) {
+      const gym = await db('gyms').where('invite_code', inviteCode.toUpperCase()).select('id').first();
+      if (!gym) return reply.code(400).send({ error: 'INVALID_CODE', message: 'Invalid gym invite code' });
+      gymId = gym.id;
+    }
+
+    // Store registration data in Redis (pending OTP verification)
+    await redis.set(`b2c_register:${normalizedEmail}`, JSON.stringify({
+      name: name.trim(),
+      phone: phone.trim(),
+      gymId,
+    }), { EX: 600 }); // 10 minutes
+
+    // Send OTP using the existing B2C flow
+    const result = await authService.requestB2CLoginOTP(normalizedEmail);
+    return { ...result, registered: true };
+  });
+
+  // Connect member to gym via invite code (authenticated)
+  fastify.post('/auth/connect-gym', {
+    preHandler: [fastify.verifyToken],
+    schema: {
+      body: {
+        type: 'object',
+        required: ['code'],
+        properties: {
+          code: { type: 'string', minLength: 4, maxLength: 10 },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    const { code } = request.body;
+    const memberId = request.user.memberId;
+    if (!memberId) return reply.code(401).send({ error: 'Not a member token' });
+
+    const gym = await db('gyms').where('invite_code', code.toUpperCase()).select('id', 'gym_name').first();
+    if (!gym) return reply.code(404).send({ error: 'INVALID_CODE', message: 'Invalid invite code' });
+
+    await db('members').where('id', memberId).update({ gym_id: gym.id, updated_at: new Date() });
+
+    // Re-issue token with gymId
+    const token = jwt.sign(
+      { memberId, gymId: gym.id, email: request.user.email, role: 'member' },
+      config.jwt.secret,
+      { expiresIn: '7d' }
+    );
+
+    return { token, gymId: gym.id, gymName: gym.gym_name };
+  });
+
   // Refresh JWT token (extend expiry without re-login)
   fastify.post('/auth/refresh', { preHandler: [fastify.verifyToken] }, async (request) => {
     const user = request.user;

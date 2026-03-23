@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useTheme } from '../../context/ThemeContext'
 import api from '../../lib/api'
-import { Building2, CreditCard, Globe, Bell, Monitor, Rows3, Rows4, MessageSquare, Send, Shield, Download, Trash2, AlertTriangle } from 'lucide-react'
+import { Building2, CreditCard, Globe, Bell, Monitor, Rows3, Rows4, MessageSquare, Send, Shield, Download, Trash2, AlertTriangle, Link2, Copy, RefreshCw, Share2, Check } from 'lucide-react'
 import { formatDate } from '../../lib/utils'
 
 const CITIES = [
@@ -35,6 +35,141 @@ const TABS = [
 function formatPaise(paise) {
   const rupees = (paise || 0) / 100
   return '\u20B9' + rupees.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+/* ---- Invite Code Card ---- */
+function InviteCodeCard({ gymId, theme, sp }) {
+  const toast = useToast()
+  const [inviteCode, setInviteCode] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [regenerating, setRegenerating] = useState(false)
+  const [copied, setCopied] = useState(null) // 'code' | 'link'
+
+  useEffect(() => {
+    api.get(`/gyms/${gymId}/invite-code`).then(r => {
+      setInviteCode(r.data.inviteCode)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [gymId])
+
+  const regenerate = async () => {
+    if (!window.confirm('Regenerate invite code? The old code will stop working.')) return
+    setRegenerating(true)
+    try {
+      const r = await api.post(`/gyms/${gymId}/invite-code/regenerate`)
+      setInviteCode(r.data.inviteCode)
+      toast.success('New invite code generated')
+    } catch { toast.error('Failed to regenerate code') }
+    setRegenerating(false)
+  }
+
+  const shareLink = inviteCode ? `${window.location.origin}/member/login?code=${inviteCode}` : ''
+
+  const copyText = async (text, type) => {
+    await navigator.clipboard.writeText(text)
+    setCopied(type)
+    toast.success('Copied to clipboard')
+    setTimeout(() => setCopied(null), 2000)
+  }
+
+  const share = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Join my gym on I V I R A', url: shareLink }) } catch {}
+    } else {
+      copyText(shareLink, 'link')
+    }
+  }
+
+  const inputSty = {
+    width: '100%', padding: `${sp(10)}px ${sp(14)}px`, background: theme.bgTer,
+    border: `1px solid ${theme.borderStrong}`, borderRadius: 8, color: theme.text,
+    fontSize: 16, fontFamily: "'JetBrains Mono', 'SF Mono', monospace", fontWeight: 700,
+    letterSpacing: 2, outline: 'none', boxSizing: 'border-box', textAlign: 'center',
+  }
+
+  return (
+    <div style={{
+      background: theme.bgSec, border: `1px solid ${theme.borderStrong}`,
+      borderTop: `3px solid ${theme.accent}`,
+      borderRadius: 14, padding: sp(28), backdropFilter: 'blur(20px)', marginTop: sp(20),
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: sp(6) }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 8, background: theme.accentSoft,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Link2 size={18} color={theme.accent} />
+        </div>
+        <h3 style={{ fontSize: 17, fontWeight: 600, color: theme.text, margin: 0, fontFamily: "'Inter', -apple-system, sans-serif" }}>
+          Member Invite Code
+        </h3>
+      </div>
+      <p style={{ fontSize: 13, color: theme.textSec, marginTop: 4, marginBottom: sp(20), fontFamily: "'Inter', -apple-system, sans-serif" }}>
+        Share this code with members so they can sign up and link to your gym automatically.
+      </p>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 20, color: theme.textSec }}>Loading...</div>
+      ) : (
+        <div style={{ maxWidth: 480 }}>
+          {/* Code display */}
+          <div style={{ position: 'relative', marginBottom: sp(12) }}>
+            <input readOnly value={inviteCode || 'No code generated'} style={inputSty} />
+            <button onClick={() => inviteCode && copyText(inviteCode, 'code')} title="Copy code" style={{
+              position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', cursor: 'pointer', padding: 6,
+              color: copied === 'code' ? '#22c55e' : theme.textSec,
+            }}>
+              {copied === 'code' ? <Check size={18} /> : <Copy size={18} />}
+            </button>
+          </div>
+
+          {/* Shareable link */}
+          {inviteCode && (
+            <div style={{
+              background: theme.bgTer, borderRadius: 8, padding: `${sp(10)}px ${sp(14)}px`,
+              marginBottom: sp(16), border: `1px solid ${theme.borderStrong}`,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <span style={{ fontSize: 12, color: theme.textSec, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontFamily: "'Inter', -apple-system, sans-serif" }}>
+                {shareLink}
+              </span>
+              <button onClick={() => copyText(shareLink, 'link')} style={{
+                background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0,
+                color: copied === 'link' ? '#22c55e' : theme.textSec,
+              }}>
+                {copied === 'link' ? <Check size={16} /> : <Copy size={16} />}
+              </button>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button onClick={share} style={{
+              background: theme.grad, color: '#fff', border: 'none', borderRadius: 10,
+              padding: `${sp(10)}px ${sp(20)}px`, fontWeight: 600, cursor: 'pointer',
+              fontSize: 13, fontFamily: "'Inter', -apple-system, sans-serif",
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <Share2 size={14} /> Share Link
+            </button>
+            <button onClick={regenerate} disabled={regenerating} style={{
+              background: 'transparent', color: theme.textSec, border: `1px solid ${theme.borderStrong}`,
+              borderRadius: 10, padding: `${sp(10)}px ${sp(20)}px`, fontWeight: 600,
+              cursor: 'pointer', fontSize: 13, fontFamily: "'Inter', -apple-system, sans-serif",
+              display: 'flex', alignItems: 'center', gap: 6,
+              opacity: regenerating ? 0.6 : 1,
+            }}>
+              <RefreshCw size={14} style={{ animation: regenerating ? 'spin 1s linear infinite' : 'none' }} />
+              {regenerating ? 'Generating...' : 'Regenerate'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
 }
 
 /* ---- Gym Profile Tab ---- */
@@ -83,57 +218,60 @@ function GymProfileTab({ gymId, gym, updateGym, theme, sp }) {
   }
 
   return (
-    <div style={{
-      background: theme.bgSec, border: `1px solid ${theme.borderStrong}`,
-      borderRadius: 14, padding: sp(28), backdropFilter: 'blur(20px)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: sp(28) }}>
-        <div style={{
-          width: 34, height: 34, borderRadius: 8, background: theme.accentSoft,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Building2 size={18} color={theme.accent} />
+    <>
+      <div style={{
+        background: theme.bgSec, border: `1px solid ${theme.borderStrong}`,
+        borderRadius: 14, padding: sp(28), backdropFilter: 'blur(20px)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: sp(28) }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 8, background: theme.accentSoft,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Building2 size={18} color={theme.accent} />
+          </div>
+          <h3 style={{ fontSize: 17, fontWeight: 600, color: theme.text, margin: 0, fontFamily: "'Inter', -apple-system, sans-serif" }}>
+            Gym Profile
+          </h3>
         </div>
-        <h3 style={{ fontSize: 17, fontWeight: 600, color: theme.text, margin: 0, fontFamily: "'Inter', -apple-system, sans-serif" }}>
-          Gym Profile
-        </h3>
+        <form onSubmit={handleSubmit} style={{ maxWidth: 480 }}>
+          <div style={{ marginBottom: sp(18) }}>
+            <label style={labelSty}>Gym Name</label>
+            <input value={form.name} onChange={set('name')} required style={inputSty} />
+          </div>
+          <div style={{ marginBottom: sp(18) }}>
+            <label style={labelSty}>Address</label>
+            <input value={form.address} onChange={set('address')} style={inputSty} />
+          </div>
+          <div style={{ marginBottom: sp(18) }}>
+            <label style={labelSty}>City</label>
+            <select value={form.city} onChange={set('city')} style={{ ...inputSty, appearance: 'none', cursor: 'pointer' }}>
+              <option value="">Select city</option>
+              {CITIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: sp(18) }}>
+            <div>
+              <label style={labelSty}>GPS Latitude</label>
+              <input type="number" step="any" value={form.latitude} onChange={set('latitude')} style={inputSty} />
+            </div>
+            <div>
+              <label style={labelSty}>GPS Longitude</label>
+              <input type="number" step="any" value={form.longitude} onChange={set('longitude')} style={inputSty} />
+            </div>
+          </div>
+          <button type="submit" disabled={mutation.isPending} style={{
+            background: theme.grad, color: '#fff', border: 'none', borderRadius: 10,
+            padding: `${sp(12)}px ${sp(28)}px`, fontWeight: 600, cursor: 'pointer',
+            fontSize: 14, fontFamily: "'Inter', -apple-system, sans-serif", marginTop: 4,
+            opacity: mutation.isPending ? 0.7 : 1, transition: 'opacity 0.2s',
+          }}>
+            {mutation.isPending ? 'Saving...' : 'Save Changes'}
+          </button>
+        </form>
       </div>
-      <form onSubmit={handleSubmit} style={{ maxWidth: 480 }}>
-        <div style={{ marginBottom: sp(18) }}>
-          <label style={labelSty}>Gym Name</label>
-          <input value={form.name} onChange={set('name')} required style={inputSty} />
-        </div>
-        <div style={{ marginBottom: sp(18) }}>
-          <label style={labelSty}>Address</label>
-          <input value={form.address} onChange={set('address')} style={inputSty} />
-        </div>
-        <div style={{ marginBottom: sp(18) }}>
-          <label style={labelSty}>City</label>
-          <select value={form.city} onChange={set('city')} style={{ ...inputSty, appearance: 'none', cursor: 'pointer' }}>
-            <option value="">Select city</option>
-            {CITIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: sp(18) }}>
-          <div>
-            <label style={labelSty}>GPS Latitude</label>
-            <input type="number" step="any" value={form.latitude} onChange={set('latitude')} style={inputSty} />
-          </div>
-          <div>
-            <label style={labelSty}>GPS Longitude</label>
-            <input type="number" step="any" value={form.longitude} onChange={set('longitude')} style={inputSty} />
-          </div>
-        </div>
-        <button type="submit" disabled={mutation.isPending} style={{
-          background: theme.grad, color: '#fff', border: 'none', borderRadius: 10,
-          padding: `${sp(12)}px ${sp(28)}px`, fontWeight: 600, cursor: 'pointer',
-          fontSize: 14, fontFamily: "'Inter', -apple-system, sans-serif", marginTop: 4,
-          opacity: mutation.isPending ? 0.7 : 1, transition: 'opacity 0.2s',
-        }}>
-          {mutation.isPending ? 'Saving...' : 'Save Changes'}
-        </button>
-      </form>
-    </div>
+      <InviteCodeCard gymId={gymId} theme={theme} sp={sp} />
+    </>
   )
 }
 

@@ -229,16 +229,29 @@ export async function verifyB2CLoginOTP(email, code) {
   let memberId = existingMember?.id;
   let gymId = existingMember?.gym_id || null;
 
-  // If no member record exists, create a "floating" member (no gym)
+  // If no member record exists, create a new member
   if (!existingMember) {
+    // Check if there's pending registration data (from /auth/b2c/register)
+    let regData = null;
+    try {
+      const raw = await redis.get(`b2c_register:${normalizedEmail}`);
+      if (raw) {
+        regData = JSON.parse(raw);
+        await redis.del(`b2c_register:${normalizedEmail}`);
+      }
+    } catch {}
+
     const [newMember] = await db('members')
       .insert({
         email: normalizedEmail,
-        name: normalizedEmail.split('@')[0],
+        name: regData?.name || normalizedEmail.split('@')[0],
+        phone: regData?.phone || null,
+        gym_id: regData?.gymId || null,
         status: 'active',
       })
       .returning('*');
     memberId = newMember.id;
+    gymId = regData?.gymId || null;
   }
 
   // Generate JWT

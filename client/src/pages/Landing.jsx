@@ -138,42 +138,42 @@ const icons = {
 
 // ── Data ─────────────────────────────────────────────────────
 const ownerFeatures = [
-  { icon: 'members', title: 'Member Management', desc: 'Add, search, and track 100 to 2,000 members with detailed profiles and membership telemetry.' },
-  { icon: 'qr', title: 'QR + OTP Check-ins', desc: 'GPS-validated check-ins within 150m radius. Members scan QR or enter OTP at the gate.' },
-  { icon: 'payment', title: 'Payment & Billing', desc: 'Razorpay-powered payments with auto-invoicing, renewal alerts, and complete revenue tracking.' },
-  { icon: 'whatsapp', title: 'WhatsApp Notifications', desc: 'Automated reminders for dues, renewals, and announcements sent directly via WhatsApp.' },
-  { icon: 'staff', title: 'Staff Management', desc: 'Manage trainers, track staff attendance, assign roles, and monitor performance metrics.' },
-  { icon: 'classes', title: 'Classes & Scheduling', desc: 'Create group classes, manage bookings, set capacity limits, and handle recurring schedules.' },
-  { icon: 'analytics', title: 'Analytics Dashboard', desc: 'Revenue trends, member retention rates, churn scoring, and actionable business intelligence.' },
-  { icon: 'plans', title: 'Membership Plans', desc: 'Flexible monthly, quarterly, and annual plans with auto-renewal and upgrade paths.' },
-  { icon: 'ai', title: 'AI Coach', desc: 'Built-in AI that provides nutrition guidance and workout recommendations to your members.' },
-  { icon: 'marketplace', title: 'Marketplace', desc: 'Showcase trainer profiles and services. Let members book sessions and diet plans online.' },
-  { icon: 'newsletter', title: 'Newsletter & Campaigns', desc: 'Send targeted email campaigns, promotions, and updates to keep members engaged.' },
-  { icon: 'affiliate', title: 'Affiliate Store', desc: 'Earn commissions by partnering with supplement and fitness brands through our marketplace.' },
+  { icon: 'members', title: 'Member Management', desc: 'Full member database with profiles, photos, membership status, attendance history, and contact info. Import via CSV or add individually. Bulk actions for renewals and status updates.', highlights: ['100–2,000 members', 'CSV import', 'Bulk actions'] },
+  { icon: 'qr', title: 'QR + OTP Check-ins', desc: 'GPS-validated entry within 150m radius. Members scan a 30-second rotating QR code or enter a one-time OTP. Anti-screenshot protection and NFC tap-to-enter on Android.', highlights: ['GPS + QR + OTP', '150m radius lock', 'NFC support'] },
+  { icon: 'payment', title: 'Payment & Billing', desc: 'Accept payments via Razorpay (UPI, cards, net banking). Auto-generate GST invoices, send payment reminders via WhatsApp, and track revenue in real time with collection velocity metrics.', highlights: ['Razorpay integration', 'Auto-invoicing', 'Revenue analytics'] },
+  { icon: 'whatsapp', title: 'WhatsApp Notifications', desc: 'Automated messages for payment reminders, membership expiry alerts, renewal confirmations, day pass purchases, and custom announcements — delivered directly to members\' WhatsApp.', highlights: ['Auto-reminders', 'Expiry alerts', 'Custom messages'] },
+  { icon: 'staff', title: 'Staff Management', desc: 'Add trainers and staff with role-based access. Track attendance, assign members to trainers, monitor session counts, and manage commissions per booking.', highlights: ['Role-based access', 'Trainer assignment', 'Commission tracking'] },
+  { icon: 'classes', title: 'Classes & Scheduling', desc: 'Create group classes with capacity limits, recurring schedules, and booking slots. Members book online, get reminders, and check in via QR. Wait-list support for full classes.', highlights: ['Capacity limits', 'Online booking', 'Wait-list support'] },
+  { icon: 'analytics', title: 'Analytics Dashboard', desc: 'Live dashboard showing today\'s check-ins, revenue, expiring memberships, weekly trends, and peak hour heatmaps. Monthly revenue charts, churn rate tracking, and member growth over time.', highlights: ['Real-time metrics', 'Churn prediction', 'Peak hour heatmaps'] },
+  { icon: 'plans', title: 'Membership Plans', desc: 'Create unlimited plan tiers — monthly, quarterly, half-yearly, annual. Set custom pricing, enable auto-renewal reminders, and offer upgrade paths. Day pass support for walk-in visitors.', highlights: ['Custom tiers', 'Day passes', 'Auto-renewal alerts'] },
+  { icon: 'ai', title: 'AI Coach (Vira)', desc: 'Built-in AI assistant that provides your members with personalized workout routines, nutrition plans, and wellness recommendations. Powered by advanced language models.', highlights: ['Workout generation', 'Diet protocols', 'Wellness tips'] },
+  { icon: 'marketplace', title: 'Marketplace', desc: 'Publish trainer profiles, personal training packages, diet consultations, and group sessions. Members discover and book directly from the app with integrated payments.', highlights: ['Trainer profiles', 'Direct booking', 'Integrated payments'] },
+  { icon: 'newsletter', title: 'Newsletter & Campaigns', desc: 'Compose and send branded email campaigns to your member base. Segment by status, plan type, or activity level. Track open rates and engagement metrics.', highlights: ['Audience segments', 'Branded emails', 'Open rate tracking'] },
+  { icon: 'affiliate', title: 'Affiliate Store', desc: 'Curate a storefront of supplements, gym wear, and fitness accessories from partner brands. Earn commissions on every sale. Members shop directly from your gym\'s portal.', highlights: ['Earn commissions', 'Branded storefront', 'Direct sales'] },
 ]
 
 const seekerFeatures = [
-  { icon: 'search', title: 'Gym Finder', desc: 'Discover gyms nearby with ratings, amenities, photos, and real-time availability.' },
-  { icon: 'daypass', title: 'Day Pass Booking', desc: 'Walk into any partner gym and pay per visit. No long-term commitment required.' },
-  { icon: 'portal', title: 'Member Portal', desc: 'View your membership details, payment history, and check-in records in one place.' },
-  { icon: 'nutrition', title: 'Nutrition Tracking', desc: 'Log meals, set calorie goals, track macros, and get personalized diet protocols.' },
-  { icon: 'steps', title: 'Step Counter', desc: 'Sync with Apple Health or Google Fit to track daily steps and activity levels.' },
-  { icon: 'workout', title: 'Workout Logging', desc: 'Track exercises, sets, reps, and personal records. Build streaks and stay consistent.' },
-  { icon: 'fasting', title: 'Fasting Tracker', desc: 'Monitor intermittent fasting windows with timers, history, and streak tracking.' },
-  { icon: 'ai', title: 'AI Fitness Coach', desc: 'Chat with an AI coach for workout plans, nutrition advice, and performance guidance.' },
-  { icon: 'trophy', title: 'Leaderboards & Challenges', desc: 'Compete with other members on steps, workouts, and gym check-ins.' },
-  { icon: 'badge', title: 'Achievements & Badges', desc: 'Earn badges for milestones, streaks, and challenges. Gamify your fitness journey.' },
-  { icon: 'trainer', title: 'Trainer Booking', desc: 'Browse certified trainers, book personal training sessions, and get custom protocols.' },
+  { icon: 'search', title: 'Gym Finder', desc: 'Discover gyms near you powered by Google Places API. View ratings, photos, amenities, contact info, and distance. Filter by type — CrossFit, yoga, MMA, traditional gyms, and more.', highlights: ['Google Maps powered', 'Photos & ratings', 'Distance sorting'] },
+  { icon: 'daypass', title: 'Day Pass Booking', desc: 'Walk into any I V I R A partner gym and pay per visit. No commitment, no contracts. Ideal for travelers or anyone exploring new workout spots. Book and pay online.', highlights: ['Pay per visit', 'No contracts', 'Online booking'] },
+  { icon: 'portal', title: 'Member Portal', desc: 'Your complete fitness hub: view active membership, remaining days, payment history, GST invoices, upcoming class bookings, and complete check-in records.', highlights: ['Membership status', 'Invoice downloads', 'Check-in history'] },
+  { icon: 'nutrition', title: 'Nutrition Tracking', desc: 'Log meals with calorie and macro breakdowns. Set daily targets for protein, carbs, and fat. AI-powered food recognition and personalized diet protocols based on your goals.', highlights: ['Macro tracking', 'AI food recognition', 'Goal-based diets'] },
+  { icon: 'steps', title: 'Step Counter & Activity', desc: 'Built-in pedometer with daily, weekly, and monthly step counts. Syncs with Apple Health and Google Fit. Track active minutes, calories burned, and set daily movement goals.', highlights: ['Apple Health sync', 'Google Fit sync', 'Activity goals'] },
+  { icon: 'workout', title: 'Workout Logging', desc: 'Log exercises with sets, reps, weight, and RPE. Track personal records automatically. Build workout templates, follow trainer-assigned routines, and maintain consistency streaks.', highlights: ['PR tracking', 'Custom templates', 'Streak system'] },
+  { icon: 'fasting', title: 'Fasting Tracker', desc: 'Monitor intermittent fasting with customizable windows (16:8, 18:6, 20:4, OMAD). Live countdown timer, fasting history calendar, streak tracking, and completion badges.', highlights: ['Multiple protocols', 'Live timer', 'Streak badges'] },
+  { icon: 'ai', title: 'AI Fitness Coach (Vira)', desc: 'Chat with Vira, your AI fitness companion. Get personalized workout plans, nutrition advice, supplement guidance, injury prevention tips, and answers to any fitness question.', highlights: ['Chat interface', 'Personalized plans', 'Always available'] },
+  { icon: 'trophy', title: 'Leaderboards & Challenges', desc: 'Compete with your gym community on steps, workouts, and check-in streaks. Join weekly challenges, climb the leaderboard, and earn recognition from your gym tribe.', highlights: ['Gym leaderboard', 'Weekly challenges', 'Community'] },
+  { icon: 'badge', title: 'Achievements & Badges', desc: 'Earn badges for milestones: first check-in, 7-day streak, 100 workouts, nutrition master, and more. Gamified progression system that keeps you motivated and accountable.', highlights: ['30+ badges', 'Milestones', 'Gamification'] },
+  { icon: 'trainer', title: 'Trainer Booking', desc: 'Browse certified trainers at your gym with specializations, ratings, and availability. Book personal training sessions, custom diet consultations, and get tailored workout protocols.', highlights: ['Trainer profiles', 'Session booking', 'Custom protocols'] },
 ]
 
 const bentoCards = [
-  { key: 'realtime', title: 'Real-time Analytics', desc: 'Live dashboard with member activity, revenue streams, and operational metrics updated every second.', icon: 'analytics', span: 2, accent: '#60A5FA' },
-  { key: 'revenue', title: 'Revenue Tracking', desc: 'Every transaction mapped, every trend surfaced. Know your numbers before they matter.', icon: 'revenue', span: 1, accent: '#34D399' },
-  { key: 'churn', title: 'Churn Prediction', desc: 'AI-powered early warning system identifies at-risk members before they leave.', icon: 'shield', span: 1, accent: '#F472B6' },
-  { key: 'retention', title: 'Member Retention', desc: 'Engagement scoring and automated re-activation campaigns.', icon: 'target', span: 1, accent: '#A78BFA' },
-  { key: 'attendance', title: 'Attendance Patterns', desc: 'Heat maps of peak hours, seasonal trends, and capacity optimization.', icon: 'clock', span: 1, accent: '#FBBF24' },
-  { key: 'aiinsights', title: 'AI Insights', desc: 'Machine learning models that surface opportunities hidden in your data.', icon: 'brain', span: 1, accent: '#38BDF8' },
-  { key: 'velocity', title: 'Payment Velocity', desc: 'Track collection speed, outstanding dues, and cash flow projections.', icon: 'zap', span: 1, accent: '#FB923C' },
+  { key: 'realtime', title: 'Real-time Analytics', desc: 'Live dashboard with today\'s check-ins, revenue, member activity, and operational metrics. Updates automatically — no refresh needed. See your gym\'s pulse at a glance.', icon: 'analytics', span: 2, accent: '#60A5FA' },
+  { key: 'revenue', title: 'Revenue Tracking', desc: 'Daily, weekly, and monthly revenue breakdowns. Track UPI vs card vs cash. See collection rates, outstanding dues, and projected monthly revenue.', icon: 'revenue', span: 1, accent: '#34D399' },
+  { key: 'churn', title: 'Churn Prediction', desc: 'AI flags members who haven\'t checked in recently, have expiring plans, or show declining engagement — so you can intervene before they leave.', icon: 'shield', span: 1, accent: '#F472B6' },
+  { key: 'retention', title: 'Member Retention', desc: 'Engagement scoring based on check-in frequency, app usage, and payment history. Automated WhatsApp re-activation campaigns for dormant members.', icon: 'target', span: 1, accent: '#A78BFA' },
+  { key: 'attendance', title: 'Attendance Patterns', desc: 'Heatmaps showing peak hours by day of week. Identify capacity bottlenecks, optimize class schedules, and staff shifts based on real data.', icon: 'clock', span: 1, accent: '#FBBF24' },
+  { key: 'aiinsights', title: 'AI Insights', desc: 'Machine learning surfaces hidden patterns: which plan tiers retain best, which referral sources convert, and seasonal trends to plan promotions around.', icon: 'brain', span: 1, accent: '#38BDF8' },
+  { key: 'velocity', title: 'Payment Velocity', desc: 'Track how fast you collect dues after invoicing. See aging receivables, overdue payments by member, and forecast monthly cash flow.', icon: 'zap', span: 1, accent: '#FB923C' },
 ]
 
 // ── Geo-Based Pricing ───────────────────────────────────────
@@ -1006,8 +1006,8 @@ export default function Landing() {
             transition: 'all 0.8s ease 0.6s',
           }}>
             {isMobile
-              ? 'Check in at your gym, track workouts, log nutrition, and manage your membership — all from your phone.'
-              : 'For gym owners: automate check-ins, streamline billing, and grow your business. For members: track workouts, log nutrition, and stay connected to your gym — all in one platform.'}
+              ? 'QR check-in, workout logging, nutrition tracking, fasting timers, AI coaching, and your membership — all in one app.'
+              : 'For gym owners: member management, QR check-ins, Razorpay billing, WhatsApp notifications, analytics, and AI insights. For members: workout logging, nutrition tracking, fasting timers, step counter, and an AI coach — all in one platform.'}
           </p>
 
           {/* CTAs — device-aware on mobile */}
@@ -1222,9 +1222,9 @@ export default function Landing() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {[
-                    { step: '01', title: 'Register your gym', desc: 'Sign up in under 2 minutes. Get your own branded dashboard and custom subdomain.' },
-                    { step: '02', title: 'Add members & plans', desc: 'Import or add members, create membership tiers, set up Razorpay for payments.' },
-                    { step: '03', title: 'Automate everything', desc: 'QR check-ins, WhatsApp reminders, auto-invoicing, AI insights — all hands-free.' },
+                    { step: '01', title: 'Register your gym', desc: 'Create your account with email OTP. You\'ll get a branded dashboard at yourname.ivira.app, a unique member invite code, and a 14-day free trial — no credit card required.' },
+                    { step: '02', title: 'Add members & plans', desc: 'Import members via CSV or add manually. Create membership tiers (monthly, quarterly, annual), set pricing in your currency, and connect Razorpay to accept UPI, cards, and net banking.' },
+                    { step: '03', title: 'Go live', desc: 'Print your QR code for the entrance. Members scan to check in (GPS-verified). WhatsApp reminders, auto-invoicing, expiry alerts, and AI insights run on autopilot.' },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 14 }}>
                       <div style={{
@@ -1273,9 +1273,9 @@ export default function Landing() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {[
-                    { step: '01', title: 'Download the app or sign in', desc: 'Get the I V I R A app on Android (APK beta) or sign in via web. iOS coming soon.' },
-                    { step: '02', title: 'Connect to your gym', desc: 'Your gym sends you a login link. Scan QR to check in — no cards, no queues.' },
-                    { step: '03', title: 'Track everything', desc: 'Workouts, nutrition, fasting, steps, personal records. AI coaching included.' },
+                    { step: '01', title: 'Sign up with your gym\'s invite code', desc: 'Your gym owner shares a unique invite link or code (GYM-XXXXXX). Enter it during sign-up to instantly link your account. Or download the Android APK for the full native experience.' },
+                    { step: '02', title: 'Check in & connect', desc: 'Scan the QR code at your gym\'s entrance to check in — no cards, no queues, GPS-verified. View your membership status, remaining days, and payment history from your portal.' },
+                    { step: '03', title: 'Track, train, transform', desc: 'Log workouts with sets and reps, track nutrition with macro breakdowns, monitor fasting windows, count steps, and chat with Vira AI for personalized guidance. All in one app.' },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 14 }}>
                       <div style={{
@@ -1429,9 +1429,10 @@ export default function Landing() {
             <div style={{ textAlign: 'center', marginBottom: 64 }}>
               <div style={{ ...sectionLabel, color: t.textMuted }}>For Gym Owners</div>
               <h2 style={{ ...sectionHeading, color: t.text }}>The Command Center</h2>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 600, margin: '0 auto', lineHeight: 1.7 }}>
-                Total operational control. Every tool a gym owner needs,
-                precision-engineered into a single cockpit.
+              <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 680, margin: '0 auto', lineHeight: 1.7 }}>
+                Member management, billing, check-ins, staff, classes, analytics, AI coaching,
+                and marketing — everything your gym needs in a single dashboard. No spreadsheets.
+                No third-party tools.
               </p>
             </div>
 
@@ -1475,9 +1476,20 @@ export default function Landing() {
                       color: t.text, margin: 0, marginBottom: 10,
                     }}>{feat.title}</h3>
                     <p style={{
-                      fontFamily: FONT_BODY, fontSize: 14, color: t.textMuted,
+                      fontFamily: FONT_BODY, fontSize: 13, color: t.textMuted,
                       lineHeight: 1.6, margin: 0,
                     }}>{feat.desc}</p>
+                    {feat.highlights && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>
+                        {feat.highlights.map(h => (
+                          <span key={h} style={{
+                            fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600,
+                            color: accent, background: accent + '12',
+                            padding: '3px 10px', borderRadius: 6, letterSpacing: '0.01em',
+                          }}>{h}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
                 )
@@ -1494,9 +1506,9 @@ export default function Landing() {
             <div style={{ textAlign: 'center', marginBottom: 64 }}>
               <div style={{ ...sectionLabel, color: t.textMuted }}>For Fitness Seekers</div>
               <h2 style={{ ...sectionHeading, color: t.text }}>Your Performance Suite</h2>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 600, margin: '0 auto', lineHeight: 1.7 }}>
-                Every tool an athlete needs to train smarter, track progress,
-                and push beyond limits.
+              <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 680, margin: '0 auto', lineHeight: 1.7 }}>
+                Gym finder, workout logging, nutrition tracking, fasting timers, step counting,
+                AI coaching, leaderboards, and more — whether you\'re a member or exploring new gyms.
               </p>
             </div>
 
@@ -1540,9 +1552,20 @@ export default function Landing() {
                       color: t.text, margin: 0, marginBottom: 10,
                     }}>{feat.title}</h3>
                     <p style={{
-                      fontFamily: FONT_BODY, fontSize: 14, color: t.textMuted,
+                      fontFamily: FONT_BODY, fontSize: 13, color: t.textMuted,
                       lineHeight: 1.6, margin: 0,
                     }}>{feat.desc}</p>
+                    {feat.highlights && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>
+                        {feat.highlights.map(h => (
+                          <span key={h} style={{
+                            fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600,
+                            color: accent, background: accent + '12',
+                            padding: '3px 10px', borderRadius: 6, letterSpacing: '0.01em',
+                          }}>{h}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
                 )
@@ -1644,7 +1667,7 @@ export default function Landing() {
                 A Premium Experience for Your Members.
               </h2>
               <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 700, margin: '0 auto', lineHeight: 1.7 }}>
-                No App Store downloads required. Members get a branded web app for secure entry, payment history, and easy shopping. Everything stays in their pocket.
+                Members access your gym through a PWA (Progressive Web App) that works like a native app — no App Store download required. Instant check-in, payment history, GST invoices, and a built-in store. Install to home screen for the full app experience.
               </p>
             </div>
 
@@ -1654,9 +1677,9 @@ export default function Landing() {
               gap: 20,
             }}>
               {[
-                { icon: 'shield', title: '30s QR Rotation', desc: 'QR codes rotate every 30 seconds for bulletproof security. No screenshot sharing.', accent: '#8B5CF6' },
-                { icon: 'qr', title: 'Tap to Enter', desc: 'NFC-powered check-in on Android devices. Just tap your phone at the door.', accent: '#3B82F6' },
-                { icon: 'payment', title: 'Invoice & Store', desc: 'View payment history, download GST invoices, and shop from your phone.', accent: '#22C55E' },
+                { icon: 'shield', title: '30-Second QR Rotation', desc: 'Your QR code refreshes every 30 seconds, making screenshots useless. GPS verification ensures you\'re physically at the gym. The most secure check-in system available.', accent: '#8B5CF6' },
+                { icon: 'qr', title: 'Tap to Enter (NFC)', desc: 'On Android, simply tap your phone at the gym entrance — no app to open, no QR to scan. NFC-powered instant check-in. Members love the speed. Gym owners love the accuracy.', accent: '#3B82F6' },
+                { icon: 'payment', title: 'Invoices, Payments & Store', desc: 'View complete payment history with downloadable GST invoices. Browse and buy from your gym\'s curated store — supplements, gear, accessories — all with integrated checkout.', accent: '#22C55E' },
               ].map((card, i) => (
                 <motion.div key={card.title} custom={i} variants={scaleIn}
                   initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
@@ -1690,8 +1713,95 @@ export default function Landing() {
         </Section>
       </section>
 
-      {/* ── YOUR BRAND, YOUR WEBSITE ──────────────────────────── */}
+      {/* ── WHY I V I R A ─────────────────────────────────────── */}
       <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bgAlt }}>
+        <Section>
+          <div style={containerStyle}>
+            <div style={{ textAlign: 'center', marginBottom: 56 }}>
+              <div style={{ ...sectionLabel, color: t.textMuted }}>Why I V I R A</div>
+              <h2 style={{ ...sectionHeading, color: t.text, fontSize: 'clamp(28px, 4.5vw, 44px)' }}>
+                Built Different.
+              </h2>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 680, margin: '0 auto', lineHeight: 1.7 }}>
+                Not another generic gym management SaaS. I V I R A is a complete fitness ecosystem
+                that serves both sides of the gym — the business and the athlete.
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+              gap: 20,
+            }}>
+              {[
+                {
+                  title: 'Two-Sided Platform',
+                  desc: 'Most gym software only serves owners. I V I R A gives members their own app experience — workouts, nutrition, AI coaching — while gym owners get a complete management dashboard.',
+                  accent: IVIRA_BLUE,
+                  number: '01',
+                },
+                {
+                  title: 'PWA + Native Apps',
+                  desc: 'Members get an installable Progressive Web App that works offline. Gym owners get a full dashboard. Android APK available now. iOS coming soon. No App Store dependency.',
+                  accent: '#22C55E',
+                  number: '02',
+                },
+                {
+                  title: 'AI-Powered Wellness',
+                  desc: 'Vira, our AI coach, provides personalized workout plans, nutrition guidance, and wellness recommendations. Not just a chatbot — a comprehensive health intelligence layer.',
+                  accent: '#8B5CF6',
+                  number: '03',
+                },
+                {
+                  title: 'Invite Code System',
+                  desc: 'Gym owners share a unique code (GYM-XXXXXX). Members enter it during sign-up and are instantly linked. Deep-linkable URLs make onboarding frictionless.',
+                  accent: '#F59E0B',
+                  number: '04',
+                },
+                {
+                  title: 'Geo-Localized Pricing',
+                  desc: 'Pricing automatically adjusts to your country using purchasing power parity. Fair pricing whether you\'re in Bengaluru, New York, London, or Dubai.',
+                  accent: '#EF4444',
+                  number: '05',
+                },
+                {
+                  title: 'White-Label Branding',
+                  desc: 'Every gym gets a custom subdomain (yourgym.ivira.app) with their branding. Members see your gym\'s identity, not ours. Your brand, your portal.',
+                  accent: '#06B6D4',
+                  number: '06',
+                },
+              ].map((item, i) => (
+                <motion.div key={item.number} custom={i} variants={fadeUp}
+                  initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
+                  <div style={{
+                    background: t.cardBg, borderRadius: 16, padding: 28,
+                    position: 'relative', overflow: 'hidden',
+                    border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow,
+                    height: '100%',
+                  }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: item.accent }} />
+                    <div style={{
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700,
+                      color: item.accent, opacity: 0.6, marginBottom: 12,
+                    }}>{item.number}</div>
+                    <h3 style={{
+                      fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700,
+                      color: t.text, margin: 0, marginBottom: 10, letterSpacing: '-0.01em',
+                    }}>{item.title}</h3>
+                    <p style={{
+                      fontFamily: FONT_BODY, fontSize: 14, color: t.textMuted,
+                      lineHeight: 1.65, margin: 0,
+                    }}>{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </Section>
+      </section>
+
+      {/* ── YOUR BRAND, YOUR WEBSITE ──────────────────────────── */}
+      <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bg }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 64 }}>

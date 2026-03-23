@@ -178,7 +178,7 @@ function DataLawSection({ region }) {
         <li style={S.li}><strong>Name:</strong> I V I R A {c.officer}</li>
         <li style={S.li}><strong>Email:</strong> admin@ivira.app</li>
         <li style={S.li}><strong>Response time:</strong> Within {c.response}</li>
-        <li style={S.li}><strong>Registered address:</strong> SevenH Tech LLC, 545 Harrold St 3074, Fort Worth, TX 76107, United States</li>
+        <li style={S.li}><strong>Registered address:</strong> {region === 'IN' ? 'Rightswipe Technologies OPC Pvt Ltd, 134, Sri Sai Gardens, Sarjapura - Attibele Rd, Sarjapura, Bengaluru, Karnataka 562125, India' : 'SevenH Tech LLC, 545 Harrold St 3074, Fort Worth, TX 76107, United States'}</li>
       </ul>
 
       <h2 style={S.h2}>6. Data Retention</h2>
@@ -236,7 +236,7 @@ export default function Privacy() {
       </div>
 
       <p style={S.p}>
-        SevenH Tech LLC d/b/a I V I R A ("we", "us", "our") operates the I V I R A platform. This Privacy Policy explains how we collect, use, store, and protect your personal data in compliance with {region === 'IN' ? 'the Digital Personal Data Protection (DPDP) Act 2023' : region === 'EU' ? 'the General Data Protection Regulation (GDPR)' : region === 'GB' ? 'the UK GDPR & Data Protection Act 2018' : region === 'US' ? 'applicable US state privacy laws including CCPA' : region === 'AE' ? 'UAE Federal Decree-Law No. 45 of 2021' : region === 'AU' ? 'the Australian Privacy Act 1988' : region === 'CA' ? 'PIPEDA' : region === 'SG' ? 'the Personal Data Protection Act 2012 (PDPA)' : 'applicable data protection laws in your jurisdiction'}.
+        {region === 'IN' ? 'Rightswipe Technologies OPC Pvt Ltd' : 'SevenH Tech LLC'} d/b/a I V I R A ("we", "us", "our") operates the I V I R A platform. This Privacy Policy explains how we collect, use, store, and protect your personal data in compliance with {region === 'IN' ? 'the Digital Personal Data Protection (DPDP) Act 2023' : region === 'EU' ? 'the General Data Protection Regulation (GDPR)' : region === 'GB' ? 'the UK GDPR & Data Protection Act 2018' : region === 'US' ? 'applicable US state privacy laws including CCPA' : region === 'AE' ? 'UAE Federal Decree-Law No. 45 of 2021' : region === 'AU' ? 'the Australian Privacy Act 1988' : region === 'CA' ? 'PIPEDA' : region === 'SG' ? 'the Personal Data Protection Act 2012 (PDPA)' : 'applicable data protection laws in your jurisdiction'}.
       </p>
 
       <h2 style={S.h2}>1. Information We Collect</h2>

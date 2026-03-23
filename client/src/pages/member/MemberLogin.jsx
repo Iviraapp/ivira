@@ -18,8 +18,13 @@ function getMobilePlatform() {
 }
 
 export default function MemberLogin() {
-  const [step, setStep] = useState(() => isMobileDevice() ? 'app_prompt' : 'email')
+  const [mode, setMode] = useState('signin') // signin | signup
+  const [step, setStep] = useState(() => isMobileDevice() ? 'app_prompt' : 'form')
   const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [resolvedGym, setResolvedGym] = useState(null) // { gymName, city }
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -35,6 +40,8 @@ export default function MemberLogin() {
   // Magic link token redirect
   const tokenParam = searchParams.get('token')
   const gymParam = searchParams.get('gym')
+  const codeParam = searchParams.get('code')
+
   useEffect(() => {
     if (tokenParam && gymParam) {
       localStorage.setItem('ivira_member_token', tokenParam)
@@ -43,6 +50,22 @@ export default function MemberLogin() {
     }
   }, [tokenParam, gymParam, navigate])
 
+  // Deep link: auto-fill invite code from URL param
+  useEffect(() => {
+    if (codeParam) {
+      setInviteCode(codeParam)
+      setMode('signup')
+      setStep('form')
+      resolveCode(codeParam)
+    }
+  }, [codeParam])
+
+  // Already logged in
+  useEffect(() => {
+    if (localStorage.getItem('ivira_member_token')) navigate('/member/dashboard', { replace: true })
+  }, [navigate])
+
+  // Countdown timer for OTP
   useEffect(() => {
     if (step !== 'otp') return
     setCountdown(60)
@@ -56,15 +79,41 @@ export default function MemberLogin() {
     return () => clearInterval(interval)
   }, [step])
 
+  async function resolveCode(code) {
+    if (!code || code.length < 4) { setResolvedGym(null); return }
+    try {
+      const { data } = await api.get(`/auth/resolve-code/${code.toUpperCase()}`)
+      setResolvedGym(data)
+    } catch {
+      setResolvedGym(null)
+    }
+  }
+
   const requestOTP = async () => {
     if (!email.trim() || !email.includes('@')) return setError('Enter a valid email address')
     setError('')
     setLoading(true)
     try {
-      await api.post('/members/login/otp/email', { email: email.trim() })
+      if (mode === 'signup') {
+        if (!name.trim()) { setLoading(false); return setError('Enter your name') }
+        if (!phone.trim() || phone.trim().length < 10) { setLoading(false); return setError('Enter a valid phone number') }
+        await api.post('/auth/b2c/register', {
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          inviteCode: inviteCode.trim() || undefined,
+        })
+      } else {
+        await api.post('/auth/b2c/otp/request', { email: email.trim() })
+      }
       setStep('otp')
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Member not found')
+      const msg = err.response?.data?.message || err.response?.data?.error
+      if (err.response?.status === 409) {
+        setError('Account already exists. Sign in instead.')
+      } else {
+        setError(msg || (mode === 'signup' ? 'Could not create account' : 'Could not send code'))
+      }
     } finally {
       setLoading(false)
     }
@@ -75,7 +124,7 @@ export default function MemberLogin() {
     setCanResend(false)
     setCountdown(60)
     try {
-      await api.post('/members/login/otp/email', { email: email.trim() })
+      await api.post('/auth/b2c/otp/request', { email: email.trim() })
     } catch {
       setCanResend(true)
     }
@@ -87,24 +136,26 @@ export default function MemberLogin() {
     setError('')
     setLoading(true)
     try {
-      const { data } = await api.post('/members/login/verify/email', { email: email.trim(), otp: otpStr })
+      const { data } = await api.post('/auth/b2c/otp/verify', { email: email.trim(), otp: otpStr })
       setStep('verifying')
       setTimeout(() => {
         localStorage.setItem('ivira_member_token', data.token)
-        localStorage.setItem('ivira_member_gym', data.gymId)
-        localStorage.setItem('ivira_member', JSON.stringify(data.member))
+        if (data.gymId) localStorage.setItem('ivira_member_gym', data.gymId)
+        if (data.member) localStorage.setItem('ivira_member', JSON.stringify(data.member))
         navigate('/member/dashboard', { replace: true })
       }, 1200)
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Invalid code')
       setShaking(true)
-      setTimeout(() => {
-        setShaking(false)
-        setError('')
-        setOtp(['', '', '', '', '', ''])
-      }, 1000)
+      setTimeout(() => { setShaking(false); setError(''); setOtp(['', '', '', '', '', '']) }, 1000)
       setLoading(false)
     }
+  }
+
+  const switchMode = (newMode) => {
+    setMode(newMode)
+    setError('')
+    setStep('form')
   }
 
   const footerContent = step !== 'verifying' && (
@@ -134,12 +185,12 @@ export default function MemberLogin() {
             animation: 'authSpin 0.8s linear infinite', marginBottom: 24,
           }} />
           <p style={{ fontSize: 16, fontWeight: 600, color: textPrimary, fontFamily: ff, margin: 0 }}>
-            Securing your session...
+            {mode === 'signup' ? 'Creating your account...' : 'Securing your session...'}
           </p>
         </div>
       )}
 
-      {/* Mobile App Download Prompt — platform-aware */}
+      {/* Mobile App Download Prompt */}
       {step === 'app_prompt' && (() => {
         const platform = getMobilePlatform()
         const isAndroid = platform === 'android'
@@ -168,66 +219,41 @@ export default function MemberLogin() {
               </p>
             </div>
 
-            {/* Android: APK download + Google Play coming soon */}
             {isAndroid && (
               <>
-                <a
-                  href="https://api.ivira.app/downloads/ivira-latest.apk"
-                  download
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    width: '100%', padding: '16px 24px', borderRadius: 12,
-                    background: accent, color: '#fff', fontSize: 16, fontWeight: 700,
-                    fontFamily: ff, textDecoration: 'none', textAlign: 'center',
-                    marginBottom: 12, transition: 'opacity 0.2s',
-                  }}
-                >
+                <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  width: '100%', padding: '16px 24px', borderRadius: 12,
+                  background: accent, color: '#fff', fontSize: 16, fontWeight: 700,
+                  fontFamily: ff, textDecoration: 'none', textAlign: 'center',
+                  marginBottom: 12, transition: 'opacity 0.2s',
+                }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
                   Download APK
                 </a>
-                <div style={{
-                  padding: '14px', borderRadius: 10,
-                  border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5,
-                  marginBottom: 20,
-                }}>
+                <div style={{ padding: '14px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5, marginBottom: 20 }}>
                   <div style={{ fontSize: 11, color: textTer, fontFamily: ff }}>Coming Soon</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: textSec, fontFamily: ff }}>Google Play</div>
                 </div>
               </>
             )}
 
-            {/* iOS: App Store coming soon */}
             {isIOS && (
-              <div style={{
-                padding: '20px', borderRadius: 12,
-                border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.6,
-                marginBottom: 20,
-              }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={textSec} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 8 }}>
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-                  <path d="M8 12l2 2 4-4"/>
-                </svg>
+              <div style={{ padding: '20px', borderRadius: 12, border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.6, marginBottom: 20 }}>
                 <div style={{ fontSize: 12, color: textTer, fontFamily: ff, marginBottom: 4 }}>Coming Soon</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: textSec, fontFamily: ff }}>App Store</div>
               </div>
             )}
 
-            {/* Fallback for other mobile devices */}
             {!isAndroid && !isIOS && (
               <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-                <div style={{
-                  flex: 1, padding: '12px', borderRadius: 10,
-                  border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5,
-                }}>
+                <div style={{ flex: 1, padding: '12px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5 }}>
                   <div style={{ fontSize: 11, color: textTer, fontFamily: ff }}>Coming Soon</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: textSec, fontFamily: ff }}>App Store</div>
                 </div>
-                <div style={{
-                  flex: 1, padding: '12px', borderRadius: 10,
-                  border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5,
-                }}>
+                <div style={{ flex: 1, padding: '12px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, textAlign: 'center', opacity: 0.5 }}>
                   <div style={{ fontSize: 11, color: textTer, fontFamily: ff }}>Coming Soon</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: textSec, fontFamily: ff }}>Google Play</div>
                 </div>
@@ -235,13 +261,16 @@ export default function MemberLogin() {
             )}
 
             <div style={{ textAlign: 'center', borderTop: `1px solid ${t.inputBorder}`, paddingTop: 20 }}>
-              <p style={{ fontSize: 13, color: textSec, fontFamily: ff, margin: 0 }}>
+              <p style={{ fontSize: 13, color: textSec, fontFamily: ff, margin: '0 0 8px' }}>
                 Already have an account?{' '}
-                <button
-                  onClick={() => setStep('email')}
-                  style={{ background: 'none', border: 'none', color: accent, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: ff }}
-                >
+                <button onClick={() => setStep('form')} style={{ background: 'none', border: 'none', color: accent, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: ff }}>
                   Sign in here
+                </button>
+              </p>
+              <p style={{ fontSize: 13, color: textSec, fontFamily: ff, margin: 0 }}>
+                New here?{' '}
+                <button onClick={() => { setMode('signup'); setStep('form') }} style={{ background: 'none', border: 'none', color: accent, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: ff }}>
+                  Create an account
                 </button>
               </p>
             </div>
@@ -249,8 +278,8 @@ export default function MemberLogin() {
         )
       })()}
 
-      {/* Email step */}
-      {step === 'email' && (
+      {/* Sign In / Sign Up Form */}
+      {step === 'form' && (
         <>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <img src="/icons/icon-96.png" alt="I V I R A" style={{
@@ -265,30 +294,126 @@ export default function MemberLogin() {
 
           <div style={{ marginBottom: 28 }}>
             <h3 style={{ fontSize: 22, fontWeight: 700, color: textPrimary, margin: '0 0 6px', fontFamily: ff }}>
-              Welcome Back
+              {mode === 'signup' ? 'Create Account' : 'Welcome Back'}
             </h3>
             <p style={{ fontSize: 14, color: textSec, margin: 0, lineHeight: 1.5, fontFamily: ff }}>
-              Sign in to access your gym, track progress
+              {mode === 'signup'
+                ? 'Join I V I R A to track workouts and connect with your gym'
+                : 'Sign in to access your gym, track progress'}
             </p>
           </div>
 
-          <div style={{ marginBottom: 8 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: textSec, marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase', fontFamily: ff }}>
-              Email Address
-            </label>
-            <input
-              type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && requestOTP()}
-              autoFocus
-              style={t.inputStyle(!!error)}
-              onFocus={t.onFocus}
-              onBlur={(e) => t.onBlur(e, !!error)}
-            />
-            {error && <p style={{ color: errorColor, fontSize: 13, margin: '8px 0 0', fontFamily: ff }}>{error}</p>}
+          {/* Resolved gym banner */}
+          {mode === 'signup' && resolvedGym && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 14px', borderRadius: 10, marginBottom: 16,
+              background: `${accent}0d`, border: `1px solid ${accent}26`,
+            }}>
+              {resolvedGym.logoUrl && (
+                <img src={resolvedGym.logoUrl} alt="" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover' }} />
+              )}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: textPrimary, fontFamily: ff }}>
+                  Joining {resolvedGym.gymName}
+                </div>
+                {resolvedGym.city && (
+                  <div style={{ fontSize: 11, color: textSec, fontFamily: ff }}>{resolvedGym.city}</div>
+                )}
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>
+              </svg>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 8 }}>
+            {/* Name (signup only) */}
+            {mode === 'signup' && (
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: textSec, marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase', fontFamily: ff }}>
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Your full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  style={t.inputStyle(false)}
+                  onFocus={t.onFocus}
+                  onBlur={(e) => t.onBlur(e, false)}
+                />
+              </div>
+            )}
+
+            {/* Email */}
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: textSec, marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase', fontFamily: ff }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="you@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (mode === 'signin' ? requestOTP() : null)}
+                autoFocus={mode === 'signin'}
+                style={t.inputStyle(!!error)}
+                onFocus={t.onFocus}
+                onBlur={(e) => t.onBlur(e, !!error)}
+              />
+            </div>
+
+            {/* Phone (signup only) */}
+            {mode === 'signup' && (
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: textSec, marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase', fontFamily: ff }}>
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+1 (814) 895-7439"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  style={t.inputStyle(false)}
+                  onFocus={t.onFocus}
+                  onBlur={(e) => t.onBlur(e, false)}
+                />
+              </div>
+            )}
+
+            {/* Invite Code (signup only) */}
+            {mode === 'signup' && (
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: textSec, marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase', fontFamily: ff }}>
+                  Gym Invite Code <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="GYM-XXXXXX"
+                  value={inviteCode}
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase()
+                    setInviteCode(val)
+                    if (val.length >= 4) resolveCode(val)
+                    else setResolvedGym(null)
+                  }}
+                  style={{
+                    ...t.inputStyle(false),
+                    letterSpacing: '2px',
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
+                  onFocus={t.onFocus}
+                  onBlur={(e) => t.onBlur(e, false)}
+                />
+                {inviteCode && !resolvedGym && inviteCode.length >= 6 && (
+                  <p style={{ color: errorColor, fontSize: 12, margin: '6px 0 0', fontFamily: ff }}>Invalid invite code</p>
+                )}
+              </div>
+            )}
           </div>
+
+          {error && <p style={{ color: errorColor, fontSize: 13, margin: '8px 0 0', fontFamily: ff }}>{error}</p>}
 
           <button
             onClick={requestOTP}
@@ -298,8 +423,29 @@ export default function MemberLogin() {
             style={{ ...t.buttonStyle(loading, btnHover), marginTop: 14 }}
           >
             {loading && <Loader2 size={18} style={{ animation: 'authSpin 1s linear infinite' }} />}
-            {loading ? 'Sending...' : 'SEND LOGIN CODE'}
+            {loading
+              ? (mode === 'signup' ? 'Creating...' : 'Sending...')
+              : (mode === 'signup' ? 'CREATE ACCOUNT' : 'SEND LOGIN CODE')}
           </button>
+
+          {/* Mode switch */}
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
+            {mode === 'signin' ? (
+              <p style={{ fontSize: 13, color: textSec, fontFamily: ff, margin: 0 }}>
+                New here?{' '}
+                <button onClick={() => switchMode('signup')} style={{ background: 'none', border: 'none', color: accent, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: ff }}>
+                  Create an account
+                </button>
+              </p>
+            ) : (
+              <p style={{ fontSize: 13, color: textSec, fontFamily: ff, margin: 0 }}>
+                Already have an account?{' '}
+                <button onClick={() => switchMode('signin')} style={{ background: 'none', border: 'none', color: accent, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: ff }}>
+                  Sign in
+                </button>
+              </p>
+            )}
+          </div>
         </>
       )}
 
@@ -316,13 +462,7 @@ export default function MemberLogin() {
           </div>
 
           <div style={{ marginBottom: 20 }}>
-            <PinInput
-              value={otp}
-              onChange={setOtp}
-              onComplete={verifyOTP}
-              error={!!error}
-              shaking={shaking}
-            />
+            <PinInput value={otp} onChange={setOtp} onComplete={verifyOTP} error={!!error} shaking={shaking} />
           </div>
 
           {error && <p style={{ color: errorColor, fontSize: 13, textAlign: 'center', marginBottom: 12, fontFamily: ff }}>{error}</p>}
@@ -347,17 +487,14 @@ export default function MemberLogin() {
                 </span>
               </span>
             ) : (
-              <button
-                onClick={resendOTP}
-                style={{ background: 'none', border: 'none', color: accent, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: ff }}
-              >
+              <button onClick={resendOTP} style={{ background: 'none', border: 'none', color: accent, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: ff }}>
                 Resend Code
               </button>
             )}
           </div>
 
           <button
-            onClick={() => { setStep('email'); setError(''); setOtp(['', '', '', '', '', '']) }}
+            onClick={() => { setStep('form'); setError(''); setOtp(['', '', '', '', '', '']) }}
             style={{ display: 'block', margin: '16px auto 0', background: 'none', border: 'none', color: accent, fontSize: 14, cursor: 'pointer', fontFamily: ff, transition: 'opacity 0.2s' }}
             onMouseEnter={(e) => (e.target.style.opacity = '0.7')}
             onMouseLeave={(e) => (e.target.style.opacity = '1')}

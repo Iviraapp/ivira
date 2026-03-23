@@ -3,8 +3,16 @@ import { useTheme } from '../../context/ThemeContext'
 
 const FONT = "'Inter', -apple-system, sans-serif"
 
+function isIndianUser() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta' || tz === 'Asia/Colombo'
+  } catch { return false }
+}
+
 export default function Contact() {
   const { isDark } = useTheme()
+  const isIndia = isIndianUser()
 
   const cardStyle = {
     background: isDark ? '#121212' : '#FFFFFF',
@@ -56,10 +64,21 @@ export default function Contact() {
         {/* Registered Office */}
         <div style={cardStyle}>
           <h3 style={cardTitle}>Registered Office</h3>
-          <p style={cardText}>SevenH Tech LLC</p>
-          <p style={cardText}>545 Harrold St 3074</p>
-          <p style={cardText}>Fort Worth, TX 76107</p>
-          <p style={cardText}>United States</p>
+          {isIndia ? (
+            <>
+              <p style={cardText}>Rightswipe Technologies OPC Pvt Ltd</p>
+              <p style={cardText}>134, Sri Sai Gardens, Sarjapura - Attibele Rd</p>
+              <p style={cardText}>Sarjapura, Bengaluru, Karnataka 562125</p>
+              <p style={cardText}>India</p>
+            </>
+          ) : (
+            <>
+              <p style={cardText}>SevenH Tech LLC</p>
+              <p style={cardText}>545 Harrold St 3074</p>
+              <p style={cardText}>Fort Worth, TX 76107</p>
+              <p style={cardText}>United States</p>
+            </>
+          )}
         </div>
 
         {/* Support */}
@@ -71,10 +90,14 @@ export default function Contact() {
           </p>
           <p style={cardLabel}>WhatsApp</p>
           <p style={cardText}>
-            <a href="https://wa.me/18148957439" style={cardLink}>+1 (814) 895-7439</a>
+            {isIndia ? (
+              <a href="https://wa.me/919036465769" style={cardLink}>+91 90364 65769</a>
+            ) : (
+              <a href="https://wa.me/18148957439" style={cardLink}>+1 (814) 895-7439</a>
+            )}
           </p>
           <p style={cardLabel}>Hours</p>
-          <p style={cardText}>Mon&ndash;Fri, 9:00 AM &ndash; 6:00 PM EST</p>
+          <p style={cardText}>{isIndia ? 'Mon\u2013Sat, 9:00 AM \u2013 7:00 PM IST' : 'Mon\u2013Fri, 9:00 AM \u2013 6:00 PM EST'}</p>
         </div>
 
         {/* For Gym Owners */}

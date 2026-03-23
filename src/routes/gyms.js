@@ -26,6 +26,19 @@ export default async function gymRoutes(fastify) {
     return { gym: request.gym };
   });
 
+  // Get gym invite code
+  fastify.get('/gyms/:gymId/invite-code', authHooks, async (request) => {
+    const gym = await db('gyms').where('id', request.params.gymId).select('invite_code').first();
+    return { inviteCode: gym?.invite_code || null };
+  });
+
+  // Regenerate gym invite code
+  fastify.post('/gyms/:gymId/invite-code/regenerate', authHooks, async (request) => {
+    const newCode = 'GYM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    await db('gyms').where('id', request.params.gymId).update({ invite_code: newCode, updated_at: new Date() });
+    return { inviteCode: newCode };
+  });
+
   // Update gym
   fastify.patch('/gyms/:gymId', { schema: updateSchema, ...authHooks }, async (request) => {
     const gym = await authService.updateGym(request.params.gymId, request.body);
