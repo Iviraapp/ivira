@@ -688,7 +688,7 @@ export default function Trainers() {
                 <label style={labelSty(theme)}>Phone *</label>
                 <input
                   style={inputSty(theme)}
-                  placeholder="+91 9876543210"
+                  placeholder="+1 (814) 895-7439"
                   value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                 />

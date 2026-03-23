@@ -168,7 +168,7 @@ function FloatingOrbs({ accent, isDark }) {
 
 export default function AuthLayout({
   children,
-  title = 'IVIRA',
+  title = 'I V I R A',
   subtitle = 'Access your enterprise dashboard.',
   tagline = 'Secure. Real-time. Global.',
   role = 'owner', // 'owner' | 'member' | 'trainer' | 'admin'
@@ -273,7 +273,7 @@ export default function AuthLayout({
           <div style={{ opacity: 0, animation: 'authFadeIn 0.6s ease-out 100ms forwards' }}>
             <img
               src="/icons/icon-96.png"
-              alt="IVIRA"
+              alt="I V I R A"
               style={{
                 width: 48, height: 48, borderRadius: 14, marginBottom: 28,
                 boxShadow: `0 4px 24px ${heroTheme.accent}40`,

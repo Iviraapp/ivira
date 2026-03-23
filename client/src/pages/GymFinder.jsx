@@ -8,7 +8,8 @@ import {
   Search, MapPin, Star, X, Navigation, Clock, Dumbbell, Car, Waves,
   Snowflake, Lock, Flame, Coffee, Locate, AlertCircle, Loader2,
   ExternalLink, Phone, Globe as GlobeIcon, ChevronRight, Sparkles,
-  Ticket, CheckCircle2, User, CreditCard,
+  Ticket, CheckCircle2, User, CreditCard, ShieldCheck, Building2,
+  PhoneCall, Mail,
 } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 
@@ -145,7 +146,22 @@ export default function GymFinder() {
   const [checkoutForm, setCheckoutForm] = useState({ buyerName: '', buyerPhone: '', validDate: '' })
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false)
   const [checkoutResult, setCheckoutResult] = useState(null) // { success, message }
+  // Lead capture state
+  const [showLeadModal, setShowLeadModal] = useState(false)
+  const [leadType, setLeadType] = useState(null) // 'contact' | 'trial' | 'callback'
+  const [leadForm, setLeadForm] = useState({ name: '', phone: '', email: '' })
+  const [leadSubmitting, setLeadSubmitting] = useState(false)
+  const [leadSubmitted, setLeadSubmitted] = useState(false)
+  const [contactUnlocked, setContactUnlocked] = useState(false) // unlocked after lead capture
   const searchTimeoutRef = useRef(null)
+
+  // Close lead modal on Escape
+  useEffect(() => {
+    if (!showLeadModal) return
+    const handleKey = (e) => { if (e.key === 'Escape') setShowLeadModal(false) }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [showLeadModal])
 
   // All gyms combined
   const allGyms = activeSource === 'internal' ? internalGyms
@@ -299,6 +315,10 @@ export default function GymFinder() {
     setDayPassMatch(null)
     setShowCheckout(false)
     setCheckoutResult(null)
+    setShowLeadModal(false)
+    setLeadSubmitted(false)
+    setContactUnlocked(false)
+    setLeadForm({ name: '', phone: '', email: '' })
 
     const lat = parseFloat(gym.latitude)
     const lng = parseFloat(gym.longitude)
@@ -340,6 +360,9 @@ export default function GymFinder() {
       setDayPassMatch(null)
       setShowCheckout(false)
       setCheckoutResult(null)
+      setShowLeadModal(false)
+      setLeadSubmitted(false)
+      setContactUnlocked(false)
     }, 300)
   }
 
@@ -405,6 +428,41 @@ export default function GymFinder() {
     } finally {
       setCheckoutSubmitting(false)
     }
+  }
+
+  async function handleLeadSubmit(e) {
+    e.preventDefault()
+    const { name, phone } = leadForm
+    if (!name.trim() || !phone.trim()) return
+
+    setLeadSubmitting(true)
+    try {
+      await api.post('/concierge/inquiries', {
+        name: name.trim(),
+        phone: phone.trim(),
+        email: leadForm.email.trim() || undefined,
+        facility_name: selectedGym?.gym_name,
+        facility_place_id: selectedGym?.place_id,
+        inquiry_type: leadType,
+        source: 'gymfinder',
+      })
+      setLeadSubmitted(true)
+      if (leadType === 'contact') setContactUnlocked(true)
+      setShowLeadModal(false)
+    } catch {
+      // Still unlock on error — don't block UX for tracking failure
+      setLeadSubmitted(true)
+      if (leadType === 'contact') setContactUnlocked(true)
+      setShowLeadModal(false)
+    } finally {
+      setLeadSubmitting(false)
+    }
+  }
+
+  function openLeadModal(type) {
+    setLeadType(type)
+    setLeadForm({ name: '', phone: '', email: '' })
+    setShowLeadModal(true)
   }
 
   function retryLocation() {
@@ -536,7 +594,7 @@ export default function GymFinder() {
             <div style={{ display: 'flex', gap: 4 }}>
               {[
                 { key: 'all', label: 'All' },
-                ...(internalGyms.length > 0 ? [{ key: 'internal', label: `IVIRA (${internalGyms.length})` }] : []),
+                ...(internalGyms.length > 0 ? [{ key: 'internal', label: `I V I R A (${internalGyms.length})` }] : []),
                 ...(googleGyms.length > 0 ? [{ key: 'google', label: `Nearby (${googleGyms.length})` }] : []),
               ].map(tab => (
                 <button
@@ -693,7 +751,7 @@ export default function GymFinder() {
                         {gym.gym_name}
                       </div>
                       {/* Source badge */}
-                      {gym.source === 'google_places' && (
+                      {gym.source === 'google_places' ? (
                         <span style={{
                           fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 6,
                           background: `${theme.cyan}1a`, color: theme.cyan,
@@ -702,6 +760,17 @@ export default function GymFinder() {
                           textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0,
                         }}>
                           Google
+                        </span>
+                      ) : (
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 6,
+                          background: `${theme.brandAccent}1a`, color: theme.brandAccent,
+                          border: `1px solid ${theme.brandAccent}26`,
+                          fontFamily: "'JetBrains Mono', monospace",
+                          textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0,
+                          display: 'flex', alignItems: 'center', gap: 3,
+                        }}>
+                          <ShieldCheck size={9} /> Partner
                         </span>
                       )}
                     </div>
@@ -812,7 +881,7 @@ export default function GymFinder() {
                     }}>
                       {selectedGym.gym_name}
                     </h2>
-                    {isGoogleGym && (
+                    {isGoogleGym ? (
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
                         background: `${theme.cyan}1a`, color: theme.cyan,
@@ -821,6 +890,17 @@ export default function GymFinder() {
                         textTransform: 'uppercase',
                       }}>
                         Google
+                      </span>
+                    ) : (
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                        background: `${theme.brandAccent}1a`, color: theme.brandAccent,
+                        border: `1px solid ${theme.brandAccent}26`,
+                        fontFamily: "'JetBrains Mono', monospace",
+                        textTransform: 'uppercase',
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                      }}>
+                        <ShieldCheck size={11} /> I V I R A Partner
                       </span>
                     )}
                   </div>
@@ -917,35 +997,75 @@ export default function GymFinder() {
                 </div>
               )}
 
-              {/* Contact buttons (Google Places) */}
+              {/* Contact buttons (Google Places) — gated behind lead capture */}
               {isGoogleGym && (detail.phone || detail.website) && (
-                <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                  {detail.phone && (
-                    <a href={`tel:${detail.phone}`} style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '10px 16px', borderRadius: 12,
-                      background: `${theme.green}14`, color: theme.green,
-                      border: `1px solid ${theme.green}26`,
-                      fontSize: 13, fontWeight: 600, fontFamily: "'Inter', -apple-system, sans-serif",
-                      textDecoration: 'none', transition: 'all 0.15s',
-                    }}>
-                      <Phone size={15} />
-                      {detail.phone}
-                    </a>
-                  )}
-                  {detail.website && (
-                    <a href={detail.website} target="_blank" rel="noopener noreferrer" style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '10px 16px', borderRadius: 12,
-                      background: theme.brandAccentSoft, color: theme.brandAccent,
-                      border: `1px solid ${theme.brandAccent}26`,
-                      fontSize: 13, fontWeight: 600, fontFamily: "'Inter', -apple-system, sans-serif",
-                      textDecoration: 'none', transition: 'all 0.15s',
-                    }}>
-                      <GlobeIcon size={15} />
-                      Website
-                      <ExternalLink size={12} />
-                    </a>
+                <div style={{ marginBottom: 20 }}>
+                  {contactUnlocked ? (
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      {detail.phone && (
+                        <a href={`tel:${detail.phone}`} style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '10px 16px', borderRadius: 12,
+                          background: `${theme.green}14`, color: theme.green,
+                          border: `1px solid ${theme.green}26`,
+                          fontSize: 13, fontWeight: 600, fontFamily: "'Inter', -apple-system, sans-serif",
+                          textDecoration: 'none', transition: 'all 0.15s',
+                        }}>
+                          <Phone size={15} />
+                          {detail.phone}
+                        </a>
+                      )}
+                      {detail.website && (
+                        <a href={detail.website} target="_blank" rel="noopener noreferrer" style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '10px 16px', borderRadius: 12,
+                          background: theme.brandAccentSoft, color: theme.brandAccent,
+                          border: `1px solid ${theme.brandAccent}26`,
+                          fontSize: 13, fontWeight: 600, fontFamily: "'Inter', -apple-system, sans-serif",
+                          textDecoration: 'none', transition: 'all 0.15s',
+                        }}>
+                          <GlobeIcon size={15} />
+                          Website
+                          <ExternalLink size={12} />
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => openLeadModal('contact')}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        width: '100%', padding: '14px 18px', borderRadius: 12,
+                        background: `linear-gradient(135deg, ${theme.brandAccent}14, ${theme.cyan}14)`,
+                        border: `1px solid ${theme.brandAccent}26`,
+                        cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = theme.brandAccent + '4d'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = theme.brandAccent + '26'}
+                    >
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 10,
+                        background: theme.brandAccentSoft,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Lock size={16} style={{ color: theme.brandAccent }} />
+                      </div>
+                      <div style={{ flex: 1, textAlign: 'left' }}>
+                        <div style={{
+                          fontSize: 13, fontWeight: 700, color: theme.text,
+                          fontFamily: "'Inter', -apple-system, sans-serif",
+                        }}>
+                          Unlock Contact Details
+                        </div>
+                        <div style={{
+                          fontSize: 11, color: theme.textTer,
+                          fontFamily: "'Inter', -apple-system, sans-serif",
+                        }}>
+                          Quick sign-up to view phone & website
+                        </div>
+                      </div>
+                      <ChevronRight size={16} style={{ color: theme.textTer }} />
+                    </button>
                   )}
                 </div>
               )}
@@ -1177,6 +1297,95 @@ export default function GymFinder() {
                   </div>
                 )}
 
+                {/* Request Trial / Callback — for unmatched Google gyms */}
+                {isGoogleGym && !dayPassLoading && (!dayPassMatch || !dayPassMatch.matched) && !leadSubmitted && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <button
+                      onClick={() => openLeadModal('trial')}
+                      style={{
+                        width: '100%', padding: '14px 24px', fontSize: 15,
+                        fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px',
+                        fontFamily: "'Inter', -apple-system, sans-serif",
+                        background: `linear-gradient(135deg, ${theme.brandAccent}, ${theme.cyan})`,
+                        color: '#fff', border: 'none', borderRadius: 14,
+                        cursor: 'pointer', transition: 'all 0.2s',
+                        boxShadow: `0 4px 24px ${theme.brandAccent}4d`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = `0 8px 32px ${theme.brandAccent}66`
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'none'
+                        e.currentTarget.style.boxShadow = `0 4px 24px ${theme.brandAccent}4d`
+                      }}
+                    >
+                      <Sparkles size={16} />
+                      Request a Free Trial
+                    </button>
+                  </div>
+                )}
+
+                {/* Lead submitted confirmation */}
+                {isGoogleGym && leadSubmitted && (
+                  <div style={{
+                    padding: '16px 20px', borderRadius: 14, textAlign: 'center',
+                    background: `${theme.green}0f`,
+                    border: `1px solid ${theme.green}26`,
+                    animation: 'fadeIn 0.3s ease',
+                  }}>
+                    <CheckCircle2 size={28} style={{ color: theme.green, marginBottom: 8 }} />
+                    <div style={{
+                      fontSize: 14, fontWeight: 700, color: theme.green,
+                      fontFamily: "'Inter', -apple-system, sans-serif",
+                      textTransform: 'uppercase', marginBottom: 4,
+                    }}>
+                      Request Submitted
+                    </div>
+                    <div style={{
+                      fontSize: 12, color: theme.textSec,
+                      fontFamily: "'Inter', -apple-system, sans-serif",
+                      lineHeight: 1.5,
+                    }}>
+                      Our concierge team will connect you with {selectedGym?.gym_name} shortly.
+                    </div>
+                  </div>
+                )}
+
+                {/* Claim This Gym — for gym owners */}
+                {isGoogleGym && !dayPassLoading && (!dayPassMatch || !dayPassMatch.matched) && (
+                  <a
+                    href="/onboarding"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '12px 16px', borderRadius: 12,
+                      background: theme.accentSoft,
+                      border: `1px solid ${theme.border}`,
+                      textDecoration: 'none', transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = theme.brandAccent + '4d'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = theme.border}
+                  >
+                    <Building2 size={18} style={{ color: theme.brandAccent, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: 13, fontWeight: 700, color: theme.text,
+                        fontFamily: "'Inter', -apple-system, sans-serif",
+                      }}>
+                        Own this gym?
+                      </div>
+                      <div style={{
+                        fontSize: 11, color: theme.textTer,
+                        fontFamily: "'Inter', -apple-system, sans-serif",
+                      }}>
+                        Claim your listing & manage it on I V I R A
+                      </div>
+                    </div>
+                    <ChevronRight size={16} style={{ color: theme.textTer }} />
+                  </a>
+                )}
+
                 {/* Day Pass Checkout Form */}
                 {showCheckout && !checkoutResult && (
                   <form onSubmit={handleDayPassPurchase} style={{
@@ -1360,7 +1569,26 @@ export default function GymFinder() {
                   </div>
                 )}
 
-                {/* Directions — always shown for Google gyms */}
+                {/* Request Callback — always available for Google gyms */}
+                {isGoogleGym && !leadSubmitted && (
+                  <button
+                    onClick={() => openLeadModal('callback')}
+                    style={{
+                      width: '100%', padding: '12px 24px', fontSize: 13,
+                      fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px',
+                      fontFamily: "'Inter', -apple-system, sans-serif",
+                      background: `${theme.green}14`,
+                      color: theme.green, border: `1px solid ${theme.green}26`,
+                      borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    <PhoneCall size={14} />
+                    Request Callback
+                  </button>
+                )}
+
+                {/* Directions — always shown for Google gyms (secondary) */}
                 {isGoogleGym && (
                   <a
                     href={`https://www.google.com/maps/place/?q=place_id:${selectedGym.place_id}`}
@@ -1368,22 +1596,19 @@ export default function GymFinder() {
                     rel="noopener noreferrer"
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                      width: '100%', padding: dayPassMatch?.matched ? '12px 24px' : '16px 24px',
-                      fontSize: dayPassMatch?.matched ? 14 : 16,
-                      fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px',
+                      width: '100%', padding: '12px 24px',
+                      fontSize: 13,
+                      fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px',
                       fontFamily: "'Inter', -apple-system, sans-serif",
-                      background: dayPassMatch?.matched
-                        ? `${theme.cyan}14`
-                        : `linear-gradient(135deg, ${theme.cyan}, ${theme.brandAccent})`,
-                      color: dayPassMatch?.matched ? theme.cyan : '#fff',
-                      border: dayPassMatch?.matched ? `1px solid ${theme.cyan}26` : 'none',
-                      borderRadius: 14,
-                      cursor: 'pointer', transition: 'all 0.2s',
-                      boxShadow: dayPassMatch?.matched ? 'none' : `0 4px 24px ${theme.cyan}4d`,
+                      background: `${theme.cyan}14`,
+                      color: theme.cyan,
+                      border: `1px solid ${theme.cyan}26`,
+                      borderRadius: 12,
+                      cursor: 'pointer', transition: 'all 0.15s',
                       textDecoration: 'none',
                     }}
                   >
-                    <Navigation size={dayPassMatch?.matched ? 15 : 18} />
+                    <Navigation size={15} />
                     Get Directions
                   </a>
                 )}
@@ -1411,6 +1636,181 @@ export default function GymFinder() {
                 )}
               </div>
             </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Lead Capture Modal ── */}
+      {showLeadModal && (
+        <>
+          <div
+            onClick={() => setShowLeadModal(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 2000,
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+              animation: 'fadeIn 0.2s ease',
+            }}
+          />
+          <div style={{
+            position: 'fixed', zIndex: 2001,
+            top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            width: '90%', maxWidth: 400,
+            background: theme.bgSec,
+            borderRadius: 20,
+            border: `1px solid ${theme.border}`,
+            boxShadow: '0 16px 64px rgba(0,0,0,0.5)',
+            animation: 'fadeIn 0.25s ease',
+            overflow: 'hidden',
+          }}>
+            {/* Modal header */}
+            <div style={{
+              padding: '20px 24px 16px',
+              borderBottom: `1px solid ${theme.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div>
+                <h3 style={{
+                  fontSize: 18, fontWeight: 800, color: theme.text, margin: 0,
+                  fontFamily: "'Inter', -apple-system, sans-serif",
+                }}>
+                  {leadType === 'contact' ? 'Unlock Contact Info'
+                    : leadType === 'trial' ? 'Request Free Trial'
+                    : 'Request a Callback'}
+                </h3>
+                <p style={{
+                  fontSize: 12, color: theme.textTer, margin: '4px 0 0',
+                  fontFamily: "'Inter', -apple-system, sans-serif",
+                }}>
+                  {leadType === 'contact'
+                    ? `Get direct contact details for ${selectedGym?.gym_name}`
+                    : leadType === 'trial'
+                    ? `We'll arrange a free trial session at ${selectedGym?.gym_name}`
+                    : `Our concierge will call you about ${selectedGym?.gym_name}`}
+                </p>
+              </div>
+              <button onClick={() => setShowLeadModal(false)} style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: theme.accentSoft, border: 'none',
+                color: theme.textSec, cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Modal form */}
+            <form onSubmit={handleLeadSubmit} style={{ padding: '20px 24px 24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ position: 'relative' }}>
+                  <User size={15} style={{
+                    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                    color: theme.textTer,
+                  }} />
+                  <input
+                    required
+                    placeholder="Your name"
+                    value={leadForm.name}
+                    onChange={e => setLeadForm(f => ({ ...f, name: e.target.value }))}
+                    autoFocus
+                    style={{
+                      width: '100%', padding: '12px 14px 12px 40px', fontSize: 14,
+                      fontFamily: "'Inter', -apple-system, sans-serif", fontWeight: 500,
+                      background: theme.bgInput, color: theme.text,
+                      border: `1px solid ${theme.border}`, borderRadius: 10,
+                      outline: 'none', transition: 'border-color 0.15s',
+                      boxSizing: 'border-box',
+                    }}
+                    onFocus={e => e.target.style.borderColor = theme.borderFocus}
+                    onBlur={e => e.target.style.borderColor = theme.border}
+                  />
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                  <Phone size={15} style={{
+                    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                    color: theme.textTer,
+                  }} />
+                  <input
+                    required
+                    type="tel"
+                    placeholder="Phone number"
+                    value={leadForm.phone}
+                    onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
+                    style={{
+                      width: '100%', padding: '12px 14px 12px 40px', fontSize: 14,
+                      fontFamily: "'Inter', -apple-system, sans-serif", fontWeight: 500,
+                      background: theme.bgInput, color: theme.text,
+                      border: `1px solid ${theme.border}`, borderRadius: 10,
+                      outline: 'none', transition: 'border-color 0.15s',
+                      boxSizing: 'border-box',
+                    }}
+                    onFocus={e => e.target.style.borderColor = theme.borderFocus}
+                    onBlur={e => e.target.style.borderColor = theme.border}
+                  />
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                  <Mail size={15} style={{
+                    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                    color: theme.textTer,
+                  }} />
+                  <input
+                    type="email"
+                    placeholder="Email (optional)"
+                    value={leadForm.email}
+                    onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
+                    style={{
+                      width: '100%', padding: '12px 14px 12px 40px', fontSize: 14,
+                      fontFamily: "'Inter', -apple-system, sans-serif", fontWeight: 500,
+                      background: theme.bgInput, color: theme.text,
+                      border: `1px solid ${theme.border}`, borderRadius: 10,
+                      outline: 'none', transition: 'border-color 0.15s',
+                      boxSizing: 'border-box',
+                    }}
+                    onFocus={e => e.target.style.borderColor = theme.borderFocus}
+                    onBlur={e => e.target.style.borderColor = theme.border}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={leadSubmitting}
+                  style={{
+                    width: '100%', padding: '14px 24px', fontSize: 15,
+                    fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px',
+                    fontFamily: "'Inter', -apple-system, sans-serif",
+                    background: leadSubmitting
+                      ? `${theme.brandAccent}4d`
+                      : `linear-gradient(135deg, ${theme.brandAccent}, ${theme.cyan})`,
+                    color: '#fff', border: 'none', borderRadius: 12,
+                    cursor: leadSubmitting ? 'wait' : 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: `0 4px 20px ${theme.brandAccent}4d`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    marginTop: 4,
+                  }}
+                >
+                  {leadSubmitting ? (
+                    <>
+                      <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                      Submitting...
+                    </>
+                  ) : (
+                    leadType === 'contact' ? 'Unlock Contact Info'
+                      : leadType === 'trial' ? 'Request Trial'
+                      : 'Request Callback'
+                  )}
+                </button>
+              </div>
+
+              <p style={{
+                fontSize: 10, color: theme.textTer, textAlign: 'center',
+                marginTop: 12, marginBottom: 0, lineHeight: 1.5,
+                fontFamily: "'Inter', -apple-system, sans-serif",
+              }}>
+                By submitting, you agree to our privacy policy. We'll connect you with this gym.
+              </p>
+            </form>
           </div>
         </>
       )}

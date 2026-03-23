@@ -1104,7 +1104,7 @@ export default function Newsletter() {
               background: '#fafafa', textAlign: 'center',
             }}>
               <div style={{ fontSize: 11, color: '#aaa' }}>
-                Sent via IVIRA &middot; <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>Unsubscribe</span>
+                Sent via I V I R A &middot; <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>Unsubscribe</span>
               </div>
             </div>
           </div>

@@ -85,13 +85,13 @@ export default function AdminLogin() {
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
         <path d="M7 11V7a5 5 0 0110 0v4" />
       </svg>
-      <span style={{ fontSize: 12, color: textTer }}>Secured by IVIRA Guard</span>
+      <span style={{ fontSize: 12, color: textTer }}>Secured by I V I R A Guard</span>
     </div>
   )
 
   return (
     <AuthLayout
-      title="IVIRA"
+      title="I V I R A"
       subtitle="Command Center — Super Admin access."
       tagline="Secure. Real-time. Global."
       role="admin"
@@ -113,7 +113,7 @@ export default function AdminLogin() {
               <span style={{ fontSize: 24, fontWeight: 900, color: '#fff', fontFamily: ff }}>G</span>
             </div>
             <h2 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: textPrimary, letterSpacing: '-0.02em', fontFamily: ff }}>
-              IVIRA
+              I V I R A
             </h2>
             <p style={{ fontSize: 14, color: textSec, margin: 0, fontFamily: ff }}>Command Center</p>
           </div>

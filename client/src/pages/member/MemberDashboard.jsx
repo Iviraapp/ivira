@@ -600,7 +600,7 @@ function Sidebar({ tabs, activeTab, onTabChange, onCheckin }) {
           fontSize: 20, fontWeight: 800, color: M.text,
           letterSpacing: '-0.02em',
         }}>
-          IVIRA
+          I V I R A
         </span>
       </div>
 

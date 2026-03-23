@@ -1,7 +1,7 @@
 {
-  "name": "IVIRA - Gym Management System",
+  "name": "I V I R A - Fitness & Gym Platform",
   "short_name": "IVIRA",
-  "description": "Enterprise gym management for high-growth fitness brands",
+  "description": "Gym management for owners. Workout tracking, nutrition & QR check-in for members.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1A3A8F",

@@ -98,14 +98,14 @@ const styles = {
 
 export default function LegalLayout({ title, documentTitle, children }) {
   useEffect(() => {
-    document.title = documentTitle || `${title} | IVIRA`
+    document.title = documentTitle || `${title} | I V I R A`
   }, [title, documentTitle])
 
   return (
     <div style={styles.page}>
       <div style={styles.container}>
         <header style={styles.header}>
-          <Link to="/" style={{ ...styles.logo, letterSpacing: 2 }}>IVIRA</Link>
+          <Link to="/" style={{ ...styles.logo, letterSpacing: '0.3em' }}>I V I R A</Link>
           <h1 style={styles.pageTitle}>{title}</h1>
         </header>
 
@@ -119,7 +119,7 @@ export default function LegalLayout({ title, documentTitle, children }) {
             <Link to="/contact" style={styles.footerLink}>Contact Us</Link>
           </div>
           <div style={styles.footerText}>
-            &copy; 2026 IVIRA. All Rights Reserved. Compliant with DPDP Act 2023.
+            &copy; {new Date().getFullYear()} I V I R A. All Rights Reserved.
           </div>
         </footer>
       </div>

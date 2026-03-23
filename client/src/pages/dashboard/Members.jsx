@@ -954,7 +954,7 @@ function ImportMembersModal({ gymId, plans, onClose, onSuccess }) {
               <h2 style={{ fontSize: 16, fontWeight: 700, color: theme.text, margin: 0, fontFamily: FONT }}>Import Members</h2>
               <p style={{ fontSize: 12, color: theme.textTer, margin: 0, fontFamily: FONT }}>
                 {step === 'upload' && 'Upload a CSV or Excel file'}
-                {step === 'map' && 'Map columns to IVIRA fields'}
+                {step === 'map' && 'Map columns to I V I R A fields'}
                 {step === 'validate' && 'Review and confirm'}
                 {step === 'importing' && 'Importing...'}
               </p>
@@ -1047,7 +1047,7 @@ function ImportMembersModal({ gymId, plans, onClose, onSuccess }) {
               }}>
                 Found <strong style={{ color: theme.text }}>{fileData.rows.length}</strong> rows
                 with <strong style={{ color: theme.text }}>{fileData.headers.length}</strong> columns.
-                Map each file column to a IVIRA field.
+                Map each file column to a I V I R A field.
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1072,10 +1072,10 @@ function ImportMembersModal({ gymId, plans, onClose, onSuccess }) {
 
                     <ArrowRight size={16} color={theme.textTer} style={{ flexShrink: 0 }} />
 
-                    {/* IVIRA field selector */}
+                    {/* I V I R A field selector */}
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 10, color: theme.textTer, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>
-                        IVIRA Field
+                        I V I R A Field
                       </div>
                       <select
                         value={mapping[idx] || ''}
@@ -1840,7 +1840,7 @@ export default function Members() {
             <label style={labelStyle}>Phone <span style={{ color: theme.red }}>*</span></label>
             <div style={{ position: 'relative' }}>
               <Phone size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: theme.textTer, pointerEvents: 'none' }} />
-              <input placeholder="+91 98765 43210" value={form.phone} onChange={(e) => handleFormChange('phone', e.target.value)}
+              <input placeholder="+1 (814) 895-7439" value={form.phone} onChange={(e) => handleFormChange('phone', e.target.value)}
                 style={{ ...darkInput, paddingLeft: 40 }}
                 onFocus={(e) => { e.target.style.borderColor = theme.accent; e.target.style.boxShadow = `0 0 0 3px ${theme.accent}20` }}
                 onBlur={(e) => { e.target.style.borderColor = theme.borderStrong; e.target.style.boxShadow = 'none' }}

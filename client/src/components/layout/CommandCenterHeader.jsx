@@ -31,7 +31,7 @@ const SERVICES = [
 
 const APP_OPTIONS = [
   { id: 'a1', label: 'Settings', icon: Settings, desc: 'Account & gym settings', route: '/dashboard/settings', category: 'App Options' },
-  { id: 'a2', label: 'Billing', icon: CreditCard, desc: 'Your IVIRA subscription & invoices', route: '/dashboard/payments', category: 'App Options' },
+  { id: 'a2', label: 'Billing', icon: CreditCard, desc: 'Your I V I R A subscription & invoices', route: '/dashboard/payments', category: 'App Options' },
   { id: 'a3', label: 'Add Member', icon: UserPlus, desc: 'Register a new gym member', route: '/dashboard/members?action=add', category: 'App Options' },
   { id: 'a4', label: 'Log Out', icon: LogOut, desc: 'Sign out of your account', route: '__logout__', category: 'App Options' },
 ]
@@ -417,7 +417,7 @@ export default function CommandCenterHeader() {
               letterSpacing: '-0.5px', color: '#FFFFFF',
               lineHeight: 1,
             }}>
-              IVIRA
+              I V I R A
             </span>
           </div>
           <div style={{

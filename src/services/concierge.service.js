@@ -153,11 +153,15 @@ export async function createInquiry(data) {
   try {
     const [inquiry] = await db('concierge_inquiries')
       .insert({
-        facility_id: data.facility_id,
+        facility_id: data.facility_id || null,
+        facility_name: data.facility_name || null,
+        facility_place_id: data.facility_place_id || null,
         name: data.name,
         phone: data.phone,
         email: data.email || null,
         discipline: data.discipline || null,
+        inquiry_type: data.inquiry_type || 'general',
+        source: data.source || null,
         message: data.message || null,
         created_at: new Date(),
       })
@@ -167,9 +171,11 @@ export async function createInquiry(data) {
     // Table may not exist yet — log and return success
     console.log('[Concierge] Inquiry received (table not ready):', {
       facility_id: data.facility_id,
+      facility_name: data.facility_name,
+      facility_place_id: data.facility_place_id,
       name: data.name,
       phone: data.phone,
-      discipline: data.discipline,
+      inquiry_type: data.inquiry_type,
     });
     return { status: 'logged', message: 'Inquiry recorded (pending table creation)' };
   }

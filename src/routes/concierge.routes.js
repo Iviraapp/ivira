@@ -19,13 +19,17 @@ const listFacilitiesSchema = {
 const createInquirySchema = {
   body: {
     type: 'object',
-    required: ['facility_id', 'name', 'phone'],
+    required: ['name', 'phone'],
     properties: {
       facility_id: { type: 'string', format: 'uuid' },
+      facility_name: { type: 'string', maxLength: 200 },
+      facility_place_id: { type: 'string', maxLength: 200 },
       name: { type: 'string', minLength: 2, maxLength: 100 },
       phone: { type: 'string', minLength: 10, maxLength: 15 },
       email: { type: 'string', format: 'email' },
       discipline: { type: 'string' },
+      inquiry_type: { type: 'string', enum: ['contact', 'trial', 'callback', 'general'] },
+      source: { type: 'string', maxLength: 50 },
       message: { type: 'string', maxLength: 1000 },
     },
   },

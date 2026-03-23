@@ -113,7 +113,7 @@ function DataLawSection({ region }) {
       rights: [
         { name: 'Access', desc: 'Request access to your personal information' },
         { name: 'Correction', desc: 'Request correction of inaccurate or out-of-date information' },
-        { name: 'Complaint', desc: 'Lodge a complaint with IVIRA or the Office of the Australian Information Commissioner (OAIC)' },
+        { name: 'Complaint', desc: 'Lodge a complaint with I V I R A or the Office of the Australian Information Commissioner (OAIC)' },
         { name: 'Anonymity', desc: 'Option to deal with us anonymously or using a pseudonym where practicable' },
       ],
       officer: 'Privacy Officer',
@@ -175,10 +175,10 @@ function DataLawSection({ region }) {
 
       <h2 style={S.h2}>8. {c.officer}</h2>
       <ul style={S.ul}>
-        <li style={S.li}><strong>Name:</strong> IVIRA {c.officer}</li>
+        <li style={S.li}><strong>Name:</strong> I V I R A {c.officer}</li>
         <li style={S.li}><strong>Email:</strong> admin@ivira.app</li>
         <li style={S.li}><strong>Response time:</strong> Within {c.response}</li>
-        <li style={S.li}><strong>Registered address:</strong> IVIRA Technologies, Bengaluru, Karnataka, India</li>
+        <li style={S.li}><strong>Registered address:</strong> SevenH Tech LLC, 545 Harrold St 3074, Fort Worth, TX 76107, United States</li>
       </ul>
 
       <h2 style={S.h2}>6. Data Retention</h2>
@@ -212,7 +212,7 @@ export default function Privacy() {
   const [region, setRegion] = useState(() => detectRegion())
 
   return (
-    <LegalLayout title="Privacy Policy" documentTitle="Privacy Policy | IVIRA">
+    <LegalLayout title="Privacy Policy" documentTitle="Privacy Policy | I V I R A">
       <p style={S.p}>
         <strong>Last updated:</strong> March 2026
       </p>
@@ -236,7 +236,7 @@ export default function Privacy() {
       </div>
 
       <p style={S.p}>
-        IVIRA Technologies ("we", "us", "our") operates the IVIRA platform. This Privacy Policy explains how we collect, use, store, and protect your personal data in compliance with {region === 'IN' ? 'the Digital Personal Data Protection (DPDP) Act 2023' : region === 'EU' ? 'the General Data Protection Regulation (GDPR)' : region === 'GB' ? 'the UK GDPR & Data Protection Act 2018' : region === 'US' ? 'applicable US state privacy laws including CCPA' : region === 'AE' ? 'UAE Federal Decree-Law No. 45 of 2021' : region === 'AU' ? 'the Australian Privacy Act 1988' : region === 'CA' ? 'PIPEDA' : region === 'SG' ? 'the Personal Data Protection Act 2012 (PDPA)' : 'applicable data protection laws in your jurisdiction'}.
+        SevenH Tech LLC d/b/a I V I R A ("we", "us", "our") operates the I V I R A platform. This Privacy Policy explains how we collect, use, store, and protect your personal data in compliance with {region === 'IN' ? 'the Digital Personal Data Protection (DPDP) Act 2023' : region === 'EU' ? 'the General Data Protection Regulation (GDPR)' : region === 'GB' ? 'the UK GDPR & Data Protection Act 2018' : region === 'US' ? 'applicable US state privacy laws including CCPA' : region === 'AE' ? 'UAE Federal Decree-Law No. 45 of 2021' : region === 'AU' ? 'the Australian Privacy Act 1988' : region === 'CA' ? 'PIPEDA' : region === 'SG' ? 'the Personal Data Protection Act 2012 (PDPA)' : 'applicable data protection laws in your jurisdiction'}.
       </p>
 
       <h2 style={S.h2}>1. Information We Collect</h2>
@@ -332,12 +332,12 @@ export default function Privacy() {
       </p>
       {(region === 'EU' || region === 'GB') && (
         <p style={S.p}>
-          <strong>International transfers:</strong> Your data may be transferred to servers in India (AWS Mumbai). We ensure adequate safeguards through Standard Contractual Clauses (SCCs) as approved by the {region === 'EU' ? 'European Commission' : 'UK ICO'}.
+          <strong>International transfers:</strong> Your data may be transferred to servers in the United States (AWS). We ensure adequate safeguards through Standard Contractual Clauses (SCCs) as approved by the {region === 'EU' ? 'European Commission' : 'UK ICO'}.
         </p>
       )}
       {region === 'US' && (
         <p style={S.p}>
-          <strong>Do Not Sell:</strong> IVIRA does not sell, rent, or share your personal information for monetary or other valuable consideration. We honor Do Not Track browser signals.
+          <strong>Do Not Sell:</strong> I V I R A does not sell, rent, or share your personal information for monetary or other valuable consideration. We honor Do Not Track browser signals.
         </p>
       )}
 
@@ -363,18 +363,18 @@ export default function Privacy() {
 
       <h2 style={S.h2}>9. Children's Privacy</h2>
       <p style={S.p}>
-        IVIRA is not directed at children under {region === 'US' ? '13 (COPPA)' : region === 'EU' || region === 'GB' ? '16 (or the age set by the member state)' : '18'}. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us immediately.
+        I V I R A is not directed at children under {region === 'US' ? '13 (COPPA)' : region === 'EU' || region === 'GB' ? '16 (or the age set by the member state)' : '18'}. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us immediately.
       </p>
 
       <h2 style={S.h2}>10. Cookies & Tracking</h2>
       <p style={S.p}>
-        IVIRA uses essential cookies for authentication and session management. We do not use advertising cookies or third-party tracking pixels.
+        I V I R A uses essential cookies for authentication and session management. We do not use advertising cookies or third-party tracking pixels.
         {(region === 'EU' || region === 'GB') ? ' In compliance with the ePrivacy Directive, we obtain consent before setting any non-essential cookies.' : ''}
       </p>
 
       <h2 style={S.h2}>11. Changes to This Policy</h2>
       <p style={S.p}>
-        We may update this Privacy Policy from time to time. Material changes will be communicated to users via email and/or in-app notification{region === 'EU' || region === 'GB' ? '. Where required, we will obtain your consent before implementing changes that affect how we process your data' : ''}. Continued use of IVIRA after changes constitutes acceptance of the updated policy.
+        We may update this Privacy Policy from time to time. Material changes will be communicated to users via email and/or in-app notification{region === 'EU' || region === 'GB' ? '. Where required, we will obtain your consent before implementing changes that affect how we process your data' : ''}. Continued use of I V I R A after changes constitutes acceptance of the updated policy.
       </p>
     </LegalLayout>
   )

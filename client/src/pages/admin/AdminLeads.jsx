@@ -101,8 +101,8 @@ export default function AdminLeads() {
 
   const whatsappUrl = (lead) => {
     const phone = (lead.phone || '').replace(/\D/g, '').replace(/^(\+?91)/, '')
-    const pkg = lead.package_interest || 'IVIRA'
-    const text = `Hi ${lead.name}, I'm from IVIRA. I saw you were interested in the ${pkg} plan for ${lead.gym_name}. Would love to help you get started!`
+    const pkg = lead.package_interest || 'I V I R A'
+    const text = `Hi ${lead.name}, I'm from I V I R A. I saw you were interested in the ${pkg} plan for ${lead.gym_name}. Would love to help you get started!`
     return `https://wa.me/91${phone}?text=${encodeURIComponent(text)}`
   }
 

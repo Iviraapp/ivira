@@ -113,13 +113,13 @@ export default function MemberLogin() {
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
         <path d="M7 11V7a5 5 0 0110 0v4" />
       </svg>
-      <span style={{ fontSize: 12, color: textTer }}>Secured by IVIRA Guard</span>
+      <span style={{ fontSize: 12, color: textTer }}>Secured by I V I R A Guard</span>
     </div>
   )
 
   return (
     <AuthLayout
-      title="IVIRA"
+      title="I V I R A"
       subtitle="Your fitness journey, one tap away."
       tagline="Track. Train. Transform."
       role="member"
@@ -147,7 +147,7 @@ export default function MemberLogin() {
         return (
           <>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <img src="/icons/icon-96.png" alt="IVIRA" style={{
+              <img src="/icons/icon-96.png" alt="I V I R A" style={{
                 width: 56, height: 56, borderRadius: 16, marginBottom: 16,
                 boxShadow: '0 0 40px rgba(26,58,143,0.25)', objectFit: 'cover',
               }} />
@@ -159,11 +159,11 @@ export default function MemberLogin() {
 
             <div style={{ marginBottom: 28, textAlign: 'center' }}>
               <h3 style={{ fontSize: 22, fontWeight: 700, color: textPrimary, margin: '0 0 8px', fontFamily: ff }}>
-                {isIOS ? 'IVIRA for iOS' : 'Download the IVIRA App'}
+                {isIOS ? 'I V I R A for iOS' : 'Download the I V I R A App'}
               </h3>
               <p style={{ fontSize: 14, color: textSec, margin: 0, lineHeight: 1.6, fontFamily: ff }}>
                 {isIOS
-                  ? 'The IVIRA iOS app is coming soon. Sign in via web for now.'
+                  ? 'The I V I R A iOS app is coming soon. Sign in via web for now.'
                   : 'Track workouts, find gyms, log nutrition, and more — all from the app.'}
               </p>
             </div>
@@ -253,7 +253,7 @@ export default function MemberLogin() {
       {step === 'email' && (
         <>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <img src="/icons/icon-96.png" alt="IVIRA" style={{
+            <img src="/icons/icon-96.png" alt="I V I R A" style={{
               width: 56, height: 56, borderRadius: 16, marginBottom: 16,
               boxShadow: '0 0 40px rgba(26,58,143,0.25)', objectFit: 'cover',
             }} />

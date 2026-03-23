@@ -150,7 +150,7 @@ export default function PWAInstallPrompt() {
 
           {/* Icon */}
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <img src="/icons/icon-96.png" alt="IVIRA"
+            <img src="/icons/icon-96.png" alt="I V I R A"
               style={{ width: 56, height: 56, borderRadius: 14, boxShadow: `0 0 20px rgba(26,58,143,0.25)` }} />
           </div>
 
@@ -158,13 +158,13 @@ export default function PWAInstallPrompt() {
             fontFamily: FONT_BRAND, fontSize: 20, fontWeight: 800,
             color: c.text, textAlign: 'center', margin: '0 0 8px',
             letterSpacing: '-0.02em',
-          }}>Welcome to IVIRA</h3>
+          }}>Welcome to I V I R A</h3>
           <p style={{
             fontFamily: FONT_BODY, fontSize: 14, color: c.sub,
             textAlign: 'center', lineHeight: 1.6, margin: '0 0 28px',
           }}>
             {desktop
-              ? 'Your desktop command center is ready. Sign in to sync your gym data or create a new account.'
+              ? 'Your desktop command center is ready. Sign in to manage your gym or access your membership.'
               : 'Your fitness companion is installed. Sign in to access your membership or get started.'}
           </p>
 
@@ -306,7 +306,7 @@ export default function PWAInstallPrompt() {
         borderRadius: '0 0 2px 2px',
       }} />
 
-      <img src="/icons/icon-96.png" alt="IVIRA"
+      <img src="/icons/icon-96.png" alt="I V I R A"
         style={{
           width: 48, height: 48, borderRadius: 12,
           flexShrink: 0, objectFit: 'cover',
@@ -319,8 +319,8 @@ export default function PWAInstallPrompt() {
           color: c.text, letterSpacing: '-0.01em',
         }}>
           {desktop
-            ? (auth.isReturning ? 'Install IVIRA Desktop' : 'Install IVIRA App')
-            : 'Add IVIRA to Home Screen'}
+            ? (auth.isReturning ? 'Install I V I R A Desktop' : 'Install I V I R A App')
+            : 'Add I V I R A to Home Screen'}
         </div>
         <div style={{
           fontFamily: FONT_BODY, fontSize: 11, color: c.sub,

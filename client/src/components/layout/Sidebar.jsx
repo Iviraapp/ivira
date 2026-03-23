@@ -101,7 +101,7 @@ export default function Sidebar({ open, onClose }) {
                 fontFamily: FONT,
                 fontWeight: 700, fontSize: 20, letterSpacing: '-0.5px',
                 color: theme.text,
-              }}>IVIRA</div>
+              }}>I V I R A</div>
               <div style={{ fontSize: 12, color: theme.textTer, marginTop: 2, fontWeight: 400, fontFamily: FONT }}>
                 {gym?.gym_name || 'Dashboard'}
               </div>
@@ -208,7 +208,7 @@ export default function Sidebar({ open, onClose }) {
                   className="sidebar-support-btn"
                   onClick={() => {
                     api.post(`/gyms/${gym?.id}/support/priority`, { type: 'emergency', source: 'sidebar' }).catch(() => {})
-                    window.open(`https://wa.me/919876543210?text=Hi%20IVIRA%20Team,%20this%20is%20${ownerName}%20from%20${gymName}.%20I%20need%20priority%20assistance%20with%20[Subject]`, '_blank')
+                    window.open(`https://wa.me/18148957439?text=Hi%20IVIRA%20Team,%20this%20is%20${ownerName}%20from%20${gymName}.%20I%20need%20priority%20assistance%20with%20[Subject]`, '_blank')
                   }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, width: '100%',
@@ -241,7 +241,7 @@ export default function Sidebar({ open, onClose }) {
                   className="sidebar-support-btn"
                   onClick={() => {
                     api.post(`/gyms/${gym?.id}/support/priority`, { type: 'vip', source: 'sidebar' }).catch(() => {})
-                    window.open(`https://wa.me/919876543210?text=Hi%20IVIRA%20Team,%20this%20is%20${ownerName}%20from%20${gymName}.%20I%20need%20help%20with%20[Subject]`, '_blank')
+                    window.open(`https://wa.me/18148957439?text=Hi%20IVIRA%20Team,%20this%20is%20${ownerName}%20from%20${gymName}.%20I%20need%20help%20with%20[Subject]`, '_blank')
                   }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, width: '100%',

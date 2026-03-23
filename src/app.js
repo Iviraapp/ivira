@@ -153,18 +153,21 @@ export async function buildApp(opts = {}) {
   await fastify.register(foodScanRoutes, { prefix: '/api/v1' });
   await fastify.register(sleepRoutes, { prefix: '/api/v1' });
   await fastify.register(conciergeRoutes, { prefix: '/api/v1' });
-  // APK download route with proper headers
+  // APK download route — serve locally if available, otherwise redirect to GitHub Release
   fastify.get('/downloads/ivira-latest.apk', async (request, reply) => {
     const fs = await import('fs');
     const filePath = join(__dirname, '..', 'public', 'downloads', 'ivira-latest.apk');
-    if (!fs.existsSync(filePath)) {
-      return reply.code(404).send({ error: 'APK not found' });
+    const stat = fs.statSync(filePath, { throwIfNoEntry: false });
+    // Only serve locally if the file is real (not a Git LFS pointer)
+    if (stat && stat.size > 1000) {
+      const stream = fs.createReadStream(filePath);
+      return reply
+        .header('Content-Type', 'application/vnd.android.package-archive')
+        .header('Content-Disposition', 'attachment; filename="ivira-latest.apk"')
+        .send(stream);
     }
-    const stream = fs.createReadStream(filePath);
-    return reply
-      .header('Content-Type', 'application/vnd.android.package-archive')
-      .header('Content-Disposition', 'attachment; filename="ivira-latest.apk"')
-      .send(stream);
+    // Redirect to GitHub Release
+    return reply.redirect('https://github.com/Iviraapp/ivira/releases/download/v1.0.0/ivira-latest.apk');
   });
 
   // Root-level redirect for affiliate click tracking (short URLs)

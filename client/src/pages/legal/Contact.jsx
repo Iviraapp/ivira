@@ -46,7 +46,7 @@ export default function Contact() {
   }
 
   return (
-    <LegalLayout title="Contact Us" documentTitle="Contact Us | IVIRA">
+    <LegalLayout title="Contact Us" documentTitle="Contact Us | I V I R A">
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -56,10 +56,10 @@ export default function Contact() {
         {/* Registered Office */}
         <div style={cardStyle}>
           <h3 style={cardTitle}>Registered Office</h3>
-          <p style={cardText}>IVIRA Technologies</p>
-          <p style={cardText}>[Address Line 1]</p>
-          <p style={cardText}>Bengaluru, Karnataka 560001</p>
-          <p style={cardText}>India</p>
+          <p style={cardText}>SevenH Tech LLC</p>
+          <p style={cardText}>545 Harrold St 3074</p>
+          <p style={cardText}>Fort Worth, TX 76107</p>
+          <p style={cardText}>United States</p>
         </div>
 
         {/* Support */}
@@ -71,10 +71,10 @@ export default function Contact() {
           </p>
           <p style={cardLabel}>WhatsApp</p>
           <p style={cardText}>
-            <a href="https://wa.me/919876543210" style={cardLink}>+91 98765 43210</a>
+            <a href="https://wa.me/18148957439" style={cardLink}>+1 (814) 895-7439</a>
           </p>
           <p style={cardLabel}>Hours</p>
-          <p style={cardText}>Mon&ndash;Sat, 9:00 AM &ndash; 7:00 PM IST</p>
+          <p style={cardText}>Mon&ndash;Fri, 9:00 AM &ndash; 6:00 PM EST</p>
         </div>
 
         {/* For Gym Owners */}
@@ -100,15 +100,15 @@ export default function Contact() {
           <p style={cardText}>Response within 48 hours.</p>
         </div>
 
-        {/* DPDP Act Grievance Officer */}
+        {/* Privacy Officer */}
         <div style={cardStyle}>
-          <h3 style={cardTitle}>DPDP Act Grievance Officer</h3>
+          <h3 style={cardTitle}>Privacy Officer</h3>
           <p style={cardLabel}>Email</p>
           <p style={cardText}>
             <a href="mailto:admin@ivira.app" style={cardLink}>admin@ivira.app</a>
           </p>
           <p style={cardLabel}>Response Time</p>
-          <p style={cardText}>Within 30 days as per DPDP Act 2023</p>
+          <p style={cardText}>Within 30 days of request</p>
         </div>
 
         {/* Business Inquiries */}

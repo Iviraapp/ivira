@@ -158,7 +158,7 @@ function StepHardwareSync({ pairingCode }) {
         Activate your front desk.
       </h2>
       <p style={{ fontFamily: FONT, fontSize: 14, color: COLORS.textSec, textAlign: 'center', marginBottom: 32 }}>
-        Pair a tablet or kiosk to your IVIRA account.
+        Pair a tablet or kiosk to your I V I R A account.
       </p>
 
       <div style={{
@@ -179,7 +179,7 @@ function StepHardwareSync({ pairingCode }) {
         </div>
 
         <p style={{ fontFamily: FONT, fontSize: 14, color: COLORS.textSec, textAlign: 'center', maxWidth: 360, marginBottom: 24, lineHeight: 1.6 }}>
-          Enter this code on your gym's tablet or kiosk device to pair it with your IVIRA account.
+          Enter this code on your gym's tablet or kiosk device to pair it with your I V I R A account.
         </p>
 
         {/* Waiting indicator */}
@@ -396,7 +396,7 @@ export default function FirstTimeSetup() {
         accent_color: accentColor,
         onboarding_step: 4,
       })
-      addToast('Setup complete! Welcome to IVIRA.', 'success')
+      addToast('Setup complete! Welcome to I V I R A.', 'success')
       navigate('/dashboard')
     } catch (err) {
       addToast('Failed to save settings. Please try again.', 'error')

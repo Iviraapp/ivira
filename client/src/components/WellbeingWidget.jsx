@@ -184,12 +184,12 @@ export default function WellbeingWidget() {
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/icons/icon-96.png" alt="IVIRA"
+          <img src="/icons/icon-96.png" alt="I V I R A"
             style={{ width: 20, height: 20, borderRadius: 4 }} />
           <span style={{
             fontFamily: FONT_BRAND, fontSize: 11, fontWeight: 900,
             color: WHITE, letterSpacing: '0.25em', textTransform: 'uppercase',
-          }}>IVIRA</span>
+          }}>I V I R A</span>
           <div style={{
             width: 5, height: 5, borderRadius: '50%',
             background: '#22C55E',

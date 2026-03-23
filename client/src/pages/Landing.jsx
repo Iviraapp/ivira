@@ -388,7 +388,7 @@ function GymSignUpModal({ open, onClose, isDark }) {
               letterSpacing: '-0.02em', color: m.textPrimary, marginBottom: 12,
             }}>Application Received</h3>
             <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: m.textSec, lineHeight: 1.6 }}>
-              Our team will review your application and contact you within 24 hours to set up your IVIRA Command Center.
+              Our team will review your application and contact you within 24 hours to set up your I V I R A Command Center.
             </p>
             <button onClick={onClose} style={{
               fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600,
@@ -439,7 +439,7 @@ function GymSignUpModal({ open, onClose, isDark }) {
                   <label style={labelStyle}>PHONE *</label>
                   <input required type="tel" style={fieldStyle} value={form.phone}
                     onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                    placeholder="+91 9876543210"
+                    placeholder="+1 8148957439"
                     onFocus={e => e.target.style.borderColor = ACCENT}
                     onBlur={e => e.target.style.borderColor = m.fieldBorder} />
                 </div>
@@ -994,7 +994,7 @@ export default function Landing() {
           }}>
             {isMobile
               ? 'Your Fitness. One App.'
-              : 'The Enterprise Fitness Platform for High-Growth Brands.'}
+              : 'Run Your Gym. Crush Your Goals.'}
           </h1>
 
           <p style={{
@@ -1007,7 +1007,7 @@ export default function Landing() {
           }}>
             {isMobile
               ? 'Check in at your gym, track workouts, log nutrition, and manage your membership — all from your phone.'
-              : 'Automate member check-ins, streamline invoicing, and protect your revenue with the most secure fitness platform. Built for gyms that value operational excellence.'}
+              : 'For gym owners: automate check-ins, streamline billing, and grow your business. For members: track workouts, log nutrition, and stay connected to your gym — all in one platform.'}
           </p>
 
           {/* CTAs — device-aware on mobile */}
@@ -1031,7 +1031,7 @@ export default function Landing() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 }}>
                   <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Download IVIRA (Beta)
+                  Download I V I R A (Beta)
                 </a>
                 <div style={{
                   fontFamily: FONT_BODY, fontSize: 12, color: t.textDim,
@@ -1096,19 +1096,18 @@ export default function Landing() {
                 onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 16px rgba(26,58,143,0.35)' }}>
                   Start Your 14-Day Free Trial
                 </button>
-                <button onClick={() => {
-                  const el = document.getElementById('features')
-                  if (el) el.scrollIntoView({ behavior: 'smooth' })
-                }} style={{
+                <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
                   fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600,
                   background: 'transparent', color: t.text,
                   border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.15)', borderRadius: 10,
                   padding: '14px 32px', cursor: 'pointer', transition: 'all 0.3s',
+                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
                 }}
-                onMouseEnter={e => { e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'; e.target.style.transform = 'translateY(-2px)' }}
-                onMouseLeave={e => { e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'; e.target.style.transform = 'translateY(0)' }}>
-                  See Features
-                </button>
+                onMouseEnter={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download APK
+                </a>
               </>
             )}
           </div>
@@ -1184,12 +1183,12 @@ export default function Landing() {
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
-              <div style={{ ...sectionLabel, color: t.textMuted }}>How IVIRA Works</div>
+              <div style={{ ...sectionLabel, color: t.textMuted }}>How I V I R A Works</div>
               <h2 style={{ ...sectionHeading, color: t.text, fontSize: 'clamp(28px, 4.5vw, 44px)' }}>
                 Two Sides. One Platform.
               </h2>
               <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 640, margin: '0 auto', lineHeight: 1.7 }}>
-                IVIRA powers both the business and the athlete. Gym owners get a complete
+                I V I R A powers both the business and the athlete. Gym owners get a complete
                 command center. Members get a personal fitness companion.
               </p>
             </div>
@@ -1274,7 +1273,7 @@ export default function Landing() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {[
-                    { step: '01', title: 'Download the app or sign in', desc: 'Get the IVIRA app on Android (APK beta) or sign in via web. iOS coming soon.' },
+                    { step: '01', title: 'Download the app or sign in', desc: 'Get the I V I R A app on Android (APK beta) or sign in via web. iOS coming soon.' },
                     { step: '02', title: 'Connect to your gym', desc: 'Your gym sends you a login link. Scan QR to check in — no cards, no queues.' },
                     { step: '03', title: 'Track everything', desc: 'Workouts, nutrition, fasting, steps, personal records. AI coaching included.' },
                   ].map((item, i) => (
@@ -1883,7 +1882,7 @@ export default function Landing() {
               fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted,
               maxWidth: 500, margin: '0 auto 48px', lineHeight: 1.7,
             }}>
-              Take the full IVIRA experience with you. Available on every platform.
+              Take the full I V I R A experience with you. Available on every platform.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
@@ -1931,68 +1930,67 @@ export default function Landing() {
                 }}>Coming Soon</span>
               </a>
 
-              {/* Download APK - mWeb Android only */}
-              {isMobile && platform === 'android' ? (
-                <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
-                  background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
-                  border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
-                  borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center',
-                  gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
-                  boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
-                  position: 'relative',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10,
-                    background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  </div>
-                  <div style={{ textAlign: 'left' }}>
-                    <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: ACCENT, fontWeight: 600, display: 'block' }}>Try the Beta</span>
-                    <span style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: t.text }}>Download APK</span>
-                  </div>
-                  <span style={{
-                    position: 'absolute', top: -8, right: -8,
-                    fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700,
-                    color: WHITE, background: '#22C55E',
-                    padding: '3px 10px', borderRadius: 6,
-                  }}>Available</span>
-                </a>
-              ) : !isMobile && (
-                <a href="/member/login" style={{
-                  background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
-                  border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
-                  borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center',
-                  gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
-                  boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
-                  position: 'relative',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10,
-                    background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M8 12h8M12 8v8" /></svg>
-                  </div>
-                  <div style={{ textAlign: 'left' }}>
-                    <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: ACCENT, fontWeight: 600, display: 'block' }}>Try it now</span>
-                    <span style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: t.text }}>Open Web App</span>
-                  </div>
-                  <span style={{
-                    position: 'absolute', top: -8, right: -8,
-                    fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700,
-                    color: WHITE, background: '#22C55E',
-                    padding: '3px 10px', borderRadius: 6,
-                  }}>Live</span>
-                </a>
-              )}
+              {/* Download APK - Available to all users */}
+              <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
+                background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
+                border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
+                borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center',
+                gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
+                boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
+                position: 'relative',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <div style={{ textAlign: 'left' }}>
+                  <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: ACCENT, fontWeight: 600, display: 'block' }}>Android Beta</span>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: t.text }}>Download APK</span>
+                </div>
+                <span style={{
+                  position: 'absolute', top: -8, right: -8,
+                  fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700,
+                  color: WHITE, background: '#22C55E',
+                  padding: '3px 10px', borderRadius: 6,
+                }}>Available</span>
+              </a>
+
+              {/* Open Web App */}
+              <a href="/member/login" style={{
+                background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
+                border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
+                borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center',
+                gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
+                boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
+                position: 'relative',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M8 12h8M12 8v8" /></svg>
+                </div>
+                <div style={{ textAlign: 'left' }}>
+                  <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: ACCENT, fontWeight: 600, display: 'block' }}>Try it now</span>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: t.text }}>Open Web App</span>
+                </div>
+                <span style={{
+                  position: 'absolute', top: -8, right: -8,
+                  fontFamily: FONT_BODY, fontSize: 10, fontWeight: 700,
+                  color: WHITE, background: '#22C55E',
+                  padding: '3px 10px', borderRadius: 6,
+                }}>Live</span>
+              </a>
             </div>
 
             {/* Feedback prompt */}
@@ -2008,7 +2006,7 @@ export default function Landing() {
                 fontFamily: FONT_BODY, fontSize: 13, color: t.textMuted,
                 lineHeight: 1.6, margin: 0, textAlign: 'left',
               }}>
-                Installed the APK? We'd love your feedback!{' '}
+                Try the I V I R A app! We'd love your feedback.{' '}
                 <a href="/contact" style={{ color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>
                   Share your thoughts
                 </a>{' '}
@@ -2067,7 +2065,7 @@ export default function Landing() {
             <div style={{
               fontFamily: FONT_BODY, fontSize: 13, color: t.textDim,
             }}>
-              &copy; {new Date().getFullYear()} IVIRA. All rights reserved.
+              &copy; {new Date().getFullYear()} I V I R A. All rights reserved.
             </div>
           </div>
         </div>
