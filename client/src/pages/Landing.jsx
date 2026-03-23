@@ -681,12 +681,12 @@ export default function Landing() {
     bgCarbon:  isDark ? CARBON : '#E8EDFF',
     text:      isDark ? WHITE : '#0F172A',
     textSec:   isDark ? PLATINUM : '#334155',
-    textMuted: isDark ? SILVER : '#475569',
-    textDim:   isDark ? GUNMETAL : '#94A3B8',
-    border:    isDark ? `${GUNMETAL}33` : 'rgba(26,58,143,0.10)',
-    cardBg:    isDark ? SURFACE : 'rgba(255,255,255,0.80)',
-    cardBorder:isDark ? 'rgba(255,255,255,0.05)' : 'rgba(26,58,143,0.10)',
-    cardShadow:isDark ? 'none' : '0 4px 20px rgba(26,58,143,0.08)',
+    textMuted: isDark ? SILVER : '#1E293B',
+    textDim:   isDark ? GUNMETAL : '#475569',
+    border:    isDark ? `${GUNMETAL}33` : 'rgba(26,58,143,0.12)',
+    cardBg:    isDark ? SURFACE : 'rgba(255,255,255,0.95)',
+    cardBorder:isDark ? 'rgba(255,255,255,0.05)' : 'rgba(26,58,143,0.15)',
+    cardShadow:isDark ? 'none' : '0 4px 24px rgba(26,58,143,0.12)',
     navBg:     isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.85)',
     navBgClear:isDark ? 'transparent' : 'rgba(255,255,255,0.5)',
     carbonBg:  isDark ? carbonFiberBg : {},
@@ -1396,7 +1396,7 @@ export default function Landing() {
                     e.currentTarget.style.boxShadow = `0 0 24px ${card.accent}25`
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'
+                    e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(26,58,143,0.14)'
                     e.currentTarget.style.boxShadow = 'none'
                   }}>
                     {/* Accent gradient line */}
@@ -1505,7 +1505,7 @@ export default function Landing() {
                         {feat.highlights.map(h => (
                           <span key={h} style={{
                             fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600,
-                            color: accent, background: accent + '12',
+                            color: accent, background: accent + (isDark ? '18' : '22'),
                             padding: '3px 10px', borderRadius: 6, letterSpacing: '0.01em',
                           }}>{h}</span>
                         ))}
@@ -1581,7 +1581,7 @@ export default function Landing() {
                         {feat.highlights.map(h => (
                           <span key={h} style={{
                             fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600,
-                            color: accent, background: accent + '12',
+                            color: accent, background: accent + (isDark ? '18' : '22'),
                             padding: '3px 10px', borderRadius: 6, letterSpacing: '0.01em',
                           }}>{h}</span>
                         ))}
