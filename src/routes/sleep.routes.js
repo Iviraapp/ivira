@@ -31,7 +31,14 @@ export default async function sleepRoutes(fastify) {
   // POST /gyms/:gymId/members/:memberId/sleep — log sleep (member or owner)
   fastify.post('/gyms/:gymId/members/:memberId/sleep', tokenAuth, async (request, reply) => {
     const { gymId, memberId } = request.params;
-    const { bedtime, wake_time, quality_rating, notes } = request.body || {};
+    const {
+      bedtime, wake_time, quality_rating, notes,
+      // Advanced fields from IVIRA Sleep Engine
+      deep_minutes, rem_minutes, light_minutes, awake_minutes,
+      efficiency, onset_latency, awakenings, sleep_cycles,
+      snoring_minutes, audio_events_count,
+      stage_timeline, audio_events, source,
+    } = request.body || {};
 
     if (!bedtime || !wake_time) {
       return reply.code(400).send({ error: 'bedtime and wake_time are required' });
@@ -51,18 +58,35 @@ export default async function sleepRoutes(fastify) {
     // Use wake date as the log date
     const date = wakeTimeDate.toISOString().split('T')[0];
 
+    const insertData = {
+      gym_id: gymId,
+      member_id: memberId,
+      bedtime: bedtimeDate,
+      wake_time: wakeTimeDate,
+      duration_minutes: durationMinutes,
+      quality_rating: rating,
+      sleep_score: sleepScore,
+      notes: notes || null,
+      date,
+    };
+
+    // Add advanced fields if provided (from IVIRA Sleep Engine)
+    if (deep_minutes != null) insertData.deep_minutes = parseInt(deep_minutes);
+    if (rem_minutes != null) insertData.rem_minutes = parseInt(rem_minutes);
+    if (light_minutes != null) insertData.light_minutes = parseInt(light_minutes);
+    if (awake_minutes != null) insertData.awake_minutes = parseInt(awake_minutes);
+    if (efficiency != null) insertData.efficiency = parseInt(efficiency);
+    if (onset_latency != null) insertData.onset_latency = parseInt(onset_latency);
+    if (awakenings != null) insertData.awakenings = parseInt(awakenings);
+    if (sleep_cycles != null) insertData.sleep_cycles = parseInt(sleep_cycles);
+    if (snoring_minutes != null) insertData.snoring_minutes = parseInt(snoring_minutes);
+    if (audio_events_count != null) insertData.audio_events_count = parseInt(audio_events_count);
+    if (stage_timeline) insertData.stage_timeline = JSON.stringify(stage_timeline);
+    if (audio_events) insertData.audio_events = JSON.stringify(audio_events);
+    if (source) insertData.source = String(source).slice(0, 30);
+
     const [log] = await db('sleep_logs')
-      .insert({
-        gym_id: gymId,
-        member_id: memberId,
-        bedtime: bedtimeDate,
-        wake_time: wakeTimeDate,
-        duration_minutes: durationMinutes,
-        quality_rating: rating,
-        sleep_score: sleepScore,
-        notes: notes || null,
-        date,
-      })
+      .insert(insertData)
       .returning('*');
 
     return reply.code(201).send({ sleep_log: log });
