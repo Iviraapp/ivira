@@ -7,11 +7,20 @@ const ACCENT = '#1A3A8F'
 const ACCENT_LIGHT = '#3B82F6'
 
 // Role-specific visual configs — no static images, pure CSS
+// Instantly.ai-inspired mesh gradient for auth hero panels
+const MESH_AUTH_LIGHT = `
+  radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99,132,255,0.30), transparent 55%),
+  radial-gradient(ellipse 70% 50% at 80% 10%, rgba(120,160,255,0.24), transparent 50%),
+  radial-gradient(ellipse 60% 80% at 50% 80%, rgba(150,130,255,0.20), transparent 55%),
+  radial-gradient(ellipse 90% 60% at 90% 60%, rgba(100,170,255,0.16), transparent 50%),
+  linear-gradient(135deg, #e8eeff 0%, #dce4fc 25%, #d0dcfa 50%, #c8d8f8 75%, #e0e8ff 100%)
+`
+
 const HERO_THEMES = {
   owner: {
     gradient: {
       dark: 'linear-gradient(135deg, #050A1A 0%, #0A1628 35%, #122044 70%, #1A3A8F 100%)',
-      light: 'linear-gradient(135deg, #F0F4FF 0%, #E0E8F5 35%, #C8D6F0 70%, #A8BEE8 100%)',
+      light: MESH_AUTH_LIGHT,
     },
     accent: '#1A3A8F',
     pattern: 'owner',
@@ -19,7 +28,7 @@ const HERO_THEMES = {
   member: {
     gradient: {
       dark: 'linear-gradient(135deg, #050508 0%, #0A0A1A 30%, #0F1B3D 60%, #162E6B 100%)',
-      light: 'linear-gradient(135deg, #F8FAFF 0%, #EEF2FF 30%, #DDE6FA 60%, #C5D5F5 100%)',
+      light: MESH_AUTH_LIGHT,
     },
     accent: '#3B82F6',
     pattern: 'member',
@@ -27,7 +36,7 @@ const HERO_THEMES = {
   trainer: {
     gradient: {
       dark: 'linear-gradient(135deg, #080505 0%, #1A0A0A 30%, #2D1220 60%, #4A1942 100%)',
-      light: 'linear-gradient(135deg, #FFF8FA 0%, #FEF0F5 30%, #F8DFE8 60%, #F0C5D5 100%)',
+      light: MESH_AUTH_LIGHT,
     },
     accent: '#EC4899',
     pattern: 'trainer',
@@ -35,7 +44,7 @@ const HERO_THEMES = {
   admin: {
     gradient: {
       dark: 'linear-gradient(135deg, #020808 0%, #051515 30%, #082828 60%, #0D4040 100%)',
-      light: 'linear-gradient(135deg, #F0FAFA 0%, #E0F5F5 30%, #C5EAEA 60%, #A0DEDE 100%)',
+      light: MESH_AUTH_LIGHT,
     },
     accent: '#0D9488',
     pattern: 'admin',
@@ -181,9 +190,9 @@ export default function AuthLayout({
   const heroTheme = HERO_THEMES[role] || HERO_THEMES.owner
 
   // Derived colors
-  const pageBg = isDark ? '#050505' : '#F8FAFC'
-  const cardBg = isDark ? '#121212' : '#FFFFFF'
-  const cardBorder = isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0'
+  const pageBg = isDark ? '#050505' : '#F0F4FF'
+  const cardBg = isDark ? '#121212' : 'rgba(255,255,255,0.90)'
+  const cardBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(26,58,143,0.12)'
   const cardShadow = isDark
     ? '0 8px 40px rgba(0,0,0,0.5), 0 0 80px rgba(26,58,143,0.06)'
     : '0 8px 40px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)'
@@ -372,7 +381,12 @@ export default function AuthLayout({
         style={{
           flex: '0 0 50%', width: '50%', minHeight: '100vh',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '40px 56px', background: pageBg,
+          padding: '40px 56px',
+          background: isDark ? pageBg : `
+            radial-gradient(ellipse 70% 50% at 60% 30%, rgba(99,132,255,0.12), transparent 55%),
+            radial-gradient(ellipse 60% 60% at 30% 70%, rgba(130,150,255,0.08), transparent 50%),
+            #F4F7FF
+          `,
         }}
       >
         <div style={{ width: '100%', maxWidth: 400 }}>
@@ -410,9 +424,9 @@ export function useAuthTheme() {
     textPrimary: isDark ? '#FFFFFF' : '#0F172A',
     textSec: isDark ? 'rgba(255,255,255,0.6)' : '#64748B',
     textTer: isDark ? 'rgba(255,255,255,0.35)' : '#94A3B8',
-    inputBg: isDark ? '#0A0A0A' : '#F8FAFC',
-    inputBorder: isDark ? '#1F1F1F' : '#E2E8F0',
-    inputBorderHover: isDark ? '#333' : '#CBD5E1',
+    inputBg: isDark ? '#0A0A0A' : '#FFFFFF',
+    inputBorder: isDark ? '#1F1F1F' : 'rgba(26,58,143,0.15)',
+    inputBorderHover: isDark ? '#333' : 'rgba(26,58,143,0.25)',
     accent: ACCENT,
     focusGlow: '0 0 0 3px rgba(26,58,143,0.15)',
     errorColor: '#EA4335',

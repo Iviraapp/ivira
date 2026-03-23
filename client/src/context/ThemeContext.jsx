@@ -2,11 +2,27 @@ import { createContext, useContext, useState, useEffect, useMemo } from 'react'
 
 const ThemeContext = createContext()
 
+// Instantly.ai-inspired blue mesh gradient for light mode backgrounds
+const MESH_GRADIENT = `
+  radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99,132,255,0.28), transparent 55%),
+  radial-gradient(ellipse 70% 50% at 80% 10%, rgba(120,160,255,0.22), transparent 50%),
+  radial-gradient(ellipse 60% 80% at 50% 80%, rgba(150,130,255,0.18), transparent 55%),
+  radial-gradient(ellipse 90% 60% at 90% 60%, rgba(100,170,255,0.15), transparent 50%),
+  linear-gradient(135deg, #e8eeff 0%, #dce4fc 25%, #d0dcfa 50%, #c8d8f8 75%, #e0e8ff 100%)
+`
+const MESH_GRADIENT_DARK = `
+  radial-gradient(ellipse 80% 60% at 10% 20%, rgba(26,58,143,0.20), transparent 55%),
+  radial-gradient(ellipse 70% 50% at 80% 10%, rgba(59,130,246,0.12), transparent 50%),
+  radial-gradient(ellipse 60% 80% at 50% 80%, rgba(99,102,241,0.10), transparent 55%),
+  linear-gradient(135deg, #050508 0%, #0A0A14 50%, #080812 100%)
+`
+
 const THEMES = {
   dark: {
     // Backgrounds
     bg: '#000000', bgSec: '#111111', bgTer: '#1A1A1A', bgHover: '#222222',
     bgInput: '#111111',
+    bgMesh: MESH_GRADIENT_DARK,
     // Text — white at full opacity, secondary at 60%
     text: '#FFFFFF', textSec: 'rgba(255,255,255,0.6)', textTer: 'rgba(255,255,255,0.4)',
     // Monochrome accent for general UI
@@ -19,7 +35,7 @@ const THEMES = {
     border: '#262626', borderFocus: 'rgba(255,255,255,0.3)',
     borderStrong: '#333333',
     // Brand gradient (logo only)
-    grad: 'linear-gradient(135deg, #DC2626, #EF4444)',
+    grad: 'linear-gradient(135deg, #1A3A8F, #3B82F6)',
     // Preview
     previewBg: '#ffffff', previewText: '#333',
     // Navigation
@@ -30,30 +46,31 @@ const THEMES = {
     cardBg: '#121212', brandDark: '#050505',
   },
   light: {
-    // Backgrounds
-    bg: '#FFFFFF', bgSec: '#F8F9FA', bgTer: '#F1F3F4', bgHover: '#E8EAED',
-    bgInput: '#F8F9FA',
-    // Text — black at full opacity, secondary at 60%
-    text: '#000000', textSec: 'rgba(0,0,0,0.6)', textTer: 'rgba(0,0,0,0.4)',
+    // Backgrounds — soft blue tints inspired by Instantly.ai
+    bg: '#F4F7FF', bgSec: '#EEF2FF', bgTer: '#E8EDFF', bgHover: '#DDE5FF',
+    bgInput: '#FFFFFF',
+    bgMesh: MESH_GRADIENT,
+    // Text
+    text: '#0F172A', textSec: '#475569', textTer: '#94A3B8',
     // Monochrome accent for general UI
-    accent: '#000000', accentSoft: 'rgba(0,0,0,0.05)',
+    accent: '#1A3A8F', accentSoft: 'rgba(26,58,143,0.08)',
     // Brand blue — ONLY for active nav + primary CTA buttons
     brandAccent: '#1A3A8F', brandAccentSoft: 'rgba(26,58,143,0.08)',
     // Status colors
     green: '#34A853', amber: '#FBBC05', red: '#EA4335', cyan: '#4285F4',
     // Borders
-    border: '#E5E7EB', borderFocus: 'rgba(0,0,0,0.2)',
-    borderStrong: '#D1D5DB',
-    // Brand gradient (logo only)
-    grad: 'linear-gradient(135deg, #DC2626, #EF4444)',
+    border: 'rgba(26,58,143,0.12)', borderFocus: 'rgba(26,58,143,0.3)',
+    borderStrong: 'rgba(26,58,143,0.18)',
+    // Brand gradient
+    grad: 'linear-gradient(135deg, #1A3A8F, #3B82F6)',
     // Preview
     previewBg: '#ffffff', previewText: '#333',
     // Navigation
-    navBg: 'rgba(255,255,255,0.95)', sidebarBg: '#FFFFFF',
+    navBg: 'rgba(255,255,255,0.85)', sidebarBg: '#F8FAFF',
     // Status
-    statusActive: '#34A853', statusExpired: '#EA4335', statusInactive: 'rgba(0,0,0,0.4)',
+    statusActive: '#34A853', statusExpired: '#EA4335', statusInactive: '#94A3B8',
     // Card & brand
-    cardBg: '#FFFFFF', brandLight: '#F8FAFC',
+    cardBg: 'rgba(255,255,255,0.85)', brandLight: '#F8FAFC',
   },
 }
 

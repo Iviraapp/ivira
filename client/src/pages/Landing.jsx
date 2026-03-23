@@ -654,23 +654,46 @@ export default function Landing() {
 
   const { pricing, plans, geo } = useGeoPricing()
 
+  // Instantly.ai-inspired mesh gradient for light backgrounds
+  const meshGradient = `
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99,132,255,0.28), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 80% 10%, rgba(120,160,255,0.22), transparent 50%),
+    radial-gradient(ellipse 60% 80% at 50% 80%, rgba(150,130,255,0.18), transparent 55%),
+    radial-gradient(ellipse 90% 60% at 90% 60%, rgba(100,170,255,0.15), transparent 50%),
+    linear-gradient(135deg, #e8eeff 0%, #dce4fc 25%, #d0dcfa 50%, #c8d8f8 75%, #e0e8ff 100%)
+  `
+  const meshGradientAlt = `
+    radial-gradient(ellipse 70% 50% at 30% 30%, rgba(99,132,255,0.20), transparent 55%),
+    radial-gradient(ellipse 60% 60% at 70% 70%, rgba(130,150,255,0.18), transparent 50%),
+    linear-gradient(135deg, #eef1ff 0%, #e4eafc 50%, #dce3fa 100%)
+  `
+  const meshGradientDeep = `
+    radial-gradient(ellipse 80% 50% at 20% 50%, rgba(80,110,255,0.25), transparent 50%),
+    radial-gradient(ellipse 70% 60% at 80% 30%, rgba(110,140,255,0.20), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 50% 90%, rgba(130,120,255,0.15), transparent 55%),
+    linear-gradient(135deg, #e0e8ff 0%, #d4defa 50%, #ccd6f8 100%)
+  `
+
   // ── Theme-adaptive colors ──
   const t = {
-    bg:        isDark ? MATTE_BLACK : '#FFFFFF',
-    bgAlt:     isDark ? SURFACE : '#F8F9FA',
-    bgCarbon:  isDark ? CARBON : '#F1F3F5',
-    text:      isDark ? WHITE : '#111111',
-    textSec:   isDark ? PLATINUM : '#333333',
-    textMuted: isDark ? SILVER : '#555555',
-    textDim:   isDark ? GUNMETAL : '#AAAAAA',
-    border:    isDark ? `${GUNMETAL}33` : 'rgba(0,0,0,0.08)',
-    cardBg:    isDark ? SURFACE : '#FFFFFF',
-    cardBorder:isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)',
-    cardShadow:isDark ? 'none' : '0 2px 12px rgba(0,0,0,0.06)',
-    navBg:     isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.92)',
-    navBgClear:isDark ? 'transparent' : 'rgba(255,255,255,0.6)',
+    bg:        isDark ? MATTE_BLACK : '#F4F7FF',
+    bgAlt:     isDark ? SURFACE : '#EEF2FF',
+    bgCarbon:  isDark ? CARBON : '#E8EDFF',
+    text:      isDark ? WHITE : '#0F172A',
+    textSec:   isDark ? PLATINUM : '#334155',
+    textMuted: isDark ? SILVER : '#475569',
+    textDim:   isDark ? GUNMETAL : '#94A3B8',
+    border:    isDark ? `${GUNMETAL}33` : 'rgba(26,58,143,0.10)',
+    cardBg:    isDark ? SURFACE : 'rgba(255,255,255,0.80)',
+    cardBorder:isDark ? 'rgba(255,255,255,0.05)' : 'rgba(26,58,143,0.10)',
+    cardShadow:isDark ? 'none' : '0 4px 20px rgba(26,58,143,0.08)',
+    navBg:     isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.85)',
+    navBgClear:isDark ? 'transparent' : 'rgba(255,255,255,0.5)',
     carbonBg:  isDark ? carbonFiberBg : {},
-    wordmark:  isDark ? WHITE : '#111111',
+    meshBg:    isDark ? {} : { background: meshGradient },
+    meshBgAlt: isDark ? {} : { background: meshGradientAlt },
+    meshBgDeep:isDark ? {} : { background: meshGradientDeep },
+    wordmark:  isDark ? WHITE : '#0F172A',
     selection: isDark ? SKY_ACCENT : IVIRA_BLUE,
     selText:   WHITE,
   }
@@ -704,7 +727,7 @@ export default function Landing() {
   ]
 
   return (
-    <div style={{ background: t.bg, color: t.textSec, fontFamily: FONT_BODY, minHeight: '100vh', overflowX: 'hidden', transition: 'background 0.4s, color 0.4s' }}>
+    <div style={{ ...(isDark ? { background: t.bg } : t.meshBg), color: t.textSec, fontFamily: FONT_BODY, minHeight: '100vh', overflowX: 'hidden', transition: 'background 0.4s, color 0.4s' }}>
 
       {/* ── STICKY NAV ──────────────────────────────────────── */}
       <nav style={{
@@ -948,15 +971,13 @@ export default function Landing() {
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
         justifyContent: 'center', alignItems: 'center', textAlign: 'center',
         position: 'relative', padding: '120px 24px 80px',
-        background: t.bg, ...t.carbonBg,
+        ...( isDark ? { background: MATTE_BLACK, ...t.carbonBg } : { ...t.meshBg }),
       }}>
         {/* Subtle gradient overlay */}
-        <div style={{
+        {isDark && <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: isDark
-            ? `radial-gradient(ellipse 60% 50% at 50% 40%, ${ACCENT_GLOW}, transparent 70%)`
-            : `radial-gradient(ellipse 60% 50% at 50% 40%, rgba(26,58,143,0.04), transparent 70%)`,
-        }} />
+          background: `radial-gradient(ellipse 60% 50% at 50% 40%, ${ACCENT_GLOW}, transparent 70%)`,
+        }} />}
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 900 }}>
           {/* Status Badge */}
@@ -1179,7 +1200,7 @@ export default function Landing() {
       </section>
 
       {/* ── HOW IT WORKS — Two Audiences ────────────────────── */}
-      <section style={{ padding: 'clamp(60px, 10vw, 100px) 0', background: t.bgAlt }}>
+      <section style={{ padding: 'clamp(60px, 10vw, 100px) 0', ...(isDark ? { background: t.bgAlt } : t.meshBgAlt) }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -1423,7 +1444,7 @@ export default function Landing() {
       </section>
 
       {/* ── COMMAND CENTER (Owner Features) ─────────────────── */}
-      <section id="features" style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bgCarbon, ...t.carbonBg }}>
+      <section id="features" style={{ padding: 'clamp(60px, 10vw, 120px) 0', ...(isDark ? { background: t.bgCarbon, ...t.carbonBg } : t.meshBgDeep) }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 64 }}>
@@ -1500,7 +1521,7 @@ export default function Landing() {
       </section>
 
       {/* ── PERFORMANCE SUITE (Seeker Features) ────────────── */}
-      <section id="members" style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bgAlt }}>
+      <section id="members" style={{ padding: 'clamp(60px, 10vw, 120px) 0', ...(isDark ? { background: t.bgAlt } : t.meshBgAlt) }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 64 }}>
@@ -1578,13 +1599,13 @@ export default function Landing() {
       {/* ── CONCIERGE ───────────────────────────────────────── */}
       <section style={{
         padding: 'clamp(60px, 10vw, 120px) 0',
-        background: t.bg, ...t.carbonBg,
+        ...(isDark ? { background: t.bg, ...t.carbonBg } : t.meshBg),
         position: 'relative',
       }}>
-        <div style={{
+        {isDark && <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           background: `radial-gradient(ellipse 80% 50% at 50% 100%, ${ACCENT_GLOW}, transparent 60%)`,
-        }} />
+        }} />}
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }}>
           <div style={{ ...containerStyle, position: 'relative', zIndex: 1 }}>
             <motion.div variants={fadeUp} style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -1659,7 +1680,7 @@ export default function Landing() {
       </section>
 
       {/* ── MEMBER EXPERIENCE ─────────────────────────────────── */}
-      <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bgCarbon }}>
+      <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', ...(isDark ? { background: t.bgCarbon } : t.meshBgDeep) }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 64 }}>
@@ -1714,7 +1735,7 @@ export default function Landing() {
       </section>
 
       {/* ── WHY I V I R A ─────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bgAlt }}>
+      <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', ...(isDark ? { background: t.bgAlt } : t.meshBgAlt) }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -1801,7 +1822,7 @@ export default function Landing() {
       </section>
 
       {/* ── YOUR BRAND, YOUR WEBSITE ──────────────────────────── */}
-      <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bg }}>
+      <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', ...(isDark ? { background: t.bg } : t.meshBg) }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 64 }}>
@@ -1977,13 +1998,13 @@ export default function Landing() {
       {/* ── DOWNLOAD ────────────────────────────────────────── */}
       <section id="download" style={{
         padding: 'clamp(60px, 10vw, 100px) 0',
-        background: t.bgCarbon, ...t.carbonBg,
+        ...(isDark ? { background: t.bgCarbon, ...t.carbonBg } : t.meshBgDeep),
         position: 'relative',
       }}>
-        <div style={{
+        {isDark && <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           background: `radial-gradient(ellipse 50% 60% at 50% 0%, ${ACCENT_GLOW}, transparent 50%)`,
-        }} />
+        }} />}
         <Section>
           <div style={{ ...containerStyle, position: 'relative', zIndex: 1, textAlign: 'center' }}>
             <div style={{ ...sectionLabel, color: t.textMuted }}>Mobile</div>

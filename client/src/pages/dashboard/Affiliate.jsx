@@ -15,24 +15,23 @@ export default function Affiliate() {
   const { gym } = useAuth()
   const gymId = gym?.id
   const toast = useToast()
-  const { theme } = useTheme()
+  const { theme, isDark } = useTheme()
 
-  const cardBg = '#0A0A0A'
-  const borderColor = '#1F1F1F'
+  const t = theme
 
   const cardStyle = {
-    background: cardBg,
-    border: `1px solid ${borderColor}`,
+    background: t.cardBg || t.bgSec,
+    border: `1px solid ${t.border}`,
     borderRadius: 14,
   }
 
   const inputStyle = {
     width: '100%',
     padding: '10px 14px',
-    background: '#111111',
-    border: `1px solid ${borderColor}`,
+    background: t.bgInput || t.bgSec,
+    border: `1px solid ${t.border}`,
     borderRadius: 8,
-    color: '#FFFFFF',
+    color: t.text,
     fontSize: 14,
     fontFamily: "'Inter', sans-serif",
     outline: 'none',
@@ -141,23 +140,23 @@ export default function Affiliate() {
   const statCards = [
     {
       title: 'Total Clicks', value: earnings.totalClicks ?? 0,
-      icon: <MousePointerClick size={20} color={theme.cyan} />,
-      color: theme.cyan, bgColor: 'rgba(66,133,244,0.08)',
+      icon: <MousePointerClick size={20} color={t.cyan} />,
+      color: t.cyan, bgColor: 'rgba(66,133,244,0.08)',
     },
     {
       title: 'Conversions', value: earnings.conversions ?? 0,
-      icon: <TrendingUp size={20} color={theme.accent} />,
-      color: theme.accent, bgColor: 'rgba(26,58,143,0.08)',
+      icon: <TrendingUp size={20} color={t.accent} />,
+      color: t.accent, bgColor: 'rgba(26,58,143,0.08)',
     },
     {
       title: 'Total Earned', value: formatPaise(earnings.totalEarned ?? 0),
-      icon: <TrendingUp size={20} color={theme.green} />,
-      color: theme.green, bgColor: 'rgba(52,168,83,0.08)',
+      icon: <TrendingUp size={20} color={t.green} />,
+      color: t.green, bgColor: 'rgba(52,168,83,0.08)',
     },
     {
       title: 'Pending Payout', value: formatPaise(earnings.pendingPayout ?? 0),
-      icon: <Clock size={20} color={theme.amber} />,
-      color: theme.amber, bgColor: 'rgba(251,188,5,0.08)',
+      icon: <Clock size={20} color={t.amber} />,
+      color: t.amber, bgColor: 'rgba(251,188,5,0.08)',
     },
   ]
 
@@ -165,12 +164,12 @@ export default function Affiliate() {
     if (active && payload && payload.length) {
       return (
         <div style={{
-          background: '#111111', border: `1px solid ${borderColor}`,
+          background: t.bgSec, border: `1px solid ${t.border}`,
           borderRadius: 10, padding: '10px 14px', fontSize: 13,
           fontFamily: "'Inter', sans-serif",
         }}>
-          <div style={{ color: '#888888', marginBottom: 4 }}>{label}</div>
-          <div style={{ color: '#FFFFFF', fontWeight: 600 }}>
+          <div style={{ color: t.textTer, marginBottom: 4 }}>{label}</div>
+          <div style={{ color: t.text, fontWeight: 600 }}>
             {'\u20B9'}{(payload[0].value / 100).toLocaleString()}
           </div>
         </div>
@@ -187,7 +186,7 @@ export default function Affiliate() {
         height: 24,
         borderRadius: 12,
         border: 'none',
-        background: active ? '#1A3A8F' : '#333333',
+        background: active ? t.brandAccent : t.borderStrong,
         cursor: 'pointer',
         position: 'relative',
         transition: 'background 0.2s ease',
@@ -214,13 +213,13 @@ export default function Affiliate() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
         <div style={{
           width: 40, height: 40, borderRadius: 10,
-          background: 'rgba(26,58,143,0.08)',
+          background: t.accentSoft,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Globe size={20} color={theme.accent} />
+          <Globe size={20} color={t.accent} />
         </div>
         <h1 style={{
-          fontSize: 26, fontWeight: 700, color: '#FFFFFF', margin: 0,
+          fontSize: 26, fontWeight: 700, color: t.text, margin: 0,
           fontFamily: "'Inter', sans-serif",
         }}>
           Affiliate
@@ -255,7 +254,7 @@ export default function Affiliate() {
                 {s.icon}
               </div>
               <div style={{
-                fontSize: 12, fontWeight: 600, color: '#666666',
+                fontSize: 12, fontWeight: 600, color: t.textTer,
                 textTransform: 'uppercase', letterSpacing: '0.5px',
                 marginBottom: 6, position: 'relative',
                 fontFamily: "'Inter', sans-serif",
@@ -263,7 +262,7 @@ export default function Affiliate() {
                 {s.title}
               </div>
               <div style={{
-                fontSize: 24, fontWeight: 700, color: '#FFFFFF',
+                fontSize: 24, fontWeight: 700, color: t.text,
                 fontFamily: "'Inter', sans-serif",
                 position: 'relative',
               }}>
@@ -282,8 +281,8 @@ export default function Affiliate() {
             disabled={payoutLoading}
             style={{
               background: 'transparent',
-              color: '#1A3A8F',
-              border: '1px solid #1A3A8F',
+              color: t.brandAccent,
+              border: `1px solid ${t.brandAccent}`,
               borderRadius: 10,
               padding: '10px 22px',
               fontWeight: 600,
@@ -308,7 +307,7 @@ export default function Affiliate() {
       {monthlyData.length > 0 && (
         <div style={{ ...cardStyle, padding: 28, marginBottom: 32 }}>
           <h2 style={{
-            fontSize: 17, fontWeight: 600, color: '#FFFFFF',
+            fontSize: 17, fontWeight: 600, color: t.text,
             marginTop: 0, marginBottom: 22,
             fontFamily: "'Inter', sans-serif",
           }}>
@@ -319,21 +318,21 @@ export default function Affiliate() {
               <BarChart data={monthlyData} barSize={28}>
                 <defs>
                   <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={theme.accent} stopOpacity={1} />
-                    <stop offset="100%" stopColor={theme.cyan} stopOpacity={0.6} />
+                    <stop offset="0%" stopColor={t.accent} stopOpacity={1} />
+                    <stop offset="100%" stopColor={t.cyan} stopOpacity={0.6} />
                   </linearGradient>
                 </defs>
                 <XAxis
                   dataKey="month"
-                  tick={{ fontSize: 12, fill: '#666666' }}
+                  tick={{ fontSize: 12, fill: t.textTer }}
                   axisLine={false} tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 12, fill: '#666666' }}
+                  tick={{ fontSize: 12, fill: t.textTer }}
                   axisLine={false} tickLine={false}
                   tickFormatter={(v) => `\u20B9${(v / 100).toLocaleString()}`}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }} />
                 <Bar dataKey="earned" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -344,7 +343,7 @@ export default function Affiliate() {
       {/* Brand Catalog */}
       <div style={{ marginBottom: 32 }}>
         <h2 style={{
-          fontSize: 15, fontWeight: 600, color: '#888888', marginBottom: 16,
+          fontSize: 15, fontWeight: 600, color: t.textTer, marginBottom: 16,
           textTransform: 'uppercase', letterSpacing: '0.5px',
           fontFamily: "'Inter', sans-serif",
         }}>
@@ -371,22 +370,22 @@ export default function Affiliate() {
               }}>
                 <div style={{
                   width: 48, height: 48, borderRadius: '50%',
-                  background: '#1F1F1F',
+                  background: t.bgHover,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   marginBottom: 16,
-                  fontSize: 20, fontWeight: 700, color: '#444444',
+                  fontSize: 20, fontWeight: 700, color: t.textTer,
                   fontFamily: "'Inter', sans-serif",
                 }}>
                   ?
                 </div>
                 <div style={{
-                  fontWeight: 700, fontSize: 16, color: '#FFFFFF', marginBottom: 8,
+                  fontWeight: 700, fontSize: 16, color: t.text, marginBottom: 8,
                   fontFamily: "'Inter', sans-serif",
                 }}>
                   {placeholder.name}
                 </div>
                 <span style={{
-                  background: '#1F1F1F', color: '#666666',
+                  background: t.bgHover, color: t.textTer,
                   fontSize: 12, padding: '4px 10px', borderRadius: 20,
                   fontWeight: 500, fontFamily: "'Inter', sans-serif",
                 }}>
@@ -410,10 +409,10 @@ export default function Affiliate() {
                   cursor: 'default',
                 }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#333333'
+                    e.currentTarget.style.borderColor = t.borderStrong
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = borderColor
+                    e.currentTarget.style.borderColor = t.border
                   }}
                 >
                   {/* Brand Logo */}
@@ -452,7 +451,7 @@ export default function Affiliate() {
 
                   {/* Brand Name */}
                   <div style={{
-                    fontWeight: 700, fontSize: 16, color: '#FFFFFF', marginBottom: 8,
+                    fontWeight: 700, fontSize: 16, color: t.text, marginBottom: 8,
                     fontFamily: "'Inter', sans-serif",
                   }}>
                     {brand.name}
@@ -461,7 +460,7 @@ export default function Affiliate() {
                   {/* Category Badge */}
                   <div style={{ marginBottom: 12 }}>
                     <span style={{
-                      background: '#1F1F1F', color: '#999999',
+                      background: t.bgHover, color: t.textSec,
                       fontSize: 12, padding: '4px 10px', borderRadius: 20,
                       fontWeight: 500, fontFamily: "'Inter', sans-serif",
                       display: 'inline-block',
@@ -472,7 +471,7 @@ export default function Affiliate() {
 
                   {/* Commission Rate */}
                   <div style={{
-                    fontSize: 14, fontWeight: 600, color: '#34A853',
+                    fontSize: 14, fontWeight: 600, color: t.green,
                     marginBottom: 20, fontFamily: "'Inter', sans-serif",
                   }}>
                     {getCommissionDisplay(brand)}
@@ -491,7 +490,7 @@ export default function Affiliate() {
                         onToggle={() => handleToggleBrand(brand)}
                       />
                       <span style={{
-                        fontSize: 12, color: isActive ? '#BBBBBB' : '#666666',
+                        fontSize: 12, color: isActive ? t.textSec : t.textTer,
                         fontFamily: "'Inter', sans-serif",
                         fontWeight: 500,
                         transition: 'color 0.2s ease',
@@ -504,7 +503,7 @@ export default function Affiliate() {
                       <button
                         onClick={() => openModal(brand)}
                         style={{
-                          background: '#1A3A8F',
+                          background: t.brandAccent,
                           color: '#FFFFFF', border: 'none', borderRadius: 8,
                           padding: '8px 16px', fontWeight: 600, cursor: 'pointer',
                           display: 'flex', alignItems: 'center', gap: 6,
@@ -530,19 +529,19 @@ export default function Affiliate() {
       <Modal open={!!selectedBrand} onClose={closeModal}>
         <div style={{
           padding: 28,
-          background: cardBg,
+          background: t.cardBg || t.bgSec,
           borderRadius: 16,
-          border: `1px solid ${borderColor}`,
+          border: `1px solid ${t.border}`,
         }}>
           <h3 style={{
-            fontSize: 20, fontWeight: 700, color: '#FFFFFF',
+            fontSize: 20, fontWeight: 700, color: t.text,
             marginTop: 0, marginBottom: 6,
             fontFamily: "'Inter', sans-serif",
           }}>
             Generate Tracking Link
           </h3>
           <p style={{
-            color: '#888888', fontSize: 14, marginBottom: 24,
+            color: t.textSec, fontSize: 14, marginBottom: 24,
             fontFamily: "'Inter', sans-serif",
           }}>
             {selectedBrand?.name} {'\u2014'} {selectedBrand?.commissionRate}% commission
@@ -551,7 +550,7 @@ export default function Affiliate() {
           <div style={{ marginBottom: 18 }}>
             <label style={{
               display: 'block', fontSize: 13, fontWeight: 600,
-              color: '#888888', marginBottom: 6,
+              color: t.textSec, marginBottom: 6,
               fontFamily: "'Inter', sans-serif",
             }}>
               Product URL (optional)
@@ -569,7 +568,7 @@ export default function Affiliate() {
               onClick={handleGenerateLink}
               disabled={generateLinkMutation.isPending}
               style={{
-                background: '#1A3A8F', color: '#FFFFFF',
+                background: t.brandAccent, color: '#FFFFFF',
                 border: 'none', borderRadius: 10,
                 padding: '12px 24px', fontWeight: 600, cursor: 'pointer',
                 width: '100%', fontSize: 14,
@@ -581,11 +580,11 @@ export default function Affiliate() {
             </button>
           ) : (
             <div style={{
-              background: '#111111', border: `1px solid ${borderColor}`,
+              background: t.bgTer, border: `1px solid ${t.border}`,
               borderRadius: 10, padding: 16,
             }}>
               <div style={{
-                fontSize: 12, fontWeight: 600, color: '#1A3A8F', marginBottom: 8,
+                fontSize: 12, fontWeight: 600, color: t.brandAccent, marginBottom: 8,
                 textTransform: 'uppercase', letterSpacing: '0.5px',
                 fontFamily: "'Inter', sans-serif",
               }}>
@@ -593,8 +592,8 @@ export default function Affiliate() {
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <div style={{
-                  flex: 1, fontSize: 13, color: '#FFFFFF',
-                  background: '#000000', border: `1px solid ${borderColor}`,
+                  flex: 1, fontSize: 13, color: t.text,
+                  background: t.bg, border: `1px solid ${t.border}`,
                   borderRadius: 8, padding: '10px 12px',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   fontFamily: "'JetBrains Mono', monospace",
@@ -604,8 +603,8 @@ export default function Affiliate() {
                 <button
                   onClick={handleCopy}
                   style={{
-                    background: '#1F1F1F', color: '#FFFFFF',
-                    border: `1px solid ${borderColor}`, borderRadius: 8,
+                    background: t.bgHover, color: t.text,
+                    border: `1px solid ${t.border}`, borderRadius: 8,
                     padding: '10px 14px', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                     fontSize: 13, fontWeight: 600,
@@ -626,13 +625,13 @@ export default function Affiliate() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
           <div style={{
             width: 34, height: 34, borderRadius: 8,
-            background: 'rgba(26,58,143,0.08)',
+            background: t.accentSoft,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <MousePointerClick size={18} color="#888888" />
+            <MousePointerClick size={18} color={t.textSec} />
           </div>
           <h2 style={{
-            fontSize: 17, fontWeight: 600, color: '#FFFFFF', margin: 0,
+            fontSize: 17, fontWeight: 600, color: t.text, margin: 0,
             fontFamily: "'Inter', sans-serif",
           }}>
             Click History
@@ -645,7 +644,7 @@ export default function Affiliate() {
           </div>
         ) : clicks.length === 0 ? (
           <EmptyState
-            icon={<MousePointerClick size={40} color="#444444" />}
+            icon={<MousePointerClick size={40} color={t.textTer} />}
             title="No clicks yet"
             description="Share your affiliate links with members to start tracking clicks."
           />
@@ -653,11 +652,11 @@ export default function Affiliate() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
-                <tr style={{ borderBottom: `1px solid ${borderColor}` }}>
+                <tr style={{ borderBottom: `1px solid ${t.border}` }}>
                   {['Brand', 'Member', 'Clicked', 'Converted', 'Date'].map((h) => (
                     <th key={h} style={{
                       textAlign: 'left', padding: '12px 14px',
-                      color: '#666666', fontWeight: 600, fontSize: 12,
+                      color: t.textTer, fontWeight: 600, fontSize: 12,
                       textTransform: 'uppercase', letterSpacing: '0.5px',
                       fontFamily: "'Inter', sans-serif",
                     }}>
@@ -669,15 +668,15 @@ export default function Affiliate() {
               <tbody>
                 {clicks.map((click, idx) => (
                   <tr key={click.id} style={{
-                    borderBottom: `1px solid ${borderColor}`,
-                    background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                    borderBottom: `1px solid ${t.border}`,
+                    background: idx % 2 === 0 ? 'transparent' : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'),
                   }}>
-                    <td style={{ padding: '14px', color: '#FFFFFF', fontWeight: 500, fontFamily: "'Inter', sans-serif" }}>{click.brand}</td>
-                    <td style={{ padding: '14px', color: '#FFFFFF', fontFamily: "'Inter', sans-serif" }}>{click.member}</td>
+                    <td style={{ padding: '14px', color: t.text, fontWeight: 500, fontFamily: "'Inter', sans-serif" }}>{click.brand}</td>
+                    <td style={{ padding: '14px', color: t.text, fontFamily: "'Inter', sans-serif" }}>{click.member}</td>
                     <td style={{ padding: '14px' }}>
                       <span style={{
-                        background: click.clicked ? 'rgba(52,168,83,0.12)' : 'rgba(255,255,255,0.05)',
-                        color: click.clicked ? '#34A853' : '#666666',
+                        background: click.clicked ? 'rgba(52,168,83,0.12)' : t.accentSoft,
+                        color: click.clicked ? t.green : t.textTer,
                         fontSize: 12, padding: '4px 10px', borderRadius: 6, fontWeight: 600,
                         fontFamily: "'Inter', sans-serif",
                       }}>
@@ -687,14 +686,14 @@ export default function Affiliate() {
                     <td style={{ padding: '14px' }}>
                       <span style={{
                         background: click.converted ? 'rgba(52,168,83,0.12)' : 'rgba(234,67,53,0.12)',
-                        color: click.converted ? '#34A853' : '#EA4335',
+                        color: click.converted ? t.green : t.red,
                         fontSize: 12, padding: '4px 10px', borderRadius: 6, fontWeight: 600,
                         fontFamily: "'Inter', sans-serif",
                       }}>
                         {click.converted ? 'Converted' : 'Pending'}
                       </span>
                     </td>
-                    <td style={{ padding: '14px', color: '#888888', fontFamily: "'Inter', sans-serif" }}>{formatDate(click.date)}</td>
+                    <td style={{ padding: '14px', color: t.textSec, fontFamily: "'Inter', sans-serif" }}>{formatDate(click.date)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -52,6 +52,32 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* Light mode — blue mesh theme inspired by Instantly.ai */
+html.light {
+  --bg:             #F4F7FF;
+  --bg-secondary:   #EEF2FF;
+  --bg-tertiary:    #E8EDFF;
+  --bg-hover:       #DDE5FF;
+
+  --text:           #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary:  #94A3B8;
+
+  --accent:         #1A3A8F;
+  --accent-soft:    rgba(26,58,143,0.08);
+
+  --brand-accent:   #1A3A8F;
+  --brand-accent-soft: rgba(26,58,143,0.08);
+
+  --border:         rgba(26,58,143,0.12);
+  --border-focus:   rgba(26,58,143,0.3);
+  --border-strong:  rgba(26,58,143,0.18);
+
+  --shadow-sm:  0 2px 8px rgba(26,58,143,0.06);
+  --shadow:     0 4px 16px rgba(26,58,143,0.08);
+  --shadow-lg:  0 8px 32px rgba(26,58,143,0.10);
+}
+
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
