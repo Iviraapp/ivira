@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AreaChart, Area, ResponsiveContainer } from 'recharts'
 import { useTheme } from '../context/ThemeContext'
+import { events as analytics } from '../lib/analytics'
 
 // ── IVIRA Brand Tokens ──────────────────────────────────────
 const MATTE_BLACK  = '#0A0A0A'

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import api from '../lib/api'
+import { identify, events as analyticsEvents } from '../lib/analytics'
 
 const AuthContext = createContext(null)
 
@@ -20,6 +21,9 @@ export function AuthProvider({ children }) {
     localStorage.setItem('ivira_gym', JSON.stringify(gymData))
     setToken(newToken)
     setGym(gymData)
+    // Track login + identify visitor
+    analyticsEvents.login({ gym_id: gymData?.id, role: gymData?.user_role || 'owner' })
+    if (gymData?.id) identify(gymData.id, gymData?.user_role || 'owner')
   }, [])
 
   const logout = useCallback(() => {

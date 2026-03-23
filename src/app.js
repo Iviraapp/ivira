@@ -53,7 +53,9 @@ import recipeRoutes from './routes/recipes.routes.js';
 import foodScanRoutes from './routes/food-scan.routes.js';
 import sleepRoutes from './routes/sleep.routes.js';
 import conciergeRoutes from './routes/concierge.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
 import multipart from '@fastify/multipart';
+import fastifyCookie from '@fastify/cookie';
 import { startCronJobs } from './cron/scheduler.js';
 import { AppError } from './utils/errors.js';
 
@@ -83,6 +85,9 @@ export async function buildApp(opts = {}) {
     max: 100,
     timeWindow: '1 minute',
   });
+
+  // Cookie support
+  await fastify.register(fastifyCookie);
 
   // Multipart file uploads
   await fastify.register(multipart, {
@@ -153,6 +158,7 @@ export async function buildApp(opts = {}) {
   await fastify.register(foodScanRoutes, { prefix: '/api/v1' });
   await fastify.register(sleepRoutes, { prefix: '/api/v1' });
   await fastify.register(conciergeRoutes, { prefix: '/api/v1' });
+  await fastify.register(analyticsRoutes, { prefix: '/api/v1' });
   // APK download route — serve locally if available, otherwise redirect to GitHub Release
   fastify.get('/downloads/ivira-latest.apk', async (request, reply) => {
     const fs = await import('fs');

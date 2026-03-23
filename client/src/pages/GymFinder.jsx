@@ -4,6 +4,7 @@ import L from 'leaflet'
 import api from '../lib/api'
 import { formatPaise } from '../lib/utils'
 import { useTheme } from '../context/ThemeContext'
+import { events as analytics } from '../lib/analytics'
 import {
   Search, MapPin, Star, X, Navigation, Clock, Dumbbell, Car, Waves,
   Snowflake, Lock, Flame, Coffee, Locate, AlertCircle, Loader2,
@@ -154,6 +155,9 @@ export default function GymFinder() {
   const [leadSubmitted, setLeadSubmitted] = useState(false)
   const [contactUnlocked, setContactUnlocked] = useState(false) // unlocked after lead capture
   const searchTimeoutRef = useRef(null)
+
+  // Track find_gym_opened
+  useEffect(() => { analytics.findGymOpened() }, [])
 
   // Close lead modal on Escape
   useEffect(() => {
@@ -309,6 +313,7 @@ export default function GymFinder() {
   }, [userLocation])
 
   async function selectGym(gym) {
+    analytics.gymViewed({ gym_id: gym.id, gym_name: gym.name })
     setSelectedGym(gym)
     setCardVisible(true)
     setDetailData(null)
@@ -372,6 +377,7 @@ export default function GymFinder() {
     if (!buyerName || !buyerPhone || !validDate) return
 
     setCheckoutSubmitting(true)
+    analytics.checkoutStarted({ gym_name: selectedGym.name })
     try {
       const placeId = selectedGym.place_id
       const { data } = await api.post(`/external/gyms/match/${placeId}/day-pass`, {
@@ -404,6 +410,7 @@ export default function GymFinder() {
                 await api.post(`/discover/day-pass/${data.dayPass.id}/verify`, {
                   paymentId: response.razorpay_payment_id,
                 })
+                analytics.paymentCompleted({ gym_name: dayPassMatch.gym_name, payment_id: response.razorpay_payment_id })
                 setCheckoutResult({
                   success: true,
                   message: 'Payment confirmed! Your day pass is active.',
@@ -1248,6 +1255,7 @@ export default function GymFinder() {
                 {isGoogleGym && dayPassMatch?.matched && dayPassMatch.accepts_day_pass && dayPassMatch.day_pass_paise > 0 && !showCheckout && !checkoutResult && (
                   <button
                     onClick={() => {
+                      analytics.buyPassClicked({ gym_id: dayPassMatch.gym_id, price: dayPassMatch.day_pass_paise })
                       setShowCheckout(true)
                       setCheckoutForm(f => ({ ...f, validDate: new Date().toISOString().split('T')[0] }))
                     }}

@@ -6,6 +6,7 @@ import { useTheme } from './context/ThemeContext'
 import CommandBar from './components/CommandBar'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
 import WellbeingWidget from './components/WellbeingWidget'
+import CookieConsent from './components/CookieConsent'
 
 // Pages
 import Login from './pages/Login'
@@ -201,6 +202,7 @@ export default function App() {
       <CommandBar />
       <PWAInstallPrompt />
       <WellbeingWidget />
+      <CookieConsent />
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
