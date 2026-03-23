@@ -76,6 +76,12 @@ const memberFeatures = [
     color: '#34A853',
   },
   {
+    title: 'Sleep Tracking',
+    desc: 'Auto-sync sleep from Apple Health and Google Health Connect. Track quality and trends.',
+    icon: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z',
+    color: '#8B5CF6',
+  },
+  {
     title: 'AI Coach',
     desc: 'Get personalized workout plans and nutrition advice from our AI coach.',
     icon: 'M12 2a4 4 0 0 1 4 4v2H8V6a4 4 0 0 1 4-4zM5 10h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z',
