@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { V, FONT, FONT_D } from '../../components/vira/theme'
+import { V, G, GR, FONT, FONT_D, glass } from '../../components/vira/theme'
 
 const INTAKE_QUESTIONS = [
   { key: 'name', question: "Let's get started. What's your full name?", type: 'text' },
@@ -18,30 +18,51 @@ const FIELD_LABELS = {
   allergies: 'Allergies', emergency_name: 'Emergency Contact', emergency_phone: 'Emergency Phone',
 }
 
+// Rule 4: Vira avatar always visible left, user messages have 2px violet-500/30 border
+// Rule 3: gap-4 (GR.md) between bubbles
 function ChatBubble({ role, text }) {
   const isVira = role === 'vira'
   return (
     <div style={{
-      display: 'flex', justifyContent: isVira ? 'flex-start' : 'flex-end',
-      marginBottom: 10,
+      display: 'flex',
+      flexDirection: 'row', // Rule 4: avatar always on left
+      alignItems: 'flex-start',
+      gap: GR.sm,
+      padding: `0 0 ${GR.md}px 0`, // Rule 3: golden ratio gap
     }}>
-      {isVira && (
-        <div style={{
-          width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-          background: `linear-gradient(135deg, ${V.accent}, #EC4899)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginRight: 8, marginTop: 2,
-        }}>
+      {/* Rule 4: Always-visible avatar */}
+      <div style={{
+        width: G * 4, height: G * 4, borderRadius: '50%', flexShrink: 0,
+        background: isVira
+          ? `linear-gradient(135deg, ${V.accent}, #EC4899)`
+          : V.cardSolid,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginTop: G / 4,
+        border: isVira ? 'none' : `1px solid ${V.border}`,
+      }}>
+        {isVira ? (
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
             <circle cx="12" cy="12" r="3" fill="rgba(255,255,255,0.2)" />
           </svg>
-        </div>
-      )}
+        ) : (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={V.textTer} strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        )}
+      </div>
       <div style={{
-        maxWidth: '80%', padding: '10px 14px',
-        borderRadius: isVira ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
-        background: isVira ? V.card : `${V.accent}20`,
-        border: `1px solid ${isVira ? V.border : `${V.accent}30`}`,
+        maxWidth: '85%',
+        padding: `${GR.sm}px ${GR.md}px`,
+        borderRadius: isVira
+          ? `${G / 2}px ${GR.md}px ${GR.md}px ${GR.md}px`
+          : `${GR.md}px ${G / 2}px ${GR.md}px ${GR.md}px`,
+        ...glass(isVira ? null : V.accent),
+        background: isVira ? V.card : `${V.accent}10`,
+        // Rule 4: User messages have 2px violet-500/30 border
+        border: isVira
+          ? `1px solid ${V.border}`
+          : `2px solid ${V.userBorder}`,
         color: V.text, fontFamily: FONT, fontSize: 14, lineHeight: 1.5,
       }}>
         {text}
@@ -68,13 +89,11 @@ export default function ViraIntake() {
   const handleSubmit = () => {
     const text = input.trim()
     if (!text) return
-
     const currentQ = INTAKE_QUESTIONS[step]
     const newAnswers = { ...answers, [currentQ.key]: text }
     setAnswers(newAnswers)
     setMessages(prev => [...prev, { role: 'user', text }])
     setInput('')
-
     if (step + 1 < INTAKE_QUESTIONS.length) {
       const nextQ = INTAKE_QUESTIONS[step + 1]
       setTimeout(() => {
@@ -100,8 +119,8 @@ export default function ViraIntake() {
       background: V.bg,
     }}>
       {/* Progress bar */}
-      <div style={{ padding: '12px 16px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+      <div style={{ padding: `${GR.sm}px ${GR.md}px 0` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: GR.xs }}>
           <span style={{
             fontFamily: FONT, fontSize: 11, fontWeight: 600, color: V.textSec,
             letterSpacing: '0.04em', textTransform: 'uppercase',
@@ -113,10 +132,10 @@ export default function ViraIntake() {
           </span>
         </div>
         <div style={{
-          height: 4, borderRadius: 2, background: V.border, overflow: 'hidden',
+          height: G / 2, borderRadius: G / 4, background: V.cardSolid, overflow: 'hidden',
         }}>
           <div style={{
-            height: '100%', borderRadius: 2,
+            height: '100%', borderRadius: G / 4,
             background: `linear-gradient(90deg, ${V.accent}, #EC4899)`,
             width: `${progress}%`, transition: 'width 0.4s ease',
           }} />
@@ -125,8 +144,9 @@ export default function ViraIntake() {
 
       {/* Chat messages */}
       <div ref={scrollRef} style={{
-        flex: 1, overflowY: 'auto', padding: '12px 12px',
-        paddingBottom: complete ? 16 : 80,
+        flex: 1, overflowY: 'auto',
+        padding: `${GR.sm}px ${GR.md}px`,
+        paddingBottom: complete ? GR.md : GR.xl * 2,
       }}>
         {messages.map((msg, i) => (
           <ChatBubble key={i} {...msg} />
@@ -135,14 +155,15 @@ export default function ViraIntake() {
         {/* Summary card */}
         {complete && (
           <div style={{
-            margin: '16px 0', padding: '20px', borderRadius: 16,
-            background: V.card, border: `1px solid ${V.border}`,
+            margin: `${GR.md}px 0`,
+            padding: GR.md,
+            ...glass(V.accent),
             borderTop: `3px solid ${V.accent}`,
             animation: 'fadeIn 0.4s ease-out',
           }}>
             <h3 style={{
               fontFamily: FONT_D, fontSize: 16, fontWeight: 700,
-              color: V.text, margin: '0 0 16px',
+              color: V.text, margin: `0 0 ${GR.md}px`,
             }}>
               Your Health Profile
             </h3>
@@ -150,7 +171,8 @@ export default function ViraIntake() {
             {Object.entries(answers).map(([key, val]) => (
               <div key={key} style={{
                 display: 'flex', justifyContent: 'space-between',
-                padding: '10px 0', borderBottom: `1px solid ${V.border}`,
+                padding: `${GR.sm}px 0`,
+                borderBottom: `1px solid ${V.border}`,
               }}>
                 <span style={{ fontFamily: FONT, fontSize: 13, color: V.textSec }}>
                   {FIELD_LABELS[key]}
@@ -162,12 +184,12 @@ export default function ViraIntake() {
             ))}
 
             <button style={{
-              marginTop: 20, width: '100%', padding: '14px',
-              borderRadius: 14, border: 'none',
+              marginTop: GR.md, width: '100%', padding: `${GR.sm}px`,
+              borderRadius: GR.md, border: 'none',
               background: `linear-gradient(135deg, ${V.accent}, #EC4899)`,
               color: '#fff', fontFamily: FONT, fontSize: 15, fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: `0 4px 20px ${V.accentGlow}`,
+              boxShadow: `0 ${G / 2}px ${GR.md}px ${V.accentGlow}`,
             }}>
               Confirm & Save Profile
             </button>
@@ -175,19 +197,26 @@ export default function ViraIntake() {
         )}
       </div>
 
-      {/* Input bar (hidden when complete) */}
+      {/* Rule 5: Floating Pill input with inset shadow */}
       {!complete && (
         <div style={{
-          position: 'fixed', bottom: 72, left: 0, right: 0,
-          padding: '8px 12px',
-          paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
-          background: `${V.bg}F0`, backdropFilter: 'blur(16px)',
+          position: 'fixed', bottom: G * 8,
+          left: 0, right: 0,
+          padding: `${GR.xs}px ${GR.sm}px`,
+          paddingBottom: `max(${GR.xs}px, env(safe-area-inset-bottom))`,
+          ...glass(),
+          borderRadius: 0,
           borderTop: `1px solid ${V.border}`,
+          borderLeft: 'none', borderRight: 'none', borderBottom: 'none',
         }}>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: V.card, borderRadius: 28,
-            border: `1px solid ${V.border}`, padding: '4px 4px 4px 16px',
+            display: 'flex', alignItems: 'center', gap: GR.xs,
+            background: V.cardSolid,
+            borderRadius: GR.lg, // Pill shape
+            padding: `${G / 2}px ${G / 2}px ${G / 2}px ${GR.md}px`,
+            // Rule 5: Inset shadow for depth
+            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.25), inset 0 1px 2px rgba(0,0,0,0.15)',
+            border: `1px solid ${V.border}`,
           }}>
             <input
               value={input}
@@ -197,17 +226,20 @@ export default function ViraIntake() {
               type={INTAKE_QUESTIONS[step]?.type === 'number' ? 'number' : INTAKE_QUESTIONS[step]?.type === 'tel' ? 'tel' : 'text'}
               style={{
                 flex: 1, background: 'none', border: 'none', outline: 'none',
-                color: V.text, fontFamily: FONT, fontSize: 15, padding: '10px 0',
+                color: V.text, fontFamily: FONT, fontSize: 15,
+                padding: `${GR.sm}px 0`,
               }}
             />
             <button
               onClick={handleSubmit}
               disabled={!input.trim()}
               style={{
-                width: 40, height: 40, borderRadius: '50%',
-                background: input.trim() ? `linear-gradient(135deg, ${V.accent}, #EC4899)` : V.border,
-                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: G * 5, height: G * 5, borderRadius: '50%',
+                background: input.trim() ? `linear-gradient(135deg, ${V.accent}, #EC4899)` : V.cardSolid,
+                border: `1px solid ${input.trim() ? 'transparent' : V.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: input.trim() ? 'pointer' : 'default',
+                boxShadow: input.trim() ? `0 2px 8px ${V.accentGlow}` : 'none',
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

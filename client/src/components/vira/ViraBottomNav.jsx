@@ -1,4 +1,7 @@
-import { V, FONT } from './theme'
+import { V, G, GR, FONT, glass } from './theme'
+
+// Rule 2: Bottom Floating Bar for mWeb — 64px fixed
+const NAV_H = G * 8
 
 export default function ViraBottomNav({ tabs, activeTab, onTabChange, onVira }) {
   const mid = Math.floor(tabs.length / 2)
@@ -11,10 +14,12 @@ export default function ViraBottomNav({ tabs, activeTab, onTabChange, onVira }) 
       onClick={() => onTabChange(key)}
       style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: 2, padding: '6px 0', background: 'none', border: 'none',
+        gap: G / 4,
+        padding: `${GR.xs}px 0`, background: 'none', border: 'none',
         color: activeTab === key ? V.accent : V.textTer,
         cursor: 'pointer', fontFamily: FONT, transition: 'color 0.2s',
-        minHeight: 48, justifyContent: 'center',
+        minHeight: G * 6,
+        justifyContent: 'center',
       }}
     >
       <Icon size={20} />
@@ -31,11 +36,14 @@ export default function ViraBottomNav({ tabs, activeTab, onTabChange, onVira }) 
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: `${V.card}F2`, borderTop: `1px solid ${V.border}`,
+      height: NAV_H,
+      ...glass(),
+      borderRadius: 0,
+      borderTop: `1px solid ${V.border}`,
+      borderLeft: 'none', borderRight: 'none', borderBottom: 'none',
       display: 'flex', alignItems: 'flex-end',
-      padding: '6px 0',
+      padding: `${GR.xs}px 0`,
       paddingBottom: 'max(6px, env(safe-area-inset-bottom))',
-      backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
       zIndex: 100,
     }}>
       {leftTabs.map(renderTab)}
@@ -45,22 +53,22 @@ export default function ViraBottomNav({ tabs, activeTab, onTabChange, onVira }) 
         <button
           onClick={onVira}
           style={{
-            width: 56, height: 56, borderRadius: '50%',
+            width: G * 7, height: G * 7,
+            borderRadius: '50%',
             background: `linear-gradient(135deg, ${V.accent}, #EC4899)`,
             border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', marginTop: -24,
-            boxShadow: `0 4px 20px ${V.accentGlow}, 0 0 40px ${V.accent}30`,
+            cursor: 'pointer', marginTop: -(G * 3),
+            boxShadow: `0 ${G / 2}px ${GR.md}px ${V.accentGlow}, 0 0 ${GR.lg}px ${V.accent}30`,
             transition: 'transform 0.2s, box-shadow 0.2s',
           }}
           aria-label="Talk to Vira"
         >
-          {/* Vira sparkle icon */}
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 3v1m0 16v1m-8-9H3m18 0h-1M5.6 5.6l.7.7m12.4 12.4l-.7-.7M5.6 18.4l.7-.7M18.7 5.6l-.7.7" />
             <circle cx="12" cy="12" r="4" fill="rgba(255,255,255,0.15)" />
           </svg>
         </button>
-        <span style={{ fontSize: 9, color: V.accent, fontWeight: 600, marginTop: 2, fontFamily: FONT }}>Vira</span>
+        <span style={{ fontSize: 9, color: V.accent, fontWeight: 600, marginTop: G / 4, fontFamily: FONT }}>Vira</span>
       </div>
 
       {rightTabs.map(renderTab)}

@@ -1,9 +1,5 @@
 import { useState } from 'react'
-import { V, FONT, FONT_D } from '../../components/vira/theme'
-
-const CARD_ACCENTS = [
-  '#3B82F6', '#EF4444', '#22C55E', '#F59E0B', '#8B5CF6', '#EC4899',
-]
+import { V, G, GR, FONT, FONT_D, CARD_ACCENTS, glass } from '../../components/vira/theme'
 
 const MOODS = [
   { emoji: '😊', label: 'Great',      color: '#22C55E', score: 5 },
@@ -13,7 +9,6 @@ const MOODS = [
   { emoji: '😢', label: 'Struggling', color: '#EF4444', score: 1 },
 ]
 
-// Mock 7-day history
 const MOCK_HISTORY = [
   { day: 'Mon', score: 4 },
   { day: 'Tue', score: 3 },
@@ -38,33 +33,38 @@ export default function ViraMoodLog() {
 
   return (
     <div style={{
-      padding: '16px 16px 100px', minHeight: '100%', background: V.bg,
+      padding: `${GR.md}px ${GR.md}px ${GR.xl * 2}px`,
+      minHeight: '100%', background: V.bg,
     }}>
       <h2 style={{
         fontFamily: FONT_D, fontSize: 22, fontWeight: 700,
-        color: V.text, margin: '0 0 4px',
+        color: V.text, margin: `0 0 ${G / 2}px`,
       }}>
         How are you feeling?
       </h2>
       <p style={{
-        fontFamily: FONT, fontSize: 14, color: V.textSec, margin: '0 0 20px',
+        fontFamily: FONT, fontSize: 14, color: V.textSec,
+        margin: `0 0 ${GR.md}px`,
       }}>
         Tap the emoji that best describes your mood right now
       </p>
 
-      {/* Mood selector */}
+      {/* Mood selector — golden ratio gaps */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8,
-        marginBottom: 20,
+        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
+        gap: GR.xs, marginBottom: GR.md,
       }}>
         {MOODS.map((mood) => (
           <button
             key={mood.label}
             onClick={() => setSelected(mood)}
             style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-              padding: '16px 4px', borderRadius: 16,
-              background: selected?.label === mood.label ? `${mood.color}18` : V.card,
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: GR.xs,
+              padding: `${GR.md}px ${G / 2}px`,
+              borderRadius: GR.md,
+              ...glass(selected?.label === mood.label ? mood.color : null),
+              background: selected?.label === mood.label ? `${mood.color}15` : V.card,
               border: `2px solid ${selected?.label === mood.label ? mood.color : V.border}`,
               cursor: 'pointer', transition: 'all 0.2s',
               transform: selected?.label === mood.label ? 'scale(1.05)' : 'none',
@@ -83,15 +83,16 @@ export default function ViraMoodLog() {
 
       {/* Note input */}
       {selected && (
-        <div style={{ animation: 'fadeIn 0.3s ease-out', marginBottom: 16 }}>
+        <div style={{ animation: 'fadeIn 0.3s ease-out', marginBottom: GR.md }}>
           <textarea
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="What's on your mind? (optional)"
             rows={3}
             style={{
-              width: '100%', padding: '14px 16px', borderRadius: 14,
-              background: V.card, border: `1px solid ${V.border}`,
+              width: '100%', padding: `${GR.sm}px ${GR.md}px`,
+              borderRadius: GR.md,
+              ...glass(),
               color: V.text, fontFamily: FONT, fontSize: 14,
               resize: 'none', outline: 'none', boxSizing: 'border-box',
             }}
@@ -99,8 +100,8 @@ export default function ViraMoodLog() {
           <button
             onClick={handleSave}
             style={{
-              marginTop: 10, width: '100%', padding: '14px',
-              borderRadius: 14, border: 'none',
+              marginTop: GR.sm, width: '100%', padding: `${GR.sm}px`,
+              borderRadius: GR.md, border: 'none',
               background: `linear-gradient(135deg, ${selected.color}, ${V.accent})`,
               color: '#fff', fontFamily: FONT, fontSize: 15, fontWeight: 700,
               cursor: 'pointer', transition: 'all 0.2s',
@@ -112,13 +113,15 @@ export default function ViraMoodLog() {
           {/* Struggling nudge */}
           {selected.score <= 2 && (
             <div style={{
-              marginTop: 12, padding: '14px 16px', borderRadius: 14,
-              background: `${V.accent}12`, border: `1px solid ${V.accent}25`,
+              marginTop: GR.sm, padding: `${GR.sm}px ${GR.md}px`,
+              borderRadius: GR.md,
+              ...glass(V.accent),
+              background: `${V.accent}10`,
             }}>
               <p style={{
                 fontFamily: FONT, fontSize: 13, color: V.textSec, margin: 0, lineHeight: 1.6,
               }}>
-                💜 It's okay to not be okay. Would you like to{' '}
+                It's okay to not be okay. Would you like to{' '}
                 <span style={{ color: V.accent, fontWeight: 600, cursor: 'pointer' }}>
                   talk to Vira
                 </span>{' '}
@@ -129,32 +132,34 @@ export default function ViraMoodLog() {
         </div>
       )}
 
-      {/* 7-day history */}
+      {/* 7-day history — glassmorphism card */}
       <div style={{
-        background: V.card, borderRadius: 16, padding: '18px 16px',
-        border: `1px solid ${V.border}`, borderTop: `3px solid ${CARD_ACCENTS[4]}`,
+        ...glass(CARD_ACCENTS[4]),
+        borderTop: `3px solid ${CARD_ACCENTS[4]}`,
+        padding: `${GR.md}px`,
       }}>
         <h3 style={{
           fontFamily: FONT, fontSize: 13, fontWeight: 600,
-          color: V.textSec, margin: '0 0 14px',
+          color: V.textSec, margin: `0 0 ${GR.sm}px`,
           letterSpacing: '0.06em', textTransform: 'uppercase',
         }}>
           This Week
         </h3>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: G / 2 }}>
           {history.map((day, i) => {
             const mood = day.score ? MOODS.find(m => m.score === day.score) : null
             return (
               <div key={i} style={{
                 flex: 1, display: 'flex', flexDirection: 'column',
-                alignItems: 'center', gap: 6,
+                alignItems: 'center', gap: GR.xs,
               }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: mood ? `${mood.color}20` : V.border,
+                  width: G * 4.5, height: G * 4.5, borderRadius: '50%',
+                  background: mood ? `${mood.color}18` : V.cardSolid,
                   border: `2px solid ${mood ? mood.color : 'transparent'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 18,
+                  backdropFilter: 'blur(8px)',
                 }}>
                   {mood ? mood.emoji : '·'}
                 </div>
@@ -171,9 +176,10 @@ export default function ViraMoodLog() {
 
       {/* Streak */}
       <div style={{
-        marginTop: 12, padding: '14px 16px', borderRadius: 14,
-        background: V.card, border: `1px solid ${V.border}`,
-        display: 'flex', alignItems: 'center', gap: 12,
+        marginTop: GR.sm,
+        padding: `${GR.sm}px ${GR.md}px`,
+        ...glass(),
+        display: 'flex', alignItems: 'center', gap: GR.sm,
       }}>
         <span style={{ fontSize: 28 }}>🔥</span>
         <div>
