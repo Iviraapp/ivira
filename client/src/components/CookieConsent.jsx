@@ -5,162 +5,155 @@ import { hasConsent, grantConsent, revokeConsent, setupRouteTracking } from '../
 export default function CookieConsent() {
   const { theme, isDark } = useTheme()
   const [visible, setVisible] = useState(false)
-  const [expanded, setExpanded] = useState(false)
+  const [leaving, setLeaving] = useState(false)
 
   useEffect(() => {
-    // Show banner only if no consent decision has been made
     const consent = document.cookie.match(/ivira_consent=/)
     if (!consent) {
-      // Small delay so it doesn't flash on load
-      const t = setTimeout(() => setVisible(true), 1500)
+      const t = setTimeout(() => setVisible(true), 2000)
       return () => clearTimeout(t)
     }
   }, [])
 
-  if (!visible) return null
+  function dismiss(cb) {
+    setLeaving(true)
+    setTimeout(() => { cb(); setVisible(false) }, 300)
+  }
 
   function handleAccept() {
-    grantConsent()
-    setupRouteTracking()
-    setVisible(false)
+    dismiss(() => { grantConsent(); setupRouteTracking() })
   }
 
   function handleDecline() {
-    revokeConsent()
-    setVisible(false)
+    dismiss(() => revokeConsent())
   }
 
-  const s = {
-    overlay: {
-      position: 'fixed', bottom: 0, left: 0, right: 0,
-      zIndex: 99999,
-      padding: '0 16px 16px',
-      animation: 'slideUpConsent 0.4s ease-out',
-      pointerEvents: 'none',
-    },
-    banner: {
-      maxWidth: 520,
-      margin: '0 auto',
-      background: isDark ? '#111114' : '#FFFFFF',
-      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,58,143,0.12)'}`,
-      borderRadius: 16,
-      padding: '20px 22px',
-      boxShadow: isDark
-        ? '0 -4px 40px rgba(0,0,0,0.5)'
-        : '0 -4px 40px rgba(26,58,143,0.15)',
-      pointerEvents: 'auto',
-    },
-    icon: {
-      fontSize: 20,
-      marginBottom: 8,
-    },
-    title: {
-      fontSize: 14,
-      fontWeight: 700,
-      color: theme.text,
-      marginBottom: 6,
-      fontFamily: "'Inter', -apple-system, sans-serif",
-      letterSpacing: '-0.3px',
-    },
-    text: {
-      fontSize: 12.5,
-      lineHeight: '18px',
-      color: isDark ? 'rgba(255,255,255,0.55)' : '#64748B',
-      marginBottom: expanded ? 12 : 16,
-      fontFamily: "'Inter', -apple-system, sans-serif",
-    },
-    detail: {
-      fontSize: 11.5,
-      lineHeight: '17px',
-      color: isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8',
-      marginBottom: 16,
-      padding: '12px 14px',
-      background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(26,58,143,0.04)',
-      borderRadius: 10,
-      fontFamily: "'Inter', -apple-system, sans-serif",
-    },
-    toggle: {
-      color: '#1A3A8F',
-      fontSize: 11.5,
-      fontWeight: 600,
-      cursor: 'pointer',
-      background: 'none',
-      border: 'none',
-      padding: 0,
-      marginBottom: 14,
-      fontFamily: "'Inter', -apple-system, sans-serif",
-    },
-    actions: {
-      display: 'flex',
-      gap: 10,
-    },
-    accept: {
-      flex: 1,
-      padding: '10px 20px',
-      borderRadius: 10,
-      border: 'none',
-      background: '#1A3A8F',
-      color: '#fff',
-      fontSize: 13,
-      fontWeight: 700,
-      cursor: 'pointer',
-      fontFamily: "'Inter', -apple-system, sans-serif",
-      letterSpacing: '-0.2px',
-      transition: 'opacity 0.15s',
-    },
-    decline: {
-      flex: 1,
-      padding: '10px 20px',
-      borderRadius: 10,
-      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(26,58,143,0.15)'}`,
-      background: 'transparent',
-      color: isDark ? 'rgba(255,255,255,0.5)' : '#64748B',
-      fontSize: 13,
-      fontWeight: 600,
-      cursor: 'pointer',
-      fontFamily: "'Inter', -apple-system, sans-serif",
-      letterSpacing: '-0.2px',
-      transition: 'opacity 0.15s',
-    },
-  }
+  if (!visible) return null
+
+  const BRAND = '#1A3A8F'
 
   return (
     <>
       <style>{`
-        @keyframes slideUpConsent {
-          from { transform: translateY(100%); opacity: 0; }
-          to   { transform: translateY(0);    opacity: 1; }
+        @keyframes cookieSlideUp {
+          from { transform: translateY(calc(100% + 20px)); opacity: 0; }
+          to   { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes cookieSlideDown {
+          from { transform: translateY(0); opacity: 1; }
+          to   { transform: translateY(calc(100% + 20px)); opacity: 0; }
+        }
+        .ivira-cookie-accept:hover { opacity: 0.9; }
+        .ivira-cookie-decline:hover {
+          background: ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(26,58,143,0.06)'} !important;
         }
       `}</style>
-      <div style={s.overlay}>
-        <div style={s.banner}>
-          <div style={s.icon}>🍪</div>
-          <div style={s.title}>We value your privacy</div>
-          <div style={s.text}>
-            We use first-party cookies to understand how you use IVIRA and improve your experience. No data is shared with third parties.
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        zIndex: 99999,
+        padding: '16px',
+        pointerEvents: 'none',
+        animation: `${leaving ? 'cookieSlideDown' : 'cookieSlideUp'} 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+      }}>
+        <div style={{
+          maxWidth: 440,
+          margin: '0 auto',
+          background: isDark
+            ? 'rgba(15,15,18,0.92)'
+            : 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+          borderRadius: 14,
+          padding: '14px 16px',
+          boxShadow: isDark
+            ? '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset'
+            : '0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)',
+          pointerEvents: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          flexWrap: 'wrap',
+        }}>
+          {/* Cookie icon */}
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: isDark ? 'rgba(26,58,143,0.2)' : 'rgba(26,58,143,0.08)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" stroke={BRAND} strokeWidth="1.5" strokeOpacity="0.6"/>
+              <circle cx="5.5" cy="6" r="1" fill={BRAND} opacity="0.5"/>
+              <circle cx="9" cy="4.5" r="0.8" fill={BRAND} opacity="0.4"/>
+              <circle cx="7" cy="10" r="1.1" fill={BRAND} opacity="0.5"/>
+              <circle cx="10.5" cy="8.5" r="0.7" fill={BRAND} opacity="0.35"/>
+              <circle cx="10" cy="11.5" r="0.9" fill={BRAND} opacity="0.45"/>
+            </svg>
           </div>
 
-          {expanded && (
-            <div style={s.detail}>
-              <strong style={{ color: theme.text }}>What we collect:</strong><br />
-              • <strong>Visitor ID</strong> — anonymous identifier to recognize returning visitors<br />
-              • <strong>Session data</strong> — pages visited, time on site, navigation patterns<br />
-              • <strong>Device info</strong> — browser type, OS, screen size (no fingerprinting)<br />
-              • <strong>Traffic source</strong> — referrer URL and UTM campaign parameters<br /><br />
-              All data stays on IVIRA servers. You can revoke consent anytime in Settings.
-            </div>
-          )}
+          {/* Text */}
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <span style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: theme.text,
+              fontFamily: "'Inter', -apple-system, sans-serif",
+              lineHeight: '18px',
+              letterSpacing: '-0.1px',
+            }}>
+              We use cookies to improve your experience.
+            </span>
+            <span style={{
+              fontSize: 12,
+              color: isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8',
+              fontFamily: "'Inter', -apple-system, sans-serif",
+              marginLeft: 4,
+            }}>
+              First-party only, no tracking.
+            </span>
+          </div>
 
-          <button
-            style={s.toggle}
-            onClick={() => setExpanded(!expanded)}
-          >
-            {expanded ? 'Hide details' : 'What do we collect?'}
-          </button>
-
-          <div style={s.actions}>
-            <button style={s.accept} onClick={handleAccept}>Accept</button>
-            <button style={s.decline} onClick={handleDecline}>Decline</button>
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button
+              className="ivira-cookie-decline"
+              onClick={handleDecline}
+              style={{
+                padding: '7px 14px',
+                borderRadius: 8,
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                background: 'transparent',
+                color: isDark ? 'rgba(255,255,255,0.45)' : '#94A3B8',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: "'Inter', -apple-system, sans-serif",
+                transition: 'background 0.15s',
+                lineHeight: 1,
+              }}
+            >
+              Decline
+            </button>
+            <button
+              className="ivira-cookie-accept"
+              onClick={handleAccept}
+              style={{
+                padding: '7px 16px',
+                borderRadius: 8,
+                border: 'none',
+                background: BRAND,
+                color: '#fff',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'Inter', -apple-system, sans-serif",
+                transition: 'opacity 0.15s',
+                lineHeight: 1,
+              }}
+            >
+              Got it
+            </button>
           </div>
         </div>
       </div>
