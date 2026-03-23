@@ -731,8 +731,8 @@ export default function Landing() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}
                className="nav-desktop">
             {[
-              { label: 'For Gyms', href: '#features' },
-              { label: 'For Health', href: '#health' },
+              { label: 'Features', href: '#features' },
+              { label: 'For Members', href: '#members' },
               { label: 'Pricing', href: '#pricing' },
               { label: 'Contact', href: '/contact' },
             ].map(link => (
@@ -993,8 +993,8 @@ export default function Landing() {
             transition: 'all 0.8s ease 0.4s',
           }}>
             {isMobile
-              ? 'Fitness. Health. One Platform.'
-              : 'The Platform for Fitness Businesses & Personal Health.'}
+              ? 'Your Fitness. One App.'
+              : 'The Enterprise Fitness Platform for High-Growth Brands.'}
           </h1>
 
           <p style={{
@@ -1006,8 +1006,8 @@ export default function Landing() {
             transition: 'all 0.8s ease 0.6s',
           }}>
             {isMobile
-              ? 'Manage your gym, track your health, chat with Vira AI — all from one app.'
-              : 'Gym management SaaS for owners. AI-powered health companion for everyone. Mood tracking, medication adherence, and intelligent care — all on one platform.'}
+              ? 'Check in at your gym, track workouts, log nutrition, and manage your membership — all from your phone.'
+              : 'Automate member check-ins, streamline invoicing, and protect your revenue with the most secure fitness platform. Built for gyms that value operational excellence.'}
           </p>
 
           {/* CTAs — device-aware on mobile */}
@@ -1107,17 +1107,7 @@ export default function Landing() {
                 }}
                 onMouseEnter={e => { e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'; e.target.style.transform = 'translateY(-2px)' }}
                 onMouseLeave={e => { e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'; e.target.style.transform = 'translateY(0)' }}>
-                  For Gyms
-                </button>
-                <button onClick={() => navigate('/vira')} style={{
-                  fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600,
-                  background: 'transparent', color: t.text,
-                  border: '1px solid rgba(139,92,246,0.35)', borderRadius: 10,
-                  padding: '14px 32px', cursor: 'pointer', transition: 'all 0.3s',
-                }}
-                onMouseEnter={e => { e.target.style.borderColor = '#8B5CF6'; e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 4px 16px rgba(139,92,246,0.25)' }}
-                onMouseLeave={e => { e.target.style.borderColor = 'rgba(139,92,246,0.35)'; e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = 'none' }}>
-                  Try Vira AI
+                  See Features
                 </button>
               </>
             )}
@@ -1196,11 +1186,11 @@ export default function Landing() {
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
               <div style={{ ...sectionLabel, color: t.textMuted }}>How IVIRA Works</div>
               <h2 style={{ ...sectionHeading, color: t.text, fontSize: 'clamp(28px, 4.5vw, 44px)' }}>
-                Three Paths. One Platform.
+                Two Sides. One Platform.
               </h2>
               <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 640, margin: '0 auto', lineHeight: 1.7 }}>
-                IVIRA powers gym businesses, fuels athlete performance, and supports personal
-                health — with Vira, your AI health companion.
+                IVIRA powers both the business and the athlete. Gym owners get a complete
+                command center. Members get a personal fitness companion.
               </p>
             </div>
 
@@ -1335,78 +1325,6 @@ export default function Landing() {
                 </div>
               </div>
 
-              {/* Health & Wellness — Vira AI */}
-              <div style={{
-                background: t.cardBg, borderRadius: 20, padding: 'clamp(28px, 4vw, 40px)',
-                border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow,
-                position: 'relative', overflow: 'hidden',
-                gridColumn: 'span 2',
-              }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #8B5CF6, #EC4899)' }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 12,
-                    background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 3v1m0 16v1m-8-9H3m18 0h-1M5.6 5.6l.7.7m12.4 12.4l-.7-.7M5.6 18.4l.7-.7M18.7 5.6l-.7.7" />
-                      <circle cx="12" cy="12" r="3" fill="rgba(139,92,246,0.2)" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 800, color: t.text, margin: 0, letterSpacing: '-0.01em' }}>
-                      For Your Health
-                    </h3>
-                    <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: t.textMuted, margin: 0 }}>Meet Vira — Your AI Health Companion</p>
-                  </div>
-                </div>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
-                  gap: 20,
-                }}>
-                  {[
-                    { step: '01', title: 'Chat with Vira', desc: 'AI-powered health conversations. Mental wellness, blood pressure, medication — Vira adapts to your care program.' },
-                    { step: '02', title: 'Track mood & meds', desc: 'Daily mood logging, medication adherence tracking, streaks, and gentle reminders to stay on track.' },
-                    { step: '03', title: 'Get intelligent care', desc: 'Crisis detection, practitioner dashboards, and personalized health insights powered by AI.' },
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 14 }}>
-                      <div style={{
-                        fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700,
-                        color: '#8B5CF6', opacity: 0.7, flexShrink: 0, marginTop: 2,
-                      }}>{item.step}</div>
-                      <div>
-                        <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 4 }}>{item.title}</div>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: t.textMuted, lineHeight: 1.6 }}>{item.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 28 }}>
-                  <button onClick={() => navigate('/vira')} style={{
-                    fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700,
-                    background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', color: '#FFFFFF',
-                    border: 'none', borderRadius: 10,
-                    padding: '12px 24px', cursor: 'pointer', transition: 'opacity 0.2s', flex: 1,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                    Try Vira AI
-                  </button>
-                  <button onClick={() => navigate('/vira')} style={{
-                    fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600,
-                    background: 'transparent', color: t.text, flex: 1,
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'}`,
-                    borderRadius: 10, padding: '12px 20px', cursor: 'pointer', transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = '#8B5CF6'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'}>
-                    Learn More
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </Section>
@@ -1571,7 +1489,7 @@ export default function Landing() {
       </section>
 
       {/* ── PERFORMANCE SUITE (Seeker Features) ────────────── */}
-      <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bgAlt }}>
+      <section id="members" style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bgAlt }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 64 }}>
@@ -1630,95 +1548,6 @@ export default function Landing() {
                 </motion.div>
                 )
               })}
-            </div>
-          </div>
-        </Section>
-      </section>
-
-      {/* ── HEALTH & WELLNESS — VIRA AI ────────────────────── */}
-      <section id="health" style={{ padding: 'clamp(60px, 10vw, 120px) 0', background: t.bg }}>
-        <Section>
-          <div style={containerStyle}>
-            <div style={{ textAlign: 'center', marginBottom: 64 }}>
-              <div style={{ ...sectionLabel, color: '#8B5CF6' }}>AI-Powered Health</div>
-              <h2 style={{ ...sectionHeading, color: t.text }}>Meet Vira, Your Health Companion</h2>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 600, margin: '0 auto', lineHeight: 1.7 }}>
-                More than a chatbot. Vira is an intelligent health assistant that tracks
-                your mood, manages medications, and adapts to your care program.
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 20,
-            }}>
-              {[
-                { title: 'AI Health Chat', desc: 'Conversational AI that adapts its tone per care program — reflective for mental health, instructional for hypertension, efficient for pharmacy management.', color: '#8B5CF6', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> },
-                { title: 'Mood Tracking', desc: 'Daily mood logging with emoji selectors, 7-day history, streak tracking, and gentle nudges when you need support.', color: '#EC4899', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
-                { title: 'Medication Adherence', desc: 'Track daily medications with visual progress rings, refill alerts, streak counters, and adherence percentages.', color: '#22C55E', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 1.5l-8 8a4.95 4.95 0 0 0 7 7l8-8a4.95 4.95 0 0 0-7-7z"/><path d="M6.5 10.5L13.5 3.5"/></svg> },
-                { title: 'Crisis Detection', desc: 'Red flag triage system detects crisis keywords and immediately surfaces emergency resources with Indian helpline numbers.', color: '#EF4444', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-                { title: 'Care Programs', desc: 'Dynamic persona mapping — Mental Health, Hypertension, Pharmacy, General Wellness — each with tailored AI responses and interfaces.', color: '#3B82F6', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
-                { title: 'Care Compass', desc: 'Practitioner dashboard for healthcare providers. Monitor patients, track adherence, receive critical alerts, and review care plans.', color: '#14B8A6', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg> },
-                { title: 'Conversational Intake', desc: 'No boring forms. Vira collects health profiles through a natural chat flow — name, conditions, medications, allergies, emergency contacts.', color: '#F59E0B', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
-                { title: 'Glassmorphism UI', desc: 'Beautiful frosted-glass interface with dark theme, 8px grid system, and a 12-color accent palette. Designed for health, not just fitness.', color: '#6366F1', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> },
-              ].map((feat, i) => (
-                <motion.div key={feat.title} custom={i} variants={fadeUp}
-                  initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}
-                  whileHover={{ y: -6, scale: 1.02, transition: { duration: 0.3 } }}>
-                  <div style={{
-                    background: t.cardBg, borderRadius: 16, padding: 28,
-                    position: 'relative', overflow: 'hidden',
-                    border: `1px solid ${t.cardBorder}`,
-                    boxShadow: t.cardShadow,
-                    transition: 'border-color 0.5s, box-shadow 0.5s',
-                    height: '100%',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = feat.color + '55'
-                    e.currentTarget.style.boxShadow = `0 4px 20px ${feat.color}22`
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = t.cardBorder
-                    e.currentTarget.style.boxShadow = t.cardShadow
-                  }}>
-                    <div style={{
-                      position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                      background: feat.color,
-                    }} />
-                    <div style={{ marginBottom: 16 }}>
-                      {feat.icon}
-                    </div>
-                    <h3 style={{
-                      fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 700,
-                      letterSpacing: '-0.01em',
-                      color: t.text, margin: 0, marginBottom: 10,
-                    }}>{feat.title}</h3>
-                    <p style={{
-                      fontFamily: FONT_BODY, fontSize: 14, color: t.textMuted,
-                      lineHeight: 1.6, margin: 0,
-                    }}>{feat.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Vira CTA */}
-            <div style={{ textAlign: 'center', marginTop: 48 }}>
-              <button onClick={() => navigate('/vira')} style={{
-                fontFamily: FONT_BODY, fontSize: 16, fontWeight: 700,
-                background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
-                color: '#FFFFFF', border: 'none', borderRadius: 12,
-                padding: '16px 40px', cursor: 'pointer', transition: 'opacity 0.2s, transform 0.2s',
-                boxShadow: '0 4px 20px rgba(139,92,246,0.3)',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}>
-                Try Vira AI — Free
-              </button>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: t.textDim, marginTop: 12 }}>
-                No sign-up required. Start chatting with Vira instantly.
-              </p>
             </div>
           </div>
         </Section>
@@ -2210,10 +2039,10 @@ export default function Landing() {
           {/* Links */}
           <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', justifyContent: 'center' }}>
             {[
-              { label: 'Gym Dashboard', to: '/login' },
+              { label: 'Dashboard', to: '/login' },
               { label: 'Member Login', to: '/member/login' },
-              { label: 'Vira Health', to: '/vira' },
               { label: 'Find Gym', to: '/find-gym' },
+              { label: 'Download App', to: '/app' },
               { label: 'Privacy', to: '/privacy' },
               { label: 'Terms', to: '/terms' },
               { label: 'Contact', to: '/contact' },
