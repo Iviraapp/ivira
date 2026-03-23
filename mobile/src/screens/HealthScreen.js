@@ -1,0 +1,1776 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Modal,
+  TextInput,
+  FlatList,
+  Alert,
+} from 'react-native'
+import { Feather } from '@expo/vector-icons'
+let Svg = null
+let Circle = null
+try {
+  const svg = require('react-native-svg')
+  Svg = svg.default || svg.Svg
+  Circle = svg.Circle
+} catch {}
+let Pedometer = null
+try {
+  Pedometer = require('expo-sensors').Pedometer
+} catch {}
+import Haptics from '../lib/haptics'
+import { COLORS, SPACING, RADIUS, FONT, METABOLIC, ELITE_CARD } from '../lib/theme'
+import api from '../lib/api'
+import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
+import {
+  DEMO_DAILY_NUTRITION,
+  DEMO_NUTRITION_GOAL,
+} from '../lib/demoData'
+import {
+  requestHealthPermissions,
+  getTodaySteps,
+  syncStepsToBackend,
+  DEMO_STEPS,
+} from '../lib/healthKit'
+import NutritionGoalSetup from '../components/NutritionGoalSetup'
+import WaterTracker from '../components/WaterTracker'
+import AdBanner from '../components/AdBanner'
+import { getItem, setItem } from '../lib/storage'
+import { getWeeklyInsight } from '../lib/aiCoach'
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
+const RING_SIZE = 140
+const STEP_GOAL = 10000
+const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack']
+const MEAL_ICONS = {
+  breakfast: 'sunrise',
+  lunch: 'sun',
+  dinner: 'moon',
+  snack: 'coffee',
+}
+const MEAL_LABELS = {
+  breakfast: 'Breakfast',
+  lunch: 'Lunch',
+  dinner: 'Dinner',
+  snack: 'Snack',
+}
+const MOCK_FOODS = [
+  { name: '1 Scoop Whey Protein', calories: 120, protein: 24, carbs: 3, fats: 1 },
+  { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fats: 3.6 },
+  { name: 'Brown Rice (1 cup)', calories: 216, protein: 5, carbs: 45, fats: 1.8 },
+  { name: 'Banana', calories: 105, protein: 1.3, carbs: 27, fats: 0.4 },
+  { name: 'Greek Yogurt (150g)', calories: 100, protein: 17, carbs: 6, fats: 0.7 },
+  { name: 'Oats (40g)', calories: 154, protein: 5, carbs: 27, fats: 2.6 },
+  { name: 'Egg (1 whole)', calories: 78, protein: 6, carbs: 0.6, fats: 5 },
+  { name: 'Peanut Butter (2 tbsp)', calories: 188, protein: 8, carbs: 6, fats: 16 },
+]
+
+export default function HealthScreen({ navigation }) {
+  const { member, gymId, isDemo } = useAuth()
+  const { colors, card } = useTheme()
+
+  const [steps, setSteps] = useState(0)
+  const [syncing, setSyncing] = useState(false)
+  const [lastSynced, setLastSynced] = useState(null)
+  const [daily, setDaily] = useState(null)
+  const [goal, setGoal] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [goalCelebrated, setGoalCelebrated] = useState(false)
+  const [foodSearch, setFoodSearch] = useState('')
+  const [foodModalVisible, setFoodModalVisible] = useState(false)
+  const [goalSetupVisible, setGoalSetupVisible] = useState(false)
+  const [hasCustomGoal, setHasCustomGoal] = useState(false)
+
+  // Step data source tracking: 'health', 'pedometer', 'demo', or null
+  const [stepSource, setStepSource] = useState(null)
+  const healthSyncRef = useRef(null)
+  const pedometerSubRef = useRef(null)
+
+  // Dual-mode step tracking
+  const [stepMode, setStepMode] = useState('auto') // 'auto' | 'manual'
+  const [manualSteps, setManualSteps] = useState(0)
+  const [manualStepInput, setManualStepInput] = useState('')
+  const [timerRunning, setTimerRunning] = useState(false)
+  const [timerSeconds, setTimerSeconds] = useState(0)
+  const timerRef = useRef(null)
+
+  const pulseAnim = useRef(new Animated.Value(0)).current
+  const progressAnim = useRef(new Animated.Value(0)).current
+  const glowAnim = useRef(new Animated.Value(0)).current
+  const insightFadeAnim = useRef(new Animated.Value(0)).current
+  const [weeklyInsight, setWeeklyInsight] = useState(null)
+
+  // Pulse animation
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
+      ])
+    )
+    pulse.start()
+    return () => pulse.stop()
+  }, [pulseAnim])
+
+  // Green glow when goal met — only trigger once when threshold crossed
+  const goalMet = (stepMode === 'manual' ? manualSteps : steps) >= STEP_GOAL
+  useEffect(() => {
+    if (goalMet) {
+      const glow = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+          Animated.timing(glowAnim, { toValue: 0.3, duration: 1500, useNativeDriver: true }),
+        ])
+      )
+      glow.start()
+      return () => glow.stop()
+    }
+  }, [goalMet])
+
+  // Animate step progress
+  const animSteps = stepMode === 'manual' ? manualSteps : steps
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: Math.min(animSteps / STEP_GOAL, 1),
+      duration: 1000,
+      useNativeDriver: false,
+    }).start()
+  }, [animSteps, progressAnim])
+
+  // Goal celebration haptic
+  useEffect(() => {
+    if (animSteps >= STEP_GOAL && !goalCelebrated) {
+      setGoalCelebrated(true)
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+    }
+  }, [animSteps, goalCelebrated])
+
+  // Fetch weekly AI insight
+  useEffect(() => {
+    let cancelled = false
+    getWeeklyInsight().then(data => {
+      if (!cancelled) {
+        setWeeklyInsight(data)
+        Animated.timing(insightFadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }).start()
+      }
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [insightFadeAnim])
+
+  // Check if user has a custom nutrition goal
+  useEffect(() => {
+    getItem('ivira_nutrition_profile').then(v => { if (v) setHasCustomGoal(true) }).catch(() => {})
+    getItem('ivira_custom_nutrition_goal').then(stored => {
+      if (stored) {
+        try { setGoal(JSON.parse(stored)) } catch {}
+      }
+    }).catch(() => {})
+  }, [])
+
+  // Load saved step mode + manual steps from storage
+  useEffect(() => {
+    const todayKey = `ivira_manual_steps_${new Date().toISOString().split('T')[0]}`
+    getItem('ivira_step_mode').then(mode => {
+      if (mode === 'manual') setStepMode('manual')
+    }).catch(() => {})
+    getItem(todayKey).then(val => {
+      if (val) {
+        try {
+          const parsed = JSON.parse(val)
+          setManualSteps(parsed.steps || 0)
+          setTimerSeconds(parsed.timerSeconds || 0)
+        } catch {}
+      }
+    }).catch(() => {})
+  }, [])
+
+  // Persist manual steps whenever they change
+  useEffect(() => {
+    if (stepMode === 'manual') {
+      const todayKey = `ivira_manual_steps_${new Date().toISOString().split('T')[0]}`
+      setItem(todayKey, JSON.stringify({ steps: manualSteps, timerSeconds })).catch(() => {})
+    }
+  }, [manualSteps, timerSeconds, stepMode])
+
+  // Timer interval
+  useEffect(() => {
+    if (timerRunning) {
+      timerRef.current = setInterval(() => {
+        setTimerSeconds(prev => prev + 1)
+      }, 1000)
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [timerRunning])
+
+  // Switch mode handler
+  const handleModeSwitch = useCallback(async (mode) => {
+    setStepMode(mode)
+    await setItem('ivira_step_mode', mode).catch(() => {})
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    if (mode === 'manual') {
+      // Stop auto-sync when switching to manual
+      if (healthSyncRef.current) { clearInterval(healthSyncRef.current); healthSyncRef.current = null }
+    } else {
+      // Switching back to auto — stop timer, refresh from health API
+      setTimerRunning(false)
+      try {
+        const granted = await requestHealthPermissions()
+        if (granted) {
+          const todaySteps = await getTodaySteps()
+          setSteps(todaySteps)
+          setLastSynced(new Date())
+          if (todaySteps !== DEMO_STEPS) {
+            setStepSource('health')
+          }
+          if (!isDemo && gymId && member?.id) {
+            syncStepsToBackend(gymId, member.id, todaySteps)
+          }
+        }
+      } catch {}
+    }
+  }, [gymId, member?.id, isDemo])
+
+  const handleManualStepAdjust = useCallback((delta) => {
+    setManualSteps(prev => Math.max(0, prev + delta))
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }, [])
+
+  const handleManualStepSubmit = useCallback(() => {
+    const val = parseInt(manualStepInput, 10)
+    if (!isNaN(val) && val >= 0) {
+      setManualSteps(prev => prev + val)
+      setManualStepInput('')
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    }
+  }, [manualStepInput])
+
+  const handleTimerToggle = useCallback(() => {
+    setTimerRunning(prev => !prev)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+  }, [])
+
+  const formatTimer = (totalSeconds) => {
+    const hrs = Math.floor(totalSeconds / 3600)
+    const mins = Math.floor((totalSeconds % 3600) / 60)
+    const secs = totalSeconds % 60
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
+
+  // Step tracking — Health APIs (primary) → Pedometer (fallback) → Demo
+  useEffect(() => {
+    let cancelled = false
+
+    const startStepTracking = async () => {
+      // 1. Try native health APIs first
+      try {
+        const granted = await requestHealthPermissions()
+        if (granted && !cancelled) {
+          const steps = await getTodaySteps()
+          if (steps !== DEMO_STEPS) {
+            setSteps(steps)
+            setStepSource('health')
+            setLastSynced(new Date())
+            // Sync to backend (fire-and-forget)
+            if (!isDemo && gymId && member?.id) {
+              syncStepsToBackend(gymId, member.id, steps)
+            }
+            // Re-fetch from health platform every 60s
+            healthSyncRef.current = setInterval(async () => {
+              if (cancelled) return
+              try {
+                const updated = await getTodaySteps()
+                if (updated !== DEMO_STEPS) {
+                  setSteps(updated)
+                  setLastSynced(new Date())
+                  if (!isDemo && gymId && member?.id) {
+                    syncStepsToBackend(gymId, member.id, updated)
+                  }
+                }
+              } catch {}
+            }, 60_000)
+            return // Health API working — skip pedometer
+          }
+        }
+      } catch {}
+
+      // 2. Fallback: device pedometer (expo-sensors)
+      if (Pedometer && !cancelled) {
+        try {
+          const available = await Pedometer.isAvailableAsync()
+          if (available) {
+            setStepSource('pedometer')
+            const start = new Date()
+            start.setHours(0, 0, 0, 0)
+            try {
+              const result = await Pedometer.getStepCountAsync(start, new Date())
+              if (result?.steps) {
+                setSteps(result.steps)
+                setLastSynced(new Date())
+              }
+            } catch {}
+            // Live delta updates
+            pedometerSubRef.current = Pedometer.watchStepCount((result) => {
+              setSteps((prev) => prev + (result?.steps || 0))
+              setLastSynced(new Date())
+            })
+            return
+          }
+        } catch {}
+      }
+
+      // 3. No health data available — show demo
+      if (!cancelled) {
+        setSteps(DEMO_STEPS)
+        setStepSource('demo')
+        setLastSynced(new Date())
+      }
+    }
+
+    startStepTracking()
+    return () => {
+      cancelled = true
+      if (pedometerSubRef.current) { pedometerSubRef.current.remove(); pedometerSubRef.current = null }
+      if (healthSyncRef.current) { clearInterval(healthSyncRef.current); healthSyncRef.current = null }
+    }
+  }, [gymId, member?.id, isDemo])
+
+  // Load data on mount
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  // Refresh data when screen comes back into focus (e.g. after barcode scanner)
+  // Don't set loading=true on refocus to avoid flicker
+  const hasMounted = useRef(false)
+  useFocusEffect(
+    useCallback(() => {
+      if (hasMounted.current) {
+        loadData(false) // silent refresh — no loading spinner
+      }
+      hasMounted.current = true
+    }, [])
+  )
+
+  const loadData = async (showLoader = true) => {
+    if (showLoader) setLoading(true)
+    try {
+      // Load nutrition (steps are handled by the step tracking useEffect)
+      if (isDemo) {
+        setDaily(DEMO_DAILY_NUTRITION)
+        setGoal(DEMO_NUTRITION_GOAL)
+      } else {
+        const today = new Date().toISOString().split('T')[0]
+        const [dailyRes, goalRes] = await Promise.all([
+          api.get(`/gyms/${gymId}/members/${member.id}/nutrition/daily?date=${today}`),
+          api.get(`/gyms/${gymId}/members/${member.id}/nutrition/goal`),
+        ])
+        setDaily(dailyRes.data)
+        setGoal(goalRes.data)
+      }
+    } catch {
+      // Fallback
+      setDaily(DEMO_DAILY_NUTRITION)
+      setGoal(DEMO_NUTRITION_GOAL)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSync = useCallback(async () => {
+    setSyncing(true)
+    try {
+      const granted = await requestHealthPermissions()
+      if (granted) {
+        const todaySteps = await getTodaySteps()
+        setSteps(todaySteps)
+        setLastSynced(new Date())
+        if (todaySteps !== DEMO_STEPS) {
+          setStepSource('health')
+        }
+        if (!isDemo && gymId && member?.id) {
+          syncStepsToBackend(gymId, member.id, todaySteps)
+        }
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+      }
+    } catch {
+      Alert.alert('Sync Failed', 'Could not sync health data. Please try again.')
+    } finally {
+      setSyncing(false)
+    }
+  }, [gymId, member?.id, isDemo])
+
+  const handleGoalSave = useCallback(async (macroGoal) => {
+    setGoal(macroGoal)
+    setHasCustomGoal(true)
+    await setItem('ivira_custom_nutrition_goal', JSON.stringify(macroGoal)).catch(() => {})
+    // Sync to backend if available
+    if (!isDemo && gymId && member?.id) {
+      api.patch(`/gyms/${gymId}/members/${member.id}/nutrition/goal`, macroGoal).catch(() => {})
+    }
+  }, [gymId, member?.id, isDemo])
+
+  const handleNavigateNutrition = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    navigation?.navigate?.('Nutrition')
+  }, [navigation])
+
+  const handleMealSlot = useCallback((mealType) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    navigation?.navigate?.('Nutrition', { mealType })
+  }, [navigation])
+
+  // Only show full-screen spinner on first load (no data yet)
+  if (loading && !daily && !goal) {
+    return (
+      <View style={[styles.container, styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.accent} size="large" />
+      </View>
+    )
+  }
+
+  const totals = daily?.totals || { calories: 0, protein: 0, carbs: 0, fats: 0 }
+  const goals = goal || { calorie_goal: 2000, protein_goal: 120, carb_goal: 250, fat_goal: 65 }
+  const caloriesRemaining = Math.max(goals.calorie_goal - totals.calories, 0)
+  const effectiveSteps = stepMode === 'manual' ? manualSteps : steps
+  const stepProgress = Math.min(effectiveSteps / STEP_GOAL, 1)
+  const isGoalMet = effectiveSteps >= STEP_GOAL
+  const activeMinutes = Math.floor(timerSeconds / 60)
+
+  const macros = [
+    { label: 'Protein', value: totals.protein, goal: goals.protein_goal, color: COLORS.accent, unit: 'g' },
+    { label: 'Carbs', value: totals.carbs, goal: goals.carb_goal, color: COLORS.cyan, unit: 'g' },
+    { label: 'Fats', value: totals.fats, goal: goals.fat_goal, color: COLORS.amber, unit: 'g' },
+  ]
+
+  // Determine which meals have been logged
+  const loggedMeals = {}
+  if (daily?.meals) {
+    daily.meals.forEach((meal) => {
+      loggedMeals[meal.meal_type] = meal
+    })
+  }
+
+  const formatSyncTime = (date) => {
+    if (!date) return 'Never'
+    const now = new Date()
+    const diffMs = now - date
+    const diffMin = Math.floor(diffMs / 60000)
+    if (diffMin < 1) return 'Just now'
+    if (diffMin < 60) return `${diffMin}m ago`
+    const diffHr = Math.floor(diffMin / 60)
+    return `${diffHr}h ago`
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Health</Text>
+          <TouchableOpacity
+            style={[styles.syncBtn, { backgroundColor: colors.bgSec, borderColor: colors.border }]}
+            onPress={handleSync}
+            disabled={syncing}
+            activeOpacity={0.7}
+          >
+            {syncing ? (
+              <ActivityIndicator color={colors.accent} size="small" />
+            ) : (
+              <Feather name="refresh-cw" size={18} color={colors.textSec} />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* AI Insights Card */}
+        {weeklyInsight && (
+          <Animated.View style={[
+            styles.aiInsightCard,
+            card,
+            { borderLeftColor: colors.accent, borderLeftWidth: 3, opacity: insightFadeAnim },
+          ]}>
+            <View style={styles.aiInsightHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+                <Feather name="zap" size={16} color={colors.accent} />
+                <Text style={[styles.aiInsightTitle, { color: colors.text }]}>AI Insights</Text>
+              </View>
+              <Text style={[styles.aiInsightSubtitle, { color: colors.textSec }]}>This Week</Text>
+            </View>
+            <View style={styles.aiInsightList}>
+              {weeklyInsight.items.map((item, i) => (
+                <View key={i} style={styles.aiInsightRow}>
+                  <View style={[
+                    styles.aiInsightDot,
+                    { backgroundColor: item.status === 'good' ? colors.green : item.status === 'neutral' ? colors.amber : colors.red },
+                  ]} />
+                  <Text style={[styles.aiInsightText, { color: colors.textSec }]}>{item.label}</Text>
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={styles.aiInsightLink}
+              onPress={() => { console.log('TODO: Navigate to detailed AI analytics screen') }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.aiInsightLinkText, { color: colors.accent }]}>View Details</Text>
+              <Feather name="arrow-right" size={14} color={colors.accent} />
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {/* Section A - Step Mode Toggle + Dual Ring Layout */}
+        <View style={styles.modeToggleRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+            <Text style={[styles.movementTitle, { color: colors.text }]}>Today's Movement</Text>
+            {stepSource === 'health' && stepMode === 'auto' && (
+              <View style={styles.stepSourceBadge}>
+                <Feather name="activity" size={10} color={COLORS.green} />
+                <Text style={[styles.stepSourceText, { color: COLORS.green }]}>Live</Text>
+              </View>
+            )}
+          </View>
+          <View style={[styles.segmentedControl, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
+            <TouchableOpacity
+              style={[
+                styles.segmentBtn,
+                stepMode === 'auto' && [styles.segmentBtnActive, { backgroundColor: colors.accent }],
+              ]}
+              onPress={() => handleModeSwitch('auto')}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.segmentText,
+                { color: stepMode === 'auto' ? '#FFFFFF' : colors.textSec },
+                stepMode === 'auto' && styles.segmentTextActive,
+              ]}>Auto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.segmentBtn,
+                stepMode === 'manual' && [styles.segmentBtnActive, { backgroundColor: colors.accent }],
+              ]}
+              onPress={() => handleModeSwitch('manual')}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.segmentText,
+                { color: stepMode === 'manual' ? '#FFFFFF' : colors.textSec },
+                stepMode === 'manual' && styles.segmentTextActive,
+              ]}>Manual</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.stepSection}>
+          <StepRing
+            progress={stepProgress}
+            steps={effectiveSteps}
+            isGoalMet={isGoalMet}
+            pulseAnim={pulseAnim}
+            glowAnim={glowAnim}
+            colors={colors}
+          />
+          <CalorieRing caloriesRemaining={caloriesRemaining} calorieGoal={goals.calorie_goal} />
+        </View>
+
+        {/* Auto Mode — Sync Row */}
+        {stepMode === 'auto' && (
+          <View style={styles.syncRow}>
+            <Text style={[styles.syncText, { color: colors.textTer }]}>
+              Last synced: {formatSyncTime(lastSynced)}
+            </Text>
+            <TouchableOpacity
+              style={[styles.syncHealthBtn, { backgroundColor: colors.accentSoft }, syncing && styles.btnDisabled]}
+              onPress={handleSync}
+              disabled={syncing}
+              activeOpacity={0.7}
+            >
+              <Feather name="activity" size={16} color={COLORS.accent} style={{ marginRight: SPACING.sm }} />
+              <Text style={styles.syncHealthBtnText}>
+                {syncing ? 'Syncing...' : 'Sync Health Data'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Manual Mode — Timer + Step Entry */}
+        {stepMode === 'manual' && (
+          <View style={[styles.manualPanel, card, { borderColor: colors.border }]}>
+            {/* Active Timer */}
+            <View style={styles.timerBlock}>
+              <Text style={[styles.timerLabel, { color: colors.textSec }]}>ACTIVE TIME</Text>
+              <Text style={[
+                styles.timerDisplay,
+                { color: timerRunning ? METABOLIC.activity : colors.text },
+              ]}>
+                {formatTimer(timerSeconds)}
+              </Text>
+              <Text style={[styles.timerMinutes, { color: colors.textTer }]}>
+                {activeMinutes} min active
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.timerBtn,
+                  {
+                    backgroundColor: timerRunning ? COLORS.red : colors.accent,
+                    shadowColor: timerRunning ? COLORS.red : colors.accent,
+                  },
+                ]}
+                onPress={handleTimerToggle}
+                activeOpacity={0.7}
+              >
+                <Feather
+                  name={timerRunning ? 'square' : 'play'}
+                  size={18}
+                  color="#FFFFFF"
+                  style={{ marginRight: SPACING.sm }}
+                />
+                <Text style={styles.timerBtnText}>
+                  {timerRunning ? 'Stop' : 'Start'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Divider */}
+            <View style={[styles.manualDivider, { backgroundColor: colors.border }]} />
+
+            {/* Manual Step Entry */}
+            <View style={styles.manualStepBlock}>
+              <Text style={[styles.timerLabel, { color: colors.textSec }]}>STEP COUNT</Text>
+              <View style={styles.manualStepRow}>
+                <TouchableOpacity
+                  style={[styles.stepAdjustBtn, { backgroundColor: colors.bgTer, borderColor: colors.border }]}
+                  onPress={() => handleManualStepAdjust(-100)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.stepAdjustText, { color: colors.text }]}>-100</Text>
+                </TouchableOpacity>
+                <Text style={[styles.manualStepCount, { color: colors.text }]}>
+                  {manualSteps.toLocaleString()}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.stepAdjustBtn, { backgroundColor: colors.bgTer, borderColor: colors.border }]}
+                  onPress={() => handleManualStepAdjust(100)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.stepAdjustText, { color: colors.text }]}>+100</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.manualInputRow}>
+                <TextInput
+                  style={[styles.manualInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.bgTer }]}
+                  placeholder="Add steps"
+                  placeholderTextColor={colors.textTer}
+                  keyboardType="number-pad"
+                  value={manualStepInput}
+                  onChangeText={setManualStepInput}
+                  onSubmitEditing={handleManualStepSubmit}
+                  returnKeyType="done"
+                />
+                <TouchableOpacity
+                  style={[styles.manualAddBtn, { backgroundColor: colors.accent }]}
+                  onPress={handleManualStepSubmit}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="plus" size={18} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Steps & Activity Dashboard Link */}
+        <TouchableOpacity
+          style={[styles.activityDashLink, card]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            navigation?.navigate?.('ActivityDashboard')
+          }}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.activityDashIcon, { backgroundColor: COLORS.accentSoft }]}>
+            <Feather name="bar-chart-2" size={20} color={COLORS.accent} />
+          </View>
+          <View style={styles.activityDashTextWrap}>
+            <Text style={[styles.activityDashTitle, { color: colors.text }]}>
+              Steps & Activity
+            </Text>
+            <Text style={[styles.activityDashDesc, { color: colors.textSec }]}>
+              Weekly overview, goals & detailed tracking
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={18} color={colors.textTer} />
+        </TouchableOpacity>
+
+        {/* Quick Links Row */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SPACING.lg, gap: SPACING.sm, paddingBottom: SPACING.md }}>
+          {[
+            { label: 'Scan Food', icon: 'camera', color: '#EA4335', screen: 'FoodScanner' },
+            { label: 'Recipes', icon: 'book-open', color: '#34A853', screen: 'Recipes' },
+            { label: 'Challenges', icon: 'zap', color: '#8B5CF6', screen: 'Challenges' },
+            { label: 'Sleep', icon: 'moon', color: '#6366F1', screen: 'SleepTracker' },
+            { label: 'Badges', icon: 'star', color: '#F59E0B', screen: 'Achievements' },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.screen}
+              style={[{ backgroundColor: colors.bgSec, borderRadius: RADIUS.md, paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, borderWidth: 1, borderColor: colors.border }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                navigation?.navigate?.(item.screen)
+              }}
+              activeOpacity={0.7}
+            >
+              <Feather name={item.icon} size={14} color={item.color} />
+              <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Section B - Nutrition Summary */}
+        <View style={styles.nutritionSection}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Nutrition</Text>
+            <TouchableOpacity
+              style={[styles.goalSetupBtn, { backgroundColor: hasCustomGoal ? colors.bgTer : colors.accentSoft }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                setGoalSetupVisible(true)
+              }}
+              activeOpacity={0.7}
+            >
+              <Feather
+                name={hasCustomGoal ? 'edit-2' : 'sliders'}
+                size={14}
+                color={hasCustomGoal ? colors.textSec : COLORS.accent}
+              />
+              <Text style={[
+                styles.goalSetupText,
+                { color: hasCustomGoal ? colors.textSec : COLORS.accent },
+              ]}>
+                {hasCustomGoal ? 'Edit Goal' : 'Set Goal'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Prompt card when no custom goal */}
+          {!hasCustomGoal && (
+            <TouchableOpacity
+              style={[styles.goalPromptCard, card]}
+              onPress={() => setGoalSetupVisible(true)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.goalPromptIcon, { backgroundColor: colors.accentSoft }]}>
+                <Feather name="target" size={20} color={COLORS.accent} />
+              </View>
+              <View style={styles.goalPromptTextWrap}>
+                <Text style={[styles.goalPromptTitle, { color: colors.text }]}>
+                  Set your nutrition goal
+                </Text>
+                <Text style={[styles.goalPromptDesc, { color: colors.textSec }]}>
+                  Get personalized macros based on your body stats and fitness goal
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={colors.textTer} />
+            </TouchableOpacity>
+          )}
+
+          {/* Macro Bars */}
+          <View style={[styles.macroSection, card]}>
+            {macros.map((macro) => (
+              <MacroBar key={macro.label} {...macro} />
+            ))}
+          </View>
+
+          {/* View Full Nutrition */}
+          <TouchableOpacity
+            style={styles.viewNutritionBtn}
+            onPress={handleNavigateNutrition}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.viewNutritionText}>View Full Nutrition</Text>
+            <Feather name="arrow-right" size={16} color={COLORS.accent} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Food Search Input */}
+        <View style={[styles.foodSearchContainer, card]}>
+          <TextInput
+            style={[styles.foodSearchInput, { color: colors.text }]}
+            placeholder="Search for food or scan barcode..."
+            placeholderTextColor={colors.textTer}
+            value={foodSearch}
+            onChangeText={(text) => {
+              setFoodSearch(text)
+              if (text.length > 0) setFoodModalVisible(true)
+              else setFoodModalVisible(false)
+            }}
+          />
+          <TouchableOpacity
+            style={styles.barcodeBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              navigation?.navigate?.('BarcodeScanner')
+            }}
+            activeOpacity={0.7}
+          >
+            <Feather name="camera" size={20} color={colors.textSec} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Food Database Modal */}
+        <Modal
+          visible={foodModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            setFoodModalVisible(false)
+            setFoodSearch('')
+          }}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => {
+              setFoodModalVisible(false)
+              setFoodSearch('')
+            }}
+          >
+            <View style={[styles.foodModalContent, { backgroundColor: colors.bgSec }]}>
+              <View style={[styles.foodModalSearchRow, { borderBottomColor: colors.border }]}>
+                <TextInput
+                  style={[styles.foodModalInput, { color: colors.text }]}
+                  placeholder="Search for food or scan barcode..."
+                  placeholderTextColor={colors.textTer}
+                  value={foodSearch}
+                  onChangeText={(text) => {
+                    setFoodSearch(text)
+                    if (text.length === 0) setFoodModalVisible(false)
+                  }}
+                  autoFocus
+                />
+              </View>
+              <FlatList
+                data={MOCK_FOODS.filter((f) =>
+                  f.name.toLowerCase().includes(foodSearch.toLowerCase())
+                )}
+                keyExtractor={(item) => item.name}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.foodResultItem, { borderBottomColor: colors.border }]}
+                    onPress={async () => {
+                      setFoodModalVisible(false)
+                      setFoodSearch('')
+                      try {
+                        const today = new Date().toISOString().split('T')[0]
+                        await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
+                          mealType: 'snack',
+                          rawInput: item.name,
+                          items: [{ name: item.name, qty: 1, unit: 'serving', calories: item.calories, protein: item.protein, carbs: item.carbs, fats: item.fats }],
+                          source: 'manual',
+                        })
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                        loadData()
+                      } catch (err) {
+                        if (!isDemo) {
+                          Alert.alert('Failed to save', 'Please try again.')
+                        }
+                        loadData()
+                      }
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.foodResultName, { color: colors.text }]}>{item.name}</Text>
+                    <Text style={styles.foodResultCal}>{item.calories} kcal</Text>
+                    <View style={styles.foodResultMacros}>
+                      <Text style={[styles.foodResultMacroText, { color: colors.textTer }]}>P: {item.protein}g</Text>
+                      <Text style={[styles.foodResultMacroText, { color: colors.textTer }]}>C: {item.carbs}g</Text>
+                      <Text style={[styles.foodResultMacroText, { color: colors.textTer }]}>F: {item.fats}g</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <Text style={[styles.foodResultEmpty, { color: colors.textTer }]}>No results found</Text>
+                }
+                style={styles.foodResultList}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* Water Tracking */}
+        <WaterTracker style={{ marginHorizontal: 4, marginBottom: 12 }} />
+
+        {/* Ad */}
+        <AdBanner style={{ marginHorizontal: 4, marginBottom: 12 }} />
+
+        {/* Section C - Quick Meal Log */}
+        <View style={styles.mealSection}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Meal Log</Text>
+          <View style={styles.mealGrid}>
+            {MEAL_TYPES.map((type) => {
+              const logged = loggedMeals[type]
+              return (
+                <TouchableOpacity
+                  key={type}
+                  style={[styles.mealSlot, card]}
+                  onPress={() => handleMealSlot(type)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.mealSlotHeader}>
+                    <View style={[styles.mealIconContainer, { backgroundColor: colors.bgTer }, logged && styles.mealIconLogged]}>
+                      <Feather
+                        name={MEAL_ICONS[type]}
+                        size={20}
+                        color={logged ? COLORS.green : colors.textSec}
+                      />
+                    </View>
+                    <Text style={[styles.mealSlotLabel, { color: colors.text }]}>{MEAL_LABELS[type]}</Text>
+                  </View>
+                  {logged ? (
+                    <View style={styles.mealLoggedInfo}>
+                      <Text style={[styles.mealLoggedCal, { color: colors.text }]}>{logged.total_calories} cal</Text>
+                      <Text style={[styles.mealLoggedMacros, { color: colors.textTer }]}>
+                        P:{logged.total_protein}g  C:{logged.total_carbs}g  F:{logged.total_fats}g
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.mealAddRow}>
+                      <Feather name="plus" size={14} color={COLORS.accent} />
+                      <Text style={styles.mealAddText}>Add Food</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </View>
+
+        <View style={{ height: SPACING.xxl + SPACING.xl }} />
+      </ScrollView>
+
+      {/* Nutrition Goal Setup Modal */}
+      <NutritionGoalSetup
+        visible={goalSetupVisible}
+        onClose={() => setGoalSetupVisible(false)}
+        onSave={handleGoalSave}
+        memberWeight={member?.weight_kg}
+        memberHeight={member?.height_cm}
+      />
+    </View>
+  )
+}
+
+// --- Step Ring Component ---
+function StepRing({ progress, steps, isGoalMet, pulseAnim, glowAnim, colors }) {
+  const themeColors = colors || COLORS
+  const strokeWidth = 10
+  const center = RING_SIZE / 2
+  const radius = (RING_SIZE - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference * (1 - progress)
+  const ringColor = isGoalMet ? COLORS.green : METABOLIC.steps
+
+  const pulseScale = pulseAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, isGoalMet ? 1.03 : 1.01],
+  })
+
+  const glowOpacity = isGoalMet
+    ? glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.8] })
+    : 0
+
+  return (
+    <Animated.View style={[styles.ringContainer, { transform: [{ scale: pulseScale }] }]}>
+      {isGoalMet && (
+        <Animated.View
+          style={[
+            styles.ringGlow,
+            {
+              width: RING_SIZE + 24,
+              height: RING_SIZE + 24,
+              borderRadius: (RING_SIZE + 24) / 2,
+              opacity: glowOpacity,
+            },
+          ]}
+        />
+      )}
+      <Svg width={RING_SIZE} height={RING_SIZE}>
+        {/* Background track */}
+        <Circle
+          cx={center}
+          cy={center}
+          r={radius}
+          stroke={themeColors.border || 'rgba(255,255,255,0.1)'}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        {/* Progress track */}
+        <Circle
+          cx={center}
+          cy={center}
+          r={radius}
+          stroke={ringColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          transform={`rotate(-90 ${center} ${center})`}
+        />
+      </Svg>
+      {/* Center content */}
+      <View style={styles.ringCenter}>
+        <Text style={[styles.stepCount, { color: isGoalMet ? COLORS.green : themeColors.text }]}>
+          {steps.toLocaleString()}
+        </Text>
+        <Text style={[styles.stepLabel, { color: themeColors.textSec }]}>steps</Text>
+        <Text style={[styles.ringGoalText, { color: themeColors.textTer }]}>of 10k</Text>
+        {isGoalMet && (
+          <View style={styles.goalBadge}>
+            <Feather name="check-circle" size={12} color={COLORS.green} />
+            <Text style={styles.goalBadgeText}>Goal Met!</Text>
+          </View>
+        )}
+      </View>
+    </Animated.View>
+  )
+}
+
+// --- Calorie Ring Component ---
+function CalorieRing({ caloriesRemaining, calorieGoal }) {
+  const { colors } = useTheme()
+  const strokeWidth = 10
+  const center = RING_SIZE / 2
+  const radius = (RING_SIZE - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const progress = Math.min((calorieGoal - caloriesRemaining) / calorieGoal, 1)
+  const strokeDashoffset = circumference * (1 - progress)
+
+  return (
+    <View style={styles.ringContainer}>
+      <Svg width={RING_SIZE} height={RING_SIZE}>
+        <Circle
+          cx={center}
+          cy={center}
+          r={radius}
+          stroke={colors.border}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <Circle
+          cx={center}
+          cy={center}
+          r={radius}
+          stroke={COLORS.accent}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          transform={`rotate(-90 ${center} ${center})`}
+        />
+      </Svg>
+      <View style={styles.ringCenter}>
+        <Text style={[styles.calorieRingCount, { color: colors.text }]}>{caloriesRemaining}</Text>
+        <Text style={[styles.calorieRingLabel, { color: colors.textSec }]}>kcal left</Text>
+        <Text style={[styles.ringGoalText, { color: colors.textTer }]}>of {(calorieGoal / 1000).toFixed(1)}k</Text>
+      </View>
+    </View>
+  )
+}
+
+// --- Macro Bar Component ---
+function MacroBar({ label, value, goal: macroGoal, color, unit }) {
+  const { colors } = useTheme()
+  const progress = Math.min(value / macroGoal, 1)
+  return (
+    <View style={styles.macroRow}>
+      <View style={styles.macroLabelRow}>
+        <View style={[styles.macroDot, { backgroundColor: color }]} />
+        <Text style={[styles.macroLabel, { color: colors.textSec }]}>{label}</Text>
+        <Text style={[styles.macroValue, { color: colors.text }]}>
+          {value}{unit} <Text style={[styles.macroGoalText, { color: colors.textTer }]}>/ {macroGoal}{unit}</Text>
+        </Text>
+      </View>
+      <View style={[styles.macroTrack, { backgroundColor: colors.bgTer }]}>
+        <View style={[styles.macroFill, { width: `${progress * 100}%`, backgroundColor: color }]} />
+      </View>
+    </View>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
+  center: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.xxl + SPACING.lg,
+    paddingBottom: 128,
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.xl,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  syncBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.bgSec,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Step Section
+  stepSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    width: '100%',
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+  },
+  stepSourceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  stepSourceText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  syncRow: {
+    alignItems: 'center',
+    marginBottom: SPACING.xl,
+  },
+  syncText: {
+    fontSize: 12,
+    color: COLORS.textTer,
+    marginBottom: SPACING.md,
+  },
+  syncHealthBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.accentSoft,
+    paddingVertical: SPACING.sm + 4,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: COLORS.accent,
+    minHeight: 48,
+  },
+  syncHealthBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.accent,
+  },
+  btnDisabled: {
+    opacity: 0.6,
+  },
+
+  // Ring
+  ringContainer: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringGlow: {
+    position: 'absolute',
+    backgroundColor: 'rgba(52,168,83,0.15)',
+  },
+  ringCenter: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepCount: {
+    fontSize: 28,
+    fontFamily: FONT.numBlack,
+    fontWeight: '900',
+    color: COLORS.text,
+    letterSpacing: -1.5,
+    fontVariant: ['tabular-nums'],
+  },
+  stepLabel: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#94A3B8',
+    marginTop: 1,
+  },
+  ringGoalText: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  goalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: SPACING.xs,
+    gap: 4,
+  },
+  goalBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.green,
+  },
+
+  // Activity Dashboard Link
+  activityDashLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    marginBottom: SPACING.lg,
+    gap: SPACING.md,
+  },
+  activityDashIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityDashTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  activityDashTitle: {
+    fontSize: 15,
+    fontFamily: FONT.semibold,
+  },
+  activityDashDesc: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+  },
+
+  // Nutrition Section
+  nutritionSection: {
+    marginBottom: SPACING.xl,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  goalSetupBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+  },
+  goalSetupText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  goalPromptCard: {
+    ...ELITE_CARD,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    gap: SPACING.md,
+  },
+  goalPromptIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: COLORS.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  goalPromptTextWrap: {
+    flex: 1,
+  },
+  goalPromptTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  goalPromptDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+  },
+
+  // Macro Bars
+  macroSection: {
+    ...ELITE_CARD,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    gap: SPACING.md,
+  },
+  macroRow: {
+    gap: SPACING.sm,
+  },
+  macroLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  macroDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: SPACING.sm,
+  },
+  macroLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.textSec,
+    flex: 1,
+  },
+  macroValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  macroGoalText: {
+    fontWeight: '400',
+    color: COLORS.textTer,
+  },
+  macroTrack: {
+    height: 6,
+    backgroundColor: COLORS.bgTer,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  macroFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+
+  // View Nutrition Button
+  viewNutritionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.md,
+    gap: SPACING.sm,
+    minHeight: 48,
+  },
+  viewNutritionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.accent,
+  },
+
+  // Meal Section
+  mealSection: {
+    marginBottom: SPACING.lg,
+  },
+  mealGrid: {
+    gap: SPACING.sm,
+  },
+  mealSlot: {
+    ...ELITE_CARD,
+    padding: SPACING.md,
+    minHeight: 80,
+  },
+  mealSlotHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  mealIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.bgTer,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  mealIconLogged: {
+    backgroundColor: 'rgba(52,168,83,0.12)',
+  },
+  mealSlotLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  mealLoggedInfo: {
+    paddingLeft: SPACING.xxl + SPACING.sm,
+  },
+  mealLoggedCal: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+  mealLoggedMacros: {
+    fontSize: 12,
+    color: COLORS.textTer,
+  },
+  mealAddRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: SPACING.xxl + SPACING.sm,
+    gap: SPACING.xs,
+    minHeight: 24,
+  },
+  mealAddText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.accent,
+  },
+
+  // Calorie Ring
+  calorieRingCount: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: COLORS.text,
+    letterSpacing: -1,
+    fontVariant: ['tabular-nums'],
+  },
+  calorieRingLabel: {
+    fontSize: 13,
+    color: '#94A3B8',
+    marginTop: 1,
+  },
+
+  // Food Search
+  foodSearchContainer: {
+    ...ELITE_CARD,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+    paddingHorizontal: SPACING.md,
+  },
+  foodSearchInput: {
+    flex: 1,
+    height: 48,
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  barcodeBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Food Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-start',
+    paddingTop: 100,
+    paddingHorizontal: SPACING.lg,
+  },
+  foodModalContent: {
+    ...ELITE_CARD,
+    maxHeight: 420,
+    overflow: 'hidden',
+  },
+  foodModalSearchRow: {
+    paddingHorizontal: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  foodModalInput: {
+    height: 48,
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  foodResultList: {
+    paddingVertical: SPACING.xs,
+  },
+  foodResultItem: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.03)',
+  },
+  foodResultName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  foodResultCal: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.accent,
+    marginBottom: 4,
+  },
+  foodResultMacros: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+  },
+  foodResultMacroText: {
+    fontSize: 12,
+    color: COLORS.textTer,
+  },
+  foodResultEmpty: {
+    fontSize: 14,
+    color: COLORS.textTer,
+    textAlign: 'center',
+    paddingVertical: SPACING.xl,
+  },
+
+  // Mode Toggle
+  modeToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.lg,
+  },
+  movementTitle: {
+    fontSize: 18,
+    fontFamily: FONT.bold,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    borderRadius: RADIUS.full,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.bgTer,
+    padding: 3,
+  },
+  segmentBtn: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md + 2,
+    borderRadius: RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 64,
+  },
+  segmentBtnActive: {
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontFamily: FONT.semibold,
+    fontWeight: '600',
+    color: COLORS.textSec,
+  },
+  segmentTextActive: {
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+  },
+
+  // Manual Panel
+  manualPanel: {
+    ...ELITE_CARD,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl,
+  },
+  timerBlock: {
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  timerLabel: {
+    fontSize: 11,
+    fontFamily: FONT.semibold,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    color: COLORS.textSec,
+    marginBottom: SPACING.sm,
+  },
+  timerDisplay: {
+    fontSize: 44,
+    fontFamily: FONT.mono,
+    fontWeight: '700',
+    letterSpacing: 2,
+    fontVariant: ['tabular-nums'],
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+  },
+  timerMinutes: {
+    fontSize: 13,
+    fontFamily: FONT.numMedium,
+    color: COLORS.textTer,
+    marginBottom: SPACING.md,
+  },
+  timerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.sm + 4,
+    paddingHorizontal: SPACING.xl,
+    borderRadius: RADIUS.full,
+    minHeight: 48,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  timerBtnText: {
+    fontSize: 16,
+    fontFamily: FONT.bold,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  manualDivider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: SPACING.lg,
+  },
+  manualStepBlock: {
+    alignItems: 'center',
+  },
+  manualStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  stepAdjustBtn: {
+    width: 60,
+    height: 40,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepAdjustText: {
+    fontSize: 14,
+    fontFamily: FONT.numBold,
+    fontWeight: '700',
+  },
+  manualStepCount: {
+    fontSize: 36,
+    fontFamily: FONT.numBlack,
+    fontWeight: '900',
+    letterSpacing: -1,
+    fontVariant: ['tabular-nums'],
+    minWidth: 100,
+    textAlign: 'center',
+  },
+  manualInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    width: '100%',
+    maxWidth: 240,
+  },
+  manualInput: {
+    flex: 1,
+    height: 44,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    paddingHorizontal: SPACING.md,
+    fontSize: 16,
+    fontFamily: FONT.numSemibold,
+    fontVariant: ['tabular-nums'],
+    textAlign: 'center',
+  },
+  manualAddBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // AI Insights Card
+  aiInsightCard: {
+    marginBottom: SPACING.lg,
+    padding: SPACING.md,
+    overflow: 'hidden',
+  },
+  aiInsightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.sm + 2,
+  },
+  aiInsightTitle: {
+    fontSize: 15,
+    fontFamily: FONT.semibold,
+    fontWeight: '600',
+  },
+  aiInsightSubtitle: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+  },
+  aiInsightList: {
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm + 2,
+  },
+  aiInsightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  aiInsightDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  aiInsightText: {
+    fontSize: 13,
+    fontFamily: FONT.regular,
+    flex: 1,
+  },
+  aiInsightLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-end',
+  },
+  aiInsightLinkText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    fontWeight: '500',
+  },
+})

@@ -1,0 +1,102 @@
+{
+  "expo": {
+    "name": "IVIRA",
+    "slug": "ivira",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0F19"
+    },
+    "assetBundlePatterns": [
+      "assets/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ivira.member",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use Face ID for quick sign-in",
+        "NSCameraUsageDescription": "Scan QR codes and barcodes at the gym",
+        "NSHealthShareUsageDescription": "IVIRA reads your step count and sleep data to track daily activity and rest",
+        "NSMotionUsageDescription": "IVIRA uses motion data to count your steps throughout the day",
+        "NSMicrophoneUsageDescription": "IVIRA uses the microphone during sleep tracking to detect snoring and disturbances. Audio is processed on-device only.",
+        "NFCReaderUsageDescription": "Tap your phone on the NFC tag at the gym entrance to check in",
+        "NSLocationWhenInUseUsageDescription": "IVIRA uses your location to verify gym check-ins"
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.background-delivery": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0052FF"
+      },
+      "package": "com.ivira.member",
+      "permissions": [
+        "CAMERA",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "VIBRATE",
+        "android.permission.health.READ_STEPS",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.NFC",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.BODY_SENSORS",
+        "android.permission.HIGH_SAMPLING_RATE_SENSORS",
+        "android.permission.FOREGROUND_SERVICE"
+      ]
+    },
+    "plugins": [
+      "expo-local-authentication",
+      "expo-camera",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0052FF"
+        }
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "react-native-health-connect",
+      "./plugins/withHealthConnectPermissions",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      "react-native-nfc-manager",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "IVIRA uses your location to verify gym check-ins"
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-1836914755619181~7453478671",
+          "iosAppId": "ca-app-pub-1836914755619181~7453478671"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e554db55-7b14-4d81-b288-723ac43503c6"
+      }
+    },
+    "owner": "gymos2026"
+  }
+}
