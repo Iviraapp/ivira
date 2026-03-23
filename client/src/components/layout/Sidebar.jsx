@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import api from '../../lib/api'
 import {
   LayoutDashboard, Users, QrCode, CreditCard, Mail, Globe, BarChart3,
-  Settings, LogOut, Dumbbell, UserCog, X, MapPin, ShieldCheck, ShoppingBag, Award, TrendingUp, Activity, Lock, Heart,
+  Settings, LogOut, Dumbbell, UserCog, X, MapPin, ShieldCheck, ShoppingBag, Award, TrendingUp, Activity, Lock, Heart, Brain,
 } from 'lucide-react'
 import { useAllFeatures } from '../../hooks/useFeatureGate'
 
@@ -29,6 +29,7 @@ const navGroups = [
       { path: '/dashboard/affiliate', label: 'Affiliate', icon: Globe, featureSlug: 'affiliate' },
       { path: '/dashboard/newsletter', label: 'Newsletter', icon: Mail, featureSlug: 'newsletter' },
       { path: '/dashboard/analytics', label: 'Analytics', icon: BarChart3, featureSlug: 'analytics' },
+      { path: '/dashboard/finance', label: 'Finance AI', icon: Brain, featureSlug: 'analytics' },
     ],
   },
   {

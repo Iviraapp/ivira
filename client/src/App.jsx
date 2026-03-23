@@ -55,6 +55,9 @@ import ViraLayout from './pages/vira/ViraLayout'
 // Care Compass
 import CareCompass from './pages/dashboard/CareCompass'
 
+// Financial Intelligence
+import Finance from './pages/dashboard/Finance'
+
 // Admin pages
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminLayout from './pages/admin/AdminLayout'
@@ -138,6 +141,7 @@ export default function App() {
           <Route path="staff-performance" element={<StaffPerformance />} />
           <Route path="pulse" element={<LivePulse />} />
           <Route path="care-compass" element={<CareCompass />} />
+          <Route path="finance" element={<Finance />} />
         </Route>
 
         {/* Super Admin */}
