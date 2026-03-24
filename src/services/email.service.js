@@ -177,18 +177,95 @@ export async function sendOTPEmail(email, otp) {
             </td>
           </tr>
 
-          <!-- Security info -->
+          <!-- What's waiting for you -->
           <tr>
-            <td align="center" style="padding-bottom:40px;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:340px;">
+            <td align="center" style="padding-bottom:12px;">
+              <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#3B6AE0;line-height:1;">
+                What&rsquo;s waiting inside
+              </p>
+            </td>
+          </tr>
+
+          <!-- Feature cards - 2x2 grid -->
+          <tr>
+            <td align="center" style="padding-bottom:32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:400px;">
                 <tr>
-                  <td style="padding:16px 20px;background-color:#0B0F1A;border-radius:10px;border:1px solid #111827;">
-                    <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:400;color:#4B5C78;line-height:1.6;text-align:center;">
-                      If you didn&rsquo;t request this code, you can safely ignore this email. Someone may have entered your email by mistake.
+                  <td style="width:50%;padding:6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                      <tr>
+                        <td style="padding:16px 14px;background-color:#0B1224;border:1px solid #151E33;border-radius:12px;">
+                          <p style="margin:0 0 6px;font-size:20px;line-height:1;">&#129504;</p>
+                          <p style="margin:0 0 4px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#FFFFFF;line-height:1.2;">Vira AI Coach</p>
+                          <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:400;color:#5A6A82;line-height:1.4;">Personalised workout &amp; diet advice, anytime</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td style="width:50%;padding:6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                      <tr>
+                        <td style="padding:16px 14px;background-color:#0B1224;border:1px solid #151E33;border-radius:12px;">
+                          <p style="margin:0 0 6px;font-size:20px;line-height:1;">&#128248;</p>
+                          <p style="margin:0 0 4px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#FFFFFF;line-height:1.2;">Food Scanner</p>
+                          <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:400;color:#5A6A82;line-height:1.4;">Snap a photo, get instant nutrition data</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="width:50%;padding:6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                      <tr>
+                        <td style="padding:16px 14px;background-color:#0B1224;border:1px solid #151E33;border-radius:12px;">
+                          <p style="margin:0 0 6px;font-size:20px;line-height:1;">&#127939;</p>
+                          <p style="margin:0 0 4px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#FFFFFF;line-height:1.2;">Activity Tracking</p>
+                          <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:400;color:#5A6A82;line-height:1.4;">Steps, sleep, workouts &amp; fasting all in one</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td style="width:50%;padding:6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                      <tr>
+                        <td style="padding:16px 14px;background-color:#0B1224;border:1px solid #151E33;border-radius:12px;">
+                          <p style="margin:0 0 6px;font-size:20px;line-height:1;">&#127942;</p>
+                          <p style="margin:0 0 4px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#FFFFFF;line-height:1.2;">Challenges</p>
+                          <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:400;color:#5A6A82;line-height:1.4;">Compete, earn badges &amp; stay motivated</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Motivational nudge -->
+          <tr>
+            <td align="center" style="padding-bottom:36px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:380px;">
+                <tr>
+                  <td style="padding:18px 24px;background:linear-gradient(135deg,#0D1A3A 0%,#132044 100%);border:1px solid #1A2A4F;border-radius:12px;text-align:center;">
+                    <p style="margin:0 0 4px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;color:#FFFFFF;line-height:1.3;">
+                      Your health journey continues &#128170;
+                    </p>
+                    <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:400;color:#7A8599;line-height:1.4;">
+                      Every login is a step towards a healthier you. Keep going!
                     </p>
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
+
+          <!-- Security info -->
+          <tr>
+            <td align="center" style="padding-bottom:40px;">
+              <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:400;color:#3D4A5C;line-height:1.5;text-align:center;">
+                Didn&rsquo;t request this? You can safely ignore this email.
+              </p>
             </td>
           </tr>
 
