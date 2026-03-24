@@ -119,7 +119,11 @@ export default async function aiCoachRoutes(fastify) {
   }, async (request, reply) => {
     const { message, history = [] } = request.body;
 
-    if (!config.anthropic.enabled) {
+    // Support DeepSeek or Anthropic (prefer DeepSeek if available)
+    const useDeepSeek = config.deepseek.enabled;
+    const useAnthropic = config.anthropic.enabled;
+
+    if (!useDeepSeek && !useAnthropic) {
       return reply.code(503).send({
         error: 'AI_NOT_CONFIGURED',
         message: 'AI Coach is not available at this time.',
@@ -136,32 +140,64 @@ export default async function aiCoachRoutes(fastify) {
     messages.push({ role: 'user', content: message });
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': config.anthropic.apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 512,
-          system: SYSTEM_PROMPT,
-          messages,
-        }),
-      });
+      let text;
 
-      if (!response.ok) {
-        const err = await response.text();
-        request.log.error({ status: response.status, err }, 'Anthropic API error');
-        return reply.code(502).send({
-          error: 'AI_ERROR',
-          message: 'AI Coach is temporarily unavailable. Please try again.',
+      if (useDeepSeek) {
+        const response = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.deepseek.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            max_tokens: 512,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              ...messages,
+            ],
+          }),
         });
-      }
 
-      const data = await response.json();
-      const text = data.content?.[0]?.text || 'Sorry, I could not generate a response. Please try again.';
+        if (!response.ok) {
+          const err = await response.text();
+          request.log.error({ status: response.status, err }, 'DeepSeek API error');
+          return reply.code(502).send({
+            error: 'AI_ERROR',
+            message: 'AI Coach is temporarily unavailable. Please try again.',
+          });
+        }
+
+        const data = await response.json();
+        text = data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response. Please try again.';
+      } else {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': config.anthropic.apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 512,
+            system: SYSTEM_PROMPT,
+            messages,
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.text();
+          request.log.error({ status: response.status, err }, 'Anthropic API error');
+          return reply.code(502).send({
+            error: 'AI_ERROR',
+            message: 'AI Coach is temporarily unavailable. Please try again.',
+          });
+        }
+
+        const data = await response.json();
+        text = data.content?.[0]?.text || 'Sorry, I could not generate a response. Please try again.';
+      }
 
       return { reply: text };
     } catch (err) {
@@ -180,7 +216,10 @@ export default async function aiCoachRoutes(fastify) {
   }, async (request, reply) => {
     const { goal, experience_level, days_per_week, equipment_available, focus_areas } = request.body;
 
-    if (!config.anthropic.enabled) {
+    const useDeepSeek = config.deepseek.enabled;
+    const useAnthropic = config.anthropic.enabled;
+
+    if (!useDeepSeek && !useAnthropic) {
       return reply.code(503).send({
         error: 'AI_NOT_CONFIGURED',
         message: 'AI workout planner is not available at this time.',
@@ -205,32 +244,64 @@ export default async function aiCoachRoutes(fastify) {
 Return the plan as JSON following the exact format specified.`;
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': config.anthropic.apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 4096,
-          system: WORKOUT_PLAN_PROMPT,
-          messages: [{ role: 'user', content: userMessage }],
-        }),
-      });
+      let text;
 
-      if (!response.ok) {
-        const err = await response.text();
-        request.log.error({ status: response.status, err }, 'Anthropic API error (workout plan)');
-        return reply.code(502).send({
-          error: 'AI_ERROR',
-          message: 'AI workout planner is temporarily unavailable. Please try again.',
+      if (useDeepSeek) {
+        const response = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.deepseek.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            max_tokens: 4096,
+            messages: [
+              { role: 'system', content: WORKOUT_PLAN_PROMPT },
+              { role: 'user', content: userMessage },
+            ],
+          }),
         });
-      }
 
-      const data = await response.json();
-      const text = data.content?.[0]?.text || '';
+        if (!response.ok) {
+          const err = await response.text();
+          request.log.error({ status: response.status, err }, 'DeepSeek API error (workout plan)');
+          return reply.code(502).send({
+            error: 'AI_ERROR',
+            message: 'AI workout planner is temporarily unavailable. Please try again.',
+          });
+        }
+
+        const data = await response.json();
+        text = data.choices?.[0]?.message?.content || '';
+      } else {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': config.anthropic.apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 4096,
+            system: WORKOUT_PLAN_PROMPT,
+            messages: [{ role: 'user', content: userMessage }],
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.text();
+          request.log.error({ status: response.status, err }, 'Anthropic API error (workout plan)');
+          return reply.code(502).send({
+            error: 'AI_ERROR',
+            message: 'AI workout planner is temporarily unavailable. Please try again.',
+          });
+        }
+
+        const data = await response.json();
+        text = data.content?.[0]?.text || '';
+      }
 
       // Parse the JSON response from Claude
       let plan;
