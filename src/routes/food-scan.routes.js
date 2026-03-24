@@ -1,47 +1,127 @@
 import db from '../config/database.js';
-import crypto from 'crypto';
+import config from '../config/index.js';
 
-// Mock food detection based on a hash of the input for deterministic but varied results
-function generateMockFoodAnalysis(imageData) {
-  const hash = crypto.createHash('md5').update(imageData || 'default').digest('hex');
-  const hashNum = parseInt(hash.slice(0, 8), 16);
+const FOOD_ANALYSIS_PROMPT = `You are a nutrition analysis AI. Analyze the food in this image and identify each distinct food item visible.
 
-  const foodDatabase = [
-    { name: 'Grilled Chicken Breast', calories: 165, protein: 31.0, carbs: 0.0, fat: 3.6, serving: '100g' },
-    { name: 'Steamed Rice', calories: 130, protein: 2.7, carbs: 28.0, fat: 0.3, serving: '100g' },
-    { name: 'Dal Tadka', calories: 140, protein: 9.0, carbs: 21.0, fat: 3.0, serving: '1 bowl' },
-    { name: 'Roti (Whole Wheat)', calories: 120, protein: 3.5, carbs: 18.0, fat: 3.7, serving: '1 piece' },
-    { name: 'Paneer Tikka', calories: 220, protein: 14.0, carbs: 5.0, fat: 16.0, serving: '100g' },
-    { name: 'Mixed Vegetable Curry', calories: 95, protein: 3.0, carbs: 12.0, fat: 4.0, serving: '1 bowl' },
-    { name: 'Banana', calories: 89, protein: 1.1, carbs: 23.0, fat: 0.3, serving: '1 medium' },
-    { name: 'Curd (Yogurt)', calories: 60, protein: 3.5, carbs: 5.0, fat: 3.3, serving: '100g' },
-    { name: 'Egg Bhurji', calories: 180, protein: 13.0, carbs: 4.0, fat: 13.0, serving: '2 eggs' },
-    { name: 'Idli', calories: 39, protein: 2.0, carbs: 8.0, fat: 0.1, serving: '1 piece' },
-    { name: 'Chicken Biryani', calories: 250, protein: 16.0, carbs: 30.0, fat: 8.0, serving: '1 serving' },
-    { name: 'Sambar', calories: 75, protein: 4.0, carbs: 12.0, fat: 1.5, serving: '1 bowl' },
-    { name: 'Masala Dosa', calories: 168, protein: 3.5, carbs: 28.0, fat: 5.0, serving: '1 piece' },
-    { name: 'Protein Shake', calories: 150, protein: 25.0, carbs: 8.0, fat: 2.0, serving: '1 glass' },
-    { name: 'Chapati with Ghee', calories: 150, protein: 3.5, carbs: 18.0, fat: 7.0, serving: '1 piece' },
-    { name: 'Green Salad', calories: 35, protein: 2.0, carbs: 6.0, fat: 0.5, serving: '1 bowl' },
-  ];
+For each item, provide:
+- name: Common name of the food (be specific, e.g. "Premier Protein Chocolate Shake" not just "protein shake")
+- calories: Estimated calories per serving shown
+- protein: Grams of protein
+- carbs: Grams of carbohydrates
+- fat: Grams of fat
+- serving: Serving description (e.g. "1 bottle", "1 bowl", "100g")
+- confidence: Your confidence 0.0-1.0
 
-  // Select 2-4 items based on hash
-  const itemCount = 2 + (hashNum % 3);
-  const items = [];
-  for (let i = 0; i < itemCount; i++) {
-    const idx = (hashNum + i * 7) % foodDatabase.length;
-    const food = foodDatabase[idx];
-    const quantity = 1 + ((hashNum + i) % 2);
-    items.push({
-      ...food,
-      quantity,
-      total_calories: food.calories * quantity,
-      total_protein: +(food.protein * quantity).toFixed(1),
-      total_carbs: +(food.carbs * quantity).toFixed(1),
-      total_fat: +(food.fat * quantity).toFixed(1),
-      confidence: +(0.75 + (((hashNum + i * 3) % 25) / 100)).toFixed(2),
+If you can read nutrition labels in the image, use those exact values.
+If it's a packaged product, identify the brand and use known nutrition data.
+For home-cooked food, estimate based on typical Indian/global portions.
+
+IMPORTANT: Return ONLY valid JSON, no markdown, no explanation. Format:
+{
+  "items": [
+    { "name": "...", "calories": 0, "protein": 0, "carbs": 0, "fat": 0, "serving": "...", "confidence": 0.0 }
+  ]
+}`;
+
+async function analyzeWithVision(imageBase64) {
+  // Try OpenRouter first (access to vision models), then DeepSeek
+  if (config.openrouter.enabled) {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.openrouter.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-flash-1.5',
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: FOOD_ANALYSIS_PROMPT },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/jpeg;base64,${imageBase64}`,
+                },
+              },
+            ],
+          },
+        ],
+      }),
     });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`OpenRouter API error ${response.status}: ${err}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
   }
+
+  if (config.anthropic.enabled) {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.anthropic.apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: FOOD_ANALYSIS_PROMPT },
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: 'image/jpeg',
+                  data: imageBase64,
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Anthropic API error ${response.status}: ${err}`);
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text || '';
+  }
+
+  throw new Error('No vision-capable AI provider configured');
+}
+
+function parseAIResponse(text) {
+  // Strip markdown code fences if present
+  const jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  const parsed = JSON.parse(jsonStr);
+
+  const items = (parsed.items || []).map(item => ({
+    name: item.name || 'Unknown Item',
+    calories: Math.round(Number(item.calories) || 0),
+    protein: +(Number(item.protein) || 0).toFixed(1),
+    carbs: +(Number(item.carbs) || 0).toFixed(1),
+    fat: +(Number(item.fat) || 0).toFixed(1),
+    serving: item.serving || '1 serving',
+    confidence: +(Math.min(1, Math.max(0, Number(item.confidence) || 0.8))).toFixed(2),
+    quantity: 1,
+    total_calories: Math.round(Number(item.calories) || 0),
+    total_protein: +(Number(item.protein) || 0).toFixed(1),
+    total_carbs: +(Number(item.carbs) || 0).toFixed(1),
+    total_fat: +(Number(item.fat) || 0).toFixed(1),
+  }));
 
   const totals = items.reduce(
     (acc, item) => ({
@@ -59,7 +139,7 @@ function generateMockFoodAnalysis(imageData) {
 export default async function foodScanRoutes(fastify) {
   const authHooks = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] };
 
-  // POST /gyms/:gymId/members/:memberId/food/scan — mock AI food analysis
+  // POST /gyms/:gymId/members/:memberId/food/scan — AI-powered food analysis
   fastify.post('/gyms/:gymId/members/:memberId/food/scan', authHooks, async (request, reply) => {
     const { gymId, memberId } = request.params;
     const { image } = request.body || {};
@@ -68,14 +148,31 @@ export default async function foodScanRoutes(fastify) {
       return reply.code(400).send({ error: 'image (base64) is required' });
     }
 
-    const analysis = generateMockFoodAnalysis(image);
+    let analysis;
+    try {
+      const aiText = await analyzeWithVision(image);
+      analysis = parseAIResponse(aiText);
+    } catch (err) {
+      request.log.error(err, 'AI food analysis failed');
+      return reply.code(502).send({
+        error: 'ANALYSIS_FAILED',
+        message: 'Could not analyze the food image. Please try again with a clearer photo.',
+      });
+    }
+
+    if (analysis.items.length === 0) {
+      return reply.code(422).send({
+        error: 'NO_FOOD_DETECTED',
+        message: 'No food items were detected in the image. Please try a clearer photo.',
+      });
+    }
 
     // Save scan to database
     const [scan] = await db('food_scan_logs')
       .insert({
         gym_id: gymId,
         member_id: memberId,
-        image_url: null, // In production, upload to S3 first
+        image_url: null,
         detected_items: JSON.stringify(analysis.items),
         total_calories: analysis.totals.calories,
         total_protein: analysis.totals.protein,
