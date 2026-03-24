@@ -1,6 +1,6 @@
 import db from '../config/database.js';
 import config from '../config/index.js';
-import { sendOTPEmail, getTransporter as getEmailTransporter } from './email.service.js';
+import { sendOTPEmail, sendEmail } from './email.service.js';
 
 /**
  * Smart Dunning Flow:
@@ -27,11 +27,6 @@ const DUNNING_EMAILS = {
   5: `Hi {{memberName}},\n\nYour membership at {{gymName}} has been suspended due to non-payment.\n\nPlease contact the gym to reinstate your membership.\n\nBest,\n{{gymName}}`,
 };
 
-function getTransporter() {
-  if (!config.email.enabled) return null;
-  return getEmailTransporter();
-}
-
 function renderTemplate(text, vars) {
   return text.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || '');
 }
@@ -52,12 +47,11 @@ async function sendDunningEmail(member, gym, step, amountPaise) {
 
   const subject = renderTemplate(schedule.emailSubject, vars);
   const body = renderTemplate(DUNNING_EMAILS[step], vars);
-  const mail = getTransporter();
 
-  if (mail) {
+  if (config.email.enabled) {
     try {
-      await mail.sendMail({
-        from: `"${gym.gym_name}" <${config.email.user}>`,
+      await sendEmail({
+        from: `${gym.gym_name} <${config.email.user}>`,
         to: member.email,
         subject,
         text: body,

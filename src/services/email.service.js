@@ -3,6 +3,26 @@ import config from '../config/index.js';
 
 let transporter;
 
+// --- Resend HTTP API (works on Railway, no SMTP needed) ---
+async function sendViaResend({ from, to, subject, text, html }) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.email.resendApiKey}`,
+    },
+    body: JSON.stringify({ from, to: [to], subject, text, html }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Resend API error ${response.status}: ${err}`);
+  }
+
+  return response.json();
+}
+
+// --- SMTP fallback (for local dev or non-Railway environments) ---
 export function getTransporter() {
   if (!transporter) {
     const provider = config.email.provider;
@@ -21,8 +41,7 @@ export function getTransporter() {
           rejectUnauthorized: false,
         },
       });
-    } else {
-      // Gmail (default)
+    } else if (provider === 'gmail') {
       transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 587,
@@ -37,11 +56,25 @@ export function getTransporter() {
   return transporter;
 }
 
-export async function sendOTPEmail(email, otp) {
-  const mail = getTransporter();
+// --- Unified send function ---
+export async function sendEmail({ from, to, subject, text, html }) {
+  // Prefer Resend (HTTP-based, works everywhere including Railway)
+  if (config.email.resendApiKey) {
+    return sendViaResend({ from, to, subject, text, html });
+  }
 
-  await mail.sendMail({
-    from: `"IVIRA" <${config.email.user}>`,
+  // Fallback to SMTP
+  const mail = getTransporter();
+  if (!mail) {
+    throw new Error('No email provider configured');
+  }
+  return mail.sendMail({ from, to, subject, text, html });
+}
+
+// --- OTP Email ---
+export async function sendOTPEmail(email, otp) {
+  await sendEmail({
+    from: `IVIRA <${config.email.user}>`,
     to: email,
     subject: 'Security Verification — IVIRA',
     text: `SECURITY VERIFICATION\n\nYour code: ${otp}\n\nEnter this code to access your IVIRA dashboard.\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, please secure your account immediately.`,

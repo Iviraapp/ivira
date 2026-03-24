@@ -1,6 +1,6 @@
 import db from '../config/database.js';
 import config from '../config/index.js';
-import { getTransporter } from './email.service.js';
+import { sendEmail } from './email.service.js';
 
 export async function sendWelcomeNotification(member, gym) {
   const loginUrl = `${config.baseUrl}/member/login`;
@@ -26,10 +26,8 @@ export async function sendWelcomeNotification(member, gym) {
   // Send Email if configured
   if (config.email.enabled && member.email) {
     try {
-      const transporter = getTransporter();
-
-      await transporter.sendMail({
-        from: `"${gym.gym_name} via IVIRA" <${config.email.user}>`,
+      await sendEmail({
+        from: `${gym.gym_name} via IVIRA <${config.email.user}>`,
         to: member.email,
         subject: `Welcome to ${gym.gym_name}!`,
         text: `Hi ${member.name},\n\n${message}\n\nYour gym is using IVIRA for a seamless experience.\n\nSee you at the gym!`,

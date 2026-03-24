@@ -43,12 +43,14 @@ const config = {
   },
 
   email: {
-    provider: process.env.EMAIL_PROVIDER || 'gmail',
-    user: process.env.EMAIL_USER || process.env.GMAIL_USER,
+    provider: process.env.EMAIL_PROVIDER || 'resend',
+    user: process.env.EMAIL_USER || process.env.GMAIL_USER || 'admin@ivira.app',
     password: process.env.EMAIL_PASSWORD || process.env.GMAIL_APP_PASSWORD,
+    resendApiKey: process.env.RESEND_API_KEY,
     enabled: !!(
-      (process.env.EMAIL_USER || process.env.GMAIL_USER) &&
-      (process.env.EMAIL_PASSWORD || process.env.GMAIL_APP_PASSWORD)
+      process.env.RESEND_API_KEY ||
+      ((process.env.EMAIL_USER || process.env.GMAIL_USER) &&
+       (process.env.EMAIL_PASSWORD || process.env.GMAIL_APP_PASSWORD))
     ),
   },
 

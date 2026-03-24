@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import db from '../config/database.js';
 import config from '../config/index.js';
-import { sendOTPEmail, getTransporter } from './email.service.js';
+import { sendOTPEmail, sendEmail } from './email.service.js';
 import jwt from 'jsonwebtoken';
 
 export async function createMagicLink(email, role = 'owner') {
@@ -43,10 +43,8 @@ export async function createMagicLink(email, role = 'owner') {
   const magicUrl = `${config.baseUrl}/auth/magic/${token}`;
 
   if (config.email.enabled) {
-    const transporter = getTransporter();
-
-    await transporter.sendMail({
-      from: `"IVIRA" <${config.email.user}>`,
+    await sendEmail({
+      from: `IVIRA <${config.email.user}>`,
       to: normalizedEmail,
       subject: 'Sign In to IVIRA — Magic Link',
       text: `Click this link to sign in: ${magicUrl}\n\nThis link expires in 5 minutes.\n\nIf you didn't request this, ignore this email.`,

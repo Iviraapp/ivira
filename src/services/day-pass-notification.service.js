@@ -2,12 +2,7 @@ import db from '../config/database.js';
 import config from '../config/index.js';
 import { sendTemplateMessage } from './whatsapp.service.js';
 import { sendSMS } from './sms.service.js';
-import { getTransporter as getEmailTransporter } from './email.service.js';
-
-function getTransporter() {
-  if (!config.email.enabled) return null;
-  return getEmailTransporter();
-}
+import { sendEmail } from './email.service.js';
 
 /**
  * Get notification settings for a gym, with defaults.
@@ -40,23 +35,20 @@ export async function notifyDayPassPurchase(dayPass) {
   // 1. Email to gym owner
   if (prefs.email_enabled && gym.owner_email) {
     try {
-      const mail = getTransporter();
-      if (mail) {
-        await mail.sendMail({
-          from: `"IVIRA" <${config.email.user}>`,
-          to: gym.owner_email,
-          subject: `New Daily Pass Purchased — ${dayPass.buyer_name}`,
-          html: buildOwnerEmailHtml({
-            ownerName: gym.owner_name,
-            gymName: gym.gym_name,
-            buyerName: dayPass.buyer_name,
-            buyerPhone: dayPass.buyer_phone,
-            amount,
-            validDate: dayPass.valid_date,
-            dashboardUrl,
-          }),
-        });
-      }
+      await sendEmail({
+        from: `IVIRA <${config.email.user}>`,
+        to: gym.owner_email,
+        subject: `New Daily Pass Purchased — ${dayPass.buyer_name}`,
+        html: buildOwnerEmailHtml({
+          ownerName: gym.owner_name,
+          gymName: gym.gym_name,
+          buyerName: dayPass.buyer_name,
+          buyerPhone: dayPass.buyer_phone,
+          amount,
+          validDate: dayPass.valid_date,
+          dashboardUrl,
+        }),
+      });
     } catch (err) {
       console.error('[DayPass] Owner email failed:', err.message);
     }

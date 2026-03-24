@@ -1,8 +1,7 @@
 import db from '../config/database.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 import config from '../config/index.js';
-import nodemailer from 'nodemailer';
-import { getTransporter as getEmailTransporter } from './email.service.js';
+import { sendEmail } from './email.service.js';
 
 const TEMPLATES = {
   en: {
@@ -266,11 +265,6 @@ function renderTemplate(text, vars, isHtml = false) {
   });
 }
 
-function getTransporter() {
-  if (!config.email.enabled) return null;
-  return getEmailTransporter();
-}
-
 export function getTemplates(lang = 'en') {
   const templates = getTemplatesForLang(lang);
   return Object.entries(templates).map(([key, val]) => ({
@@ -462,7 +456,6 @@ export async function sendNewsletter(gymId, { template, customSubject, customBod
   const baseSubject = effectiveSubject || (tmpl ? tmpl.subject : 'Update from your gym');
   const baseBody = effectiveBody || tmpl.body;
 
-  const mail = getTransporter();
   let sentCount = 0;
 
   for (const member of memberList) {
@@ -470,14 +463,13 @@ export async function sendNewsletter(gymId, { template, customSubject, customBod
     const subject = renderTemplate(baseSubject, memberVars, false);
     const body = renderTemplate(baseBody, memberVars, !!isHtml);
 
-    if (mail) {
+    if (config.email.enabled) {
       try {
         const mailOpts = {
-          from: `"${fromName || gym.gym_name}" <${config.email.user}>`,
+          from: `${fromName || gym.gym_name} <${config.email.user}>`,
           to: member.email,
           subject,
         };
-        // If body is HTML, send as HTML directly; otherwise wrap in pre-line div
         if (isHtml) {
           mailOpts.html = body;
           mailOpts.text = body.replace(/<[^>]+>/g, '');
@@ -485,10 +477,7 @@ export async function sendNewsletter(gymId, { template, customSubject, customBod
           mailOpts.text = body;
           mailOpts.html = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; white-space: pre-line;">${body}</div>`;
         }
-        if (replyTo) mailOpts.replyTo = replyTo;
-        if (cc && cc.length) mailOpts.cc = cc.join(', ');
-        if (bcc && bcc.length) mailOpts.bcc = bcc.join(', ');
-        await mail.sendMail(mailOpts);
+        await sendEmail(mailOpts);
         sentCount++;
       } catch (err) {
         console.error(`Failed to send to ${member.email}:`, err.message);
