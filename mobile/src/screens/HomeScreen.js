@@ -601,6 +601,48 @@ export default function HomeScreen({ navigation, route }) {
     }
   }, [gymId, member?.name])
 
+  // GPS proximity check-in — member taps button when near the gym
+  const [gpsChecking, setGpsChecking] = useState(false)
+  const handleGpsCheckin = useCallback(async () => {
+    if (!gymId) {
+      Alert.alert('No Gym', 'You need to be connected to a gym to check in.')
+      return
+    }
+    setGpsChecking(true)
+    try {
+      let Location
+      try { Location = require('expo-location') } catch {}
+      if (!Location) {
+        Alert.alert('Location Unavailable', 'Location services are not available on this device.')
+        return
+      }
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required for GPS check-in.')
+        return
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+      const res = await api.post(`/gyms/${gymId}/checkins/gps`, {
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      })
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      setQrModalVisible(false)
+      const name = res.data?.checkin?.member_name || member?.name || ''
+      const dist = res.data?.checkin?.distance_meters || 0
+      Alert.alert('Checked In!', `${name} — GPS check-in (${dist}m from gym)`)
+      setTimeout(() => showInterstitialAd(), 1500)
+      recordWorkout().catch(() => {})
+      refreshProfile?.()
+    } catch (err) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'GPS check-in failed'
+      Alert.alert('Check-in Failed', msg)
+    } finally {
+      setGpsChecking(false)
+    }
+  }, [gymId, member?.name])
+
   const openQRModal = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     generateQR()
@@ -1710,6 +1752,24 @@ export default function HomeScreen({ navigation, route }) {
                 </Text>
               </TouchableOpacity>
             )}
+
+            {/* GPS proximity check-in */}
+            <TouchableOpacity
+              style={[styles.nfcBtn, { backgroundColor: colors.accentSoft, marginTop: SPACING.xs }, gpsChecking && styles.nfcBtnScanning]}
+              onPress={handleGpsCheckin}
+              activeOpacity={0.7}
+              disabled={gpsChecking}
+            >
+              <Feather
+                name={gpsChecking ? 'loader' : 'map-pin'}
+                size={16}
+                color={COLORS.accent}
+                style={{ marginRight: SPACING.xs }}
+              />
+              <Text style={styles.nfcBtnText}>
+                {gpsChecking ? 'Getting location...' : 'Location Check-in'}
+              </Text>
+            </TouchableOpacity>
           </Animated.View>
         </View>
       </Modal>

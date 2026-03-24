@@ -312,6 +312,66 @@ export async function nfcCheckin(gymId, memberId, tagUid) {
   return { ...checkin, member_name: member.name, response_time_ms: responseTimeMs };
 }
 
+// GPS proximity check-in — member proves physical presence via device location
+export async function gpsCheckin(gymId, memberId, { latitude, longitude }) {
+  const [gym, member] = await Promise.all([
+    db('gyms').where({ id: gymId }).first(),
+    db('members').where({ id: memberId, gym_id: gymId }).first(),
+  ]);
+
+  if (!gym) throw new NotFoundError('Gym');
+  if (!member) throw new NotFoundError('Member not found at this gym');
+  if (member.status !== 'active') throw new ValidationError('Member is not active');
+
+  if (!gym.latitude || !gym.longitude) {
+    throw new ValidationError('Gym location not configured. Please contact the gym owner.');
+  }
+
+  // Calculate distance from gym
+  const distance = distanceMeters(
+    parseFloat(gym.latitude), parseFloat(gym.longitude),
+    latitude, longitude
+  );
+
+  const radiusM = config.app.gpsRadiusMeters || 150;
+  if (distance > radiusM) {
+    throw new ValidationError(
+      `You're ${Math.round(distance)}m from the gym. You need to be within ${radiusM}m to check in.`
+    );
+  }
+
+  // Duplicate detection (10 min)
+  const recentCheckin = await db('checkins')
+    .where({ member_id: memberId, gym_id: gymId })
+    .where('checked_in_at', '>', new Date(Date.now() - 10 * 60 * 1000))
+    .first();
+
+  if (recentCheckin) {
+    throw new ValidationError('Already checked in within the last 10 minutes');
+  }
+
+  const [checkin] = await db('checkins')
+    .insert({
+      member_id: memberId,
+      gym_id: gymId,
+      method: 'gps',
+      latitude,
+      longitude,
+      distance_meters: Math.round(distance * 100) / 100,
+      gps_valid: true,
+    })
+    .returning('*');
+
+  // Fire-and-forget
+  recordCheckinEvent(gymId, memberId, member.name, 'gps').catch(() => {});
+  import('../services/whatsapp.service.js').then(({ sendCheckInAlert }) => {
+    sendCheckInAlert(member, gym).catch(() => {});
+  }).catch(() => {});
+  sendAffiliatePromo(member, gym).catch(() => {});
+
+  return { ...checkin, member_name: member.name, distance_meters: Math.round(distance) };
+}
+
 // Check-in affiliate promotion hook
 async function sendAffiliatePromo(member, gym) {
   try {

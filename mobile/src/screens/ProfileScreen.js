@@ -92,6 +92,7 @@ const CHECKIN_METHOD_LABELS = {
   nfc: 'NFC',
   manual: 'Manual',
   otp: 'OTP',
+  gps: 'GPS',
 }
 
 const CHECKIN_METHOD_ICONS = {
@@ -99,6 +100,7 @@ const CHECKIN_METHOD_ICONS = {
   nfc: 'wifi',
   manual: 'edit-3',
   otp: 'hash',
+  gps: 'map-pin',
 }
 
 export default function ProfileScreen({ navigation }) {

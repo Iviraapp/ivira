@@ -247,6 +247,24 @@ function AICoachButton() {
 function FloatingTabBar({ state, descriptors, navigation }) {
   const icons = { Home: 'home', Health: 'heart', Community: 'users', Profile: 'user' }
   const { isDark, colors } = useTheme()
+  const lastTapRef = useRef({})
+
+  const handleTabPress = (route, isFocused) => {
+    const now = Date.now()
+    const lastTap = lastTapRef.current[route.name] || 0
+
+    if (isFocused && now - lastTap < 300) {
+      // Double-tap on active tab → reset to root screen
+      navigation.navigate(route.name, { screen: route.name + 'Main' })
+    } else if (isFocused) {
+      // Single tap on active tab → also reset to root
+      navigation.navigate(route.name, { screen: route.name + 'Main' })
+    } else {
+      navigation.navigate(route.name)
+    }
+
+    lastTapRef.current[route.name] = now
+  }
 
   const content = (
     <View style={styles.floatingInner}>
@@ -262,7 +280,7 @@ function FloatingTabBar({ state, descriptors, navigation }) {
           <React.Fragment key={route.key}>
             {isMiddle && <View style={styles.fabSpacer} />}
             <TouchableOpacity
-              onPress={() => navigation.navigate(route.name)}
+              onPress={() => handleTabPress(route, isFocused)}
               style={styles.floatingTab}
               activeOpacity={0.7}
             >

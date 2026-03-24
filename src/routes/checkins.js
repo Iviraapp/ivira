@@ -122,6 +122,28 @@ export default async function checkinRoutes(fastify) {
     return reply.code(201).send({ checkin });
   });
 
+  // GPS proximity check-in (member auth — member is physically near the gym)
+  fastify.post('/gyms/:gymId/checkins/gps', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['latitude', 'longitude'],
+        properties: {
+          latitude: { type: 'number' },
+          longitude: { type: 'number' },
+        },
+      },
+    },
+    preHandler: [verifyMemberToken],
+  }, async (request, reply) => {
+    const checkin = await checkinService.gpsCheckin(
+      request.params.gymId,
+      request.member.memberId,
+      { latitude: request.body.latitude, longitude: request.body.longitude }
+    );
+    return reply.code(201).send({ checkin });
+  });
+
   // NFC tap check-in (member auth — member taps phone on gym's NFC kiosk)
   // Flow: member opens app → taps NFC → phone reads kiosk tag UID →
   //       app sends tag UID + member identity (from JWT) → backend verifies + checks in
