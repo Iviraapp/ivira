@@ -1,28 +1,37 @@
 /**
- * Add 'gps' and 'nfc' to checkins.method enum
+ * Add 'gps' and 'nfc' to checkins.method — handles both enum types and CHECK constraints
  */
 export async function up(knex) {
-  // PostgreSQL: alter enum type to add new values
-  await knex.raw(`ALTER TYPE checkins_method_enum ADD VALUE IF NOT EXISTS 'nfc'`).catch(() => {});
-  await knex.raw(`ALTER TYPE checkins_method_enum ADD VALUE IF NOT EXISTS 'gps'`).catch(() => {});
+  // Strategy: Drop the CHECK constraint and re-add with all methods.
+  // Knex creates CHECK constraints (not named enums) for .enum() columns.
 
-  // If the column isn't using a named enum (some knex versions use inline CHECK constraints),
-  // drop the constraint and re-add it with all values
+  // First, find and drop any existing CHECK constraint on the method column
+  const constraintResult = await knex.raw(`
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_attribute att ON att.attrelid = rel.oid AND att.attnum = ANY(con.conkey)
+    WHERE rel.relname = 'checkins'
+      AND att.attname = 'method'
+      AND con.contype = 'c'
+  `);
+
+  for (const row of constraintResult.rows) {
+    await knex.raw(`ALTER TABLE checkins DROP CONSTRAINT IF EXISTS "${row.conname}"`);
+  }
+
+  // Re-add with all methods including nfc and gps
   await knex.raw(`
-    DO $$
-    BEGIN
-      -- Try dropping any CHECK constraint on method
-      ALTER TABLE checkins DROP CONSTRAINT IF EXISTS checkins_method_check;
-      -- Re-add with all methods
-      ALTER TABLE checkins ADD CONSTRAINT checkins_method_check
-        CHECK (method IN ('qr', 'otp', 'manual', 'nfc', 'gps'));
-    EXCEPTION WHEN others THEN
-      -- Constraint might not exist or column uses enum type — ignore
-      NULL;
-    END $$;
+    ALTER TABLE checkins ADD CONSTRAINT checkins_method_check
+    CHECK (method IN ('qr', 'otp', 'manual', 'nfc', 'gps'))
   `);
 }
 
 export async function down(knex) {
-  // Cannot remove enum values in PostgreSQL; just leave them
+  // Revert to original methods
+  await knex.raw(`ALTER TABLE checkins DROP CONSTRAINT IF EXISTS checkins_method_check`);
+  await knex.raw(`
+    ALTER TABLE checkins ADD CONSTRAINT checkins_method_check
+    CHECK (method IN ('qr', 'otp', 'manual'))
+  `);
 }
