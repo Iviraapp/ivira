@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { StackActions } from '@react-navigation/native'
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Animated, Dimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
@@ -247,23 +248,20 @@ function AICoachButton() {
 function FloatingTabBar({ state, descriptors, navigation }) {
   const icons = { Home: 'home', Health: 'heart', Community: 'users', Profile: 'user' }
   const { isDark, colors } = useTheme()
-  const lastTapRef = useRef({})
 
-  const handleTabPress = (route, isFocused) => {
-    const now = Date.now()
-    const lastTap = lastTapRef.current[route.name] || 0
-
-    if (isFocused && now - lastTap < 300) {
-      // Double-tap on active tab → reset to root screen
-      navigation.navigate(route.name, { screen: route.name + 'Main' })
-    } else if (isFocused) {
-      // Single tap on active tab → also reset to root
-      navigation.navigate(route.name, { screen: route.name + 'Main' })
+  const handleTabPress = (route, isFocused, index) => {
+    if (isFocused) {
+      // Tap on active tab → pop nested stack to root screen
+      const nestedState = state.routes[index]?.state
+      if (nestedState && nestedState.index > 0) {
+        navigation.dispatch({
+          ...StackActions.popToTop(),
+          target: nestedState.key,
+        })
+      }
     } else {
       navigation.navigate(route.name)
     }
-
-    lastTapRef.current[route.name] = now
   }
 
   const content = (
@@ -280,7 +278,7 @@ function FloatingTabBar({ state, descriptors, navigation }) {
           <React.Fragment key={route.key}>
             {isMiddle && <View style={styles.fabSpacer} />}
             <TouchableOpacity
-              onPress={() => handleTabPress(route, isFocused)}
+              onPress={() => handleTabPress(route, isFocused, index)}
               style={styles.floatingTab}
               activeOpacity={0.7}
             >
