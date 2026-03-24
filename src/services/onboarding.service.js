@@ -1,5 +1,6 @@
 import db from '../config/database.js';
 import config from '../config/index.js';
+import { getTransporter } from './email.service.js';
 
 export async function sendWelcomeNotification(member, gym) {
   const loginUrl = `${config.baseUrl}/member/login`;
@@ -23,16 +24,12 @@ export async function sendWelcomeNotification(member, gym) {
   }
 
   // Send Email if configured
-  if (config.gmail.enabled && member.email) {
+  if (config.email.enabled && member.email) {
     try {
-      const nodemailer = (await import('nodemailer')).default;
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com', port: 587, secure: false,
-        auth: { user: config.gmail.user, pass: config.gmail.appPassword },
-      });
+      const transporter = getTransporter();
 
       await transporter.sendMail({
-        from: `"${gym.gym_name} via IVIRA" <${config.gmail.user}>`,
+        from: `"${gym.gym_name} via IVIRA" <${config.email.user}>`,
         to: member.email,
         subject: `Welcome to ${gym.gym_name}!`,
         text: `Hi ${member.name},\n\n${message}\n\nYour gym is using IVIRA for a seamless experience.\n\nSee you at the gym!`,

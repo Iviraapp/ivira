@@ -2,6 +2,7 @@ import db from '../config/database.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 import config from '../config/index.js';
 import nodemailer from 'nodemailer';
+import { getTransporter as getEmailTransporter } from './email.service.js';
 
 const TEMPLATES = {
   en: {
@@ -265,17 +266,9 @@ function renderTemplate(text, vars, isHtml = false) {
   });
 }
 
-let transporter;
 function getTransporter() {
-  if (!transporter && config.gmail.enabled) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: config.gmail.user, pass: config.gmail.appPassword },
-    });
-  }
-  return transporter;
+  if (!config.email.enabled) return null;
+  return getEmailTransporter();
 }
 
 export function getTemplates(lang = 'en') {
@@ -480,7 +473,7 @@ export async function sendNewsletter(gymId, { template, customSubject, customBod
     if (mail) {
       try {
         const mailOpts = {
-          from: `"${fromName || gym.gym_name}" <${config.gmail.user}>`,
+          from: `"${fromName || gym.gym_name}" <${config.email.user}>`,
           to: member.email,
           subject,
         };

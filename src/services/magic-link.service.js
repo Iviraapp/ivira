@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import db from '../config/database.js';
 import config from '../config/index.js';
-import { sendOTPEmail } from './email.service.js';
+import { sendOTPEmail, getTransporter } from './email.service.js';
 import jwt from 'jsonwebtoken';
 
 export async function createMagicLink(email, role = 'owner') {
@@ -42,19 +42,11 @@ export async function createMagicLink(email, role = 'owner') {
   // Send email with magic link
   const magicUrl = `${config.baseUrl}/auth/magic/${token}`;
 
-  if (config.gmail.enabled) {
-    const mail = (await import('./email.service.js')).default;
-    // Use the existing email service pattern
-    const nodemailer = (await import('nodemailer')).default;
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: config.gmail.user, pass: config.gmail.appPassword },
-    });
+  if (config.email.enabled) {
+    const transporter = getTransporter();
 
     await transporter.sendMail({
-      from: `"IVIRA" <${config.gmail.user}>`,
+      from: `"IVIRA" <${config.email.user}>`,
       to: normalizedEmail,
       subject: 'Sign In to IVIRA — Magic Link',
       text: `Click this link to sign in: ${magicUrl}\n\nThis link expires in 5 minutes.\n\nIf you didn't request this, ignore this email.`,

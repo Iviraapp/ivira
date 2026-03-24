@@ -42,10 +42,14 @@ const config = {
     senderId: process.env.SMS_SENDER_ID || 'IVIRA',
   },
 
-  gmail: {
-    user: process.env.GMAIL_USER,
-    appPassword: process.env.GMAIL_APP_PASSWORD,
-    enabled: !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD),
+  email: {
+    provider: process.env.EMAIL_PROVIDER || 'gmail',
+    user: process.env.EMAIL_USER || process.env.GMAIL_USER,
+    password: process.env.EMAIL_PASSWORD || process.env.GMAIL_APP_PASSWORD,
+    enabled: !!(
+      (process.env.EMAIL_USER || process.env.GMAIL_USER) &&
+      (process.env.EMAIL_PASSWORD || process.env.GMAIL_APP_PASSWORD)
+    ),
   },
 
   jwt: {

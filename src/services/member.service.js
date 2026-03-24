@@ -174,7 +174,7 @@ export async function requestMemberOTP(gymId, email) {
   const redisKey = `otp:member:${gymId}:${normalizedEmail}`;
   await redis.set(redisKey, otp, { EX: 300 });
 
-  if (config.gmail.enabled) {
+  if (config.email.enabled) {
     const { sendOTPEmail: sendEmail } = await import('./email.service.js');
     await sendEmail(normalizedEmail, otp);
   } else {

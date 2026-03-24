@@ -1,7 +1,6 @@
 import db from '../config/database.js';
 import config from '../config/index.js';
-import { sendOTPEmail } from './email.service.js';
-import nodemailer from 'nodemailer';
+import { sendOTPEmail, getTransporter as getEmailTransporter } from './email.service.js';
 
 /**
  * Smart Dunning Flow:
@@ -28,17 +27,9 @@ const DUNNING_EMAILS = {
   5: `Hi {{memberName}},\n\nYour membership at {{gymName}} has been suspended due to non-payment.\n\nPlease contact the gym to reinstate your membership.\n\nBest,\n{{gymName}}`,
 };
 
-let transporter;
 function getTransporter() {
-  if (!transporter && config.gmail.enabled) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: config.gmail.user, pass: config.gmail.appPassword },
-    });
-  }
-  return transporter;
+  if (!config.email.enabled) return null;
+  return getEmailTransporter();
 }
 
 function renderTemplate(text, vars) {
@@ -66,7 +57,7 @@ async function sendDunningEmail(member, gym, step, amountPaise) {
   if (mail) {
     try {
       await mail.sendMail({
-        from: `"${gym.gym_name}" <${config.gmail.user}>`,
+        from: `"${gym.gym_name}" <${config.email.user}>`,
         to: member.email,
         subject,
         text: body,

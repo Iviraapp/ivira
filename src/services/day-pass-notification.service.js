@@ -2,19 +2,11 @@ import db from '../config/database.js';
 import config from '../config/index.js';
 import { sendTemplateMessage } from './whatsapp.service.js';
 import { sendSMS } from './sms.service.js';
-import nodemailer from 'nodemailer';
+import { getTransporter as getEmailTransporter } from './email.service.js';
 
-let transporter;
 function getTransporter() {
-  if (!transporter && config.gmail.enabled) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: config.gmail.user, pass: config.gmail.appPassword },
-    });
-  }
-  return transporter;
+  if (!config.email.enabled) return null;
+  return getEmailTransporter();
 }
 
 /**
@@ -51,7 +43,7 @@ export async function notifyDayPassPurchase(dayPass) {
       const mail = getTransporter();
       if (mail) {
         await mail.sendMail({
-          from: `"IVIRA" <${config.gmail.user}>`,
+          from: `"IVIRA" <${config.email.user}>`,
           to: gym.owner_email,
           subject: `New Daily Pass Purchased — ${dayPass.buyer_name}`,
           html: buildOwnerEmailHtml({

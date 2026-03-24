@@ -3,17 +3,36 @@ import config from '../config/index.js';
 
 let transporter;
 
-function getTransporter() {
+export function getTransporter() {
   if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: config.gmail.user,
-        pass: config.gmail.appPassword,
-      },
-    });
+    const provider = config.email.provider;
+
+    if (provider === 'microsoft') {
+      transporter = nodemailer.createTransport({
+        host: 'smtp.office365.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: config.email.user,
+          pass: config.email.password,
+        },
+        tls: {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false,
+        },
+      });
+    } else {
+      // Gmail (default)
+      transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: config.email.user,
+          pass: config.email.password,
+        },
+      });
+    }
   }
   return transporter;
 }
@@ -22,7 +41,7 @@ export async function sendOTPEmail(email, otp) {
   const mail = getTransporter();
 
   await mail.sendMail({
-    from: `"IVIRA" <${config.gmail.user}>`,
+    from: `"IVIRA" <${config.email.user}>`,
     to: email,
     subject: 'Security Verification — IVIRA',
     text: `SECURITY VERIFICATION\n\nYour code: ${otp}\n\nEnter this code to access your IVIRA dashboard.\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, please secure your account immediately.`,

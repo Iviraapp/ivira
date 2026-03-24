@@ -81,7 +81,7 @@ export async function requestEmailOTP(email) {
   await redis.set(redisKey, otp, { EX: 300 });
 
   // Send OTP via email
-  if (config.gmail.enabled) {
+  if (config.email.enabled) {
     await sendOTPEmail(normalizedEmail, otp);
   } else {
     // Dev mode: log OTP to console
@@ -173,7 +173,7 @@ export async function requestB2CLoginOTP(email) {
   await redis.set(redisKey, otp, { EX: 300 });
 
   // Send OTP via email
-  if (config.gmail.enabled) {
+  if (config.email.enabled) {
     await sendOTPEmail(normalizedEmail, otp);
   } else {
     console.log(`[DEV] B2C OTP for ${normalizedEmail}: ${otp}`);
