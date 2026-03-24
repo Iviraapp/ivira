@@ -20,11 +20,6 @@ import { useTheme } from '../context/ThemeContext'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { recordMeal } from '../lib/SmartNotificationEngine'
-import {
-  DEMO_DAILY_NUTRITION,
-  DEMO_WEEKLY_NUTRITION,
-  DEMO_NUTRITION_GOAL,
-} from '../lib/demoData'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const RING_SIZE = 160
@@ -103,7 +98,7 @@ const typingStyles = StyleSheet.create({
 })
 
 export default function NutritionScreen({ navigation }) {
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
   const { colors, card } = useTheme()
 
   const [daily, setDaily] = useState(null)
@@ -152,13 +147,6 @@ export default function NutritionScreen({ navigation }) {
 
   const loadData = async () => {
     setLoading(true)
-    if (isDemo) {
-      setDaily(DEMO_DAILY_NUTRITION)
-      setWeekly(DEMO_WEEKLY_NUTRITION)
-      setGoal(DEMO_NUTRITION_GOAL)
-      setLoading(false)
-      return
-    }
     try {
       const today = new Date().toISOString().split('T')[0]
       const [dailyRes, weeklyRes, goalRes] = await Promise.all([
@@ -170,10 +158,10 @@ export default function NutritionScreen({ navigation }) {
       setWeekly(weeklyRes.data)
       setGoal(goalRes.data)
     } catch (err) {
-      // Fallback to demo data on error
-      setDaily(DEMO_DAILY_NUTRITION)
-      setWeekly(DEMO_WEEKLY_NUTRITION)
-      setGoal(DEMO_NUTRITION_GOAL)
+      // Show zeros on error
+      setDaily({ totals: { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }, meals: [] })
+      setWeekly({ days: [] })
+      setGoal(null)
     } finally {
       setLoading(false)
     }
@@ -186,22 +174,11 @@ export default function NutritionScreen({ navigation }) {
     }
     setEstimating(true)
     try {
-      let result
-      if (isDemo) {
-        // Simulate AI estimation
-        result = {
-          items: [
-            { name: logText.trim(), quantity: 1, unit: 'serving', calories: 320, protein: 12, carbs: 45, fats: 10, fiber: 4 },
-          ],
-          total: { calories: 320, protein: 12, carbs: 45, fats: 10, fiber: 4 },
-        }
-      } else {
-        const res = await api.post(`/gyms/${gymId}/nutrition/estimate`, {
-          input: logText.trim(),
-          source: 'ai',
-        })
-        result = res.data
-      }
+      const res = await api.post(`/gyms/${gymId}/nutrition/estimate`, {
+        input: logText.trim(),
+        source: 'ai',
+      })
+      const result = res.data
       setEstimatedItems(result.items || [])
       setEstimatedTotal(result.total || {})
       setShowReview(true)
@@ -211,19 +188,17 @@ export default function NutritionScreen({ navigation }) {
     } finally {
       setEstimating(false)
     }
-  }, [logText, gymId, isDemo])
+  }, [logText, gymId])
 
   const handleSaveMeal = useCallback(async () => {
     setSaving(true)
     try {
-      if (!isDemo) {
-        await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
-          mealType: logMealType,
-          rawInput: logText.trim(),
-          items: estimatedItems,
-          source: 'ai',
-        })
-      }
+      await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
+        mealType: logMealType,
+        rawInput: logText.trim(),
+        items: estimatedItems,
+        source: 'ai',
+      })
       // Record pattern for smart notifications
       recordMeal(logMealType).catch(() => {})
       // Update local state
@@ -268,7 +243,7 @@ export default function NutritionScreen({ navigation }) {
     } finally {
       setSaving(false)
     }
-  }, [logText, logMealType, estimatedItems, estimatedTotal, gymId, member?.id, isDemo, daily, goal])
+  }, [logText, logMealType, estimatedItems, estimatedTotal, gymId, member?.id, daily, goal])
 
   if (loading) {
     return (

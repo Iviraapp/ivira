@@ -5,48 +5,6 @@ import api from '../lib/api'
 
 const AuthContext = createContext(null)
 
-// Demo data for testing without a backend
-const DEMO_MEMBER = {
-  id: 'demo-001',
-  name: 'Arjun Mehta',
-  phone: '+919876543210',
-  email: 'arjun@demo.com',
-  plan_name: 'Pro Quarterly',
-  status: 'active',
-  membership_start: '2025-12-01',
-  membership_end: '2026-06-01',
-  total_checkins: 142,
-  monthly_checkins: 18,
-  streak: 7,
-  joined_at: '2024-08-15',
-  gymId: 'demo-gym',
-}
-
-// Default member for B2C users who sign up without a gym
-const GLOBAL_MEMBER = {
-  id: 'global-001',
-  name: '',
-  phone: '',
-  email: '',
-  plan_name: 'Free',
-  status: 'active',
-  membership_start: new Date().toISOString().split('T')[0],
-  membership_end: null,
-  total_checkins: 0,
-  monthly_checkins: 0,
-  streak: 0,
-  joined_at: new Date().toISOString().split('T')[0],
-}
-
-const DEMO_GYM = {
-  id: 'demo-gym',
-  gym_name: 'Iron Temple Fitness',
-  city: 'Bengaluru',
-  area: 'Koramangala',
-  accent_color: '#0052FF',
-  phone: '+919900112233',
-}
-
 export function AuthProvider({ children }) {
   const [member, setMember] = useState(null)
   const [gymId, setGymId] = useState(null)
@@ -55,7 +13,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [biometricAvailable, setBiometricAvailable] = useState(false)
   const [biometricEnabled, setBiometricEnabledState] = useState(false)
-  const [isDemo, setIsDemo] = useState(false)
 
   useEffect(() => {
     restoreSession()
@@ -84,16 +41,12 @@ export function AuthProvider({ children }) {
       const storedToken = await getItem('ivira_member_token')
       const storedGymId = await getItem('ivira_gym_id')
       const storedMember = await getItem('ivira_member_data')
-      const storedDemo = await getItem('ivira_demo_mode')
       const storedBiometric = await getItem('ivira_biometric_enabled')
 
-      if (storedDemo === 'true') {
-        setIsDemo(true)
-        setToken('demo-token')
-        setGymId('demo-gym')
-        setMember(DEMO_MEMBER)
-        setGymInfo(DEMO_GYM)
-      } else if (storedToken && storedGymId) {
+      // Clean up any leftover demo mode from previous versions
+      await deleteItem('ivira_demo_mode')
+
+      if (storedToken && storedGymId) {
         setToken(storedToken)
         setGymId(storedGymId)
         if (storedMember) setMember(JSON.parse(storedMember))
@@ -146,15 +99,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const loginDemo = useCallback(async () => {
-    await setItem('ivira_demo_mode', 'true')
-    setIsDemo(true)
-    setToken('demo-token')
-    setGymId('demo-gym')
-    setMember(DEMO_MEMBER)
-    setGymInfo(DEMO_GYM)
-  }, [])
-
   const login = useCallback(async (gymIdVal, phone, otpCode) => {
     const res = await api.post(`/gyms/${gymIdVal}/members/otp/verify`, {
       phone,
@@ -203,96 +147,68 @@ export function AuthProvider({ children }) {
     await deleteItem('ivira_member_token')
     await deleteItem('ivira_gym_id')
     await deleteItem('ivira_member_data')
-    await deleteItem('ivira_demo_mode')
     setToken(null)
     setGymId(null)
     setMember(null)
     setGymInfo(null)
-    setIsDemo(false)
   }, [])
 
   // B2C: request OTP for email-based login
   const requestOtp = useCallback(async (email) => {
     await setItem('ivira_pending_email', email)
-    try {
-      const res = await api.post('/auth/b2c/otp/request', { email })
-      return { success: true, message: res.data?.message }
-    } catch (err) {
-      // If backend is unreachable, fall back to mock for dev/QA
-      if (!err.response) {
-        console.warn('[Auth] Backend unreachable, using mock OTP flow')
-        return { success: true, mock: true }
-      }
-      throw err
-    }
+    const res = await api.post('/auth/b2c/otp/request', { email })
+    return { success: true, message: res.data?.message }
   }, [])
 
   // B2C: verify OTP for email-based login
   const verifyOtp = useCallback(async (email, otp) => {
-    try {
-      const res = await api.post('/auth/b2c/otp/verify', { email, otp })
-      const { token: newToken, member: memberData, gymId: resolvedGymId } = res.data
+    const res = await api.post('/auth/b2c/otp/verify', { email, otp })
+    const { token: newToken, member: memberData, gymId: resolvedGymId } = res.data
 
-      await setItem('ivira_member_token', newToken)
-      await setItem('ivira_gym_id', resolvedGymId || '')
-      await setItem('ivira_member_data', JSON.stringify(memberData))
-      await deleteItem('ivira_pending_email')
+    await setItem('ivira_member_token', newToken)
+    await setItem('ivira_gym_id', resolvedGymId || '')
+    await setItem('ivira_member_data', JSON.stringify(memberData))
+    await deleteItem('ivira_pending_email')
 
-      setToken(newToken)
-      setGymId(resolvedGymId || null)
-      setMember(memberData)
-      setGymInfo(null)
-      setIsDemo(false)
+    setToken(newToken)
+    setGymId(resolvedGymId || null)
+    setMember(memberData)
+    setGymInfo(null)
 
-      // Fetch gym info if linked
-      if (resolvedGymId) {
-        try {
-          const gymRes = await api.get(`/gyms/${resolvedGymId}`)
-          setGymInfo(gymRes.data?.gym || gymRes.data)
-        } catch {}
-      }
-    } catch (err) {
-      // Fallback: accept mock OTP 123456 when backend is unreachable
-      if (!err.response && otp === '123456') {
-        console.warn('[Auth] Backend unreachable, using mock OTP verification')
-        const newToken = `b2c-token-${Date.now()}`
-        const memberData = { ...GLOBAL_MEMBER, email }
-
-        await setItem('ivira_member_token', newToken)
-        await setItem('ivira_gym_id', '')
-        await setItem('ivira_member_data', JSON.stringify(memberData))
-        await deleteItem('ivira_pending_email')
-
-        setToken(newToken)
-        setGymId(null)
-        setMember(memberData)
-        setGymInfo(null)
-        setIsDemo(false)
-        return
-      }
-      throw err
+    // Fetch gym info if linked
+    if (resolvedGymId) {
+      try {
+        const gymRes = await api.get(`/gyms/${resolvedGymId}`)
+        setGymInfo(gymRes.data?.gym || gymRes.data)
+      } catch {}
     }
   }, [])
 
-  // B2C: connect to a gym via gym code
+  // B2C: connect to a gym via invite code
   const connectGym = useCallback(async (gymCode) => {
-    // TODO: POST /api/auth/connect-gym with gymCode
-    // For now, mock — set gymId and fetch gym info
-    const resolvedGymId = gymCode
+    const res = await api.post('/auth/connect-gym', { code: gymCode })
+    const { token: newToken, gymId: resolvedGymId, gymName } = res.data
 
+    // Store new token with gymId claim
+    await setItem('ivira_member_token', newToken)
     await setItem('ivira_gym_id', resolvedGymId)
+
+    setToken(newToken)
     setGymId(resolvedGymId)
 
+    // Fetch full gym info
     try {
       const gymRes = await api.get(`/gyms/${resolvedGymId}`)
       setGymInfo(gymRes.data?.gym || gymRes.data)
-    } catch {}
+    } catch {
+      setGymInfo({ id: resolvedGymId, gym_name: gymName })
+    }
   }, [])
 
-  const hasGym = gymId !== null
+  const hasGym = gymId !== null && gymId !== ''
+  const isDemo = false // Demo mode removed — always real data
 
   const refreshProfile = useCallback(async () => {
-    if (isDemo) return
     if (!gymId) return
     try {
       const res = await api.get(`/gyms/${gymId}/members/me`)
@@ -300,7 +216,7 @@ export function AuthProvider({ children }) {
       setMember(memberData)
       await setItem('ivira_member_data', JSON.stringify(memberData))
     } catch {}
-  }, [gymId, isDemo])
+  }, [gymId])
 
   return (
     <AuthContext.Provider value={{
@@ -316,7 +232,6 @@ export function AuthProvider({ children }) {
       hasGym,
       login,
       loginWithEmail,
-      loginDemo,
       logout,
       refreshProfile,
       authenticateWithBiometrics,

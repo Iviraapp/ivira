@@ -120,20 +120,6 @@ const WEEKLY_CHALLENGES = [
   },
 ]
 
-const DEMO_PROGRESS = {
-  d1: 5,
-  d2: 10,
-  d3: 6500,
-  d4: 50,
-  d5: 90,
-  w1: 3,
-  w2: 2,
-  w3: 4,
-}
-
-const DEMO_XP = 1450
-const DEMO_STREAK = 7
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -180,7 +166,7 @@ function getTodayKey() {
 export default function ChallengesScreen({ navigation }) {
   const insets = useSafeAreaInsets()
   const { colors, card } = useTheme()
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
 
   const [progress, setProgress] = useState({})
   const [totalXp, setTotalXp] = useState(0)
@@ -238,15 +224,6 @@ export default function ChallengesScreen({ navigation }) {
 
   const loadProgress = useCallback(async () => {
     try {
-      if (isDemo) {
-        setProgress(DEMO_PROGRESS)
-        setTotalXp(DEMO_XP)
-        setStreak(DEMO_STREAK)
-        setLoading(false)
-        runEntranceAnimations(DEMO_XP)
-        return
-      }
-
       // Try backend API first if authenticated
       if (gymId && member?.id) {
         try {
@@ -297,7 +274,7 @@ export default function ChallengesScreen({ navigation }) {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [isDemo, gymId, member?.id, loadFromAsyncStorage])
+  }, [gymId, member?.id, loadFromAsyncStorage])
 
   function calculateTotalXp(prog) {
     let xp = 0
@@ -312,8 +289,6 @@ export default function ChallengesScreen({ navigation }) {
 
   const saveProgress = useCallback(
     async (newProgress, newXp, challengeId, increment) => {
-      if (isDemo) return
-
       // Try backend API first
       if (gymId && member?.id && challengeId && increment) {
         try {
@@ -354,7 +329,7 @@ export default function ChallengesScreen({ navigation }) {
         console.warn('ChallengesScreen: save error', e)
       }
     },
-    [isDemo, gymId, member?.id]
+    [gymId, member?.id]
   )
 
   // -----------------------------------------------------------------------

@@ -14,11 +14,6 @@ import { COLORS, SPACING, RADIUS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import {
-  DEMO_LIVE_MEMBERS,
-  DEMO_LEADERBOARD,
-  DEMO_FEED,
-} from '../lib/demoData'
 
 const LEADERBOARD_TABS = ['Consistency', 'Strength', 'Points']
 
@@ -118,7 +113,7 @@ function getTimeAgo(timestamp) {
 }
 
 export default function SocialScreen() {
-  const { gymId, isDemo, member } = useAuth()
+  const { gymId, member } = useAuth()
   const { colors } = useTheme()
 
   const [liveMembers, setLiveMembers] = useState([])
@@ -129,13 +124,6 @@ export default function SocialScreen() {
   const [refreshing, setRefreshing] = useState(false)
 
   const fetchAll = useCallback(async () => {
-    if (isDemo) {
-      setLiveMembers(DEMO_LIVE_MEMBERS)
-      setLeaderboard(DEMO_LEADERBOARD)
-      setFeed(DEMO_FEED.map(f => ({ ...f })))
-      setLoading(false)
-      return
-    }
     if (!gymId) return
 
     try {
@@ -148,26 +136,26 @@ export default function SocialScreen() {
       setLiveMembers(
         liveRes.status === 'fulfilled'
           ? liveRes.value.data?.members || liveRes.value.data || []
-          : DEMO_LIVE_MEMBERS
+          : []
       )
       setLeaderboard(
         leaderRes.status === 'fulfilled'
           ? leaderRes.value.data?.leaderboard || leaderRes.value.data || []
-          : DEMO_LEADERBOARD
+          : []
       )
       setFeed(
         feedRes.status === 'fulfilled'
           ? (feedRes.value.data?.feed || feedRes.value.data || []).map(f => ({ ...f }))
-          : DEMO_FEED.map(f => ({ ...f }))
+          : []
       )
     } catch {
-      setLiveMembers(DEMO_LIVE_MEMBERS)
-      setLeaderboard(DEMO_LEADERBOARD)
-      setFeed(DEMO_FEED.map(f => ({ ...f })))
+      setLiveMembers([])
+      setLeaderboard([])
+      setFeed([])
     } finally {
       setLoading(false)
     }
-  }, [gymId, isDemo, activeTab])
+  }, [gymId, activeTab])
 
   useEffect(() => {
     fetchAll()
@@ -180,18 +168,14 @@ export default function SocialScreen() {
   }, [fetchAll])
 
   const fetchLeaderboard = useCallback(async (tab) => {
-    if (isDemo) {
-      setLeaderboard(DEMO_LEADERBOARD)
-      return
-    }
     if (!gymId) return
     try {
       const res = await api.get(`/gyms/${gymId}/leaderboard?type=${tab.toLowerCase()}`)
       setLeaderboard(res.data?.leaderboard || res.data || [])
     } catch {
-      setLeaderboard(DEMO_LEADERBOARD)
+      setLeaderboard([])
     }
-  }, [gymId, isDemo])
+  }, [gymId])
 
   const handleTabChange = useCallback((tab) => {
     setActiveTab(tab)

@@ -680,7 +680,7 @@ function RecipeDetailModal({ recipe, visible, onClose, isFavorite, onToggleFavor
 // ─── Main Screen ─────────────────────────────────────────────
 export default function RecipeScreen() {
   const { colors, isDark } = useTheme()
-  const { isDemo, member, gymId } = useAuth()
+  const { member, gymId } = useAuth()
 
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
@@ -688,7 +688,7 @@ export default function RecipeScreen() {
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [recipes, setRecipes] = useState(DEMO_RECIPES)
+  const [recipes, setRecipes] = useState([])
 
   // Helper to map backend recipe to the format the UI expects
   const mapBackendRecipe = (r) => ({
@@ -710,7 +710,6 @@ export default function RecipeScreen() {
 
   // Fetch recipes from backend
   const fetchRecipes = useCallback(async () => {
-    if (isDemo) return
     try {
       const params = {}
       if (activeCategory !== 'all') params.category = activeCategory
@@ -723,7 +722,7 @@ export default function RecipeScreen() {
     } catch (e) {
       // Fallback: keep existing recipes (DEMO_RECIPES on first load)
     }
-  }, [isDemo, activeCategory, search])
+  }, [activeCategory, search])
 
   // Load recipes from backend on mount and when filters change
   useEffect(() => {
@@ -733,11 +732,11 @@ export default function RecipeScreen() {
   // Load favorites from backend (with AsyncStorage fallback)
   useEffect(() => {
     loadFavorites()
-  }, [isDemo, gymId, member?.id])
+  }, [gymId, member?.id])
 
   const loadFavorites = async () => {
     // Try backend first
-    if (!isDemo && gymId && member?.id) {
+    if (gymId && member?.id) {
       try {
         const res = await api.get(`/gyms/${gymId}/members/${member.id}/recipes/favorites`)
         const data = res.data?.data ?? res.data?.favorites ?? res.data
@@ -779,7 +778,7 @@ export default function RecipeScreen() {
     saveFavorites(next)
 
     // Sync with backend
-    if (!isDemo && gymId && member?.id) {
+    if (gymId && member?.id) {
       try {
         if (isFav) {
           await api.delete(`/gyms/${gymId}/members/${member.id}/recipes/favorites/${recipeId}`)
@@ -792,20 +791,13 @@ export default function RecipeScreen() {
         saveFavorites(favorites)
       }
     }
-  }, [favorites, isDemo, gymId, member?.id])
+  }, [favorites, gymId, member?.id])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
-    if (isDemo) {
-      setTimeout(() => {
-        setRecipes([...DEMO_RECIPES])
-        setRefreshing(false)
-      }, 800)
-    } else {
-      await fetchRecipes()
-      setRefreshing(false)
-    }
-  }, [isDemo, fetchRecipes])
+    await fetchRecipes()
+    setRefreshing(false)
+  }, [fetchRecipes])
 
   // Filtered + searched recipes
   const filteredRecipes = useMemo(() => {

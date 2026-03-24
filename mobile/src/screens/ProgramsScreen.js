@@ -15,7 +15,6 @@ import { useTheme } from '../context/ThemeContext'
 import { formatPaise } from '../lib/utils'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import { DEMO_PROGRAMS } from '../lib/demoData'
 
 const CATEGORIES = ['All', 'PT', 'Diet', 'Yoga']
 
@@ -50,7 +49,7 @@ function ProgramCard({ item, colors }) {
 }
 
 export default function ProgramsScreen() {
-  const { gymId, isDemo } = useAuth()
+  const { gymId } = useAuth()
   const { colors, isDark } = useTheme()
 
   const [programs, setPrograms] = useState([])
@@ -59,22 +58,17 @@ export default function ProgramsScreen() {
   const [selectedCategory, setSelectedCategory] = useState('All')
 
   const fetchPrograms = useCallback(async () => {
-    if (isDemo) {
-      setPrograms(DEMO_PROGRAMS)
-      setLoading(false)
-      return
-    }
     if (!gymId) return
 
     try {
       const res = await api.get(`/gyms/${gymId}/programs`)
       setPrograms(res.data?.programs || res.data || [])
     } catch {
-      setPrograms(DEMO_PROGRAMS)
+      setPrograms([])
     } finally {
       setLoading(false)
     }
-  }, [gymId, isDemo])
+  }, [gymId])
 
   useEffect(() => {
     fetchPrograms()

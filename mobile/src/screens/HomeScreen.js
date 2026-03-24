@@ -59,11 +59,11 @@ import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { getItem } from '../lib/storage'
 import { useTheme } from '../context/ThemeContext'
-import { DEMO_BADGES, DEMO_DAILY_NUTRITION, DEMO_NUTRITION_GOAL } from '../lib/demoData'
+// demo data imports removed — real API data used instead
 import FastingTimer from '../components/FastingTimer'
 import AdBanner, { showInterstitialAd } from '../components/AdBanner'
 import { canAddToWallet, addMembershipToWallet } from '../lib/wallet'
-import { requestHealthPermissions, requestSleepPermissions, getTodaySteps, getLastNightSleep, syncStepsToBackend, syncSleepToBackend, isHealthConnectAvailable, DEMO_STEPS as HEALTH_DEMO_STEPS, DEMO_SLEEP } from '../lib/healthKit'
+import { requestHealthPermissions, requestSleepPermissions, getTodaySteps, getLastNightSleep, syncStepsToBackend, syncSleepToBackend, isHealthConnectAvailable } from '../lib/healthKit'
 import { requestAllPermissions } from '../lib/permissions'
 
 import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion } from '../lib/aiCoach'
@@ -85,15 +85,7 @@ const STEP_STROKE = 8
 const STEP_RADIUS = (STEP_RING_SIZE - STEP_STROKE) / 2
 const STEP_CIRCUMFERENCE = 2 * Math.PI * STEP_RADIUS
 const STEP_GOAL = 10000
-const DEMO_STEPS = 6847
-
-// --- Demo class data ---
-const DEMO_CLASSES = [
-  { id: 1, name: 'HIIT Burn', trainer: 'Coach Priya', time: '7:00 AM', spots: 4, duration: '45 min', description: 'High-intensity interval training to torch calories and build endurance. All fitness levels welcome.' },
-  { id: 2, name: 'Power Yoga', trainer: 'Coach Arjun', time: '8:30 AM', spots: 8, duration: '60 min', description: 'A vigorous flow combining strength poses with deep stretches. Great for flexibility and core stability.' },
-  { id: 3, name: 'CrossFit WOD', trainer: 'Coach Rahul', time: '10:00 AM', spots: 2, duration: '50 min', description: 'Workout of the Day — functional movements at high intensity. Scaled options for beginners.' },
-  { id: 4, name: 'Zumba', trainer: 'Coach Meera', time: '5:00 PM', spots: 12, duration: '55 min', description: 'Dance-fitness party with Bollywood and Latin beats. No experience needed — just bring your energy!' },
-]
+// DEMO_STEPS and DEMO_CLASSES removed — real API data used instead
 
 // Daily movement suggestions — rotated based on day of week
 const ALL_MOVEMENT_TIPS = [
@@ -113,24 +105,21 @@ const MOVEMENT_TIPS = [
 ]
 
 export default function HomeScreen({ navigation, route }) {
-  const { member, gymId, gymInfo, gym, isDemo, refreshProfile } = useAuth()
+  const { member, gymId, gymInfo, gym, refreshProfile } = useAuth()
   const { colors, isDark, card } = useTheme()
 
   const [qrData, setQrData] = useState(null)
   const [countdown, setCountdown] = useState(REFRESH_INTERVAL)
   const [qrModalVisible, setQrModalVisible] = useState(false)
   const [nfcAvailable, setNfcAvailable] = useState(false)
-  const [badges, setBadges] = useState(DEMO_BADGES)
+  const [badges, setBadges] = useState([])
   const [dailyGoalStatus, setDailyGoalStatus] = useState({ checkedIn: false, workedOut: false, loggedMeal: false })
   const [workoutModalVisible, setWorkoutModalVisible] = useState(false)
   const [quickLogVisible, setQuickLogVisible] = useState(false)
 
   // Class booking state
-  const [classSpots, setClassSpots] = useState(() => {
-    const map = {}
-    DEMO_CLASSES.forEach(cls => { map[cls.id] = cls.spots })
-    return map
-  })
+  const [classes, setClasses] = useState([])
+  const [classSpots, setClassSpots] = useState({})
   const [bookedClasses, setBookedClasses] = useState({})
   const [classDetailModal, setClassDetailModal] = useState(null)
   const [bookingClassId, setBookingClassId] = useState(null)
@@ -139,8 +128,8 @@ export default function HomeScreen({ navigation, route }) {
   const [profilePhoto, setProfilePhoto] = useState(null)
 
   // Nutrition state
-  const [nutritionTotals, setNutritionTotals] = useState(DEMO_DAILY_NUTRITION.totals)
-  const [nutritionGoal, setNutritionGoal] = useState(DEMO_NUTRITION_GOAL)
+  const [nutritionTotals, setNutritionTotals] = useState({ calories: 0, protein: 0, carbs: 0, fats: 0 })
+  const [nutritionGoal, setNutritionGoal] = useState({ calories: 2000, protein: 120, carbs: 250, fats: 65 })
 
   // Step counter state
   const [stepCount, setStepCount] = useState(0)
@@ -225,13 +214,13 @@ export default function HomeScreen({ navigation, route }) {
 
   // Fetch badges
   useEffect(() => {
-    if (isDemo || !gymId || !member?.id) return
+    if (!gymId || !member?.id) return
     api.get(`/gyms/${gymId}/members/${member.id}/badges`)
       .then(res => {
         if (res.data?.length) setBadges(res.data)
       })
       .catch(() => {})
-  }, [gymId, member?.id, isDemo])
+  }, [gymId, member?.id])
 
   // Request all device permissions on first load + check wallet
   useEffect(() => {
@@ -245,14 +234,6 @@ export default function HomeScreen({ navigation, route }) {
     let cancelled = false
 
     const startTracking = async () => {
-      // 0. Demo mode — show simulated step data so users can preview the UI
-      if (isDemo) {
-        setStepCount(HEALTH_DEMO_STEPS)
-        setStepSource('demo')
-        lastMilestoneRef.current = Math.floor(HEALTH_DEMO_STEPS / 1000)
-        return
-      }
-
       // 1. Try Google Health Connect first (Samsung has it built-in on Android 14+)
       try {
         const granted = await requestHealthPermissions()
@@ -375,12 +356,6 @@ export default function HomeScreen({ navigation, route }) {
   useEffect(() => {
     let cancelled = false
     const fetchSleep = async () => {
-      if (isDemo) {
-        setSleepData(DEMO_SLEEP)
-        setSleepSource('demo')
-        return
-      }
-
       try {
         await requestSleepPermissions()
         const data = await getLastNightSleep()
@@ -434,7 +409,7 @@ export default function HomeScreen({ navigation, route }) {
 
   // Fetch daily goal status + nutrition — extracted so it can be called on focus
   const fetchNutrition = useCallback(() => {
-    if (isDemo || !gymId || !member?.id) {
+    if (!gymId || !member?.id) {
       setDailyGoalStatus({ checkedIn: true, workedOut: false, loggedMeal: false })
       return
     }
@@ -458,7 +433,7 @@ export default function HomeScreen({ navigation, route }) {
         setNutritionGoal(goalRes.data)
       }
     })
-  }, [gymId, member?.id, isDemo])
+  }, [gymId, member?.id])
 
   // Refetch nutrition every time screen regains focus (e.g., after barcode scan)
   useFocusEffect(
@@ -470,20 +445,26 @@ export default function HomeScreen({ navigation, route }) {
   // Initial fetch
   useEffect(() => {
     fetchNutrition()
-  }, [gymId, member?.id, isDemo])
+  }, [gymId, member?.id])
+
+  // Fetch today's classes from API
+  useEffect(() => {
+    if (!gymId) return
+    api.get(`/gyms/${gymId}/classes`)
+      .then(res => {
+        const data = res.data || []
+        setClasses(data)
+        const map = {}
+        data.forEach(cls => { map[cls.id] = cls.spots })
+        setClassSpots(map)
+      })
+      .catch(() => {})
+  }, [gymId])
 
   // --- QR generation ---
   // Request a signed JWT token from backend for kiosk scanning
   const generateQR = useCallback(async () => {
     if (!gymId || !member?.id) return
-    if (isDemo) {
-      // Demo mode — generate local QR data
-      const nonce = generateNonce()
-      const timestamp = Date.now()
-      setQrData(JSON.stringify({ gymId, memberId: member.id, nonce, timestamp, demo: true }))
-      setCountdown(REFRESH_INTERVAL)
-      return
-    }
     try {
       const res = await api.post(`/gyms/${gymId}/qr/generate`, {
         phone: member.phone,
@@ -498,7 +479,7 @@ export default function HomeScreen({ navigation, route }) {
       setQrData(JSON.stringify({ gymId, memberId: member.id, nonce, timestamp }))
       setCountdown(REFRESH_INTERVAL)
     }
-  }, [gymId, member?.id, member?.phone, isDemo])
+  }, [gymId, member?.id, member?.phone])
 
   useEffect(() => {
     generateQR()
@@ -584,7 +565,7 @@ export default function HomeScreen({ navigation, route }) {
           return
         }
 
-        if (!isDemo && gymId) {
+        if (gymId) {
           // Send tag_uid (kiosk identity) — member identity comes from JWT
           const startMs = Date.now()
           const res = await api.post(`/gyms/${gymId}/checkins/nfc`, { tag_uid: tagUid })
@@ -607,10 +588,6 @@ export default function HomeScreen({ navigation, route }) {
 
           // Refresh profile to update check-in count
           refreshProfile?.()
-        } else {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-          setQrModalVisible(false)
-          Alert.alert('Demo Mode', 'NFC check-in simulated!')
         }
       }
     } catch (err) {
@@ -622,7 +599,7 @@ export default function HomeScreen({ navigation, route }) {
       setNfcScanning(false)
       NfcManager?.cancelTechnologyRequest?.().catch(() => {})
     }
-  }, [gymId, isDemo, member?.name])
+  }, [gymId, member?.name])
 
   const openQRModal = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
@@ -717,29 +694,19 @@ export default function HomeScreen({ navigation, route }) {
     setBookingClassId(cls.id)
     Haptics.tick()
 
-    if (isDemo) {
-      // Simulate network delay
-      await new Promise(r => setTimeout(r, 400))
+    try {
+      await api.post(`/gyms/${gymId}/bookings`, { service_id: cls.id })
       setBookedClasses(prev => ({ ...prev, [cls.id]: true }))
       setClassSpots(prev => ({ ...prev, [cls.id]: Math.max(0, (prev[cls.id] ?? cls.spots) - 1) }))
-      setBookingClassId(null)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      Alert.alert('Reserved!', `You're booked for ${cls.name} at ${cls.time}. See you there!`)
-    } else {
-      try {
-        await api.post(`/gyms/${gymId}/bookings`, { service_id: cls.id })
-        setBookedClasses(prev => ({ ...prev, [cls.id]: true }))
-        setClassSpots(prev => ({ ...prev, [cls.id]: Math.max(0, (prev[cls.id] ?? cls.spots) - 1) }))
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        Alert.alert('Reserved!', `You're booked for ${cls.name} at ${cls.time}.`)
-      } catch (err) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-        Alert.alert('Booking failed', err?.response?.data?.message || 'Please try again.')
-      } finally {
-        setBookingClassId(null)
-      }
+      Alert.alert('Reserved!', `You're booked for ${cls.name} at ${cls.time}.`)
+    } catch (err) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      Alert.alert('Booking failed', err?.response?.data?.message || 'Please try again.')
+    } finally {
+      setBookingClassId(null)
     }
-  }, [isDemo, bookedClasses])
+  }, [bookedClasses, gymId])
 
   // --- Quick actions ---
   const quickActions = [
@@ -1359,7 +1326,7 @@ export default function HomeScreen({ navigation, route }) {
           transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 300 }}
         >
           <View style={styles.fastingGlowWrap}>
-            <FastingTimer gymId={gymId} memberId={member?.id} isDemo={isDemo} navigation={navigation} />
+            <FastingTimer gymId={gymId} memberId={member?.id} navigation={navigation} />
           </View>
         </MotiView>
 
@@ -1429,7 +1396,7 @@ export default function HomeScreen({ navigation, route }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.classesStrip}
           >
-            {DEMO_CLASSES.map((cls) => {
+            {classes.map((cls) => {
               const spots = classSpots[cls.id] ?? cls.spots
               const isBooked = bookedClasses[cls.id]
               const isBooking = bookingClassId === cls.id
@@ -1650,7 +1617,6 @@ export default function HomeScreen({ navigation, route }) {
         onClose={() => setWorkoutModalVisible(false)}
         gymId={gymId}
         memberId={member?.id}
-        isDemo={isDemo}
         onSuccess={() => setDailyGoalStatus(prev => ({ ...prev, workedOut: true }))}
       />
 
@@ -1754,7 +1720,6 @@ export default function HomeScreen({ navigation, route }) {
         onClose={() => setQuickLogVisible(false)}
         gymId={gymId}
         memberId={member?.id}
-        isDemo={isDemo}
         onSuccess={(item) => {
           setNutritionTotals(prev => ({
             calories: (prev?.calories || 0) + (item.calories || 0),
@@ -1901,7 +1866,7 @@ export default function HomeScreen({ navigation, route }) {
 }
 
 // --- Quick Log Modal ---
-function QuickLogModal({ visible, onClose, gymId, memberId, isDemo, onSuccess }) {
+function QuickLogModal({ visible, onClose, gymId, memberId, onSuccess }) {
   const { colors } = useTheme()
   const [name, setName] = useState('')
   const [calories, setCalories] = useState('')
@@ -1922,14 +1887,6 @@ function QuickLogModal({ visible, onClose, gymId, memberId, isDemo, onSuccess })
       carbs: parseInt(carbs, 10) || 0,
       fats: parseInt(fats, 10) || 0,
       qty: 1,
-    }
-    if (isDemo) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      Alert.alert('Logged', `${name} — ${item.calories} kcal`)
-      onSuccess(item)
-      onClose()
-      resetFields()
-      return
     }
     setSaving(true)
     try {
@@ -2099,7 +2056,7 @@ const quickLogStyles = StyleSheet.create({
 // --- Workout Log Modal ---
 const WORKOUT_TYPES = ['Strength', 'Cardio', 'HIIT', 'Yoga', 'CrossFit', 'Functional']
 
-function WorkoutLogModal({ visible, onClose, gymId, memberId, isDemo, onSuccess }) {
+function WorkoutLogModal({ visible, onClose, gymId, memberId, onSuccess }) {
   const { colors } = useTheme()
   const [workoutType, setWorkoutType] = useState('Strength')
   const [duration, setDuration] = useState('')
@@ -2110,12 +2067,6 @@ function WorkoutLogModal({ visible, onClose, gymId, memberId, isDemo, onSuccess 
   const handleSave = async () => {
     if (!duration) {
       Alert.alert('Missing Info', 'Please enter a duration.')
-      return
-    }
-    if (isDemo) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      onSuccess()
-      onClose()
       return
     }
     setSaving(true)

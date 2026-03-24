@@ -19,7 +19,6 @@ import { formatPaise } from '../lib/utils'
 import Haptics from '../lib/haptics'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import { DEMO_PROFESSIONALS } from '../lib/demoData'
 
 const FILTERS = ['All', 'Trainer', 'Dietitian', 'Physio', 'Classes']
 
@@ -28,18 +27,6 @@ const INTENSITY_COLORS = {
   Med: { bg: '#F59E0B18', text: '#F59E0B', label: 'MED' },
   Low: { bg: '#22C55E18', text: '#22C55E', label: 'LOW' },
 }
-
-// Demo class schedule data
-const DEMO_CLASSES = [
-  { id: 'c1', name: 'Power HIIT', trainer: 'Arjun Mehta', time: '06:00', duration: 45, intensity: 'High', totalSpots: 20, bookedSpots: 17, category: 'Classes' },
-  { id: 'c2', name: 'Yoga Flow', trainer: 'Meera G.', time: '07:00', duration: 60, intensity: 'Low', totalSpots: 15, bookedSpots: 8, category: 'Classes' },
-  { id: 'c3', name: 'Strength Circuit', trainer: 'Vikram Singh', time: '08:30', duration: 50, intensity: 'High', totalSpots: 16, bookedSpots: 16, category: 'Classes' },
-  { id: 'c4', name: 'Functional Training', trainer: 'Arjun Mehta', time: '10:00', duration: 45, intensity: 'Med', totalSpots: 18, bookedSpots: 12, category: 'Classes' },
-  { id: 'c5', name: 'Spin Class', trainer: 'Priya Sharma', time: '12:00', duration: 40, intensity: 'High', totalSpots: 25, bookedSpots: 20, category: 'Classes' },
-  { id: 'c6', name: 'Pilates', trainer: 'Sneha Reddy', time: '16:00', duration: 55, intensity: 'Low', totalSpots: 12, bookedSpots: 5, category: 'Classes' },
-  { id: 'c7', name: 'Boxing Cardio', trainer: 'Vikram Singh', time: '17:30', duration: 45, intensity: 'High', totalSpots: 20, bookedSpots: 18, category: 'Classes' },
-  { id: 'c8', name: 'Stretch & Recovery', trainer: 'Meera G.', time: '19:00', duration: 30, intensity: 'Low', totalSpots: 15, bookedSpots: 3, category: 'Classes' },
-]
 
 const DAY_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -209,7 +196,7 @@ function ProfessionalCard({ item, onPress, colors, isDark }) {
 }
 
 export default function MarketplaceScreen({ navigation, embedded = false }) {
-  const { gymId, member, isDemo } = useAuth()
+  const { gymId, member } = useAuth()
   const { colors, isDark } = useTheme()
   const [professionals, setProfessionals] = useState([])
   const [sessions, setSessions] = useState([])
@@ -228,7 +215,6 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
   const dateScrollRef = useRef(null)
 
   const fetchProfessionals = useCallback(async () => {
-    if (isDemo) { setProfessionals(DEMO_PROFESSIONALS); return }
     if (!gymId) return
     try {
       const res = await api.get(`/gyms/${gymId}/trainers`)
@@ -236,17 +222,9 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
     } catch (err) {
       Alert.alert('Error', 'Could not load professionals. Pull down to retry.')
     }
-  }, [gymId, isDemo])
+  }, [gymId])
 
   const fetchSessions = useCallback(async (date) => {
-    if (isDemo) {
-      setSessions(DEMO_CLASSES.map((c) => ({
-        ...c,
-        totalSpots: c.totalSpots || 20,
-        bookedSpots: c.bookedSpots || 0,
-      })))
-      return
-    }
     if (!gymId) return
     try {
       const res = await api.get(`/gyms/${gymId}/sessions`, { params: { date } })
@@ -261,11 +239,11 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
         bookedSpots: s.current_bookings || 0,
         category: 'Classes',
       }))
-      setSessions(apiSessions.length > 0 ? apiSessions : DEMO_CLASSES)
+      setSessions(apiSessions)
     } catch {
-      setSessions(DEMO_CLASSES)
+      setSessions([])
     }
-  }, [gymId, isDemo])
+  }, [gymId])
 
   useEffect(() => {
     Promise.all([fetchProfessionals(), fetchSessions(selectedDate)])
@@ -302,13 +280,9 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
     setReservingId(classItem.id)
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      if (isDemo) {
-        await new Promise((r) => setTimeout(r, 500))
-      } else {
-        await api.post(`/gyms/${gymId}/sessions/${classItem.id}/reserve`, {
-          memberId: member?.id,
-        })
-      }
+      await api.post(`/gyms/${gymId}/sessions/${classItem.id}/reserve`, {
+        memberId: member?.id,
+      })
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setReservedIds((prev) => ({ ...prev, [classItem.id]: true }))
       fetchSessions(selectedDate)
@@ -319,7 +293,7 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
     } finally {
       setReservingId(null)
     }
-  }, [reservingId, gymId, member?.id, isDemo, selectedDate, fetchSessions])
+  }, [reservingId, gymId, member?.id, selectedDate, fetchSessions])
 
   const handleDateSelect = useCallback((key) => {
     setSelectedDate(key)

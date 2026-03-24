@@ -870,7 +870,7 @@ function AudioEventsCard({ events, colors, card }) {
 }
 
 // ── Live Tracking View ────────────────────────────────────────────
-function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, isDemo }) {
+function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId }) {
   const [tracking, setTracking] = useState(checkIsTracking())
   const [liveData, setLiveData] = useState(getLiveData())
   const [report, setReport] = useState(null)
@@ -927,7 +927,7 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, i
     setTracking(false)
 
     // Sync rich sleep data to backend
-    if (sleepReport && !isDemo && gymId && memberId) {
+    if (sleepReport && gymId && memberId) {
       try {
         await api.post(`/gyms/${gymId}/members/${memberId}/sleep`, {
           bedtime: sleepReport.bedtime,
@@ -1240,7 +1240,7 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, i
 // ── Main Screen ────────────────────────────────────────────────────
 // ════════════════════════════════════════════════════════════════════
 export default function SleepTrackerScreen({ navigation }) {
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
   const { colors, card, isDark } = useTheme()
 
   const [activeTab, setActiveTab] = useState('log') // 'log' | 'track' | 'insights'
@@ -1270,9 +1270,7 @@ export default function SleepTrackerScreen({ navigation }) {
   // ── Persistence ────────────────────────────────────────────────
   const loadData = useCallback(async () => {
     try {
-      if (isDemo) {
-        setLogs(generateDemoData())
-      } else if (gymId && member?.id) {
+      if (gymId && member?.id) {
         // Try backend first
         try {
           const res = await api.get(`/gyms/${gymId}/members/${member.id}/sleep/history`)
@@ -1309,7 +1307,7 @@ export default function SleepTrackerScreen({ navigation }) {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [isDemo, gymId, member?.id])
+  }, [gymId, member?.id])
 
   const saveLogs = useCallback(async (newLogs) => {
     try {
@@ -1367,13 +1365,13 @@ export default function SleepTrackerScreen({ navigation }) {
     saveLogs(newLogs)
 
     // POST to backend (fire-and-forget, local state already updated)
-    if (!isDemo && gymId && member?.id) {
+    if (gymId && member?.id) {
       const payload = buildBackendPayload(bedHour, bedMin, wakeHour, wakeMin, quality)
       api.post(`/gyms/${gymId}/members/${member.id}/sleep`, payload).catch(err => {
         console.warn('Failed to sync sleep log to backend:', err.message)
       })
     }
-  }, [bedHour, bedMin, wakeHour, wakeMin, quality, logs, saveLogs, isDemo, gymId, member?.id])
+  }, [bedHour, bedMin, wakeHour, wakeMin, quality, logs, saveLogs, gymId, member?.id])
 
   // ── Computed ───────────────────────────────────────────────────
   const weeklyBars = getWeeklyBarData(logs)
@@ -1449,7 +1447,6 @@ export default function SleepTrackerScreen({ navigation }) {
           navigation={navigation}
           gymId={gymId}
           memberId={member?.id}
-          isDemo={isDemo}
         />
       )}
 

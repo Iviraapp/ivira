@@ -111,7 +111,7 @@ function getPhaseArcs(elapsedHours, targetHours) {
 // Default body stats — overridden by saved nutrition profile when available
 const DEFAULT_BODY = { weightKg: 75, heightCm: 175, ageYears: 28, gender: 'male' }
 
-export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
+export default function FastingTimer({ gymId, memberId, navigation }) {
   const { colors, card } = useTheme()
   const [isFasting, setIsFasting] = useState(false)
   const [startTime, setStartTime] = useState(null)
@@ -143,7 +143,7 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
   useEffect(() => {
     async function loadState() {
       try {
-        if (!isDemo && gymId && memberId) {
+        if (gymId && memberId) {
           const res = await api.get(`/gyms/${gymId}/members/${memberId}/health/fasting/active`)
           if (res.data?.active && res.data.state) {
             const serverStart = new Date(res.data.state.start_time)
@@ -180,7 +180,7 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
       setLoading(false)
     }
     loadState()
-  }, [gymId, memberId, isDemo])
+  }, [gymId, memberId])
 
   // Load persisted reminder state
   useEffect(() => {
@@ -273,7 +273,7 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
       await setItem(STORAGE_KEY_PROTOCOL, String(selectedProtocol))
     } catch {}
 
-    if (!isDemo && gymId && memberId) {
+    if (gymId && memberId) {
       api.post(`/gyms/${gymId}/members/${memberId}/health/fasting/start`, {
         protocol: protocol.label,
         start_time: now.toISOString(),
@@ -283,7 +283,7 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
     showFastingNotification(0, PHASES[0].label).catch(() => {})
     startHydrationReminders(protocol.fastHours).catch(() => {})
     recordFastingStart().catch(() => {})
-  }, [selectedProtocol, protocol, isDemo, gymId, memberId])
+  }, [selectedProtocol, protocol, gymId, memberId])
 
   const handleEndFast = useCallback(async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
@@ -291,27 +291,20 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
     const durationMinutes = Math.floor(elapsedMs / 60000)
     const didComplete = elapsedHours >= protocol.fastHours
 
-    if (isDemo) {
+    try {
+      await api.post(`/gyms/${gymId}/members/${memberId}/health/fasting/log`, {
+        protocol: protocol.label,
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        duration_minutes: durationMinutes,
+        completed: didComplete,
+      })
       Alert.alert(
-        'Fast Ended',
+        'Fast Logged',
         `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`,
       )
-    } else {
-      try {
-        await api.post(`/gyms/${gymId}/members/${memberId}/health/fasting/log`, {
-          protocol: protocol.label,
-          start_time: startTime.toISOString(),
-          end_time: endTime.toISOString(),
-          duration_minutes: durationMinutes,
-          completed: didComplete,
-        })
-        Alert.alert(
-          'Fast Logged',
-          `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`,
-        )
-      } catch {
-        Alert.alert('Error', 'Failed to log fast. Please try again.')
-      }
+    } catch {
+      Alert.alert('Error', 'Failed to log fast. Please try again.')
     }
 
     setIsFasting(false)
@@ -339,7 +332,7 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
       await deleteItem(STORAGE_KEY_START)
       await deleteItem(STORAGE_KEY_PROTOCOL)
     } catch {}
-  }, [elapsedMs, elapsedHours, protocol, startTime, isDemo, gymId, memberId])
+  }, [elapsedMs, elapsedHours, protocol, startTime, gymId, memberId])
 
   // Protocol switch — allowed mid-fast (upgrade only, keeps elapsed time)
   const handleProtocolSelect = useCallback(
@@ -376,7 +369,7 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
                 try { await setItem(STORAGE_KEY_PROTOCOL, String(idx)) } catch {}
 
                 // Update backend
-                if (!isDemo && gymId && memberId) {
+                if (gymId && memberId) {
                   api.post(`/gyms/${gymId}/members/${memberId}/health/fasting/start`, {
                     protocol: newProtocol.label,
                     start_time: startTime.toISOString(),
@@ -393,7 +386,7 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
         setSelectedProtocol(idx)
       }
     },
-    [isFasting, selectedProtocol, elapsedMs, startTime, isDemo, gymId, memberId],
+    [isFasting, selectedProtocol, elapsedMs, startTime, gymId, memberId],
   )
 
   const handleToggleReminder = useCallback(async (value) => {
@@ -470,19 +463,15 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
 
     setSavingManual(true)
     try {
-      if (isDemo) {
-        Alert.alert('Fast Logged', `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`)
-      } else {
-        await api.post(`/gyms/${gymId}/members/${memberId}/health/fasting/log`, {
-          protocol: protocol.label,
-          start_time: manualStart.toISOString(),
-          end_time: manualEnd.toISOString(),
-          duration_minutes: durationMinutes,
-          completed: didComplete,
-          manual: true,
-        })
-        Alert.alert('Fast Logged', `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`)
-      }
+      await api.post(`/gyms/${gymId}/members/${memberId}/health/fasting/log`, {
+        protocol: protocol.label,
+        start_time: manualStart.toISOString(),
+        end_time: manualEnd.toISOString(),
+        duration_minutes: durationMinutes,
+        completed: didComplete,
+        manual: true,
+      })
+      Alert.alert('Fast Logged', `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setIsManualModalVisible(false)
     } catch {
@@ -490,7 +479,7 @@ export default function FastingTimer({ gymId, memberId, isDemo, navigation }) {
     } finally {
       setSavingManual(false)
     }
-  }, [manualDate, manualStartHour, manualStartMin, manualEndHour, manualEndMin, protocol, isDemo, gymId, memberId])
+  }, [manualDate, manualStartHour, manualStartMin, manualEndHour, manualEndMin, protocol, gymId, memberId])
 
   if (loading) return null
 

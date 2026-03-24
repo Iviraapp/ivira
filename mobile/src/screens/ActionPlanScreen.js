@@ -26,7 +26,7 @@ const MACRO_COLORS = {
 
 export default function ActionPlanScreen({ navigation, route }) {
   const { colors, card, isDark } = useTheme()
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
   const [plan, setPlan] = useState(null)
 
   // Animations

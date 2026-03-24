@@ -17,7 +17,6 @@ import { formatPaise, formatDate } from '../lib/utils'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { DEMO_INVOICES } from '../lib/demoData'
 
 const STATUS_MAP = {
   captured: { label: 'Paid', color: COLORS.green },
@@ -59,14 +58,13 @@ function buildInvoiceText(invoice, gymName) {
 }
 
 export default function InvoicesScreen() {
-  const { gymId, gymInfo, isDemo } = useAuth()
+  const { gymId, gymInfo } = useAuth()
   const { colors, card } = useTheme()
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
   const fetchInvoices = useCallback(async () => {
-    if (isDemo) { setInvoices(DEMO_INVOICES); return }
     if (!gymId) return
     try {
       const res = await api.get(`/gyms/${gymId}/payments`)

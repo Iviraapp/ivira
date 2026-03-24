@@ -28,7 +28,7 @@ const PRO_TYPE_LABELS = {
 }
 
 export default function ServiceDetailScreen({ navigation, route }) {
-  const { gymId, isDemo } = useAuth()
+  const { gymId } = useAuth()
   const { colors, isDark } = useTheme()
   const professional = route?.params?.professional
 
@@ -41,10 +41,6 @@ export default function ServiceDetailScreen({ navigation, route }) {
   }
 
   const handleBook = async (service) => {
-    if (isDemo) {
-      Alert.alert('Booking confirmed!', '(Demo Mode)')
-      return
-    }
     Alert.alert('Booking flow coming soon', 'Razorpay integration is in progress.')
   }
 

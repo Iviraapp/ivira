@@ -10,7 +10,6 @@ import { Feather } from '@expo/vector-icons'
 import Svg, { Rect, Line, Text as SvgText, G } from 'react-native-svg'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
-import { useAuth } from '../context/AuthContext'
 import AdBanner from '../components/AdBanner'
 import Haptics from '../lib/haptics'
 
@@ -29,37 +28,9 @@ const DATE_RANGES = [
   { label: 'All', days: 730 },
 ]
 
-// Seeded RNG per date
-function seedRng(dateStr) {
-  let h = 0
-  for (let i = 0; i < dateStr.length; i++) h = ((h << 5) - h + dateStr.charCodeAt(i)) | 0
-  return (min, max) => { h = (h * 16807 + 12345) & 0x7fffffff; return min + (h % (max - min + 1)) }
-}
-
-// Generate demo data for a date range
+// Returns empty data (no demo generation)
 function generateData(type, days) {
-  const data = []
-  const now = new Date()
-  for (let i = 0; i < days; i++) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    const ds = d.toISOString().split('T')[0]
-    const r = seedRng(ds + type)
-
-    // Skip ~15% of days (realistic — some days no data)
-    if (r(0, 100) < 15 && i > 0) continue
-
-    if (type === 'Steps') {
-      data.push({ date: d, dateStr: ds, value: r(800, 12000) })
-    } else if (type === 'Weight') {
-      // Gradual trend: start higher, trend down
-      const base = 82 - (i * 0.02) + r(-2, 2)
-      data.push({ date: d, dateStr: ds, value: Math.round(base * 10) / 10 })
-    } else {
-      data.push({ date: d, dateStr: ds, value: r(1200, 2600) })
-    }
-  }
-  return data
+  return []
 }
 
 function formatDateEntry(d) {
@@ -143,7 +114,6 @@ function BarChart({ data, goal, unit, color, colors: c }) {
 
 export default function ProgressScreen({ navigation }) {
   const { colors, card } = useTheme()
-  const { isDemo } = useAuth()
   const [tab, setTab] = useState(0)
   const [rangeIdx, setRangeIdx] = useState(1) // default 1 Month
   const [pickerVisible, setPickerVisible] = useState(false)

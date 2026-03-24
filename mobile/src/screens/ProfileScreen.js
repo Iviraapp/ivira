@@ -102,7 +102,7 @@ const CHECKIN_METHOD_ICONS = {
 }
 
 export default function ProfileScreen({ navigation }) {
-  const { member, gymId, logout, biometricAvailable, biometricEnabled, setBiometricEnabled, isDemo, refreshProfile, connectGym } = useAuth()
+  const { member, gymId, logout, biometricAvailable, biometricEnabled, setBiometricEnabled, refreshProfile, connectGym } = useAuth()
   const { mode: themeMode, setMode: setThemeMode, colors, isDark, card } = useTheme()
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [qrModalVisible, setQrModalVisible] = useState(false)
@@ -180,11 +180,6 @@ export default function ProfileScreen({ navigation }) {
       return
     }
 
-    if (isDemo) {
-      Alert.alert('Demo Mode', 'Stats saving is disabled in demo mode.')
-      return
-    }
-
     setSavingStats(true)
     try {
       await api.patch(`/gyms/${gymId}/members/${member.id}`, {
@@ -203,11 +198,6 @@ export default function ProfileScreen({ navigation }) {
 
   // --- Profile Picture Upload (30-day cooldown enforced by backend) ---
   const handleProfilePictureUpload = async () => {
-    if (isDemo) {
-      Alert.alert('Demo Mode', 'Profile picture upload is disabled in demo mode.')
-      return
-    }
-
     if (!ImagePicker) {
       Alert.alert('Not Available', 'Photo picker is not available on this device.')
       return
@@ -256,11 +246,6 @@ export default function ProfileScreen({ navigation }) {
 
   // --- Photo Upload ---
   const handlePhotoUpload = async () => {
-    if (isDemo) {
-      Alert.alert('Demo Mode', 'Photo upload is disabled in demo mode.')
-      return
-    }
-
     if (!ImagePicker) {
       Alert.alert('Not Available', 'Photo picker is not available on this device.')
       return
@@ -298,10 +283,6 @@ export default function ProfileScreen({ navigation }) {
 
   // --- Bookings ---
   const loadBookings = async () => {
-    if (isDemo) {
-      setBookings([])
-      return
-    }
     setBookingsLoading(true)
     try {
       const res = await api.get(`/gyms/${gymId}/members/${member.id}/bookings`)
@@ -349,10 +330,6 @@ export default function ProfileScreen({ navigation }) {
 
   // --- Check-in History ---
   const loadCheckins = async () => {
-    if (isDemo) {
-      setCheckins([])
-      return
-    }
     setCheckinsLoading(true)
     try {
       const res = await api.get(`/gyms/${gymId}/members/${member.id}/checkins?limit=10`)
@@ -425,8 +402,8 @@ export default function ProfileScreen({ navigation }) {
     setLeaderboardVisible(val)
     setItem('leaderboard_visible', val ? 'true' : 'false').catch(() => {})
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    // Sync to backend if not demo
-    if (!isDemo && gymId && member?.id) {
+    // Sync to backend
+    if (gymId && member?.id) {
       api.patch(`/gyms/${gymId}/members/${member.id}`, { show_location_data: val }).catch(() => {})
     }
   }

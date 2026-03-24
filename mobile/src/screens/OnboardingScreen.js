@@ -20,9 +20,9 @@ const ONBOARDING_KEY = 'ivira_onboarding_seen'
 const SLIDES = [
   {
     tagline: 'BALANCE STARTS HERE',
-    title: 'Gym',
-    titleAccent: 'OS',
-    subtitle: 'Track workouts, nutrition, and recovery — all in one app built for real gyms.',
+    title: 'IVI',
+    titleAccent: 'RA',
+    subtitle: 'Track workouts, nutrition, and recovery — your complete health companion.',
     // Visual scene config
     bgBase: '#08060F',
     orbs: [

@@ -56,7 +56,7 @@ function FloatingOrb({ delay, size, x, y, color, fadeAnim }) {
 }
 
 export default function LoginScreen() {
-  const { requestOtp, verifyOtp, loginDemo, biometricAvailable, biometricEnabled, authenticateWithBiometrics, token } = useAuth()
+  const { requestOtp, verifyOtp, biometricAvailable, biometricEnabled, authenticateWithBiometrics, token } = useAuth()
   const { colors, isDark } = useTheme()
 
   const [step, setStep] = useState('welcome')
@@ -211,15 +211,15 @@ export default function LoginScreen() {
       <Animated.View style={[styles.logoWrap, { transform: [{ scale: Animated.multiply(logoScale, logoPulse) }] }]}>
         <View style={styles.logoGlow} />
         <View style={styles.logoInner}>
-          <Text style={styles.logoG}>G</Text>
+          <Text style={styles.logoG}>I</Text>
         </View>
       </Animated.View>
 
-      <Text style={styles.wordmark}>
-        <Text style={[styles.wordmarkGym, { color: colors.text }]}>Gym</Text>
-        <Text style={styles.wordmarkOS}>OS</Text>
+      <Text style={[styles.wordmark, { color: colors.text }]}>
+        <Text style={styles.wordmarkGym}>IVI</Text>
+        <Text style={styles.wordmarkOS}>RA</Text>
       </Text>
-      <Text style={[styles.tagline, { color: colors.textSec }]}>Your Gym, In Your Pocket.</Text>
+      <Text style={[styles.tagline, { color: colors.textSec }]}>Your Health, Reimagined.</Text>
 
       {/* Feature pills */}
       <View style={styles.featurePills}>
@@ -246,18 +246,6 @@ export default function LoginScreen() {
       >
         <Text style={[styles.primaryBtnText, { color: colors.bg }]}>Get Started</Text>
         <Feather name="arrow-right" size={18} color={colors.bg} />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.secondaryBtn, { borderColor: colors.borderStrong }]}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-          loginDemo()
-        }}
-        activeOpacity={0.7}
-      >
-        <Feather name="play" size={15} color={colors.textSec} />
-        <Text style={[styles.secondaryBtnText, { color: colors.textSec }]}>Explore Demo</Text>
       </TouchableOpacity>
 
       {biometricAvailable && biometricEnabled && hasStoredSession && (
@@ -482,10 +470,10 @@ const styles = StyleSheet.create({
   wordmark: {
     fontSize: 36,
     marginBottom: SPACING.xs,
+    letterSpacing: 2,
   },
   wordmarkGym: {
     fontFamily: FONT.bold,
-    color: COLORS.text,
   },
   wordmarkOS: {
     fontFamily: FONT.extraBold,

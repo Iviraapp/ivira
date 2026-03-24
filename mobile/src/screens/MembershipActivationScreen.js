@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import api from '../lib/api'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -269,9 +270,14 @@ export default function MembershipActivationScreen({ navigation }) {
     }
 
     try {
-      // TODO: POST /api/leads/discovery with payload
-      // For now, mock success
-      console.log('[Discovery] Lead submitted:', JSON.stringify(payload))
+      await api.post('/concierge/inquiries', {
+        name: name.trim(),
+        phone: phone.trim(),
+        discipline: facilityTypes[0] || 'gym',
+        inquiry_type: 'discovery',
+        message: `Goals: ${fitnessGoals.join(', ')}. Experience: ${experience}. ${notes.trim()}`,
+        source: 'app_discovery',
+      })
 
       const facilityLabels = facilityTypes.map(k => FACILITY_TYPES.find(f => f.key === k)?.label).filter(Boolean)
       const goalLabels = fitnessGoals.map(k => FITNESS_GOALS.find(g => g.key === k)?.label).filter(Boolean)

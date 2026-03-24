@@ -68,49 +68,6 @@ const ALL_BADGES = [
 ]
 
 // Demo progress data (simulated current progress for locked badges)
-const DEMO_PROGRESS = {
-  first_fast:   1,
-  fasting_3:    3,
-  week_warrior: 7,
-  iron_will:    12,
-  first_rep:    1,
-  gym_rat:      5,
-  beast_mode:   9,
-  century:      9,
-  early_bird:   2,
-  clean_eater:  7,
-  hydration:    6,
-  macro_master: 2,
-  meal_prep:    4,
-  first_friend: 1,
-  social_fly:   1,
-  influencer:   1,
-  team_captain: 0,
-  founding:     1,
-  nye_grind:    0,
-  midnight_oil: 0,
-}
-
-// Badges unlocked in demo mode
-const DEMO_UNLOCKED_IDS = [
-  'first_fast', 'fasting_3', 'week_warrior',
-  'first_rep', 'gym_rat',
-  'clean_eater',
-  'first_friend',
-  'founding',
-]
-
-const DEMO_EARNED_DATES = {
-  first_fast:   '2026-01-15',
-  fasting_3:    '2026-01-18',
-  week_warrior: '2026-01-24',
-  first_rep:    '2026-01-10',
-  gym_rat:      '2026-02-02',
-  clean_eater:  '2026-02-20',
-  first_friend: '2026-03-01',
-  founding:     '2025-12-01',
-}
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -289,10 +246,10 @@ function ProgressCard({ badge, progress, colors }) {
 export default function AchievementsScreen({ navigation }) {
   const insets = useSafeAreaInsets()
   const { colors, card, isDark } = useTheme()
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
 
   const [unlockedMap, setUnlockedMap] = useState({})   // { badgeId: dateStr }
-  const [progressMap, setProgressMap] = useState(DEMO_PROGRESS) // { badgeId: number }
+  const [progressMap, setProgressMap] = useState({}) // { badgeId: number }
   const [activeFilter, setActiveFilter] = useState('all')
   const [selectedBadge, setSelectedBadge] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -315,14 +272,6 @@ export default function AchievementsScreen({ navigation }) {
   // Load unlocked badges
   const loadBadges = useCallback(async () => {
     try {
-      if (isDemo) {
-        const map = {}
-        DEMO_UNLOCKED_IDS.forEach(id => { map[id] = DEMO_EARNED_DATES[id] || '2026-01-01' })
-        setUnlockedMap(map)
-        setProgressMap(DEMO_PROGRESS)
-        return
-      }
-
       // Try backend API when gymId and member are available
       if (gymId && member?.id) {
         try {
@@ -347,7 +296,7 @@ export default function AchievementsScreen({ navigation }) {
           setUnlockedMap(map)
 
           // Build progress map from all achievements data
-          const pMap = { ...DEMO_PROGRESS }
+          const pMap = {}
           allAchievements.forEach(a => {
             const id = a.key || a.achievement_key || a.id
             if (a.progress !== undefined) pMap[id] = a.progress
@@ -375,7 +324,7 @@ export default function AchievementsScreen({ navigation }) {
     } catch {
       // silent
     }
-  }, [isDemo, gymId, member?.id])
+  }, [gymId, member?.id])
 
   useEffect(() => { loadBadges() }, [loadBadges])
 

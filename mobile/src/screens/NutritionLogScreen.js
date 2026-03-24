@@ -548,7 +548,7 @@ function DayCard({ dayData, isExpanded, onToggle, colors, card }) {
 // --- Main Screen ---
 export default function NutritionLogScreen({ navigation }) {
   const { colors, card } = useTheme()
-  const { member, gymInfo, isDemo } = useAuth()
+  const { member, gymInfo } = useAuth()
 
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date()
@@ -563,7 +563,7 @@ export default function NutritionLogScreen({ navigation }) {
     const gymId = gymInfo?.id
     const memberId = member?.id
 
-    if (!isDemo && gymId && memberId) {
+    if (gymId && memberId) {
       try {
         const daysInMonth = new Date(year, month + 1, 0).getDate()
         const today = new Date()
@@ -595,7 +595,7 @@ export default function NutritionLogScreen({ navigation }) {
 
     // Fallback to demo data
     return generateDemoData(year, month)
-  }, [gymInfo, member, isDemo])
+  }, [gymInfo, member])
 
   const loadMonth = useCallback(async (year, month) => {
     setLoading(true)

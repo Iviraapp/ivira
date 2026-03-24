@@ -31,7 +31,7 @@ try {
 } catch {}
 
 export default function BarcodeScannerScreen({ navigation, route }) {
-  const { isDemo, gymId, member } = useAuth()
+  const { gymId, member } = useAuth()
   const { colors, isDark } = useTheme()
 
   const [hasPermission, setHasPermission] = useState(null)
@@ -136,7 +136,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     const scaled = getScaledMacros()
     setLogging(true)
     try {
-      if (!isDemo && gymId && member?.id) {
+      if (gymId && member?.id) {
         await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
           mealType,
           rawInput: product?.name || 'Scanned Food',
@@ -176,7 +176,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     } finally {
       setLogging(false)
     }
-  }, [product, servingGrams, mealType, gymId, member?.id, isDemo, getScaledMacros, navigation])
+  }, [product, servingGrams, mealType, gymId, member?.id, getScaledMacros, navigation])
 
   // Quick add manual entry
   const handleQuickAddSave = useCallback(async () => {
@@ -192,7 +192,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
 
     setLogging(true)
     try {
-      if (!isDemo && gymId && member?.id) {
+      if (gymId && member?.id) {
         await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
           mealType,
           rawInput: 'Quick Add',
@@ -214,7 +214,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     } finally {
       setLogging(false)
     }
-  }, [quickAdd, mealType, gymId, member?.id, isDemo, navigation])
+  }, [quickAdd, mealType, gymId, member?.id, navigation])
 
   const handleClose = useCallback(() => {
     navigation?.goBack?.()
@@ -549,7 +549,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
                 }
                 setLogging(true)
                 try {
-                  if (!isDemo && gymId && member?.id) {
+                  if (gymId && member?.id) {
                     await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
                       mealType,
                       rawInput: manualEntry.name || 'Manual Entry',

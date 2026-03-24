@@ -18,28 +18,6 @@ const METHOD_COLORS = {
   OTP: '#FBBC05',
 }
 
-function generateDemoData() {
-  const methods = ['NFC', 'QR', 'Manual', 'OTP']
-  const gyms = ['Iron Temple Fitness', 'PowerZone Gym', 'FitLife Studio']
-  const entries = []
-  const now = Date.now()
-  for (let i = 0; i < 10; i++) {
-    const date = new Date(now - i * 24 * 60 * 60 * 1000 * (0.5 + Math.random() * 0.7))
-    const hour = 6 + Math.floor(Math.random() * 14)
-    const minute = Math.floor(Math.random() * 60)
-    date.setHours(hour, minute)
-    entries.push({
-      id: `checkin-${i}`,
-      type: 'check-in',
-      gym_name: gyms[i % gyms.length],
-      method: methods[i % methods.length],
-      timestamp: date.toISOString(),
-      duration: 45 + Math.floor(Math.random() * 60),
-    })
-  }
-  return entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-}
-
 function formatTime(iso) {
   const d = new Date(iso)
   const h = d.getHours()
@@ -136,8 +114,8 @@ export default function HistoryScreen({ navigation }) {
         }
       }
     } catch {}
-    // Fall back to demo data
-    setEntries(generateDemoData())
+    // No data available
+    setEntries([])
   }, [gymInfo, member])
 
   useEffect(() => {

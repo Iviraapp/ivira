@@ -10,7 +10,6 @@ import { Feather } from '@expo/vector-icons'
 import Svg, { Circle, G, Path, Line, Text as SvgText } from 'react-native-svg'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
-import { useAuth } from '../context/AuthContext'
 import AdBanner from '../components/AdBanner'
 import Haptics from '../lib/haptics'
 
@@ -31,54 +30,14 @@ function useDayNav() {
   return { date, label, prev: () => setOffset(o => o - 1), next: () => setOffset(o => Math.min(0, o + 1)), canNext: offset < 0 }
 }
 
-// Seed-based demo data per date
-function getDemoDay(date) {
-  const ds = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
-  let h = 0; for (let i = 0; i < ds.length; i++) h = ((h << 5) - h + ds.charCodeAt(i)) | 0
-  const r = (min, max) => { h = (h * 16807 + 12345) & 0x7fffffff; return min + (h % (max - min + 1)) }
-
-  const meals = r(2, 5)
-  const cal = r(1200, 2400)
-  const protein = r(40, 160)
-  const carbs = r(80, 300)
-  const fat = r(20, 80)
-  const fiber = r(8, 40)
-  const sugar = r(15, 80)
-  const satFat = Math.round(fat * 0.35)
-  const polyFat = Math.round(fat * 0.25)
-  const monoFat = Math.round(fat * 0.3)
-  const transFat = r(0, 2)
-  const sodium = r(800, 2800)
-  const cholesterol = r(100, 400)
-  const potassium = r(1500, 4000)
-  const vitA = r(30, 120)
-  const vitC = r(20, 150)
-  const calcium = r(400, 1200)
-  const iron = r(6, 22)
-  const water = r(3, 10)
-  const exercise = r(0, 500)
-
-  // Top foods per macro
-  const topProtein = [
-    { name: 'Paneer Tikka', g: r(18, 28) },
-    { name: 'Egg Bhurji (2 eggs)', g: r(12, 18) },
-    { name: 'Dal Tadka', g: r(8, 14) },
-  ]
-  const topCarbs = [
-    { name: 'Steamed Rice', g: r(40, 65) },
-    { name: 'Chapati (2)', g: r(30, 45) },
-    { name: 'Poha', g: r(25, 38) },
-  ]
-  const topFat = [
-    { name: 'Ghee (1 tbsp)', g: r(10, 15) },
-    { name: 'Peanut Chutney', g: r(8, 14) },
-    { name: 'Coconut Curry', g: r(6, 12) },
-  ]
-
+// Empty/zero state for when no data is available
+function getEmptyDay() {
   return {
-    cal, protein, carbs, fat, fiber, sugar, satFat, polyFat, monoFat, transFat,
-    sodium, cholesterol, potassium, vitA, vitC, calcium, iron, water, exercise, meals,
-    topProtein, topCarbs, topFat,
+    cal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0,
+    satFat: 0, polyFat: 0, monoFat: 0, transFat: 0,
+    sodium: 0, cholesterol: 0, potassium: 0, vitA: 0, vitC: 0,
+    calcium: 0, iron: 0, water: 0, exercise: 0, meals: 0,
+    topProtein: [], topCarbs: [], topFat: [],
   }
 }
 
@@ -209,11 +168,10 @@ function NutrientCard({ icon, name, current, goal, unit, color, tip, foods, colo
 
 export default function NutritionDetailScreen({ navigation, route }) {
   const { colors, card } = useTheme()
-  const { isDemo } = useAuth()
   const [tab, setTab] = useState(route?.params?.tab || 0)
   const day = useDayNav()
 
-  const data = useMemo(() => getDemoDay(day.date), [day.date])
+  const data = useMemo(() => getEmptyDay(), [day.date])
 
   const handleExport = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)

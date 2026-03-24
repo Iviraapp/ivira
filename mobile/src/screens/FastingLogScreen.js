@@ -15,7 +15,6 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 import Haptics from '../lib/haptics'
-import { getFastingCaloriesBurned } from '../utils/healthMath'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const BAR_CHART_HEIGHT = 120
@@ -31,53 +30,6 @@ const PROTOCOL_TARGETS_HOURS = {
   '16:8': 16,
   '18:6': 18,
   '20:4': 20,
-}
-
-// ── Demo data generator ────────────────────────────────────────────
-function generateDemoData() {
-  const protocols = ['16:8', '18:6', '20:4']
-  const entries = []
-  const now = new Date()
-
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-
-    // ~20% chance the day was skipped
-    if (Math.random() < 0.2) continue
-
-    const protocol = protocols[Math.floor(Math.random() * protocols.length)]
-    const targetHours = PROTOCOL_TARGETS_HOURS[protocol]
-
-    // 75% chance of completing, 25% ended early
-    const completed = Math.random() < 0.75
-    const durationHours = completed
-      ? targetHours + (Math.random() * 2 - 0.5) // slightly over/under target
-      : targetHours * (0.5 + Math.random() * 0.35) // 50-85% of target
-    const durationSec = Math.max(3600, Math.round(durationHours * 3600))
-
-    const startHour = 18 + Math.floor(Math.random() * 3) // 6-8 PM start
-    const startMin = Math.floor(Math.random() * 60)
-    const startDate = new Date(date)
-    startDate.setHours(startHour, startMin, 0, 0)
-
-    const endDate = new Date(startDate.getTime() + durationSec * 1000)
-
-    const calories = getFastingCaloriesBurned(75, 175, 28, 'male', durationSec)
-
-    entries.push({
-      id: `fast-${i}`,
-      date: date.toISOString(),
-      protocol,
-      duration_seconds: durationSec,
-      completed,
-      start_time: startDate.toISOString(),
-      end_time: endDate.toISOString(),
-      calories_burned: Math.round(calories),
-    })
-  }
-
-  return entries.sort((a, b) => new Date(b.date) - new Date(a.date))
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -458,7 +410,7 @@ function CalendarHeatmap({ entries, colors }) {
 // ── Main Screen ────────────────────────────────────────────────────
 // ════════════════════════════════════════════════════════════════════
 export default function FastingLogScreen({ navigation }) {
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
   const { colors, card } = useTheme()
 
   const [entries, setEntries] = useState([])
@@ -470,23 +422,18 @@ export default function FastingLogScreen({ navigation }) {
 
   const fetchData = useCallback(async () => {
     try {
-      if (isDemo) {
-        setEntries(generateDemoData())
-      } else {
-        const res = await api.get(`/gyms/${gymId}/members/${memberId}/health/fasting/history`, {
-          params: { limit: 30 },
-        })
-        setEntries(res.data?.data || res.data || [])
-      }
+      const res = await api.get(`/gyms/${gymId}/members/${memberId}/health/fasting/history`, {
+        params: { limit: 30 },
+      })
+      setEntries(res.data?.data || res.data || [])
     } catch (err) {
       console.warn('Failed to fetch fasting history:', err.message)
-      // Fallback to demo data on error
-      setEntries(generateDemoData())
+      setEntries([])
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [isDemo, gymId, memberId])
+  }, [gymId, memberId])
 
   useEffect(() => {
     fetchData()

@@ -115,7 +115,7 @@ const MEAL_COLORS_MAP = { breakfast: '#F97316', lunch: '#34A853', dinner: '#8B5C
 // ----- Main Screen -----
 export default function FoodScannerScreen({ navigation, route }) {
   const { colors, card, isDark } = useTheme()
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
 
   // State
   const [activeTab, setActiveTab] = useState('scan') // 'scan' | 'history'
@@ -175,10 +175,6 @@ export default function FoodScannerScreen({ navigation, route }) {
 
   // Load history
   const loadHistory = useCallback(async () => {
-    if (isDemo) {
-      setHistory(MOCK_HISTORY)
-      return
-    }
     setHistoryLoading(true)
     try {
       const res = await api.get(`/gyms/${gymId}/members/${member?.id}/food/scans`, { params: { limit: 20 } })
@@ -188,7 +184,7 @@ export default function FoodScannerScreen({ navigation, route }) {
     } finally {
       setHistoryLoading(false)
     }
-  }, [isDemo, gymId, member])
+  }, [gymId, member])
 
   useEffect(() => {
     if (activeTab === 'history') {
@@ -256,7 +252,7 @@ export default function FoodScannerScreen({ navigation, route }) {
 
   // Analyze the food photo
   const analyzePhoto = useCallback(async () => {
-    if (!imageBase64 && !isDemo) {
+    if (!imageBase64) {
       Alert.alert('No Image', 'Please take or select a photo first.')
       return
     }
@@ -265,42 +261,29 @@ export default function FoodScannerScreen({ navigation, route }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
     try {
-      if (isDemo) {
-        // Simulate network delay
-        await new Promise(r => setTimeout(r, 2000))
-        const mockResult = MOCK_SCAN_RESULTS[Math.floor(Math.random() * MOCK_SCAN_RESULTS.length)]
-        setScanResult(mockResult)
-        // Select all items by default
-        const sel = {}
-        mockResult.items.forEach((_, i) => { sel[i] = true })
-        setSelectedItems(sel)
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        animateResultsIn()
-      } else {
-        const res = await api.post(`/gyms/${gymId}/members/${member?.id}/food/scan`, {
-          image: imageBase64,
-          image_uri: imageUri,
-        }, { timeout: 30000 })
+      const res = await api.post(`/gyms/${gymId}/members/${member?.id}/food/scan`, {
+        image: imageBase64,
+        image_uri: imageUri,
+      }, { timeout: 30000 })
 
-        const data = res.data?.result || res.data?.data || res.data
-        const items = data?.items || data?.foods || []
-        const result = {
-          items: items.map(item => ({
-            name: item.name || item.food_name || 'Unknown Item',
-            calories: Number(item.calories) || 0,
-            protein: Number(item.protein) || 0,
-            carbs: Number(item.carbs) || 0,
-            fat: Number(item.fat || item.fats) || 0,
-            confidence: Number(item.confidence) || 0,
-          })),
-        }
-        setScanResult(result)
-        const sel = {}
-        result.items.forEach((_, i) => { sel[i] = true })
-        setSelectedItems(sel)
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        animateResultsIn()
+      const data = res.data?.result || res.data?.data || res.data
+      const items = data?.items || data?.foods || []
+      const result = {
+        items: items.map(item => ({
+          name: item.name || item.food_name || 'Unknown Item',
+          calories: Number(item.calories) || 0,
+          protein: Number(item.protein) || 0,
+          carbs: Number(item.carbs) || 0,
+          fat: Number(item.fat || item.fats) || 0,
+          confidence: Number(item.confidence) || 0,
+        })),
       }
+      setScanResult(result)
+      const sel = {}
+      result.items.forEach((_, i) => { sel[i] = true })
+      setSelectedItems(sel)
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      animateResultsIn()
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
       Alert.alert(
@@ -310,7 +293,7 @@ export default function FoodScannerScreen({ navigation, route }) {
     } finally {
       setScanning(false)
     }
-  }, [imageBase64, imageUri, isDemo, animateResultsIn])
+  }, [imageBase64, imageUri, animateResultsIn, gymId, member?.id])
 
   // Toggle item selection
   const toggleItemSelection = useCallback((index) => {
@@ -370,7 +353,7 @@ export default function FoodScannerScreen({ navigation, route }) {
       const totalCarbs = itemsToLog.reduce((s, i) => s + i.carbs, 0)
       const totalFat = itemsToLog.reduce((s, i) => s + i.fat, 0)
 
-      if (!isDemo && gymId && member?.id) {
+      if (gymId && member?.id) {
         await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
           mealType,
           rawInput: itemsToLog.map(i => i.name).join(', '),
@@ -411,7 +394,7 @@ export default function FoodScannerScreen({ navigation, route }) {
     } finally {
       setLogging(false)
     }
-  }, [scanResult, selectedItems, mealType, isDemo, gymId, member, imageUri, navigation])
+  }, [scanResult, selectedItems, mealType, gymId, member, imageUri, navigation])
 
   // Reset scanner
   const resetScanner = useCallback(() => {

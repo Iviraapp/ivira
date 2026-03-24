@@ -20,7 +20,6 @@ import { formatPaise } from '../lib/utils'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { DEMO_PRODUCTS } from '../lib/demoData'
 
 const CATEGORIES = [
   'All',
@@ -35,7 +34,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const CARD_WIDTH = (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.md) / 2
 
 export default function StoreScreen({ embedded = false }) {
-  const { gymId, isDemo } = useAuth()
+  const { gymId } = useAuth()
   const { colors, card, isDark } = useTheme()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -47,7 +46,6 @@ export default function StoreScreen({ embedded = false }) {
   const [debouncedQuery, setDebouncedQuery] = useState('')
 
   const fetchProducts = useCallback(async () => {
-    if (isDemo) { setProducts(DEMO_PRODUCTS); return }
     if (!gymId) return
     try {
       const res = await api.get(`/gyms/${gymId}/products`)
@@ -91,15 +89,6 @@ export default function StoreScreen({ embedded = false }) {
   const handleBuy = async (product) => {
     if (buyingId) return
 
-    // Demo mode — store purchases are not yet available
-    if (isDemo) {
-      Alert.alert(
-        'Coming Soon',
-        'In-app purchases will be available once your gym connects a payment provider.',
-      )
-      return
-    }
-
     setBuyingId(product.id)
     try {
       const res = await api.post(`/gyms/${gymId}/store/checkout`, {
@@ -134,11 +123,6 @@ export default function StoreScreen({ embedded = false }) {
 
   const handleNotify = async (product) => {
     if (buyingId) return
-
-    if (isDemo) {
-      Alert.alert('Coming Soon', 'Waitlist notifications will be available once your gym is fully set up.')
-      return
-    }
 
     setBuyingId(product.id)
     try {

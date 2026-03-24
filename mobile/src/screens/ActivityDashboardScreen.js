@@ -45,7 +45,7 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 export default function ActivityDashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets()
   const { colors, card } = useTheme()
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
 
   const [steps, setSteps] = useState(0)
   const [stepGoal, setStepGoal] = useState(DEFAULT_STEP_GOAL)

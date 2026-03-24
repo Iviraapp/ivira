@@ -31,10 +31,9 @@ import { COLORS, SPACING, RADIUS, FONT, METABOLIC, ELITE_CARD } from '../lib/the
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import {
-  DEMO_DAILY_NUTRITION,
-  DEMO_NUTRITION_GOAL,
-} from '../lib/demoData'
+// Default nutrition values when API data is unavailable
+const DEFAULT_DAILY_NUTRITION = { items: [], totals: { calories: 0, protein: 0, carbs: 0, fats: 0 } }
+const DEFAULT_NUTRITION_GOAL = { calories: 2000, protein: 120, carbs: 250, fats: 65 }
 import {
   requestHealthPermissions,
   getTodaySteps,
@@ -75,7 +74,7 @@ const MOCK_FOODS = [
 ]
 
 export default function HealthScreen({ navigation }) {
-  const { member, gymId, isDemo } = useAuth()
+  const { member, gymId } = useAuth()
   const { colors, card } = useTheme()
 
   const [steps, setSteps] = useState(0)
@@ -241,13 +240,13 @@ export default function HealthScreen({ navigation }) {
           if (todaySteps !== DEMO_STEPS) {
             setStepSource('health')
           }
-          if (!isDemo && gymId && member?.id) {
+          if (gymId && member?.id) {
             syncStepsToBackend(gymId, member.id, todaySteps)
           }
         }
       } catch {}
     }
-  }, [gymId, member?.id, isDemo])
+  }, [gymId, member?.id])
 
   const handleManualStepAdjust = useCallback((delta) => {
     setManualSteps(prev => Math.max(0, prev + delta))
@@ -290,7 +289,7 @@ export default function HealthScreen({ navigation }) {
             setStepSource('health')
             setLastSynced(new Date())
             // Sync to backend (fire-and-forget)
-            if (!isDemo && gymId && member?.id) {
+            if (gymId && member?.id) {
               syncStepsToBackend(gymId, member.id, steps)
             }
             // Re-fetch from health platform every 60s
@@ -301,7 +300,7 @@ export default function HealthScreen({ navigation }) {
                 if (updated !== DEMO_STEPS) {
                   setSteps(updated)
                   setLastSynced(new Date())
-                  if (!isDemo && gymId && member?.id) {
+                  if (gymId && member?.id) {
                     syncStepsToBackend(gymId, member.id, updated)
                   }
                 }
@@ -351,7 +350,7 @@ export default function HealthScreen({ navigation }) {
       if (pedometerSubRef.current) { pedometerSubRef.current.remove(); pedometerSubRef.current = null }
       if (healthSyncRef.current) { clearInterval(healthSyncRef.current); healthSyncRef.current = null }
     }
-  }, [gymId, member?.id, isDemo])
+  }, [gymId, member?.id])
 
   // Load data on mount
   useEffect(() => {
@@ -374,22 +373,17 @@ export default function HealthScreen({ navigation }) {
     if (showLoader) setLoading(true)
     try {
       // Load nutrition (steps are handled by the step tracking useEffect)
-      if (isDemo) {
-        setDaily(DEMO_DAILY_NUTRITION)
-        setGoal(DEMO_NUTRITION_GOAL)
-      } else {
-        const today = new Date().toISOString().split('T')[0]
-        const [dailyRes, goalRes] = await Promise.all([
-          api.get(`/gyms/${gymId}/members/${member.id}/nutrition/daily?date=${today}`),
-          api.get(`/gyms/${gymId}/members/${member.id}/nutrition/goal`),
-        ])
-        setDaily(dailyRes.data)
-        setGoal(goalRes.data)
-      }
+      const today = new Date().toISOString().split('T')[0]
+      const [dailyRes, goalRes] = await Promise.all([
+        api.get(`/gyms/${gymId}/members/${member.id}/nutrition/daily?date=${today}`),
+        api.get(`/gyms/${gymId}/members/${member.id}/nutrition/goal`),
+      ])
+      setDaily(dailyRes.data)
+      setGoal(goalRes.data)
     } catch {
       // Fallback
-      setDaily(DEMO_DAILY_NUTRITION)
-      setGoal(DEMO_NUTRITION_GOAL)
+      setDaily(DEFAULT_DAILY_NUTRITION)
+      setGoal(DEFAULT_NUTRITION_GOAL)
     } finally {
       setLoading(false)
     }
@@ -406,7 +400,7 @@ export default function HealthScreen({ navigation }) {
         if (todaySteps !== DEMO_STEPS) {
           setStepSource('health')
         }
-        if (!isDemo && gymId && member?.id) {
+        if (gymId && member?.id) {
           syncStepsToBackend(gymId, member.id, todaySteps)
         }
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
@@ -416,17 +410,17 @@ export default function HealthScreen({ navigation }) {
     } finally {
       setSyncing(false)
     }
-  }, [gymId, member?.id, isDemo])
+  }, [gymId, member?.id])
 
   const handleGoalSave = useCallback(async (macroGoal) => {
     setGoal(macroGoal)
     setHasCustomGoal(true)
     await setItem('ivira_custom_nutrition_goal', JSON.stringify(macroGoal)).catch(() => {})
     // Sync to backend if available
-    if (!isDemo && gymId && member?.id) {
+    if (gymId && member?.id) {
       api.patch(`/gyms/${gymId}/members/${member.id}/nutrition/goal`, macroGoal).catch(() => {})
     }
-  }, [gymId, member?.id, isDemo])
+  }, [gymId, member?.id])
 
   const handleNavigateNutrition = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -889,9 +883,7 @@ export default function HealthScreen({ navigation }) {
                         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
                         loadData()
                       } catch (err) {
-                        if (!isDemo) {
-                          Alert.alert('Failed to save', 'Please try again.')
-                        }
+                        Alert.alert('Failed to save', 'Please try again.')
                         loadData()
                       }
                     }}
