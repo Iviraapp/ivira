@@ -220,6 +220,88 @@ export default async function authRoutes(fastify) {
     return { token, gymId: gym.id, gymName: gym.gym_name };
   });
 
+  // Admin: one-time test gym setup (protected by secret)
+  fastify.post('/admin/setup-test-gym', async (request, reply) => {
+    const { secret } = request.body || {};
+    if (secret !== config.jwt.secret) return reply.code(403).send({ error: 'Forbidden' });
+
+    const GYM_ID = 'e1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6';
+    const results = [];
+
+    // Create or update gym
+    const existing = await db('gyms').where({ id: GYM_ID }).first();
+    if (existing) {
+      await db('gyms').where({ id: GYM_ID }).update({
+        gym_name: 'IVIRA Test Gym — Fort Worth',
+        address: '545 Harrold St, Fort Worth, TX 76107',
+        city: 'Fort Worth',
+        latitude: 32.75307193,
+        longitude: -97.34792413,
+        status: 'active',
+        invite_code: existing.invite_code || 'GYM-FWTX01',
+        updated_at: new Date(),
+      });
+      results.push('Updated existing gym');
+    } else {
+      await db('gyms').insert({
+        id: GYM_ID,
+        owner_firebase_uid: 'test_bexley_fw',
+        owner_name: 'Niel (Test)',
+        owner_phone: '+10000000000',
+        owner_email: 'admin@ivira.app',
+        gym_name: 'IVIRA Test Gym — Fort Worth',
+        address: '545 Harrold St, Fort Worth, TX 76107',
+        city: 'Fort Worth',
+        latitude: 32.75307193,
+        longitude: -97.34792413,
+        status: 'active',
+        invite_code: 'GYM-FWTX01',
+      });
+      results.push('Created gym');
+    }
+
+    // Setup members
+    for (const email of ['admin@ivira.app', 'task261190@gmail.com']) {
+      let member = await db('members').where({ email }).first();
+      if (member) {
+        await db('members').where({ id: member.id }).update({ gym_id: GYM_ID, status: 'active', updated_at: new Date() });
+        results.push(`Linked ${email} to gym`);
+      } else {
+        const [m] = await db('members').insert({
+          name: email === 'admin@ivira.app' ? 'Niel (Admin)' : 'Niel (Test)',
+          email,
+          phone: email === 'admin@ivira.app' ? '+10000000001' : '+10000000002',
+          gym_id: GYM_ID,
+          status: 'active',
+          gender: 'male',
+        }).returning('*');
+        member = m;
+        results.push(`Created member ${email}: ${member.id}`);
+      }
+
+      // Ensure active membership
+      const hasMembership = await db('memberships')
+        .where({ member_id: member.id, gym_id: GYM_ID, status: 'active' })
+        .first();
+      if (!hasMembership) {
+        await db('memberships').insert({
+          member_id: member.id,
+          gym_id: GYM_ID,
+          plan_name: 'QA Unlimited',
+          amount_paise: 0,
+          start_date: new Date().toISOString().split('T')[0],
+          end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          status: 'active',
+        });
+        results.push(`Created membership for ${email}`);
+      }
+    }
+
+    const gym = await db('gyms').where({ id: GYM_ID }).first();
+    const members = await db('members').where({ gym_id: GYM_ID }).select('id', 'name', 'email', 'status');
+    return { gym: { id: gym.id, name: gym.gym_name, invite_code: gym.invite_code, lat: gym.latitude, lng: gym.longitude }, members, actions: results };
+  });
+
   // Refresh JWT token (extend expiry without re-login)
   fastify.post('/auth/refresh', { preHandler: [fastify.verifyToken] }, async (request) => {
     const user = request.user;
