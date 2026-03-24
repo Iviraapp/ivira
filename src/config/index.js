@@ -83,6 +83,21 @@ const config = {
     enabled: !!process.env.BLOB_READ_WRITE_TOKEN,
   },
 
+  googleWallet: {
+    issuerEmail: process.env.GOOGLE_WALLET_ISSUER_EMAIL,
+    issuerKey: process.env.GOOGLE_WALLET_PRIVATE_KEY,  // PEM private key
+    issuerId: process.env.GOOGLE_WALLET_ISSUER_ID,     // from Google Pay & Wallet Console
+    enabled: !!(process.env.GOOGLE_WALLET_ISSUER_EMAIL && process.env.GOOGLE_WALLET_PRIVATE_KEY),
+  },
+
+  appleWallet: {
+    passTypeId: process.env.APPLE_PASS_TYPE_ID,       // e.g. pass.app.ivira.membership
+    teamId: process.env.APPLE_TEAM_ID,
+    certPem: process.env.APPLE_PASS_CERT_PEM,
+    keyPem: process.env.APPLE_PASS_KEY_PEM,
+    enabled: !!(process.env.APPLE_PASS_TYPE_ID && process.env.APPLE_PASS_CERT_PEM),
+  },
+
   adminSecret: process.env.ADMIN_SECRET || 'ivira-admin-2026',
 
   baseUrl: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,

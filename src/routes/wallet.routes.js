@@ -1,8 +1,56 @@
 import * as walletService from '../services/wallet.service.js'
 import * as badgeService from '../services/badge.service.js'
+import * as walletPassService from '../services/wallet-pass.service.js'
+import jwt from 'jsonwebtoken'
+import config from '../config/index.js'
+
+// Verify member JWT (member-facing endpoints)
+async function verifyMemberToken(request, reply) {
+  const authHeader = request.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return reply.code(401).send({ error: 'Missing authorization' });
+  }
+  try {
+    const decoded = jwt.verify(authHeader.slice(7), config.jwt.secret);
+    if (decoded.role !== 'member') {
+      return reply.code(403).send({ error: 'Access denied' });
+    }
+    request.member = decoded;
+  } catch {
+    return reply.code(401).send({ error: 'Invalid token' });
+  }
+}
 
 export default async function walletRoutes(fastify) {
   const authHooks = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] }
+
+  // ── Wallet Passes (Apple / Google) ──────────────────────────────
+
+  // Google Wallet pass — member-facing (uses member JWT)
+  fastify.get('/gyms/:gymId/members/:memberId/wallet/google-pass', {
+    preHandler: [verifyMemberToken],
+  }, async (request, reply) => {
+    const { gymId, memberId } = request.params
+    // Verify the member is requesting their own pass
+    if (request.member.memberId !== memberId) {
+      return reply.code(403).send({ error: 'Can only generate your own pass' })
+    }
+    const result = await walletPassService.generateGoogleWalletPass(gymId, memberId)
+    return { saveUrl: result.saveUrl, passId: result.passId }
+  })
+
+  // Apple Wallet pass — member-facing
+  fastify.get('/gyms/:gymId/members/:memberId/wallet/apple-pass', {
+    preHandler: [verifyMemberToken],
+  }, async (request, reply) => {
+    const { gymId, memberId } = request.params
+    if (request.member.memberId !== memberId) {
+      return reply.code(403).send({ error: 'Can only generate your own pass' })
+    }
+    const result = await walletPassService.generateAppleWalletPass(gymId, memberId)
+    // When Apple certs are ready, this will return base64 .pkpass data
+    return result
+  })
 
   // GET /gyms/:gymId/members/:memberId/wallet - Get wallet + transactions
   fastify.get('/gyms/:gymId/members/:memberId/wallet', authHooks, async (request) => {
