@@ -216,11 +216,6 @@ export async function verifyB2CLoginOTP(email, code) {
     }
   }
 
-  // Mark all OTPs for this email as used
-  await db('otp_codes')
-    .where({ email: normalizedEmail, purpose: 'login', used: false })
-    .update({ used: true });
-
   // Check if this email is already a member at any gym
   const existingMember = await db('members')
     .where({ email: normalizedEmail })
@@ -253,6 +248,11 @@ export async function verifyB2CLoginOTP(email, code) {
     memberId = newMember.id;
     gymId = regData?.gymId || null;
   }
+
+  // Mark OTPs as used AFTER member creation succeeds
+  await db('otp_codes')
+    .where({ email: normalizedEmail, purpose: 'login', used: false })
+    .update({ used: true });
 
   // Generate JWT
   const token = jwt.sign(
