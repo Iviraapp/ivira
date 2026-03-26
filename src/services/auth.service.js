@@ -245,7 +245,7 @@ export async function verifyB2CLoginOTP(email, code) {
       .insert({
         email: normalizedEmail,
         name: regData?.name || normalizedEmail.split('@')[0],
-        phone: regData?.phone || null,
+        phone: regData?.phone || '',
         gym_id: regData?.gymId || null,
         status: 'active',
       })

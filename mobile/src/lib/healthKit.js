@@ -389,13 +389,327 @@ export async function syncSleepToBackend(gymId, memberId, sleepData) {
   }
 }
 
+// ── Heart Rate / HRV / Resting HR ─────────────────────────────
+
+export const DEMO_HEART_RATE = { bpm: 72, timestamp: new Date().toISOString(), source: null }
+export const DEMO_RESTING_HR = { bpm: 62, source: null }
+export const DEMO_HRV = { ms: 45, source: null }
+
+/**
+ * Request extended health permissions including heart rate data.
+ * Call this instead of requestHealthPermissions() when you need HR data.
+ */
+export async function requestExtendedPermissions() {
+  if (isExpoGo || Platform.OS === 'web') return true
+
+  try {
+    if (Platform.OS === 'ios' && AppleHealthKit) {
+      return new Promise((resolve) => {
+        const permissions = {
+          permissions: {
+            read: [
+              AppleHealthKit.Constants.Permissions.StepCount,
+              AppleHealthKit.Constants.Permissions.SleepAnalysis,
+              AppleHealthKit.Constants.Permissions.HeartRate,
+              AppleHealthKit.Constants.Permissions.HeartRateVariability,
+              AppleHealthKit.Constants.Permissions.RestingHeartRate,
+            ],
+          },
+        }
+        AppleHealthKit.initHealthKit(permissions, (err) => {
+          resolve(!err)
+        })
+      })
+    }
+
+    if (Platform.OS === 'android' && HealthConnect) {
+      const ready = await ensureHealthConnectReady()
+      if (!ready) return false
+
+      try {
+        const granted = await HealthConnect.requestPermission([
+          { accessType: 'read', recordType: 'Steps' },
+          { accessType: 'read', recordType: 'SleepSession' },
+          { accessType: 'read', recordType: 'HeartRate' },
+          { accessType: 'read', recordType: 'HeartRateVariabilityRmssd' },
+          { accessType: 'read', recordType: 'RestingHeartRate' },
+        ])
+        return granted.length > 0
+      } catch {
+        return false
+      }
+    }
+  } catch (err) {
+    console.warn('[HealthKit] Extended permission failed:', err.message)
+  }
+  return false
+}
+
+/**
+ * Get the most recent heart rate reading.
+ * Returns { bpm, timestamp, source } or null.
+ */
+export async function getLatestHeartRate() {
+  if (isExpoGo || Platform.OS === 'web') {
+    return { ...DEMO_HEART_RATE }
+  }
+
+  const now = new Date()
+  const lookback = new Date(now.getTime() - 4 * 60 * 60 * 1000) // last 4 hours
+
+  try {
+    if (Platform.OS === 'ios' && AppleHealthKit) {
+      return new Promise((resolve) => {
+        AppleHealthKit.getHeartRateSamples(
+          { startDate: lookback.toISOString(), endDate: now.toISOString(), ascending: false, limit: 1 },
+          (err, results) => {
+            if (err || !results || results.length === 0) {
+              resolve(null)
+              return
+            }
+            const sample = results[0]
+            resolve({
+              bpm: Math.round(sample.value),
+              timestamp: sample.endDate || sample.startDate,
+              source: 'apple_health',
+            })
+          }
+        )
+      })
+    }
+
+    if (Platform.OS === 'android' && HealthConnect) {
+      const ready = await ensureHealthConnectReady()
+      if (!ready) return null
+
+      const result = await HealthConnect.readRecords('HeartRate', {
+        timeRangeFilter: {
+          operator: 'between',
+          startTime: lookback.toISOString(),
+          endTime: now.toISOString(),
+        },
+      })
+      const records = result?.records || []
+      if (records.length === 0) return null
+
+      const latest = records[records.length - 1]
+      const samples = latest.samples || []
+      const lastSample = samples[samples.length - 1]
+      return {
+        bpm: lastSample?.beatsPerMinute || 0,
+        timestamp: latest.endTime || latest.startTime,
+        source: 'health_connect',
+      }
+    }
+  } catch (err) {
+    console.warn('[HealthKit] Failed to fetch heart rate:', err.message)
+  }
+  return null
+}
+
+/**
+ * Get resting heart rate.
+ * Returns { bpm, source } or null.
+ */
+export async function getRestingHeartRate() {
+  if (isExpoGo || Platform.OS === 'web') {
+    return { ...DEMO_RESTING_HR }
+  }
+
+  const now = new Date()
+  const lookback = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
+  try {
+    if (Platform.OS === 'ios' && AppleHealthKit) {
+      return new Promise((resolve) => {
+        AppleHealthKit.getRestingHeartRate(
+          { startDate: lookback.toISOString(), endDate: now.toISOString() },
+          (err, results) => {
+            if (err || !results || results.length === 0) {
+              resolve(null)
+              return
+            }
+            resolve({
+              bpm: Math.round(results[results.length - 1].value),
+              source: 'apple_health',
+            })
+          }
+        )
+      })
+    }
+
+    if (Platform.OS === 'android' && HealthConnect) {
+      const ready = await ensureHealthConnectReady()
+      if (!ready) return null
+
+      const result = await HealthConnect.readRecords('RestingHeartRate', {
+        timeRangeFilter: {
+          operator: 'between',
+          startTime: lookback.toISOString(),
+          endTime: now.toISOString(),
+        },
+      })
+      const records = result?.records || []
+      if (records.length === 0) return null
+      return {
+        bpm: records[records.length - 1].beatsPerMinute || 0,
+        source: 'health_connect',
+      }
+    }
+  } catch (err) {
+    console.warn('[HealthKit] Failed to fetch resting HR:', err.message)
+  }
+  return null
+}
+
+/**
+ * Get heart rate variability (HRV).
+ * Returns { ms, source } or null.
+ * iOS returns SDNN, Android returns RMSSD — both are valid HRV metrics.
+ */
+export async function getHRV() {
+  if (isExpoGo || Platform.OS === 'web') {
+    return { ...DEMO_HRV }
+  }
+
+  const now = new Date()
+  const lookback = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
+  try {
+    if (Platform.OS === 'ios' && AppleHealthKit) {
+      return new Promise((resolve) => {
+        AppleHealthKit.getHeartRateVariabilitySamples(
+          { startDate: lookback.toISOString(), endDate: now.toISOString(), ascending: false, limit: 1 },
+          (err, results) => {
+            if (err || !results || results.length === 0) {
+              resolve(null)
+              return
+            }
+            resolve({
+              ms: Math.round(results[0].value * 1000), // Apple returns seconds, convert to ms
+              source: 'apple_health',
+            })
+          }
+        )
+      })
+    }
+
+    if (Platform.OS === 'android' && HealthConnect) {
+      const ready = await ensureHealthConnectReady()
+      if (!ready) return null
+
+      const result = await HealthConnect.readRecords('HeartRateVariabilityRmssd', {
+        timeRangeFilter: {
+          operator: 'between',
+          startTime: lookback.toISOString(),
+          endTime: now.toISOString(),
+        },
+      })
+      const records = result?.records || []
+      if (records.length === 0) return null
+      return {
+        ms: Math.round(records[records.length - 1].heartRateVariabilityMillis || 0),
+        source: 'health_connect',
+      }
+    }
+  } catch (err) {
+    console.warn('[HealthKit] Failed to fetch HRV:', err.message)
+  }
+  return null
+}
+
+/**
+ * Get heart rate samples for charting (last N hours).
+ * Returns array of { bpm, timestamp }.
+ */
+export async function getHeartRateSamples(hours = 24) {
+  if (isExpoGo || Platform.OS === 'web') {
+    // Generate demo data
+    const samples = []
+    const now = Date.now()
+    for (let i = 0; i < 24; i++) {
+      samples.push({
+        bpm: 60 + Math.floor(Math.random() * 30),
+        timestamp: new Date(now - (23 - i) * 3600000).toISOString(),
+      })
+    }
+    return samples
+  }
+
+  const now = new Date()
+  const start = new Date(now.getTime() - hours * 60 * 60 * 1000)
+
+  try {
+    if (Platform.OS === 'ios' && AppleHealthKit) {
+      return new Promise((resolve) => {
+        AppleHealthKit.getHeartRateSamples(
+          { startDate: start.toISOString(), endDate: now.toISOString(), ascending: true, limit: 200 },
+          (err, results) => {
+            if (err || !results) {
+              resolve([])
+              return
+            }
+            resolve(results.map(s => ({
+              bpm: Math.round(s.value),
+              timestamp: s.endDate || s.startDate,
+            })))
+          }
+        )
+      })
+    }
+
+    if (Platform.OS === 'android' && HealthConnect) {
+      const ready = await ensureHealthConnectReady()
+      if (!ready) return []
+
+      const result = await HealthConnect.readRecords('HeartRate', {
+        timeRangeFilter: {
+          operator: 'between',
+          startTime: start.toISOString(),
+          endTime: now.toISOString(),
+        },
+      })
+      const samples = []
+      for (const record of (result?.records || [])) {
+        for (const s of (record.samples || [])) {
+          samples.push({ bpm: s.beatsPerMinute, timestamp: s.time || record.startTime })
+        }
+      }
+      return samples
+    }
+  } catch (err) {
+    console.warn('[HealthKit] Failed to fetch HR samples:', err.message)
+  }
+  return []
+}
+
+/**
+ * Check if a wearable device is connected (has reported HR data recently).
+ */
+export async function isWearableConnected() {
+  const hr = await getLatestHeartRate()
+  if (!hr || !hr.source) return false
+  // Check if data is from the last 4 hours
+  const age = Date.now() - new Date(hr.timestamp).getTime()
+  return age < 4 * 60 * 60 * 1000
+}
+
 export default {
   requestHealthPermissions,
+  requestExtendedPermissions,
   requestSleepPermissions,
   getTodaySteps,
   getLastNightSleep,
+  getLatestHeartRate,
+  getRestingHeartRate,
+  getHRV,
+  getHeartRateSamples,
+  isWearableConnected,
   syncStepsToBackend,
   syncSleepToBackend,
   DEMO_STEPS,
   DEMO_SLEEP,
+  DEMO_HEART_RATE,
+  DEMO_RESTING_HR,
+  DEMO_HRV,
 }

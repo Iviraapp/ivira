@@ -27,261 +27,27 @@ import SleepEngine, {
   getLiveData, setSmartAlarm, subscribe, getSleepHistory,
 } from '../lib/sleepEngine'
 
+// ── Extracted sub-components ────────────────────────────────────
+import { SLEEP_COLORS, SLEEP_TIPS, QUALITY_EMOJIS, QUALITY_LABELS, SOUNDSCAPES, STORAGE_KEY_LOGS, STORAGE_KEY_GOAL } from './sleep/SleepConstants'
+import {
+  calcDurationMinutes, formatDuration, formatTime12, getDayLabel,
+  calcSleepScore, computeInsights, computeSleepDebt,
+  getWeeklyBarData, generateDemoData,
+  mapBackendLog, buildBackendPayload, serializeTags, parseTags,
+} from './sleep/SleepHelpers'
+import ScoreRing from './sleep/ScoreRing'
+import GradientHypnogram from './sleep/GradientHypnogram'
+import QuickStatsRow from './sleep/QuickStatsRow'
+import SleepDebtIndicator from './sleep/SleepDebtIndicator'
+import SleepNotesModal, { TagChips } from './sleep/SleepNotesModal'
+import SleepSoundscapes from './sleep/SleepSoundscapes'
+import TrendsTab from './sleep/TrendsTab'
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const BAR_CHART_HEIGHT = 140
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-const STORAGE_KEY_LOGS = 'ivira_sleep_logs'
-const STORAGE_KEY_GOAL = 'ivira_sleep_goal'
-
-// Sleep-themed accent colors
-const SLEEP_COLORS = {
-  primary: '#6C63FF',      // Soft indigo/purple
-  primaryGlow: 'rgba(108,99,255,0.25)',
-  deep: '#3D348B',         // Deep purple
-  light: '#A5A0FF',        // Light lavender
-  moon: '#FFD93D',         // Moon yellow
-  star: '#FFE169',         // Star gold
-}
-
-const QUALITY_EMOJIS = ['😫', '😴', '😐', '🙂', '😊']
-const QUALITY_LABELS = ['Terrible', 'Poor', 'Fair', 'Good', 'Great']
-
-const SLEEP_TIPS = [
-  { icon: 'smartphone-off', title: 'No screens 1 hour before bed', desc: 'Blue light suppresses melatonin production' },
-  { icon: 'thermometer', title: 'Cool your room to 18-20°C', desc: 'A slightly cool room improves sleep onset' },
-  { icon: 'coffee', title: 'Avoid caffeine after 2 PM', desc: 'Caffeine has a half-life of 5-6 hours' },
-  { icon: 'sun', title: 'Get morning sunlight', desc: '10 min of sun helps set your circadian rhythm' },
-  { icon: 'moon', title: 'Keep a consistent schedule', desc: 'Same bedtime & wake time, even on weekends' },
-  { icon: 'wind', title: 'Try 4-7-8 breathing', desc: 'Breathe in 4s, hold 7s, exhale 8s to relax' },
-]
-
-// ── Demo data generator ────────────────────────────────────────────
-function generateDemoData() {
-  const logs = []
-  const now = new Date()
-
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
-
-    // Bedtime between 10 PM and 12 AM
-    const bedHour = 22 + Math.floor(Math.random() * 2)
-    const bedMin = Math.floor(Math.random() * 60)
-
-    // Wake between 5:30 AM and 7:30 AM
-    const wakeHour = 5 + Math.floor(Math.random() * 2)
-    const wakeMin = 30 + Math.floor(Math.random() * 30)
-
-    const quality = Math.floor(Math.random() * 3) + 3 // 3-5
-
-    logs.push({
-      id: `sleep-${dateStr}`,
-      date: dateStr,
-      bedHour,
-      bedMin,
-      wakeHour,
-      wakeMin,
-      quality,
-      createdAt: date.toISOString(),
-    })
-  }
-
-  return logs
-}
-
-// ── Helpers ────────────────────────────────────────────────────────
-function calcDurationMinutes(bedHour, bedMin, wakeHour, wakeMin) {
-  let bedTotal = bedHour * 60 + bedMin
-  let wakeTotal = wakeHour * 60 + wakeMin
-  if (wakeTotal <= bedTotal) wakeTotal += 24 * 60 // crosses midnight
-  return wakeTotal - bedTotal
-}
-
-function formatDuration(minutes) {
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return `${h}h ${m.toString().padStart(2, '0')}m`
-}
-
-function formatTime12(hour, min) {
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const h = hour % 12 || 12
-  return `${h}:${min.toString().padStart(2, '0')} ${ampm}`
-}
-
-function getDayLabel(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00')
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  if (d.toDateString() === today.toDateString()) return 'Today'
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
-  return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
-}
-
-function getDayOfWeekIdx(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.getDay() === 0 ? 6 : d.getDay() - 1 // Mon=0
-}
-
-// ── Sleep Score Calculation ────────────────────────────────────────
-function calcSleepScore(log, allLogs, goalHours) {
-  const duration = calcDurationMinutes(log.bedHour, log.bedMin, log.wakeHour, log.wakeMin)
-  const durationHours = duration / 60
-
-  // Duration score (0-40): ideal is goal hours, penalise under/over
-  let durationScore = 0
-  if (durationHours >= goalHours - 0.5 && durationHours <= goalHours + 1) {
-    durationScore = 40
-  } else if (durationHours < goalHours - 0.5) {
-    durationScore = Math.max(0, 40 * (durationHours / goalHours))
-  } else {
-    // Oversleeping penalty
-    durationScore = Math.max(0, 40 - (durationHours - goalHours - 1) * 8)
-  }
-
-  // Quality score (0-30): based on quality rating
-  const qualityScore = ((log.quality - 1) / 4) * 30
-
-  // Consistency score (0-30): how consistent is bedtime across logs
-  let consistencyScore = 15 // default if not enough data
-  if (allLogs.length >= 3) {
-    const bedtimes = allLogs.slice(0, 7).map(l => {
-      let t = l.bedHour * 60 + l.bedMin
-      if (t < 720) t += 1440 // normalise past-midnight bedtimes
-      return t
-    })
-    const avgBedtime = bedtimes.reduce((a, b) => a + b, 0) / bedtimes.length
-    const variance = bedtimes.reduce((s, t) => s + Math.pow(t - avgBedtime, 2), 0) / bedtimes.length
-    const stdDev = Math.sqrt(variance) // in minutes
-    // Under 15 min stddev = perfect, over 90 min = 0
-    consistencyScore = Math.max(0, Math.min(30, 30 * (1 - stdDev / 90)))
-  }
-
-  return Math.round(Math.min(100, durationScore + qualityScore + consistencyScore))
-}
-
-// ── Compute Insights ───────────────────────────────────────────────
-function computeInsights(logs, goalHours) {
-  if (logs.length === 0) return null
-
-  const durations = logs.map(l => calcDurationMinutes(l.bedHour, l.bedMin, l.wakeHour, l.wakeMin))
-
-  // Average bedtime
-  const bedtimes = logs.map(l => {
-    let t = l.bedHour * 60 + l.bedMin
-    if (t < 720) t += 1440 // normalise
-    return t
-  })
-  const avgBedtime = Math.round(bedtimes.reduce((a, b) => a + b, 0) / bedtimes.length)
-  const avgBedHour = Math.floor((avgBedtime % 1440) / 60)
-  const avgBedMin = avgBedtime % 60
-
-  // Average wake time
-  const waketimes = logs.map(l => l.wakeHour * 60 + l.wakeMin)
-  const avgWaketime = Math.round(waketimes.reduce((a, b) => a + b, 0) / waketimes.length)
-  const avgWakeHour = Math.floor(avgWaketime / 60)
-  const avgWakeMin = avgWaketime % 60
-
-  const avgDuration = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
-  const bestIdx = durations.indexOf(Math.max(...durations))
-  const worstIdx = durations.indexOf(Math.min(...durations))
-
-  const scores = logs.map(l => calcSleepScore(l, logs, goalHours))
-  const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-
-  return {
-    avgBedtime: formatTime12(avgBedHour, avgBedMin),
-    avgWakeTime: formatTime12(avgWakeHour, avgWakeMin),
-    avgDuration: formatDuration(avgDuration),
-    avgScore,
-    bestNight: logs[bestIdx] ? getDayLabel(logs[bestIdx].date) : '-',
-    bestDuration: formatDuration(durations[bestIdx] || 0),
-    worstNight: logs[worstIdx] ? getDayLabel(logs[worstIdx].date) : '-',
-    worstDuration: formatDuration(durations[worstIdx] || 0),
-  }
-}
-
-// ── Weekly Bar Data ────────────────────────────────────────────────
-function getWeeklyBarData(logs) {
-  const now = new Date()
-  const bars = []
-  for (let i = 6; i >= 0; i--) {
-    const day = new Date(now)
-    day.setDate(day.getDate() - i)
-    const dateStr = day.toISOString().split('T')[0]
-    const match = logs.find(l => l.date === dateStr)
-    const duration = match
-      ? calcDurationMinutes(match.bedHour, match.bedMin, match.wakeHour, match.wakeMin)
-      : 0
-    bars.push({
-      label: DAY_LABELS[day.getDay() === 0 ? 6 : day.getDay() - 1],
-      hours: duration / 60,
-      quality: match ? match.quality : 0,
-      date: dateStr,
-    })
-  }
-  return bars
-}
-
-// ── Score Ring ──────────────────────────────────────────────────────
-function ScoreRing({ score, size = 120, colors }) {
-  const animValue = useRef(new Animated.Value(0)).current
-
-  useEffect(() => {
-    Animated.timing(animValue, {
-      toValue: score,
-      duration: 1200,
-      useNativeDriver: false,
-    }).start()
-  }, [score])
-
-  const scoreColor = score >= 80 ? '#22C55E' : score >= 60 ? SLEEP_COLORS.primary : score >= 40 ? '#F59E0B' : '#EA4335'
-  const label = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Poor'
-
-  return (
-    <View style={{ alignItems: 'center' }}>
-      <View style={[scoreRingStyles.ring, {
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        borderColor: colors.border,
-        borderWidth: 3,
-      }]}>
-        <View style={[scoreRingStyles.innerRing, {
-          width: size - 8,
-          height: size - 8,
-          borderRadius: (size - 8) / 2,
-          borderColor: scoreColor,
-          borderWidth: 4,
-        }]}>
-          <Text style={[scoreRingStyles.scoreText, { color: colors.text, fontFamily: FONT.numBold }]}>
-            {score}
-          </Text>
-          <Text style={[scoreRingStyles.scoreLabel, { color: colors.textSec }]}>
-            / 100
-          </Text>
-        </View>
-      </View>
-      <Text style={[scoreRingStyles.qualityLabel, { color: scoreColor, fontFamily: FONT.semibold }]}>
-        {label}
-      </Text>
-    </View>
-  )
-}
-
-const scoreRingStyles = StyleSheet.create({
-  ring: { justifyContent: 'center', alignItems: 'center' },
-  innerRing: { justifyContent: 'center', alignItems: 'center' },
-  scoreText: { fontSize: 32 },
-  scoreLabel: { fontSize: 13, marginTop: -2 },
-  qualityLabel: { fontSize: 14, marginTop: 8 },
-})
-
-// ── Time Picker Modal ──────────────────────────────────────────────
+// ── Time Picker Modal ──────────────────────────────────────────
 function TimePickerModal({ visible, onClose, onSelect, initialHour, initialMin, title, colors, card }) {
   const [selectedHour, setSelectedHour] = useState(initialHour)
   const [selectedMin, setSelectedMin] = useState(initialMin)
@@ -455,7 +221,7 @@ const tpStyles = StyleSheet.create({
   doneText: { fontSize: 15, color: '#fff' },
 })
 
-// ── Goal Input Modal ───────────────────────────────────────────────
+// ── Goal Input Modal ───────────────────────────────────────────
 function GoalModal({ visible, onClose, onSave, currentGoal, colors }) {
   const [value, setValue] = useState(String(currentGoal))
 
@@ -515,7 +281,7 @@ function GoalModal({ visible, onClose, onSave, currentGoal, colors }) {
   )
 }
 
-// ── Weekly Bar Chart ───────────────────────────────────────────────
+// ── Weekly Bar Chart ───────────────────────────────────────────
 function WeeklyBarChart({ data, goalHours, colors }) {
   const maxHours = Math.max(10, ...data.map(d => d.hours))
   const targetY = (1 - goalHours / maxHours) * BAR_CHART_HEIGHT
@@ -642,7 +408,7 @@ const chartStyles = StyleSheet.create({
   },
 })
 
-// ── Log Entry Card ─────────────────────────────────────────────────
+// ── Log Entry Card ─────────────────────────────────────────────
 function SleepLogEntry({ log, colors, card, goalHours, allLogs }) {
   const duration = calcDurationMinutes(log.bedHour, log.bedMin, log.wakeHour, log.wakeMin)
   const score = calcSleepScore(log, allLogs, goalHours)
@@ -656,7 +422,7 @@ function SleepLogEntry({ log, colors, card, goalHours, allLogs }) {
             {getDayLabel(log.date)}
           </Text>
           <Text style={[styles.logDay, { color: colors.textTer, fontFamily: FONT.regular }]}>
-            {new Date(log.date + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'long' })}
+            {new Date(log.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' })}
           </Text>
         </View>
         <View style={styles.logHeaderRight}>
@@ -693,40 +459,7 @@ function SleepLogEntry({ log, colors, card, goalHours, allLogs }) {
   )
 }
 
-// ── Backend data mapping ─────────────────────────────────────────
-function mapBackendLog(entry) {
-  const bed = new Date(entry.bedtime)
-  const wake = new Date(entry.wake_time)
-  return {
-    id: entry.id || `sleep-${bed.toISOString().split('T')[0]}`,
-    date: bed.toISOString().split('T')[0],
-    bedHour: bed.getHours(),
-    bedMin: bed.getMinutes(),
-    wakeHour: wake.getHours(),
-    wakeMin: wake.getMinutes(),
-    quality: entry.quality_rating,
-    createdAt: entry.created_at || bed.toISOString(),
-  }
-}
-
-function buildBackendPayload(bedHour, bedMin, wakeHour, wakeMin, quality) {
-  const now = new Date()
-  const bedtime = new Date(now)
-  bedtime.setHours(bedHour, bedMin, 0, 0)
-  // If bedtime is in the future, assume it was yesterday
-  if (bedtime > now) bedtime.setDate(bedtime.getDate() - 1)
-  const wake_time = new Date(bedtime)
-  wake_time.setHours(wakeHour, wakeMin, 0, 0)
-  // Wake time is after bedtime (next day if crosses midnight)
-  if (wake_time <= bedtime) wake_time.setDate(wake_time.getDate() + 1)
-  return {
-    bedtime: bedtime.toISOString(),
-    wake_time: wake_time.toISOString(),
-    quality_rating: quality,
-  }
-}
-
-// ── Hypnogram (Sleep Cycle Graph) ─────────────────────────────────
+// ── Hypnogram (fallback for engine data) ────────────────────────
 function Hypnogram({ epochs, colors, width: chartWidth }) {
   if (!epochs || epochs.length === 0) return null
 
@@ -743,7 +476,6 @@ function Hypnogram({ epochs, colors, width: chartWidth }) {
 
   return (
     <View style={{ marginTop: SPACING.sm }}>
-      {/* Y-axis labels */}
       <View style={{ flexDirection: 'row' }}>
         <View style={{ width: 40, height: GRAPH_HEIGHT, justifyContent: 'space-between', paddingVertical: 4 }}>
           {['Awake', 'REM', 'Light', 'Deep'].map(label => (
@@ -772,7 +504,6 @@ function Hypnogram({ epochs, colors, width: chartWidth }) {
           })}
         </View>
       </View>
-      {/* Time axis */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 40, marginTop: 4 }}>
         {epochs.length > 0 && (
           <>
@@ -789,7 +520,7 @@ function Hypnogram({ epochs, colors, width: chartWidth }) {
   )
 }
 
-// ── Stage Breakdown Bar ───────────────────────────────────────────
+// ── Stage Breakdown Bar ───────────────────────────────────────
 function StageBreakdown({ stageDurations, totalMs, colors }) {
   const total = Object.values(stageDurations).reduce((a, b) => a + b, 0) || 1
   const stages = [
@@ -801,7 +532,6 @@ function StageBreakdown({ stageDurations, totalMs, colors }) {
 
   return (
     <View style={{ marginTop: SPACING.md }}>
-      {/* Stacked bar */}
       <View style={{ flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden' }}>
         {stages.map(s => {
           const pct = (stageDurations[s.key] || 0) / total * 100
@@ -809,7 +539,6 @@ function StageBreakdown({ stageDurations, totalMs, colors }) {
           return <View key={s.key} style={{ width: `${pct}%`, backgroundColor: s.color }} />
         })}
       </View>
-      {/* Legend */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: SPACING.sm, gap: SPACING.md }}>
         {stages.map(s => {
           const mins = Math.round((stageDurations[s.key] || 0) / 60000)
@@ -831,7 +560,7 @@ function StageBreakdown({ stageDurations, totalMs, colors }) {
   )
 }
 
-// ── Audio Events Timeline ─────────────────────────────────────────
+// ── Audio Events Timeline ─────────────────────────────────────
 function AudioEventsCard({ events, colors, card }) {
   if (!events || events.length === 0) return null
 
@@ -869,8 +598,8 @@ function AudioEventsCard({ events, colors, card }) {
   )
 }
 
-// ── Live Tracking View ────────────────────────────────────────────
-function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId }) {
+// ── Live Tracking View ────────────────────────────────────────
+function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, onSaveTags }) {
   const [tracking, setTracking] = useState(checkIsTracking())
   const [liveData, setLiveData] = useState(getLiveData())
   const [report, setReport] = useState(null)
@@ -879,7 +608,10 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
   const [alarmHour, setAlarmHour] = useState(7)
   const [alarmMin, setAlarmMin] = useState(0)
   const [useSmartAlarm, setUseSmartAlarm] = useState(false)
+  const [showNotesModal, setShowNotesModal] = useState(false)
+  const [reportTags, setReportTags] = useState([])
   const pulseAnim = useRef(new Animated.Value(1)).current
+  const pulseAnim2 = useRef(new Animated.Value(0.6)).current
 
   useEffect(() => {
     const unsub = subscribe((data) => {
@@ -889,7 +621,7 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
     return unsub
   }, [])
 
-  // Pulse animation when tracking
+  // Double-pulse animation when tracking
   useEffect(() => {
     if (tracking) {
       const pulse = Animated.loop(
@@ -898,8 +630,15 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
           Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
         ])
       )
+      const pulse2 = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim2, { toValue: 1, duration: 2000, useNativeDriver: true }),
+          Animated.timing(pulseAnim2, { toValue: 0.3, duration: 2000, useNativeDriver: true }),
+        ])
+      )
       pulse.start()
-      return () => pulse.stop()
+      pulse2.start()
+      return () => { pulse.stop(); pulse2.stop() }
     }
   }, [tracking])
 
@@ -909,9 +648,8 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
     if (useSmartAlarm) {
       const now = new Date()
       alarmTime = new Date(now)
-      alarmTime.setDate(alarmTime.getDate() + 1) // tomorrow
+      alarmTime.setDate(alarmTime.getDate() + 1)
       alarmTime.setHours(alarmHour, alarmMin, 0, 0)
-      // If alarm is more than 16 hours away, set for today
       if (alarmTime - now > 16 * 60 * 60 * 1000) {
         alarmTime.setDate(alarmTime.getDate() - 1)
       }
@@ -961,7 +699,7 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
 
   const nightGradientBg = isDark ? 'rgba(108,99,255,0.06)' : 'rgba(108,99,255,0.04)'
 
-  // ── Sleep Report View ───────────────────────────────────
+  // ── Sleep Report View ───────────────────────────────
   if (report && !tracking) {
     const scoreColor = report.score >= 80 ? '#22C55E' : report.score >= 60 ? SLEEP_COLORS.primary : report.score >= 40 ? '#F59E0B' : '#EA4335'
 
@@ -972,7 +710,9 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
           <Text style={{ fontSize: 13, color: colors.textSec, fontFamily: FONT.medium, marginBottom: SPACING.sm }}>
             Sleep Report
           </Text>
-          <ScoreRing score={report.score} colors={colors} size={140} />
+          <ScoreRing score={report.score} size={160} label={report.score >= 85 ? 'Excellent' : report.score >= 70 ? 'Good' : report.score >= 50 ? 'Fair' : 'Poor'} />
+
+          {/* Quick Stats Row */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.lg, marginTop: SPACING.lg }}>
             <View style={{ alignItems: 'center' }}>
               <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.medium }}>Duration</Text>
@@ -991,12 +731,22 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
           </View>
         </View>
 
-        {/* Hypnogram */}
+        {/* SVG Hypnogram */}
         <View style={[{ padding: SPACING.lg, marginBottom: SPACING.md }, card]}>
           <Text style={{ fontSize: 17, color: colors.text, fontFamily: FONT.semibold, marginBottom: SPACING.sm }}>
             Sleep Stages
           </Text>
-          <Hypnogram epochs={report.stageTimeline} colors={colors} />
+          {report.stageTimeline && report.stageTimeline.length > 2 ? (
+            <GradientHypnogram
+              epochs={report.stageTimeline}
+              width={SCREEN_WIDTH - SPACING.md * 2 - SPACING.lg * 2}
+              startTime={report.bedtime}
+              endTime={report.wakeTime}
+              colors={colors}
+            />
+          ) : (
+            <Hypnogram epochs={report.stageTimeline} colors={colors} />
+          )}
           <StageBreakdown stageDurations={report.stageDurations} totalMs={report.totalMinutes * 60000} colors={colors} />
         </View>
 
@@ -1024,40 +774,67 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
         {/* Audio Events */}
         <AudioEventsCard events={report.audioEvents} colors={colors} card={card} />
 
+        {/* Sleep Notes */}
+        <View style={[{ padding: SPACING.lg, marginBottom: SPACING.md }, card]}>
+          <Text style={{ fontSize: 15, color: colors.text, fontFamily: FONT.semibold, marginBottom: SPACING.sm }}>
+            Sleep Notes
+          </Text>
+          <TagChips tags={reportTags} onPress={() => setShowNotesModal(true)} />
+        </View>
+
         {/* Done button */}
         <TouchableOpacity
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: RADIUS.lg, backgroundColor: SLEEP_COLORS.primary, marginBottom: SPACING.xl }}
-          onPress={() => setReport(null)}
+          onPress={() => {
+            if (onSaveTags && reportTags.length > 0) onSaveTags(reportTags)
+            setReport(null)
+          }}
         >
           <Feather name="check" size={18} color="#fff" style={{ marginRight: 6 }} />
           <Text style={{ color: '#fff', fontSize: 15, fontFamily: FONT.semibold }}>Done</Text>
         </TouchableOpacity>
+
+        <SleepNotesModal
+          visible={showNotesModal}
+          onClose={() => setShowNotesModal(false)}
+          onSave={setReportTags}
+          initialTags={reportTags}
+        />
       </ScrollView>
     )
   }
 
-  // ── Active Tracking View ────────────────────────────────
+  // ── Active Tracking View ────────────────────────────
   if (tracking) {
     const currentStage = liveData?.currentStage || SleepStage.AWAKE
     const stageColor = STAGE_COLORS[currentStage]
 
     return (
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.xxl }}>
-        {/* Tracking Hero */}
+        {/* Tracking Hero with double pulse */}
         <View style={[{ padding: SPACING.xl, marginBottom: SPACING.md, alignItems: 'center' }, card]}>
-          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-            <View style={{
-              width: 120, height: 120, borderRadius: 60,
-              backgroundColor: stageColor + '15',
-              borderWidth: 3, borderColor: stageColor + '40',
-              justifyContent: 'center', alignItems: 'center',
-            }}>
-              <Feather name="moon" size={32} color={stageColor} />
-              <Text style={{ fontSize: 11, color: stageColor, fontFamily: FONT.semibold, marginTop: 4 }}>
-                {STAGE_LABELS[currentStage]}
-              </Text>
-            </View>
-          </Animated.View>
+          <View style={{ position: 'relative', width: 140, height: 140, justifyContent: 'center', alignItems: 'center' }}>
+            {/* Outer pulse ring */}
+            <Animated.View style={{
+              position: 'absolute', width: 140, height: 140, borderRadius: 70,
+              borderWidth: 2, borderColor: stageColor + '30',
+              opacity: pulseAnim2, transform: [{ scale: pulseAnim }],
+            }} />
+            {/* Inner circle */}
+            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+              <View style={{
+                width: 120, height: 120, borderRadius: 60,
+                backgroundColor: stageColor + '15',
+                borderWidth: 3, borderColor: stageColor + '40',
+                justifyContent: 'center', alignItems: 'center',
+              }}>
+                <Feather name="moon" size={32} color={stageColor} />
+                <Text style={{ fontSize: 11, color: stageColor, fontFamily: FONT.semibold, marginTop: 4 }}>
+                  {STAGE_LABELS[currentStage]}
+                </Text>
+              </View>
+            </Animated.View>
+          </View>
 
           <Text style={{ fontSize: 13, color: colors.textSec, fontFamily: FONT.medium, marginTop: SPACING.lg }}>
             Tracking sleep...
@@ -1082,13 +859,17 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
           )}
         </View>
 
-        {/* Live Hypnogram */}
+        {/* Live SVG Hypnogram */}
         {liveData?.epochs?.length > 2 && (
           <View style={[{ padding: SPACING.lg, marginBottom: SPACING.md }, card]}>
             <Text style={{ fontSize: 15, color: colors.text, fontFamily: FONT.semibold, marginBottom: SPACING.xs }}>
               Live Sleep Stages
             </Text>
-            <Hypnogram epochs={liveData.epochs} colors={colors} />
+            <GradientHypnogram
+              epochs={liveData.epochs}
+              width={SCREEN_WIDTH - SPACING.md * 2 - SPACING.lg * 2}
+              colors={colors}
+            />
           </View>
         )}
 
@@ -1116,7 +897,7 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
     )
   }
 
-  // ── Pre-Tracking Setup View ─────────────────────────────
+  // ── Pre-Tracking Setup View ─────────────────────────
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.xxl }}>
       {/* Hero */}
@@ -1135,6 +916,11 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
         <Text style={{ fontSize: 13, color: colors.textSec, fontFamily: FONT.regular, textAlign: 'center', lineHeight: 19 }}>
           Place your phone on the mattress. IVIRA uses motion sensors and audio to track sleep stages in real-time.
         </Text>
+      </View>
+
+      {/* Soundscapes */}
+      <View style={[{ padding: SPACING.lg, marginBottom: SPACING.md }, card]}>
+        <SleepSoundscapes colors={colors} />
       </View>
 
       {/* Smart Alarm */}
@@ -1193,9 +979,8 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
         </Text>
       </View>
 
-      {/* How it works */}
-      <View style={[{ padding: SPACING.lg, marginBottom: SPACING.md }, card]}>
-        <Text style={{ fontSize: 15, color: colors.text, fontFamily: FONT.semibold, marginBottom: SPACING.md }}>How It Works</Text>
+      {/* How it works (collapsible) */}
+      <CollapsibleSection title="How It Works" colors={colors} card={card}>
         {[
           { icon: 'smartphone', text: 'Place phone face-down on your mattress', color: SLEEP_COLORS.primary },
           { icon: 'activity', text: 'Accelerometer detects body movements', color: '#22C55E' },
@@ -1210,7 +995,7 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
             <Text style={{ fontSize: 13, color: colors.textSec, fontFamily: FONT.medium, flex: 1 }}>{step.text}</Text>
           </View>
         ))}
-      </View>
+      </CollapsibleSection>
 
       {/* Start Button */}
       <TouchableOpacity
@@ -1236,6 +1021,25 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId })
   )
 }
 
+// ── Collapsible Section ──────────────────────────────────────
+function CollapsibleSection({ title, children, colors, card }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <View style={[{ padding: SPACING.lg, marginBottom: SPACING.md }, card]}>
+      <TouchableOpacity
+        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+        onPress={() => setExpanded(!expanded)}
+        activeOpacity={0.7}
+      >
+        <Text style={{ fontSize: 15, color: colors.text, fontFamily: FONT.semibold }}>{title}</Text>
+        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textTer} />
+      </TouchableOpacity>
+      {expanded && <View style={{ marginTop: SPACING.sm }}>{children}</View>}
+    </View>
+  )
+}
+
 // ════════════════════════════════════════════════════════════════════
 // ── Main Screen ────────────────────────────────────────────────────
 // ════════════════════════════════════════════════════════════════════
@@ -1243,7 +1047,7 @@ export default function SleepTrackerScreen({ navigation }) {
   const { member, gymId } = useAuth()
   const { colors, card, isDark } = useTheme()
 
-  const [activeTab, setActiveTab] = useState('log') // 'log' | 'track' | 'insights'
+  const [activeTab, setActiveTab] = useState('today') // 'today' | 'track' | 'trends'
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -1255,11 +1059,14 @@ export default function SleepTrackerScreen({ navigation }) {
   const [wakeHour, setWakeHour] = useState(6)
   const [wakeMin, setWakeMin] = useState(30)
   const [quality, setQuality] = useState(4)
+  const [logTags, setLogTags] = useState([])
+  const [logFormExpanded, setLogFormExpanded] = useState(false)
 
   // Modal state
   const [showBedPicker, setShowBedPicker] = useState(false)
   const [showWakePicker, setShowWakePicker] = useState(false)
   const [showGoalModal, setShowGoalModal] = useState(false)
+  const [showNotesModal, setShowNotesModal] = useState(false)
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -1271,16 +1078,13 @@ export default function SleepTrackerScreen({ navigation }) {
   const loadData = useCallback(async () => {
     try {
       if (gymId && member?.id) {
-        // Try backend first
         try {
           const res = await api.get(`/gyms/${gymId}/members/${member.id}/sleep/history`)
           const backendLogs = (res.data?.data || res.data || []).map(mapBackendLog)
           if (backendLogs.length > 0) {
             setLogs(backendLogs)
-            // Cache locally
             await AsyncStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(backendLogs)).catch(() => {})
           } else {
-            // Backend returned empty — fall back to local
             const stored = await AsyncStorage.getItem(STORAGE_KEY_LOGS)
             setLogs(stored ? JSON.parse(stored) : generateDemoData())
           }
@@ -1294,7 +1098,6 @@ export default function SleepTrackerScreen({ navigation }) {
         if (stored) {
           setLogs(JSON.parse(stored))
         } else {
-          // First time — show demo data
           setLogs(generateDemoData())
         }
       }
@@ -1347,6 +1150,7 @@ export default function SleepTrackerScreen({ navigation }) {
   const handleLogSleep = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     const today = new Date().toISOString().split('T')[0]
+    const notes = serializeTags(logTags, '')
     const newLog = {
       id: `sleep-${today}-${Date.now()}`,
       date: today,
@@ -1355,32 +1159,34 @@ export default function SleepTrackerScreen({ navigation }) {
       wakeHour,
       wakeMin,
       quality,
+      notes,
+      tags: logTags,
       createdAt: new Date().toISOString(),
     }
 
-    // Replace today's entry if exists, otherwise add
     const filtered = logs.filter(l => l.date !== today)
     const newLogs = [newLog, ...filtered].sort((a, b) => b.date.localeCompare(a.date))
     setLogs(newLogs)
     saveLogs(newLogs)
+    setLogFormExpanded(false)
 
-    // POST to backend (fire-and-forget, local state already updated)
     if (gymId && member?.id) {
-      const payload = buildBackendPayload(bedHour, bedMin, wakeHour, wakeMin, quality)
+      const payload = buildBackendPayload({ bedHour, bedMin, wakeHour, wakeMin, quality, notes })
       api.post(`/gyms/${gymId}/members/${member.id}/sleep`, payload).catch(err => {
         console.warn('Failed to sync sleep log to backend:', err.message)
       })
     }
-  }, [bedHour, bedMin, wakeHour, wakeMin, quality, logs, saveLogs, gymId, member?.id])
+  }, [bedHour, bedMin, wakeHour, wakeMin, quality, logTags, logs, saveLogs, gymId, member?.id])
 
   // ── Computed ───────────────────────────────────────────────────
   const weeklyBars = getWeeklyBarData(logs)
   const todayLog = logs.find(l => l.date === new Date().toISOString().split('T')[0])
   const todayScore = todayLog ? calcSleepScore(todayLog, logs, goalHours) : null
-  const insights = computeInsights(logs.slice(0, 7), goalHours)
+  const sleepDebt = computeSleepDebt(logs, goalHours, 7)
   const currentDuration = calcDurationMinutes(bedHour, bedMin, wakeHour, wakeMin)
 
   const nightGradientBg = isDark ? 'rgba(108,99,255,0.06)' : 'rgba(108,99,255,0.04)'
+  const showLogForm = !todayLog || logFormExpanded
 
   if (loading) {
     return (
@@ -1413,12 +1219,12 @@ export default function SleepTrackerScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Tab Bar */}
+      {/* Tab Bar: Today | Track | Trends */}
       <View style={[styles.tabBar, { borderBottomColor: colors.border }]}>
         {[
-          { key: 'log', label: 'Log', icon: 'edit-3' },
+          { key: 'today', label: 'Today', icon: 'sun' },
           { key: 'track', label: 'Track', icon: 'activity' },
-          { key: 'insights', label: 'History', icon: 'bar-chart-2' },
+          { key: 'trends', label: 'Trends', icon: 'trending-up' },
         ].map(tab => (
           <TouchableOpacity
             key={tab.key}
@@ -1438,7 +1244,7 @@ export default function SleepTrackerScreen({ navigation }) {
         ))}
       </View>
 
-      {/* Track Tab */}
+      {/* ── Track Tab ───────────────────────────────────── */}
       {activeTab === 'track' && (
         <LiveTrackingView
           colors={colors}
@@ -1447,11 +1253,31 @@ export default function SleepTrackerScreen({ navigation }) {
           navigation={navigation}
           gymId={gymId}
           memberId={member?.id}
+          onSaveTags={(tags) => {
+            // Save tags from tracking report to today's log
+            if (todayLog) {
+              const updated = logs.map(l =>
+                l.id === todayLog.id ? { ...l, tags, notes: serializeTags(tags, l.notes) } : l
+              )
+              setLogs(updated)
+              saveLogs(updated)
+            }
+          }}
         />
       )}
 
-      {/* Log & Insights Tabs */}
-      {activeTab !== 'track' && (
+      {/* ── Trends Tab ──────────────────────────────────── */}
+      {activeTab === 'trends' && (
+        <TrendsTab
+          logs={logs}
+          goalHours={goalHours}
+          colors={colors}
+          card={card}
+        />
+      )}
+
+      {/* ── Today Tab ──────────────────────────────────── */}
+      {activeTab === 'today' && (
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -1466,15 +1292,31 @@ export default function SleepTrackerScreen({ navigation }) {
       >
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
-          {/* ── Today's Score ──────────────────────────────── */}
+          {/* ── Score Ring ──────────────────────────────── */}
           {todayScore !== null && (
             <View style={[styles.scoreCard, { ...card, backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : card.backgroundColor }, { borderColor: SLEEP_COLORS.primary + '20' }]}>
               <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: FONT.semibold }]}>
                 Tonight&apos;s Sleep Score
               </Text>
-              <View style={{ marginTop: SPACING.md }}>
-                <ScoreRing score={todayScore} colors={colors} />
+              <View style={{ marginTop: SPACING.md, alignItems: 'center' }}>
+                <ScoreRing score={todayScore} size={160} />
               </View>
+
+              {/* Quick Stats Row */}
+              <QuickStatsRow log={todayLog} colors={colors} />
+
+              {/* SVG Hypnogram (if tracked data exists) */}
+              {todayLog?.stageTimeline && todayLog.stageTimeline.length > 2 && (
+                <View style={{ marginTop: SPACING.sm }}>
+                  <GradientHypnogram
+                    epochs={todayLog.stageTimeline}
+                    width={SCREEN_WIDTH - SPACING.md * 2 - SPACING.lg * 2}
+                    colors={colors}
+                  />
+                </View>
+              )}
+
+              {/* Bedtime → Wake summary */}
               {todayLog && (
                 <View style={styles.todaySummary}>
                   <View style={styles.todayStat}>
@@ -1495,88 +1337,125 @@ export default function SleepTrackerScreen({ navigation }) {
                   </Text>
                 </View>
               )}
+
+              {/* Sleep Notes / Tags */}
+              <View style={{ marginTop: SPACING.md }}>
+                <TagChips
+                  tags={todayLog?.tags || []}
+                  onPress={() => setShowNotesModal(true)}
+                />
+              </View>
             </View>
           )}
 
-          {/* ── Log Sleep Entry ───────────────────────────── */}
-          <View style={[styles.logEntryCard, { ...card, backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : card.backgroundColor }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: FONT.semibold }]}>
-              {todayLog ? 'Update Sleep Log' : 'Log Your Sleep'}
-            </Text>
+          {/* ── Sleep Debt ─────────────────────────────── */}
+          <SleepDebtIndicator debtHours={sleepDebt} colors={colors} />
 
-            {/* Time Selectors */}
-            <View style={styles.timeRow}>
-              <TouchableOpacity
-                style={[styles.timeBlock, { backgroundColor: nightGradientBg, borderColor: SLEEP_COLORS.primary + '30' }]}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowBedPicker(true) }}
-              >
-                <Feather name="moon" size={20} color={SLEEP_COLORS.primary} />
-                <Text style={[styles.timeLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>Bedtime</Text>
-                <Text style={[styles.timeValue, { color: colors.text, fontFamily: FONT.numBold }]}>
-                  {formatTime12(bedHour, bedMin)}
+          {/* ── Manual Log Form (collapsible if today exists) ── */}
+          {todayLog && !logFormExpanded ? (
+            <TouchableOpacity
+              style={[styles.expandLogBtn, { ...card }]}
+              onPress={() => setLogFormExpanded(true)}
+              activeOpacity={0.7}
+            >
+              <Feather name="edit-3" size={16} color={SLEEP_COLORS.primary} />
+              <Text style={{ fontSize: 14, color: SLEEP_COLORS.primary, fontFamily: FONT.semibold, marginLeft: SPACING.sm }}>
+                Update Sleep Log
+              </Text>
+              <Feather name="chevron-down" size={16} color={SLEEP_COLORS.primary} style={{ marginLeft: 'auto' }} />
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.logEntryCard, { ...card, backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : card.backgroundColor }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: FONT.semibold }]}>
+                  {todayLog ? 'Update Sleep Log' : 'Log Your Sleep'}
                 </Text>
-              </TouchableOpacity>
-
-              <View style={styles.timeDivider}>
-                <Feather name="arrow-right" size={18} color={colors.textTer} />
-                <Text style={[styles.durationPreview, { color: SLEEP_COLORS.light, fontFamily: FONT.numSemibold }]}>
-                  {formatDuration(currentDuration)}
-                </Text>
+                {todayLog && (
+                  <TouchableOpacity onPress={() => setLogFormExpanded(false)}>
+                    <Feather name="chevron-up" size={18} color={colors.textTer} />
+                  </TouchableOpacity>
+                )}
               </View>
 
+              {/* Time Selectors */}
+              <View style={styles.timeRow}>
+                <TouchableOpacity
+                  style={[styles.timeBlock, { backgroundColor: nightGradientBg, borderColor: SLEEP_COLORS.primary + '30' }]}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowBedPicker(true) }}
+                >
+                  <Feather name="moon" size={20} color={SLEEP_COLORS.primary} />
+                  <Text style={[styles.timeLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>Bedtime</Text>
+                  <Text style={[styles.timeValue, { color: colors.text, fontFamily: FONT.numBold }]}>
+                    {formatTime12(bedHour, bedMin)}
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.timeDivider}>
+                  <Feather name="arrow-right" size={18} color={colors.textTer} />
+                  <Text style={[styles.durationPreview, { color: SLEEP_COLORS.light, fontFamily: FONT.numSemibold }]}>
+                    {formatDuration(currentDuration)}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.timeBlock, { backgroundColor: nightGradientBg, borderColor: SLEEP_COLORS.moon + '30' }]}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowWakePicker(true) }}
+                >
+                  <Feather name="sunrise" size={20} color={SLEEP_COLORS.moon} />
+                  <Text style={[styles.timeLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>Wake Up</Text>
+                  <Text style={[styles.timeValue, { color: colors.text, fontFamily: FONT.numBold }]}>
+                    {formatTime12(wakeHour, wakeMin)}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Quality Rating */}
+              <Text style={[styles.qualityTitle, { color: colors.textSec, fontFamily: FONT.medium }]}>Sleep Quality</Text>
+              <View style={styles.qualityRow}>
+                {QUALITY_EMOJIS.map((emoji, idx) => {
+                  const rating = idx + 1
+                  const isSelected = quality === rating
+                  return (
+                    <TouchableOpacity
+                      key={idx}
+                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setQuality(rating) }}
+                      style={[
+                        styles.qualityBtn,
+                        {
+                          backgroundColor: isSelected ? SLEEP_COLORS.primary + '20' : colors.bgTer,
+                          borderColor: isSelected ? SLEEP_COLORS.primary : colors.border,
+                        },
+                      ]}
+                    >
+                      <Text style={{ fontSize: 22 }}>{emoji}</Text>
+                      <Text style={[styles.qualityBtnLabel, {
+                        color: isSelected ? SLEEP_COLORS.light : colors.textTer,
+                        fontFamily: FONT.medium,
+                      }]}>
+                        {QUALITY_LABELS[idx]}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
+
+              {/* Sleep Notes */}
+              <View style={{ marginTop: SPACING.md }}>
+                <TagChips tags={logTags} onPress={() => setShowNotesModal(true)} />
+              </View>
+
+              {/* Save Button */}
               <TouchableOpacity
-                style={[styles.timeBlock, { backgroundColor: nightGradientBg, borderColor: SLEEP_COLORS.moon + '30' }]}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowWakePicker(true) }}
+                style={[styles.saveBtn, { backgroundColor: SLEEP_COLORS.primary }]}
+                onPress={handleLogSleep}
               >
-                <Feather name="sunrise" size={20} color={SLEEP_COLORS.moon} />
-                <Text style={[styles.timeLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>Wake Up</Text>
-                <Text style={[styles.timeValue, { color: colors.text, fontFamily: FONT.numBold }]}>
-                  {formatTime12(wakeHour, wakeMin)}
+                <Feather name="check" size={18} color="#fff" style={{ marginRight: 6 }} />
+                <Text style={[styles.saveBtnText, { fontFamily: FONT.semibold }]}>
+                  {todayLog ? 'Update Sleep Log' : 'Save Sleep Log'}
                 </Text>
               </TouchableOpacity>
             </View>
-
-            {/* Quality Rating */}
-            <Text style={[styles.qualityTitle, { color: colors.textSec, fontFamily: FONT.medium }]}>Sleep Quality</Text>
-            <View style={styles.qualityRow}>
-              {QUALITY_EMOJIS.map((emoji, idx) => {
-                const rating = idx + 1
-                const isSelected = quality === rating
-                return (
-                  <TouchableOpacity
-                    key={idx}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setQuality(rating) }}
-                    style={[
-                      styles.qualityBtn,
-                      {
-                        backgroundColor: isSelected ? SLEEP_COLORS.primary + '20' : colors.bgTer,
-                        borderColor: isSelected ? SLEEP_COLORS.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text style={{ fontSize: 22 }}>{emoji}</Text>
-                    <Text style={[styles.qualityBtnLabel, {
-                      color: isSelected ? SLEEP_COLORS.light : colors.textTer,
-                      fontFamily: FONT.medium,
-                    }]}>
-                      {QUALITY_LABELS[idx]}
-                    </Text>
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
-
-            {/* Save Button */}
-            <TouchableOpacity
-              style={[styles.saveBtn, { backgroundColor: SLEEP_COLORS.primary }]}
-              onPress={handleLogSleep}
-            >
-              <Feather name="check" size={18} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={[styles.saveBtnText, { fontFamily: FONT.semibold }]}>
-                {todayLog ? 'Update Sleep Log' : 'Save Sleep Log'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          )}
 
           {/* ── Weekly Chart ──────────────────────────────── */}
           <View style={[styles.chartCard, { ...card }]}>
@@ -1594,99 +1473,8 @@ export default function SleepTrackerScreen({ navigation }) {
             <WeeklyBarChart data={weeklyBars} goalHours={goalHours} colors={colors} />
           </View>
 
-          {/* ── Insights (only on insights tab) ─────────── */}
-          {activeTab === 'insights' && insights && (
-            <View style={[styles.insightsCard, { ...card }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: FONT.semibold }]}>
-                Sleep Insights
-              </Text>
-              <Text style={[styles.insightsSubtitle, { color: colors.textTer, fontFamily: FONT.regular }]}>
-                Last 7 days
-              </Text>
-
-              <View style={styles.insightsGrid}>
-                <View style={[styles.insightItem, { backgroundColor: nightGradientBg, borderColor: colors.border }]}>
-                  <Feather name="moon" size={16} color={SLEEP_COLORS.primary} />
-                  <Text style={[styles.insightLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>Avg Bedtime</Text>
-                  <Text style={[styles.insightValue, { color: colors.text, fontFamily: FONT.numSemibold }]}>{insights.avgBedtime}</Text>
-                </View>
-                <View style={[styles.insightItem, { backgroundColor: nightGradientBg, borderColor: colors.border }]}>
-                  <Feather name="sunrise" size={16} color={SLEEP_COLORS.moon} />
-                  <Text style={[styles.insightLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>Avg Wake</Text>
-                  <Text style={[styles.insightValue, { color: colors.text, fontFamily: FONT.numSemibold }]}>{insights.avgWakeTime}</Text>
-                </View>
-                <View style={[styles.insightItem, { backgroundColor: nightGradientBg, borderColor: colors.border }]}>
-                  <Feather name="clock" size={16} color={SLEEP_COLORS.light} />
-                  <Text style={[styles.insightLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>Avg Duration</Text>
-                  <Text style={[styles.insightValue, { color: colors.text, fontFamily: FONT.numSemibold }]}>{insights.avgDuration}</Text>
-                </View>
-                <View style={[styles.insightItem, { backgroundColor: nightGradientBg, borderColor: colors.border }]}>
-                  <Feather name="bar-chart-2" size={16} color={colors.accent} />
-                  <Text style={[styles.insightLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>Avg Score</Text>
-                  <Text style={[styles.insightValue, { color: colors.text, fontFamily: FONT.numSemibold }]}>{insights.avgScore}</Text>
-                </View>
-              </View>
-
-              <View style={[styles.bestWorstRow, { borderTopColor: colors.border }]}>
-                <View style={styles.bestWorstItem}>
-                  <View style={[styles.bestWorstIcon, { backgroundColor: 'rgba(34,197,94,0.12)' }]}>
-                    <Feather name="trending-up" size={14} color="#22C55E" />
-                  </View>
-                  <View>
-                    <Text style={[styles.bestWorstLabel, { color: colors.textTer, fontFamily: FONT.medium }]}>Best Night</Text>
-                    <Text style={[styles.bestWorstValue, { color: colors.text, fontFamily: FONT.semibold }]}>
-                      {insights.bestNight}
-                    </Text>
-                    <Text style={[styles.bestWorstSub, { color: '#22C55E', fontFamily: FONT.numMedium }]}>
-                      {insights.bestDuration}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.bestWorstItem}>
-                  <View style={[styles.bestWorstIcon, { backgroundColor: 'rgba(234,67,53,0.12)' }]}>
-                    <Feather name="trending-down" size={14} color="#EA4335" />
-                  </View>
-                  <View>
-                    <Text style={[styles.bestWorstLabel, { color: colors.textTer, fontFamily: FONT.medium }]}>Worst Night</Text>
-                    <Text style={[styles.bestWorstValue, { color: colors.text, fontFamily: FONT.semibold }]}>
-                      {insights.worstNight}
-                    </Text>
-                    <Text style={[styles.bestWorstSub, { color: '#EA4335', fontFamily: FONT.numMedium }]}>
-                      {insights.worstDuration}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {/* ── Recent Logs (insights tab) ─────────────── */}
-          {activeTab === 'insights' && (
-          <View style={styles.recentSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: FONT.semibold, marginBottom: SPACING.md }]}>
-              Recent Sleep Logs
-            </Text>
-            {logs.slice(0, 7).map((log) => (
-              <SleepLogEntry
-                key={log.id}
-                log={log}
-                colors={colors}
-                card={card}
-                goalHours={goalHours}
-                allLogs={logs}
-              />
-            ))}
-          </View>
-          )}
-
           {/* ── Sleep Tips ────────────────────────────────── */}
-          <View style={[styles.tipsCard, { ...card }]}>
-            <View style={styles.tipsHeader}>
-              <Feather name="info" size={16} color={SLEEP_COLORS.primary} />
-              <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: FONT.semibold, marginLeft: SPACING.sm }]}>
-                Sleep Hygiene Tips
-              </Text>
-            </View>
+          <CollapsibleSection title="Sleep Hygiene Tips" colors={colors} card={card}>
             {SLEEP_TIPS.map((tip, idx) => (
               <View
                 key={idx}
@@ -1712,7 +1500,7 @@ export default function SleepTrackerScreen({ navigation }) {
                 </View>
               </View>
             ))}
-          </View>
+          </CollapsibleSection>
 
           <View style={{ height: 40 }} />
         </Animated.View>
@@ -1746,6 +1534,22 @@ export default function SleepTrackerScreen({ navigation }) {
         onSave={saveGoal}
         currentGoal={goalHours}
         colors={colors}
+      />
+      <SleepNotesModal
+        visible={showNotesModal}
+        onClose={() => setShowNotesModal(false)}
+        onSave={(tags) => {
+          setLogTags(tags)
+          // If updating today's log inline, save tags immediately
+          if (todayLog) {
+            const updated = logs.map(l =>
+              l.id === todayLog.id ? { ...l, tags, notes: serializeTags(tags, l.notes) } : l
+            )
+            setLogs(updated)
+            saveLogs(updated)
+          }
+        }}
+        initialTags={logTags}
       />
     </View>
   )
@@ -1808,13 +1612,13 @@ const styles = StyleSheet.create({
   scoreCard: {
     padding: SPACING.lg,
     marginBottom: SPACING.md,
-    alignItems: 'center',
   },
   todaySummary: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: SPACING.lg,
+    marginTop: SPACING.md,
     gap: SPACING.sm,
+    justifyContent: 'center',
   },
   todayStat: {
     flexDirection: 'row',
@@ -1827,6 +1631,14 @@ const styles = StyleSheet.create({
   todayDuration: {
     fontSize: 14,
     marginLeft: SPACING.sm,
+  },
+
+  // Expand log button
+  expandLogBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
   },
 
   // Log Entry Card
@@ -1926,70 +1738,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
-  // Insights
-  insightsCard: {
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
-  },
-  insightsSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-    marginBottom: SPACING.md,
-  },
-  insightsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-  },
-  insightItem: {
-    width: (SCREEN_WIDTH - SPACING.md * 2 - SPACING.lg * 2 - SPACING.sm) / 2,
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.md,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    gap: 4,
-  },
-  insightLabel: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  insightValue: {
-    fontSize: 18,
-  },
-  bestWorstRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: SPACING.md,
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-  },
-  bestWorstItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  bestWorstIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bestWorstLabel: {
-    fontSize: 11,
-  },
-  bestWorstValue: {
-    fontSize: 14,
-  },
-  bestWorstSub: {
-    fontSize: 12,
-    marginTop: 1,
-  },
-
-  // Recent Logs
-  recentSection: {
-    marginBottom: SPACING.md,
-  },
+  // Log cards
   logCard: {
     padding: SPACING.md,
     marginBottom: SPACING.sm,
@@ -2036,15 +1785,6 @@ const styles = StyleSheet.create({
   },
 
   // Tips
-  tipsCard: {
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
-  },
-  tipsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.md,
-  },
   tipRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',

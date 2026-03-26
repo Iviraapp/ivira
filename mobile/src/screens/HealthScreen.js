@@ -36,9 +36,17 @@ const DEFAULT_DAILY_NUTRITION = { items: [], totals: { calories: 0, protein: 0, 
 const DEFAULT_NUTRITION_GOAL = { calories: 2000, protein: 120, carbs: 250, fats: 65 }
 import {
   requestHealthPermissions,
+  requestExtendedPermissions,
   getTodaySteps,
   syncStepsToBackend,
+  getLatestHeartRate,
+  getRestingHeartRate,
+  getHRV,
+  isWearableConnected,
   DEMO_STEPS,
+  DEMO_HEART_RATE,
+  DEMO_RESTING_HR,
+  DEMO_HRV,
 } from '../lib/healthKit'
 import NutritionGoalSetup from '../components/NutritionGoalSetup'
 import WaterTracker from '../components/WaterTracker'
@@ -48,7 +56,8 @@ import { getWeeklyInsight } from '../lib/aiCoach'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const RING_SIZE = 140
-const STEP_GOAL = 10000
+const STEP_GOAL_OPTIONS = [5000, 7500, 10000, 12500, 15000]
+const DEFAULT_STEP_GOAL = 10000
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack']
 const MEAL_ICONS = {
   breakfast: 'sunrise',
@@ -107,6 +116,17 @@ export default function HealthScreen({ navigation }) {
   const glowAnim = useRef(new Animated.Value(0)).current
   const insightFadeAnim = useRef(new Animated.Value(0)).current
   const [weeklyInsight, setWeeklyInsight] = useState(null)
+  const [showInsightDetail, setShowInsightDetail] = useState(false)
+
+  // Step goal (configurable)
+  const [stepGoal, setStepGoal] = useState(DEFAULT_STEP_GOAL)
+  const [showStepGoalPicker, setShowStepGoalPicker] = useState(false)
+
+  // Heart rate data (wearable)
+  const [heartRate, setHeartRate] = useState(null)
+  const [restingHR, setRestingHR] = useState(null)
+  const [hrv, setHrv] = useState(null)
+  const [hasWearable, setHasWearable] = useState(false)
 
   // Pulse animation
   useEffect(() => {
@@ -121,7 +141,7 @@ export default function HealthScreen({ navigation }) {
   }, [pulseAnim])
 
   // Green glow when goal met — only trigger once when threshold crossed
-  const goalMet = (stepMode === 'manual' ? manualSteps : steps) >= STEP_GOAL
+  const goalMet = (stepMode === 'manual' ? manualSteps : steps) >= stepGoal
   useEffect(() => {
     if (goalMet) {
       const glow = Animated.loop(
@@ -139,7 +159,7 @@ export default function HealthScreen({ navigation }) {
   const animSteps = stepMode === 'manual' ? manualSteps : steps
   useEffect(() => {
     Animated.timing(progressAnim, {
-      toValue: Math.min(animSteps / STEP_GOAL, 1),
+      toValue: Math.min(animSteps / stepGoal, 1),
       duration: 1000,
       useNativeDriver: false,
     }).start()
@@ -147,7 +167,7 @@ export default function HealthScreen({ navigation }) {
 
   // Goal celebration haptic
   useEffect(() => {
-    if (animSteps >= STEP_GOAL && !goalCelebrated) {
+    if (animSteps >= stepGoal && !goalCelebrated) {
       setGoalCelebrated(true)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
@@ -180,6 +200,42 @@ export default function HealthScreen({ navigation }) {
     }).catch(() => {})
   }, [])
 
+  // Load step goal from storage
+  useEffect(() => {
+    getItem('ivira_step_goal').then(val => {
+      if (val) {
+        const num = parseInt(val, 10)
+        if (STEP_GOAL_OPTIONS.includes(num)) setStepGoal(num)
+      }
+    }).catch(() => {})
+  }, [])
+
+  // Fetch heart rate data from wearable
+  useEffect(() => {
+    let cancelled = false
+    const fetchHeartData = async () => {
+      try {
+        await requestExtendedPermissions()
+        const [hr, rhr, hrvData, wearable] = await Promise.all([
+          getLatestHeartRate(),
+          getRestingHeartRate(),
+          getHRV(),
+          isWearableConnected(),
+        ])
+        if (!cancelled) {
+          setHeartRate(hr)
+          setRestingHR(rhr)
+          setHrv(hrvData)
+          setHasWearable(wearable)
+        }
+      } catch {}
+    }
+    fetchHeartData()
+    // Refresh every 60s
+    const interval = setInterval(fetchHeartData, 60000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [])
+
   // Load saved step mode + manual steps from storage
   useEffect(() => {
     const todayKey = `ivira_manual_steps_${new Date().toISOString().split('T')[0]}`
@@ -191,7 +247,7 @@ export default function HealthScreen({ navigation }) {
         try {
           const parsed = JSON.parse(val)
           setManualSteps(parsed.steps || 0)
-          setTimerSeconds(parsed.timerSeconds || 0)
+          // Don't auto-restore timer — only starts when user explicitly starts a workout
         } catch {}
       }
     }).catch(() => {})
@@ -265,6 +321,14 @@ export default function HealthScreen({ navigation }) {
   const handleTimerToggle = useCallback(() => {
     setTimerRunning(prev => !prev)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+  }, [])
+
+  const handleStepGoalChange = useCallback(async (newGoal) => {
+    setStepGoal(newGoal)
+    setShowStepGoalPicker(false)
+    setGoalCelebrated(false) // Reset celebration for new goal
+    await setItem('ivira_step_goal', String(newGoal)).catch(() => {})
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
   }, [])
 
   const formatTimer = (totalSeconds) => {
@@ -445,8 +509,8 @@ export default function HealthScreen({ navigation }) {
   const goals = goal || { calorie_goal: 2000, protein_goal: 120, carb_goal: 250, fat_goal: 65 }
   const caloriesRemaining = Math.max(goals.calorie_goal - totals.calories, 0)
   const effectiveSteps = stepMode === 'manual' ? manualSteps : steps
-  const stepProgress = Math.min(effectiveSteps / STEP_GOAL, 1)
-  const isGoalMet = effectiveSteps >= STEP_GOAL
+  const stepProgress = Math.min(effectiveSteps / stepGoal, 1)
+  const isGoalMet = effectiveSteps >= stepGoal
   const activeMinutes = Math.floor(timerSeconds / 60)
 
   const macros = [
@@ -521,7 +585,7 @@ export default function HealthScreen({ navigation }) {
             </View>
             <TouchableOpacity
               style={styles.aiInsightLink}
-              onPress={() => { console.log('TODO: Navigate to detailed AI analytics screen') }}
+              onPress={() => setShowInsightDetail(true)}
               activeOpacity={0.7}
             >
               <Text style={[styles.aiInsightLinkText, { color: colors.accent }]}>View Details</Text>
@@ -540,6 +604,16 @@ export default function HealthScreen({ navigation }) {
                 <Text style={[styles.stepSourceText, { color: COLORS.green }]}>Live</Text>
               </View>
             )}
+            <TouchableOpacity
+              style={[styles.stepGoalBadge, { backgroundColor: colors.accentSoft, borderColor: colors.accent + '30' }]}
+              onPress={() => setShowStepGoalPicker(true)}
+              activeOpacity={0.7}
+            >
+              <Feather name="target" size={10} color={colors.accent} />
+              <Text style={[styles.stepGoalBadgeText, { color: colors.accent }]}>
+                {stepGoal >= 1000 ? `${(stepGoal / 1000)}k` : stepGoal}
+              </Text>
+            </TouchableOpacity>
           </View>
           <View style={[styles.segmentedControl, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
             <TouchableOpacity
@@ -577,6 +651,7 @@ export default function HealthScreen({ navigation }) {
           <StepRing
             progress={stepProgress}
             steps={effectiveSteps}
+            stepGoal={stepGoal}
             isGoalMet={isGoalMet}
             pulseAnim={pulseAnim}
             glowAnim={glowAnim}
@@ -690,6 +765,56 @@ export default function HealthScreen({ navigation }) {
             </View>
           </View>
         )}
+
+        {/* Heart Rate Section */}
+        <View style={[styles.heartSection, card, { borderTopColor: '#EA4335', borderTopWidth: 3 }]}>
+          <View style={styles.heartHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+              <Feather name="heart" size={16} color="#EA4335" />
+              <Text style={[styles.heartTitle, { color: colors.text }]}>Heart</Text>
+            </View>
+            {hasWearable && (
+              <View style={styles.stepSourceBadge}>
+                <Feather name="watch" size={10} color={COLORS.green} />
+                <Text style={[styles.stepSourceText, { color: COLORS.green }]}>Synced</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.heartCards}>
+            <View style={[styles.heartCard, { backgroundColor: colors.bgTer }]}>
+              <Feather name="heart" size={16} color="#EA4335" />
+              <Text style={[styles.heartValue, { color: colors.text }]}>
+                {heartRate ? `${heartRate.bpm}` : '--'}
+              </Text>
+              <Text style={[styles.heartUnit, { color: colors.textTer }]}>bpm</Text>
+              <Text style={[styles.heartLabel, { color: colors.textSec }]}>Current HR</Text>
+            </View>
+            <View style={[styles.heartCard, { backgroundColor: colors.bgTer }]}>
+              <Feather name="activity" size={16} color="#F59E0B" />
+              <Text style={[styles.heartValue, { color: colors.text }]}>
+                {restingHR ? `${restingHR.bpm}` : '--'}
+              </Text>
+              <Text style={[styles.heartUnit, { color: colors.textTer }]}>bpm</Text>
+              <Text style={[styles.heartLabel, { color: colors.textSec }]}>Resting HR</Text>
+            </View>
+            <View style={[styles.heartCard, { backgroundColor: colors.bgTer }]}>
+              <Feather name="trending-up" size={16} color="#8B5CF6" />
+              <Text style={[styles.heartValue, { color: colors.text }]}>
+                {hrv ? `${hrv.ms}` : '--'}
+              </Text>
+              <Text style={[styles.heartUnit, { color: colors.textTer }]}>ms</Text>
+              <Text style={[styles.heartLabel, { color: colors.textSec }]}>HRV</Text>
+            </View>
+          </View>
+          {!hasWearable && (
+            <View style={[styles.wearableBanner, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
+              <Feather name="watch" size={14} color={colors.textSec} />
+              <Text style={[styles.wearableBannerText, { color: colors.textSec }]}>
+                Connect a smartwatch for live heart rate, HRV & recovery data
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* Steps & Activity Dashboard Link */}
         <TouchableOpacity
@@ -966,12 +1091,108 @@ export default function HealthScreen({ navigation }) {
         memberWeight={member?.weight_kg}
         memberHeight={member?.height_cm}
       />
+
+      {/* Step Goal Picker Modal */}
+      <Modal visible={showStepGoalPicker} transparent animationType="fade" onRequestClose={() => setShowStepGoalPicker(false)}>
+        <TouchableOpacity style={styles.insightModalOverlay} activeOpacity={1} onPress={() => setShowStepGoalPicker(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.insightModalSheet, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
+            <Text style={[styles.insightModalTitle, { color: colors.text, textAlign: 'center', marginBottom: SPACING.sm }]}>Daily Step Goal</Text>
+            <Text style={{ color: colors.textTer, textAlign: 'center', fontSize: 13, fontFamily: FONT.regular, marginBottom: SPACING.lg }}>
+              Choose your daily target
+            </Text>
+            <View style={{ gap: SPACING.sm }}>
+              {STEP_GOAL_OPTIONS.map(opt => (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.stepGoalOption,
+                    { backgroundColor: colors.bgTer, borderColor: stepGoal === opt ? colors.accent : colors.border },
+                    stepGoal === opt && { borderWidth: 2 },
+                  ]}
+                  onPress={() => handleStepGoalChange(opt)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.stepGoalOptionText, { color: stepGoal === opt ? colors.accent : colors.text }]}>
+                    {opt.toLocaleString()} steps
+                  </Text>
+                  <Text style={[styles.stepGoalOptionHint, { color: colors.textTer }]}>
+                    {opt <= 5000 ? 'Light' : opt <= 7500 ? 'Moderate' : opt <= 10000 ? 'Active' : opt <= 12500 ? 'Very Active' : 'Athlete'}
+                  </Text>
+                  {stepGoal === opt && <Feather name="check" size={18} color={colors.accent} />}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* AI Insights Detail Modal */}
+      <Modal visible={showInsightDetail} transparent animationType="fade" onRequestClose={() => setShowInsightDetail(false)}>
+        <TouchableOpacity style={styles.insightModalOverlay} activeOpacity={1} onPress={() => setShowInsightDetail(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.insightModalSheet, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
+            <View style={styles.insightModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+                <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.accent + '15', justifyContent: 'center', alignItems: 'center' }}>
+                  <Feather name="zap" size={16} color={colors.accent} />
+                </View>
+                <Text style={[styles.insightModalTitle, { color: colors.text }]}>AI Insights</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowInsightDetail(false)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Feather name="x" size={20} color={colors.textSec} />
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.insightModalSubtitle, { color: colors.textTer }]}>
+              Weekly health summary based on your activity
+            </Text>
+
+            {weeklyInsight?.items?.map((item, i) => {
+              const statusColor = item.status === 'good' ? COLORS.green : item.status === 'neutral' ? COLORS.amber : COLORS.red
+              const statusIcon = item.status === 'good' ? 'check-circle' : item.status === 'neutral' ? 'alert-circle' : 'alert-triangle'
+              return (
+                <View key={i} style={[styles.insightDetailRow, { borderBottomColor: colors.border, borderBottomWidth: i < weeklyInsight.items.length - 1 ? 1 : 0 }]}>
+                  <View style={[styles.insightDetailIcon, { backgroundColor: statusColor + '15' }]}>
+                    <Feather name={statusIcon} size={16} color={statusColor} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.insightDetailText, { color: colors.text }]}>{item.label}</Text>
+                    <Text style={[styles.insightDetailHint, { color: colors.textTer }]}>
+                      {item.status === 'good' ? 'Great progress!' : item.status === 'neutral' ? 'Room for improvement' : 'Needs attention'}
+                    </Text>
+                  </View>
+                </View>
+              )
+            })}
+
+            {/* Quick recommendations */}
+            <View style={[styles.insightRecsBox, { backgroundColor: colors.accent + '08', borderColor: colors.accent + '20' }]}>
+              <Text style={[styles.insightRecsTitle, { color: colors.accent }]}>Recommendations</Text>
+              {[
+                { icon: 'target', text: 'Aim for 10,000+ steps daily this week' },
+                { icon: 'clock', text: 'Log meals consistently to improve tracking' },
+                { icon: 'moon', text: 'Prioritize 7-8 hours of quality sleep' },
+              ].map((rec, i) => (
+                <View key={i} style={styles.insightRecRow}>
+                  <Feather name={rec.icon} size={13} color={colors.accent} />
+                  <Text style={[styles.insightRecText, { color: colors.textSec }]}>{rec.text}</Text>
+                </View>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.insightModalCloseBtn, { backgroundColor: colors.accent }]}
+              onPress={() => setShowInsightDetail(false)}
+            >
+              <Text style={styles.insightModalCloseBtnText}>Got It</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   )
 }
 
 // --- Step Ring Component ---
-function StepRing({ progress, steps, isGoalMet, pulseAnim, glowAnim, colors }) {
+function StepRing({ progress, steps, stepGoal, isGoalMet, pulseAnim, glowAnim, colors }) {
   const themeColors = colors || COLORS
   const strokeWidth = 10
   const center = RING_SIZE / 2
@@ -1034,7 +1255,7 @@ function StepRing({ progress, steps, isGoalMet, pulseAnim, glowAnim, colors }) {
           {steps.toLocaleString()}
         </Text>
         <Text style={[styles.stepLabel, { color: themeColors.textSec }]}>steps</Text>
-        <Text style={[styles.ringGoalText, { color: themeColors.textTer }]}>of 10k</Text>
+        <Text style={[styles.ringGoalText, { color: themeColors.textTer }]}>of {stepGoal >= 1000 ? `${(stepGoal / 1000)}k` : stepGoal}</Text>
         {isGoalMet && (
           <View style={styles.goalBadge}>
             <Feather name="check-circle" size={12} color={COLORS.green} />
@@ -1764,5 +1985,190 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONT.medium,
     fontWeight: '500',
+  },
+
+  // AI Insights Detail Modal
+  insightModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  insightModalSheet: {
+    width: SCREEN_WIDTH - 40,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    borderWidth: 1,
+    maxHeight: '80%',
+  },
+  insightModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.xs,
+  },
+  insightModalTitle: {
+    fontSize: 18,
+    fontFamily: FONT.semibold,
+    fontWeight: '600',
+  },
+  insightModalSubtitle: {
+    fontSize: 13,
+    fontFamily: FONT.regular,
+    marginBottom: SPACING.lg,
+  },
+  insightDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    paddingVertical: SPACING.md,
+  },
+  insightDetailIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  insightDetailText: {
+    fontSize: 14,
+    fontFamily: FONT.medium,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  insightDetailHint: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    marginTop: 2,
+  },
+  insightRecsBox: {
+    marginTop: SPACING.lg,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+  },
+  insightRecsTitle: {
+    fontSize: 14,
+    fontFamily: FONT.semibold,
+    fontWeight: '600',
+    marginBottom: SPACING.sm,
+  },
+  insightRecRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    paddingVertical: 5,
+  },
+  insightRecText: {
+    fontSize: 13,
+    fontFamily: FONT.regular,
+    flex: 1,
+  },
+  insightModalCloseBtn: {
+    marginTop: SPACING.lg,
+    paddingVertical: 14,
+    borderRadius: RADIUS.lg,
+    alignItems: 'center',
+  },
+  insightModalCloseBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: FONT.semibold,
+    fontWeight: '600',
+  },
+
+  // Step Goal Badge + Picker
+  stepGoalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+  },
+  stepGoalBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.numSemibold,
+    fontWeight: '600',
+  },
+  stepGoalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    gap: SPACING.sm,
+  },
+  stepGoalOptionText: {
+    fontSize: 16,
+    fontFamily: FONT.numSemibold,
+    fontWeight: '600',
+    flex: 1,
+  },
+  stepGoalOptionHint: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+  },
+
+  // Heart Rate Section
+  heartSection: {
+    padding: SPACING.lg,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  heartHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  heartTitle: {
+    fontSize: 16,
+    fontFamily: FONT.semibold,
+    fontWeight: '600',
+  },
+  heartCards: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  heartCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.md,
+    gap: 2,
+  },
+  heartValue: {
+    fontSize: 22,
+    fontFamily: FONT.numBold,
+    fontWeight: '800',
+    marginTop: 4,
+  },
+  heartUnit: {
+    fontSize: 10,
+    fontFamily: FONT.numMedium,
+    marginTop: -2,
+  },
+  heartLabel: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  wearableBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginTop: SPACING.md,
+    padding: SPACING.sm + 2,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+  },
+  wearableBannerText: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    flex: 1,
+    lineHeight: 17,
   },
 })
