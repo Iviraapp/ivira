@@ -57,7 +57,7 @@ export async function createMagicLink(email, role = 'owner') {
 <tr><td align="center" style="padding-bottom:8px;font-family:'Helvetica Neue',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#6B7280;">Magic Link Sign In</td></tr>
 <tr><td align="center" style="padding-bottom:32px;font-family:'Helvetica Neue',sans-serif;font-size:15px;color:rgba(255,255,255,0.6);">Click the button below to sign in to your dashboard.</td></tr>
 <tr><td align="center" style="padding-bottom:32px;">
-<a href="${magicUrl}" style="display:inline-block;padding:14px 40px;background:#1A3A8F;color:#FFF;font-family:'Helvetica Neue',sans-serif;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Sign In</a>
+<a href="${magicUrl}" style="display:inline-block;padding:14px 40px;background:#0055FF;color:#FFF;font-family:'Helvetica Neue',sans-serif;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Sign In</a>
 </td></tr>
 <tr><td align="center" style="padding-bottom:12px;font-family:'Helvetica Neue',sans-serif;font-size:12px;color:#6B7280;">This link expires in 5 minutes.</td></tr>
 <tr><td style="height:1px;background:#1F1F1F;"></td></tr>

@@ -6,9 +6,11 @@ import {
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
+import Haptics from '../lib/haptics'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
+import { safeApiCall } from '../lib/offlineQueue'
 import WorkoutSummaryModal from '../components/WorkoutSummaryModal'
 
 // ── Default exercise library (used when API unavailable) ─────────
@@ -69,6 +71,16 @@ const WORKOUT_TYPES = [
   { key: 'cardio', label: 'Cardio' },
   { key: 'custom', label: 'Custom' },
 ]
+
+const WORKOUT_TEMPLATES = {
+  push: ['bench-press', 'incline-db-press', 'overhead-press', 'lateral-raise', 'tricep-pushdown'],
+  pull: ['deadlift', 'barbell-row', 'lat-pulldown', 'bicep-curl', 'face-pull'],
+  legs: ['squat', 'leg-press', 'romanian-deadlift', 'leg-curl', 'calf-raise'],
+  upper: ['bench-press', 'barbell-row', 'overhead-press', 'bicep-curl', 'tricep-pushdown'],
+  lower: ['squat', 'leg-press', 'romanian-deadlift', 'lunges', 'calf-raise'],
+  full: ['squat', 'bench-press', 'deadlift', 'overhead-press', 'pull-up'],
+  cardio: ['treadmill', 'cycling', 'jump-rope'],
+}
 
 // ── Exercise Picker Modal ────────────────────────────────────────
 function ExercisePicker({ visible, onClose, onSelect, exercises }) {
@@ -193,15 +205,85 @@ export default function WorkoutTrackerScreen({ navigation }) {
   const [exercises, setExercises] = useState([]) // [{exercise, sets: [{weight, reps}]}]
   const [showPicker, setShowPicker] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [startTime] = useState(Date.now())
+  const [startTime, setStartTime] = useState(null)
   const [elapsed, setElapsed] = useState(0)
   const [showHistory, setShowHistory] = useState(false)
   const [history, setHistory] = useState([])
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [summaryData, setSummaryData] = useState(null)
+  const [exerciseHistory, setExerciseHistory] = useState({}) // { exerciseId: { maxWeight, lastSets } }
 
-  // Timer
+  // Rest timer state
+  const [restTimerActive, setRestTimerActive] = useState(false)
+  const [restSeconds, setRestSeconds] = useState(0)
+  const [restDuration, setRestDuration] = useState(90) // default 90s
+  const restTimerRef = useRef(null)
+
+  const REST_PRESETS = [30, 60, 90, 120, 180]
+
+  const startRestTimer = (duration) => {
+    if (restTimerRef.current) clearInterval(restTimerRef.current)
+    const dur = duration || restDuration
+    setRestDuration(dur)
+    setRestSeconds(dur)
+    setRestTimerActive(true)
+    restTimerRef.current = setInterval(() => {
+      setRestSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(restTimerRef.current)
+          restTimerRef.current = null
+          setRestTimerActive(false)
+          // Haptic buzz when rest is over
+          try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning) } catch {}
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  const stopRestTimer = () => {
+    if (restTimerRef.current) clearInterval(restTimerRef.current)
+    restTimerRef.current = null
+    setRestTimerActive(false)
+    setRestSeconds(0)
+  }
+
   useEffect(() => {
+    return () => { if (restTimerRef.current) clearInterval(restTimerRef.current) }
+  }, [])
+
+  // Load exercise history for "Previous Sets" hints
+  useEffect(() => {
+    if (!gymId || !member?.id) return
+    api.get(`/gyms/${gymId}/members/${member.id}/workout-sessions?limit=20`)
+      .then(res => {
+        const sessions = res.data?.sessions || []
+        const history = {}
+        sessions.forEach(s => {
+          (s.exercises || []).forEach(ex => {
+            if (!history[ex.exercise_id]) {
+              history[ex.exercise_id] = {
+                maxWeight: 0,
+                lastSets: ex.sets || [],
+              }
+            }
+            ;(ex.sets || []).forEach(set => {
+              const w = parseFloat(set.weight_kg) || 0
+              if (w > history[ex.exercise_id].maxWeight) {
+                history[ex.exercise_id].maxWeight = w
+              }
+            })
+          })
+        })
+        setExerciseHistory(history)
+      })
+      .catch(() => {})
+  }, [gymId, member?.id])
+
+  // Timer — only runs after workout starts (first exercise added)
+  useEffect(() => {
+    if (!startTime) return
     const timer = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTime) / 1000))
     }, 1000)
@@ -215,6 +297,8 @@ export default function WorkoutTrackerScreen({ navigation }) {
   }
 
   const addExercise = (exercise) => {
+    // Start timer on first exercise
+    if (!startTime) setStartTime(Date.now())
     setExercises(prev => [...prev, {
       exercise,
       sets: [{ weight: '', reps: '' }],
@@ -264,7 +348,8 @@ export default function WorkoutTrackerScreen({ navigation }) {
       ex.sets.forEach(s => {
         const w = parseFloat(s.weight) || 0
         const r = parseInt(s.reps) || 0
-        volume += w * r
+        // Skip empty/incomplete sets
+        if (w > 0 && r > 0) volume += w * r
       })
     })
     return volume
@@ -280,7 +365,7 @@ export default function WorkoutTrackerScreen({ navigation }) {
       return
     }
 
-    const duration = Math.floor((Date.now() - startTime) / 60000)
+    const duration = startTime ? Math.floor((Date.now() - startTime) / 60000) : 0
 
     setSaving(true)
     try {
@@ -329,7 +414,22 @@ export default function WorkoutTrackerScreen({ navigation }) {
             })
           }
         } catch (err) {
-          console.log('[Workout] Backend save failed, workout logged locally:', err.message)
+          console.log('[Workout] Backend save failed, queuing for retry:', err.message)
+          // Queue workout for offline retry
+          safeApiCall('post', `/gyms/${gymId}/members/${member.id}/workout-sessions`, {
+            name: sessionName || 'Workout',
+            workout_type: 'strength',
+            session_date: new Date().toISOString().split('T')[0],
+            duration_minutes: duration,
+            exercises: exercises.map(ex => ({
+              exercise_id: ex.exercise.id,
+              sets: ex.sets.map((s, i) => ({
+                set_number: i + 1,
+                weight_kg: parseFloat(s.weight) || 0,
+                reps: parseInt(s.reps) || 0,
+              })),
+            })),
+          }).catch(() => {})
         }
       }
 
@@ -471,6 +571,11 @@ export default function WorkoutTrackerScreen({ navigation }) {
               <View style={{ flex: 1 }}>
                 <Text style={[styles.exerciseCardName, { color: colors.text }]}>{item.exercise.name}</Text>
                 <Text style={[styles.exerciseCardMeta, { color: colors.textTer }]}>{item.exercise.muscle_group}</Text>
+                {exerciseHistory[item.exercise.id] && (
+                  <Text style={{ fontSize: 11, color: '#22C55E', fontFamily: FONT.regular, marginTop: 2 }}>
+                    PR: {exerciseHistory[item.exercise.id].maxWeight}kg
+                  </Text>
+                )}
               </View>
               <TouchableOpacity onPress={() => removeExercise(exIndex)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Feather name="x" size={16} color={colors.textTer} />
@@ -498,15 +603,28 @@ export default function WorkoutTrackerScreen({ navigation }) {
               />
             ))}
 
-            {/* Add set button */}
-            <TouchableOpacity
-              style={[styles.addSetBtn, { borderColor: colors.border }]}
-              onPress={() => addSet(exIndex)}
-              activeOpacity={0.7}
-            >
-              <Feather name="plus" size={14} color={COLORS.accent} />
-              <Text style={[styles.addSetText, { color: COLORS.accent }]}>Add Set</Text>
-            </TouchableOpacity>
+            {/* Add set + Rest timer buttons */}
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              <TouchableOpacity
+                style={[styles.addSetBtn, { borderColor: colors.border, flex: 1 }]}
+                onPress={() => addSet(exIndex)}
+                activeOpacity={0.7}
+              >
+                <Feather name="plus" size={14} color={COLORS.accent} />
+                <Text style={[styles.addSetText, { color: COLORS.accent }]}>Add Set</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addSetBtn, { borderColor: restTimerActive ? '#F59E0B' : colors.border, flex: 1,
+                  backgroundColor: restTimerActive ? 'rgba(245,158,11,0.1)' : 'transparent' }]}
+                onPress={() => restTimerActive ? stopRestTimer() : startRestTimer()}
+                activeOpacity={0.7}
+              >
+                <Feather name={restTimerActive ? 'x' : 'clock'} size={14} color={restTimerActive ? '#F59E0B' : colors.textSec} />
+                <Text style={[styles.addSetText, { color: restTimerActive ? '#F59E0B' : colors.textSec }]}>
+                  {restTimerActive ? `${Math.floor(restSeconds / 60)}:${(restSeconds % 60).toString().padStart(2, '0')}` : 'Rest'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
 
@@ -532,7 +650,17 @@ export default function WorkoutTrackerScreen({ navigation }) {
                 <TouchableOpacity
                   key={wt.key}
                   style={[styles.templateChip, { backgroundColor: colors.bgSec, borderColor: colors.border }]}
-                  onPress={() => setSessionName(wt.label)}
+                  onPress={() => {
+                    setSessionName(wt.label)
+                    if (WORKOUT_TEMPLATES[wt.key]) {
+                      const templateExercises = WORKOUT_TEMPLATES[wt.key]
+                        .map(id => DEFAULT_EXERCISES.find(e => e.id === id))
+                        .filter(Boolean)
+                        .map(exercise => ({ exercise, sets: [{ weight: '', reps: '' }] }))
+                      setExercises(templateExercises)
+                      if (!startTime) setStartTime(Date.now())
+                    }
+                  }}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.templateChipText, { color: colors.text }]}>{wt.label}</Text>
@@ -542,6 +670,36 @@ export default function WorkoutTrackerScreen({ navigation }) {
           </View>
         )}
       </ScrollView>
+
+      {/* Floating rest timer */}
+      {restTimerActive && (
+        <View style={[styles.restTimerFloat, { backgroundColor: isDark ? '#1C1400' : '#FFF8E1', borderColor: '#F59E0B' }]}>
+          <Feather name="clock" size={18} color="#F59E0B" />
+          <View style={{ flex: 1, marginLeft: 10 }}>
+            <Text style={{ fontSize: 11, color: '#F59E0B', fontFamily: FONT.semibold }}>REST TIMER</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: colors.text, fontFamily: FONT.numExtraBold }}>
+              {Math.floor(restSeconds / 60)}:{(restSeconds % 60).toString().padStart(2, '0')}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {REST_PRESETS.map(t => (
+              <TouchableOpacity
+                key={t}
+                onPress={() => startRestTimer(t)}
+                style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+                  backgroundColor: restDuration === t ? '#F59E0B' : 'rgba(245,158,11,0.15)' }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '700', color: restDuration === t ? '#000' : '#F59E0B' }}>
+                  {t < 60 ? `${t}s` : `${t / 60}m`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity onPress={stopRestTimer} style={{ marginLeft: 8 }}>
+            <Feather name="x" size={18} color={colors.textTer} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Finish button */}
       {exercises.length > 0 && (
@@ -698,6 +856,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
   },
   finishBtnText: { fontSize: 16, fontWeight: '700', fontFamily: FONT.bold, color: '#FFF' },
+
+  // Rest timer float
+  restTimerFloat: {
+    position: 'absolute', bottom: 80, left: SPACING.lg, right: SPACING.lg,
+    flexDirection: 'row', alignItems: 'center', padding: SPACING.md,
+    borderRadius: RADIUS.lg, borderWidth: 1,
+    shadowColor: '#F59E0B', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2, shadowRadius: 12, elevation: 8,
+  },
 
   // Picker modal
   pickerOverlay: { flex: 1 },

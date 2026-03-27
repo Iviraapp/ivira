@@ -49,157 +49,8 @@ const MEAL_ICONS = {
 
 const CALORIE_GOAL = 2000
 
-// --- Seeded random for consistent demo data ---
-function seededRandom(seed) {
-  let s = seed
-  return () => {
-    s = (s * 16807 + 0) % 2147483647
-    return (s - 1) / 2147483646
-  }
-}
+// Removed demo data generator — real API data or empty state only
 
-// --- Demo Data Generator (deterministic per month) ---
-function generateDemoData(year, month) {
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const today = new Date()
-  const data = {}
-  // Seed based on year+month for consistency
-  const rng = seededRandom(year * 100 + month + 42)
-
-  const breakfastItems = [
-    { name: 'Idli (4 pcs) + Sambar', calories: 240, protein: 8, carbs: 44, fat: 2, fiber: 3 },
-    { name: 'Masala Dosa + Chutney', calories: 330, protein: 7, carbs: 50, fat: 12, fiber: 2 },
-    { name: 'Poha with Peanuts', calories: 250, protein: 6, carbs: 42, fat: 6, fiber: 2 },
-    { name: 'Rava Upma', calories: 210, protein: 5, carbs: 36, fat: 5, fiber: 2 },
-    { name: 'Aloo Paratha + Curd', calories: 350, protein: 10, carbs: 42, fat: 14, fiber: 3 },
-    { name: 'Besan Chilla (2 pcs)', calories: 220, protein: 12, carbs: 24, fat: 8, fiber: 4 },
-    { name: 'Oats with Banana & Honey', calories: 280, protein: 8, carbs: 48, fat: 6, fiber: 5 },
-    { name: 'Egg Bhurji + Toast (2)', calories: 320, protein: 18, carbs: 28, fat: 14, fiber: 2 },
-    { name: 'Pesarattu + Ginger Chutney', calories: 260, protein: 14, carbs: 34, fat: 6, fiber: 6 },
-    { name: 'Ragi Dosa + Coconut Chutney', calories: 230, protein: 6, carbs: 40, fat: 4, fiber: 4 },
-  ]
-
-  const lunchItems = [
-    { name: 'Rice + Dal + Sabzi', calories: 520, protein: 16, carbs: 78, fat: 14, fiber: 6 },
-    { name: 'Paneer Butter Masala + Roti (3)', calories: 580, protein: 22, carbs: 56, fat: 28, fiber: 4 },
-    { name: 'Chicken Curry + Steamed Rice', calories: 620, protein: 35, carbs: 68, fat: 18, fiber: 3 },
-    { name: 'Rajma Chawal + Salad', calories: 480, protein: 18, carbs: 72, fat: 10, fiber: 12 },
-    { name: 'Chole + Bhature (2)', calories: 550, protein: 16, carbs: 64, fat: 22, fiber: 8 },
-    { name: 'Fish Curry + Rice + Rasam', calories: 540, protein: 32, carbs: 62, fat: 14, fiber: 3 },
-    { name: 'Sambar Rice + Papad + Curd', calories: 460, protein: 14, carbs: 74, fat: 8, fiber: 7 },
-    { name: 'Dal Tadka + Jeera Rice', calories: 490, protein: 16, carbs: 70, fat: 12, fiber: 6 },
-    { name: 'Thali (Roti, Dal, Sabzi, Rice)', calories: 560, protein: 18, carbs: 76, fat: 16, fiber: 8 },
-    { name: 'Biryani (Veg) + Raita', calories: 510, protein: 12, carbs: 72, fat: 16, fiber: 4 },
-  ]
-
-  const dinnerItems = [
-    { name: 'Roti (3) + Palak Paneer', calories: 450, protein: 20, carbs: 48, fat: 18, fiber: 5 },
-    { name: 'Chicken Tikka (6 pcs) + Salad', calories: 380, protein: 38, carbs: 12, fat: 16, fiber: 3 },
-    { name: 'Egg Curry (2 eggs) + Roti (2)', calories: 400, protein: 22, carbs: 38, fat: 16, fiber: 3 },
-    { name: 'Khichdi + Ghee + Papad', calories: 360, protein: 12, carbs: 52, fat: 10, fiber: 4 },
-    { name: 'Paneer Tikka + Naan', calories: 480, protein: 24, carbs: 44, fat: 20, fiber: 3 },
-    { name: 'Moong Dal Soup + Chapati (2)', calories: 320, protein: 14, carbs: 46, fat: 6, fiber: 6 },
-    { name: 'Vegetable Biryani + Raita', calories: 420, protein: 10, carbs: 64, fat: 12, fiber: 5 },
-    { name: 'Grilled Chicken + Quinoa Bowl', calories: 440, protein: 36, carbs: 32, fat: 14, fiber: 4 },
-    { name: 'Curd Rice + Pickle', calories: 280, protein: 8, carbs: 44, fat: 6, fiber: 1 },
-    { name: 'Ragi Mudde + Sambar', calories: 340, protein: 10, carbs: 56, fat: 4, fiber: 8 },
-  ]
-
-  const snackItems = [
-    { name: 'Whey Protein Shake', calories: 180, protein: 24, carbs: 12, fat: 4, fiber: 1 },
-    { name: 'Masala Peanuts (50g)', calories: 160, protein: 8, carbs: 10, fat: 12, fiber: 3 },
-    { name: 'Banana + Almonds (10)', calories: 170, protein: 6, carbs: 24, fat: 8, fiber: 4 },
-    { name: 'Moong Sprouts Chaat', calories: 140, protein: 10, carbs: 18, fat: 2, fiber: 5 },
-    { name: 'Roasted Makhana (30g)', calories: 120, protein: 4, carbs: 16, fat: 4, fiber: 2 },
-    { name: 'Paneer Tikka (4 pcs)', calories: 200, protein: 14, carbs: 6, fat: 14, fiber: 1 },
-    { name: 'Buttermilk (glass) + Marie (3)', calories: 130, protein: 4, carbs: 22, fat: 2, fiber: 0 },
-    { name: 'Mixed Dry Fruits (40g)', calories: 190, protein: 6, carbs: 14, fat: 14, fiber: 3 },
-    { name: 'Boiled Egg (2)', calories: 140, protein: 12, carbs: 1, fat: 10, fiber: 0 },
-    { name: 'Greek Yogurt + Honey', calories: 150, protein: 10, carbs: 18, fat: 4, fiber: 0 },
-  ]
-
-  const pick = (arr) => arr[Math.floor(rng() * arr.length)]
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day)
-    if (date > today) continue
-
-    // 85% chance of logging on any given day
-    if (rng() > 0.85) continue
-
-    const meals = []
-    // Breakfast — 90% chance
-    if (rng() < 0.9) {
-      const item = pick(breakfastItems)
-      meals.push({
-        type: 'breakfast',
-        time: `${7 + Math.floor(rng() * 2)}:${String(Math.floor(rng() * 60)).padStart(2, '0')}`,
-        items: [item],
-      })
-    }
-    // Lunch — 95% chance
-    if (rng() < 0.95) {
-      const item = pick(lunchItems)
-      meals.push({
-        type: 'lunch',
-        time: `${12 + Math.floor(rng() * 2)}:${String(Math.floor(rng() * 60)).padStart(2, '0')}`,
-        items: [item],
-      })
-    }
-    // Dinner — 88% chance
-    if (rng() < 0.88) {
-      const item = pick(dinnerItems)
-      meals.push({
-        type: 'dinner',
-        time: `${19 + Math.floor(rng() * 2)}:${String(Math.floor(rng() * 60)).padStart(2, '0')}`,
-        items: [item],
-      })
-    }
-    // Snack — 60% chance, sometimes two
-    if (rng() < 0.6) {
-      const item = pick(snackItems)
-      meals.push({
-        type: 'snack',
-        time: `${15 + Math.floor(rng() * 3)}:${String(Math.floor(rng() * 60)).padStart(2, '0')}`,
-        items: [item],
-      })
-    }
-    if (rng() < 0.25) {
-      const item = pick(snackItems)
-      meals.push({
-        type: 'snack',
-        time: `${10 + Math.floor(rng() * 2)}:${String(Math.floor(rng() * 60)).padStart(2, '0')}`,
-        items: [item],
-      })
-    }
-
-    if (meals.length === 0) continue
-
-    const totalCals = meals.reduce((sum, m) => sum + m.items.reduce((s, i) => s + i.calories, 0), 0)
-    const totalProtein = meals.reduce((sum, m) => sum + m.items.reduce((s, i) => s + i.protein, 0), 0)
-    const totalCarbs = meals.reduce((sum, m) => sum + m.items.reduce((s, i) => s + i.carbs, 0), 0)
-    const totalFat = meals.reduce((sum, m) => sum + m.items.reduce((s, i) => s + i.fat, 0), 0)
-    const totalFiber = meals.reduce((sum, m) => sum + m.items.reduce((s, i) => s + (i.fiber || 0), 0), 0)
-
-    // Estimate water intake based on meals logged (realistic approximation)
-    const waterGlasses = Math.floor(4 + rng() * 6) // 4-9 glasses
-
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    data[dateStr] = {
-      date: dateStr,
-      calories: totalCals,
-      protein: totalProtein,
-      carbs: totalCarbs,
-      fat: totalFat,
-      fiber: totalFiber,
-      water: waterGlasses,
-      meals,
-      mealCount: meals.length,
-    }
-  }
-
-  return data
-}
 
 // --- Sub-components ---
 
@@ -593,8 +444,8 @@ export default function NutritionLogScreen({ navigation }) {
       } catch {}
     }
 
-    // Fallback to demo data
-    return generateDemoData(year, month)
+    // No API data available — return empty
+    return {}
   }, [gymInfo, member])
 
   const loadMonth = useCallback(async (year, month) => {
@@ -709,13 +560,30 @@ export default function NutritionLogScreen({ navigation }) {
             {/* Day list */}
             {sortedDays.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <View style={[styles.emptyIconWrap, { backgroundColor: colors.bgSec }]}>
-                  <Feather name="book-open" size={48} color={colors.textTer} />
+                <View style={[styles.emptyIconWrap, { backgroundColor: colors.accentSoft || (colors.accent + '12') }]}>
+                  <Feather name="book-open" size={48} color={colors.accent} />
                 </View>
                 <Text style={[styles.emptyTitle, { color: colors.text }]}>No Meals Logged</Text>
                 <Text style={[styles.emptySubtitle, { color: colors.textTer }]}>
-                  Start logging your meals to track nutrition
+                  Start logging meals to see your nutrition history
                 </Text>
+
+                <View style={styles.emptyTips}>
+                  {[
+                    { icon: 'plus-circle', text: 'Tap + on the Health screen to add your first meal', color: colors.accent },
+                    { icon: 'trending-up', text: 'Tracking helps you spot patterns and stay on target', color: '#34A853' },
+                    { icon: 'target', text: 'Set macro goals to get personalised daily feedback', color: '#F97316' },
+                  ].map((tip, i) => (
+                    <View key={i} style={[styles.emptyTipRow, { borderColor: colors.border }]}>
+                      <View style={[styles.emptyTipIcon, { backgroundColor: tip.color + '12' }]}>
+                        <Feather name={tip.icon} size={16} color={tip.color} />
+                      </View>
+                      <Text style={[styles.emptyTipText, { color: colors.textSec }]}>
+                        {tip.text}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             ) : (
               sortedDays.map((day) => (
@@ -1211,5 +1079,30 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: COLORS.textTer,
     textAlign: 'center',
+  },
+  emptyTips: {
+    width: '100%',
+    marginTop: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  emptyTipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderRadius: RADIUS.md,
+    gap: SPACING.sm,
+  },
+  emptyTipIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTipText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    flex: 1,
   },
 })

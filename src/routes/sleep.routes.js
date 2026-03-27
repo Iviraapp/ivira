@@ -27,9 +27,10 @@ function calculateSleepScore(durationMinutes, qualityRating) {
 export default async function sleepRoutes(fastify) {
   const ownerAuth = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] };
   const tokenAuth = { preHandler: [fastify.verifyToken] };
+  const memberAuth = { preHandler: [fastify.verifyToken, fastify.verifyMember] };
 
   // POST /gyms/:gymId/members/:memberId/sleep — log sleep (member or owner)
-  fastify.post('/gyms/:gymId/members/:memberId/sleep', tokenAuth, async (request, reply) => {
+  fastify.post('/gyms/:gymId/members/:memberId/sleep', memberAuth, async (request, reply) => {
     const { gymId, memberId } = request.params;
     const {
       bedtime, wake_time, quality_rating, notes,
@@ -93,7 +94,7 @@ export default async function sleepRoutes(fastify) {
   });
 
   // GET /gyms/:gymId/members/:memberId/sleep/history — get sleep logs
-  fastify.get('/gyms/:gymId/members/:memberId/sleep/history', tokenAuth, async (request) => {
+  fastify.get('/gyms/:gymId/members/:memberId/sleep/history', memberAuth, async (request) => {
     const { gymId, memberId } = request.params;
     const { days = 30, limit = 30, offset = 0 } = request.query;
 
@@ -111,7 +112,7 @@ export default async function sleepRoutes(fastify) {
   });
 
   // GET /gyms/:gymId/members/:memberId/sleep/stats — get sleep statistics
-  fastify.get('/gyms/:gymId/members/:memberId/sleep/stats', tokenAuth, async (request) => {
+  fastify.get('/gyms/:gymId/members/:memberId/sleep/stats', memberAuth, async (request) => {
     const { gymId, memberId } = request.params;
     const { days = 30 } = request.query;
 

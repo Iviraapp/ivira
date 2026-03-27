@@ -109,4 +109,12 @@ const config = {
   },
 };
 
+// Warn about insecure defaults in production
+if (!config.isDev && config.jwt.secret === 'ivira-dev-secret-change-in-production') {
+  console.error('⚠️  SECURITY: JWT_SECRET is using default value in production! Set a strong JWT_SECRET environment variable.');
+}
+if (!config.isDev && config.adminSecret === 'ivira-admin-2026') {
+  console.error('⚠️  SECURITY: ADMIN_SECRET is using default value in production! Set a strong ADMIN_SECRET environment variable.');
+}
+
 export default config;

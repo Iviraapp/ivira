@@ -22,9 +22,9 @@
   --accent:         #FFFFFF;
   --accent-soft:    rgba(255,255,255,0.08);
 
-  /* Brand purple — ONLY for active nav + primary CTA */
-  --brand-accent:   #1A3A8F;
-  --brand-accent-soft: rgba(26,58,143,0.12);
+  /* Brand blue — ONLY for active nav + primary CTA */
+  --brand-accent:   #0055FF;
+  --brand-accent-soft: rgba(0,85,255,0.12);
 
   /* Status colors */
   --green:          #34A853;
@@ -63,15 +63,15 @@ html.light {
   --text-secondary: #475569;
   --text-tertiary:  #94A3B8;
 
-  --accent:         #1A3A8F;
-  --accent-soft:    rgba(26,58,143,0.08);
+  --accent:         #0055FF;
+  --accent-soft:    rgba(0,85,255,0.08);
 
-  --brand-accent:   #1A3A8F;
-  --brand-accent-soft: rgba(26,58,143,0.08);
+  --brand-accent:   #0055FF;
+  --brand-accent-soft: rgba(0,85,255,0.08);
 
-  --border:         rgba(26,58,143,0.12);
-  --border-focus:   rgba(26,58,143,0.3);
-  --border-strong:  rgba(26,58,143,0.18);
+  --border:         rgba(0,85,255,0.12);
+  --border-focus:   rgba(0,85,255,0.3);
+  --border-strong:  rgba(0,85,255,0.18);
 
   --shadow-sm:  0 2px 8px rgba(26,58,143,0.06);
   --shadow:     0 4px 16px rgba(26,58,143,0.08);

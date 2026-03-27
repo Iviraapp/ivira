@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IVIRA System Admin</title>
+  <style>
+    /* ========== CSS Variables ========== */
+    :root {
+      --primary: #1A3A8F;
+      --bg: #0A0A0F;
+      --surface: #141420;
+      --surface-hover: #1A1A2E;
+      --border: #2A2A3A;
+      --text: #FFFFFF;
+      --text-secondary: #8888AA;
+      --text-muted: #555570;
+      --accent: #3B82F6;
+      --green: #22C55E;
+      --red: #EF4444;
+      --amber: #F59E0B;
+      --sidebar-width: 240px;
+      --topbar-height: 56px;
+      --radius: 8px;
+      --radius-sm: 6px;
+      --transition: 150ms ease;
+    }
+
+    /* ========== Reset & Base ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    input, button, select, textarea {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    /* ========== Scrollbar ========== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ========== App Layout ========== */
+    #app { height: 100%; }
+
+    .app-layout {
+      display: flex;
+      height: 100%;
+    }
+
+    /* ========== Sidebar ========== */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      height: 100%;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      transition: transform var(--transition);
+    }
+
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-logo .logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .sidebar-logo .logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-logo .logo-badge {
+      font-size: 9px;
+      text-transform: uppercase;
+      background: var(--primary);
+      color: #fff;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 8px;
+    }
+
+    .nav-section-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      padding: 16px 12px 6px;
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition);
+      font-size: 13px;
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .nav-item:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--accent);
+    }
+
+    .nav-item .nav-icon {
+      width: 20px;
+      text-align: center;
+      font-size: 15px;
+    }
+
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ========== Main Content ========== */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    .topbar {
+      height: var(--topbar-height);
+      min-height: var(--topbar-height);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topbar-admin {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .page-content {
+      flex: 1;
+      padding: 24px;
+      max-width: 1400px;
+      width: 100%;
+    }
+
+    /* ========== Login Page ========== */
+    .login-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-card .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-card .login-logo .mark {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .login-card .login-logo h1 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .login-card .login-logo p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    /* ========== Form Controls ========== */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      transition: border-color var(--transition);
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ========== Buttons ========== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn:hover { text-decoration: none; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #2563EB; }
+
+    .btn-success {
+      background: var(--green);
+      color: #fff;
+    }
+    .btn-success:hover { background: #16A34A; }
+
+    .btn-danger {
+      background: var(--red);
+      color: #fff;
+    }
+    .btn-danger:hover { background: #DC2626; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border);
+    }
+    .btn-ghost:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-full { width: 100%; }
+
+    /* ========== Stat Cards ========== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .stat-card .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .stat-card .stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ========== Cards / Panels ========== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .card-body.no-pad {
+      padding: 0;
+    }
+
+    /* ========== Data Table ========== */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .data-table th:hover {
+      color: var(--text-secondary);
+    }
+
+    .data-table th .sort-arrow {
+      margin-left: 4px;
+      font-size: 10px;
+    }
+
+    .data-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(42, 42, 58, 0.5);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 250px;
+    }
+
+    .data-table tbody tr {
+      transition: background var(--transition);
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--surface-hover);
+    }
+
+    .data-table tbody tr.clickable {
+      cursor: pointer;
+    }
+
+    /* ========== Badges ========== */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-green { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+    .badge-amber { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+    .badge-red { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+    .badge-blue { background: rgba(59, 130, 246, 0.15); color: var(--accent); }
+    .badge-muted { background: rgba(85, 85, 112, 0.15); color: var(--text-muted); }
+
+    /* ========== Search ========== */
+    .search-bar {
+      margin-bottom: 16px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      max-width: 400px;
+      padding: 9px 14px 9px 36px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .search-bar input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-bar-wrap {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .search-bar-wrap::before {
+      content: '\26B2';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    /* ========== Revenue Chart ========== */
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 180px;
+      padding-top: 20px;
+    }
+
+    .chart-bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .chart-bar {
+      width: 100%;
+      max-width: 48px;
+      background: var(--accent);
+      border-radius: 4px 4px 0 0;
+      min-height: 2px;
+      transition: height 0.4s ease;
+      position: relative;
+    }
+
+    .chart-bar:hover {
+      background: #2563EB;
+    }
+
+    .chart-bar-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .chart-bar-value {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    /* ========== Activity Feed ========== */
+    .feed-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(42, 42, 58, 0.5);
+      transition: background var(--transition);
+    }
+
+    .feed-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .feed-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .feed-icon.signup { background: rgba(34, 197, 94, 0.15); }
+    .feed-icon.checkin { background: rgba(59, 130, 246, 0.15); }
+
+    .feed-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feed-body .feed-text {
+      font-size: 13px;
+    }
+
+    .feed-body .feed-text strong {
+      color: var(--text);
+    }
+
+    .feed-body .feed-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ========== Detail Page ========== */
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .detail-header .back-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all var(--transition);
+      font-size: 16px;
+    }
+
+    .detail-header .back-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      padding: 12px 0;
+    }
+
+    .info-item .info-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .info-item .info-value {
+      font-size: 14px;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    /* ========== Feature Toggles ========== */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(42, 42, 58, 0.3);
+    }
+
+    .toggle-row:last-child { border-bottom: none; }
+
+    .toggle-label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      cursor: pointer;
+    }
+
+    .toggle-switch input {
+      display: none;
+    }
+
+    .toggle-switch .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 11px;
+      transition: background var(--transition);
+    }
+
+    .toggle-switch .slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      left: 3px;
+      top: 3px;
+      transition: transform var(--transition);
+    }
+
+    .toggle-switch input:checked + .slider {
+      background: var(--green);
+    }
+
+    .toggle-switch input:checked + .slider::before {
+      transform: translateX(18px);
+    }
+
+    /* ========== Modal ========== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      animation: fadeIn 150ms ease;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideUp 200ms ease;
+    }
+
+    .modal h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ========== Toast ========== */
+    .toast-container {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      animation: slideIn 200ms ease;
+      min-width: 240px;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .toast-success {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .toast-error {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .toast-info {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* ========== Loading ========== */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    .spinner-lg { width: 32px; height: 32px; border-width: 3px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .empty-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+
+    /* ========== Page-level spacing ========== */
+    .page-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .page-title-row h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    /* ========== Responsive ========== */
+    @media (max-width: 1024px) {
+      .section-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .page-content {
+        padding: 16px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .data-table {
+        font-size: 12px;
+      }
+
+      .data-table th, .data-table td {
+        padding: 8px 10px;
+      }
+
+      .modal {
+        margin: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ========== Utility ========== */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-8 { gap: 8px; }
+    .gap-12 { gap: 12px; }
+    .gap-16 { gap: 16px; }
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mb-16 { margin-bottom: 16px; }
+    .text-muted { color: var(--text-muted); }
+    .text-secondary { color: var(--text-secondary); }
+    .text-sm { font-size: 12px; }
+    .text-right { text-align: right; }
+    .font-mono { font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Overlay for mobile sidebar */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 99;
+    }
+
+    .sidebar-overlay.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div class="toast-container" id="toast-container"></div>
+
+  <script type="module">
+    // ======================================================
+    // IVIRA System Admin — Single Page Application
+    // ======================================================
+
+    const API_BASE = window.location.origin + '/api/v1';
+
+    // ========== State ==========
+    const state = {
+      token: sessionStorage.getItem('ivira_admin_token'),
+      admin: JSON.parse(sessionStorage.getItem('ivira_admin_info') || 'null'),
+      sidebarOpen: false,
+    };
+
+    // ========== API Helper ==========
+    async function api(path, options = {}) {
+      const url = `${API_BASE}${path}`;
+      const headers = { 'Content-Type': 'application/json', ...options.headers };
+      if (state.token) {
+        headers['Authorization'] = `Bearer ${state.token}`;
+      }
+      try {
+        const res = await fetch(url, { ...options, headers });
+        if (res.status === 401) {
+          logout();
+          throw new Error('Session expired');
+        }
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || body.message || `HTTP ${res.status}`);
+        }
+        return await res.json();
+      } catch (err) {
+        if (err.message === 'Session expired') throw err;
+        throw err;
+      }
+    }
+
+    // ========== Formatters ==========
+    function formatNumber(n) {
+      if (n == null || isNaN(n)) return '0';
+      return Number(n).toLocaleString('en-IN');
+    }
+
+    function formatCurrency(paise) {
+      if (paise == null || isNaN(paise)) return '\u20B90';
+      const rupees = Number(paise) / 100;
+      return '\u20B9' + rupees.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return '';
+      const now = Date.now();
+      const then = new Date(dateStr).getTime();
+      const diff = now - then;
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      return formatDate(dateStr);
+    }
+
+    function statusBadge(status) {
+      const map = {
+        active: 'badge-green',
+        trial: 'badge-amber',
+        suspended: 'badge-red',
+        expired: 'badge-red',
+        inactive: 'badge-muted',
+        pending: 'badge-amber',
+      };
+      const cls = map[(status || '').toLowerCase()] || 'badge-muted';
+      return `<span class="badge ${cls}">${escHtml(status || 'unknown')}</span>`;
+    }
+
+    function escHtml(str) {
+      if (str == null) return '';
+      const div = document.createElement('div');
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+
+    // ========== Toast ==========
+    function toast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(20px)';
+        el.style.transition = 'all 200ms ease';
+        setTimeout(() => el.remove(), 200);
+      }, 3000);
+    }
+
+    // ========== Modal ==========
+    function showModal(content) {
+      const existing = document.querySelector('.modal-backdrop');
+      if (existing) existing.remove();
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop';
+      backdrop.innerHTML = `<div class="modal">${content}</div>`;
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) backdrop.remove();
+      });
+      document.body.appendChild(backdrop);
+      return backdrop;
+    }
+
+    function closeModal() {
+      const m = document.querySelector('.modal-backdrop');
+      if (m) m.remove();
+    }
+
+    // ========== Auth ==========
+    function isLoggedIn() {
+      return !!state.token;
+    }
+
+    function logout() {
+      state.token = null;
+      state.admin = null;
+      sessionStorage.removeItem('ivira_admin_token');
+      sessionStorage.removeItem('ivira_admin_info');
+      navigate('/login');
+    }
+
+    // ========== Router ==========
+    function getRoute() {
+      const hash = window.location.hash.replace('#', '') || '/';
+      return hash;
+    }
+
+    function navigate(path) {
+      window.location.hash = '#' + path;
+    }
+
+    // ========== Components ==========
+
+    function renderSidebar() {
+      const route = getRoute();
+      const isActive = (path) => {
+        if (path === '/' || path === '/dashboard') {
+          return (route === '/' || route === '/dashboard') ? 'active' : '';
+        }
+        return route.startsWith(path) ? 'active' : '';
+      };
+
+      return `
+        <div class="sidebar" id="sidebar">
+          <div class="sidebar-logo">
+            <div class="logo-mark">I</div>
+            <span class="logo-text">IVIRA</span>
+            <span class="logo-badge">Admin</span>
+          </div>
+          <nav class="sidebar-nav">
+            <div class="nav-section-label">Overview</div>
+            <a href="#/dashboard" class="nav-item ${isActive('/dashboard')}">
+              <span class="nav-icon">\u25A3</span> Dashboard
+            </a>
+            <a href="#/activity" class="nav-item ${isActive('/activity')}">
+              <span class="nav-icon">\u26A1</span> Activity Feed
+            </a>
+            <div class="nav-section-label">Manage</div>
+            <a href="#/gyms" class="nav-item ${isActive('/gyms')}">
+              <span class="nav-icon">\u2302</span> Gyms
+            </a>
+            <a href="#/members" class="nav-item ${isActive('/members')}">
+              <span class="nav-icon">\u263A</span> Members
+            </a>
+            <div class="nav-section-label">System</div>
+            <a href="#/team" class="nav-item ${isActive('/team')}">
+              <span class="nav-icon">\u2630</span> Team
+            </a>
+          </nav>
+          <div class="sidebar-footer">
+            IVIRA System Admin v1.0
+          </div>
+        </div>
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+      `;
+    }
+
+    function renderTopbar(title) {
+      const adminEmail = state.admin?.email || '';
+      return `
+        <div class="topbar">
+          <div class="topbar-left">
+            <button class="mobile-menu-btn" id="mobile-menu-toggle">\u2630</button>
+            <span class="topbar-title">${escHtml(title)}</span>
+          </div>
+          <div class="topbar-right">
+            <span class="topbar-admin">${escHtml(adminEmail)}</span>
+            <button class="btn btn-ghost btn-sm" id="logout-btn">Logout</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderLoading() {
+      return `<div class="loading-center"><div class="spinner spinner-lg"></div></div>`;
+    }
+
+    function renderEmpty(icon, message) {
+      return `<div class="empty-state"><div class="empty-icon">${icon}</div><p>${escHtml(message)}</p></div>`;
+    }
+
+    function renderTable(columns, rows, options = {}) {
+      if (!rows || rows.length === 0) {
+        return renderEmpty(options.emptyIcon || '\u2205', options.emptyMessage || 'No data found');
+      }
+      const clickable = options.onRowClick ? 'clickable' : '';
+      let html = `<table class="data-table"><thead><tr>`;
+      for (const col of columns) {
+        html += `<th data-key="${col.key}">${escHtml(col.label)}</th>`;
+      }
+      html += `</tr></thead><tbody>`;
+      for (const row of rows) {
+        const rowId = row.id || '';
+        html += `<tr class="${clickable}" data-id="${escHtml(rowId)}">`;
+        for (const col of columns) {
+          const val = col.render ? col.render(row) : escHtml(row[col.key]);
+          html += `<td>${val}</td>`;
+        }
+        html += `</tr>`;
+      }
+      html += `</tbody></table>`;
+      return html;
+    }
+
+    // ========== Page: Login ==========
+    function pageLogin() {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="login-page">
+          <div class="login-card">
+            <div class="login-logo">
+              <div class="mark">I</div>
+              <h1>IVIRA Admin</h1>
+              <p>System administration console</p>
+            </div>
+            <form id="login-form">
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" class="form-input" id="login-email" placeholder="admin@ivira.io" required autocomplete="email" />
+              </div>
+              <div class="form-group">
+                <label>Password</label>
+                <input type="password" class="form-input" id="login-password" placeholder="Enter password" required autocomplete="current-password" />
+              </div>
+              <button type="submit" class="btn btn-primary btn-full" id="login-submit">Sign In</button>
+              <p class="text-muted text-sm mt-16" style="text-align:center;">Authorized personnel only</p>
+            </form>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('login-submit');
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+        try {
+          const data = await api('/super/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+          });
+
+          state.token = data.token;
+          state.admin = data.admin || { email };
+          sessionStorage.setItem('ivira_admin_token', data.token);
+          sessionStorage.setItem('ivira_admin_info', JSON.stringify(state.admin));
+
+          toast('Welcome back!', 'success');
+          navigate('/dashboard');
+        } catch (err) {
+          toast(err.message || 'Login failed', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Sign In';
+        }
+      });
+    }
+
+    // ========== Layout Wrapper ==========
+    function renderLayout(title, content) {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="app-layout">
+          ${renderSidebar()}
+          <div class="main-content">
+            ${renderTopbar(title)}
+            <div class="page-content" id="page-content">
+              ${content}
+            </div>
+          </div>
+        </div>
+      `;
+      bindLayoutEvents();
+    }
+
+    function bindLayoutEvents() {
+      // Logout
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+      // Mobile menu
+      const toggle = document.getElementById('mobile-menu-toggle');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+
+      if (toggle && sidebar) {
+        toggle.addEventListener('click', () => {
+          sidebar.classList.toggle('open');
+          overlay.classList.toggle('visible');
+        });
+      }
+
+      if (overlay && sidebar) {
+        overlay.addEventListener('click', () => {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('visible');
+        });
+      }
+
+      // Close sidebar on nav click (mobile)
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          if (sidebar) sidebar.classList.remove('open');
+          if (overlay) overlay.classList.remove('visible');
+        });
+      });
+    }
+
+    // ========== Page: Dashboard ==========
+    async function pageDashboard() {
+      renderLayout('Dashboard', renderLoading());
+
+      const content = document.getElementById('page-content');
+
+      try {
+        const [stats, activeUsers, healthOverview, activityFeed, revenue] = await Promise.all([
+          api('/super/stats').catch(() => ({})),
+          api('/super/analytics/active-users').catch(() => ({ dau: 0, wau: 0, mau: 0, total: 0 })),
+          api('/super/analytics/health-overview').catch(() => ({ nutritionLogsToday: 0, sleepLogsToday: 0, workoutSessionsToday: 0 })),
+          api('/super/analytics/activity-feed?limit=20').catch(() => ({ recentSignups: [], recentCheckins: [] })),
+          api('/super/revenue?period=6months').catch(() => ({ months: [] })),
+        ]);
+
+        const totalGyms = stats.total_gyms ?? stats.totalGyms ?? stats.gyms ?? '-';
+        const totalMembers = activeUsers.total ?? stats.total_members ?? '-';
+        const dau = activeUsers.dau ?? '-';
+        const wau = activeUsers.wau ?? '-';
+        const mau = activeUsers.mau ?? '-';
+
+        // Stats cards
+        let html = `
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Gyms</div>
+              <div class="stat-value">${formatNumber(totalGyms)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total Members</div>
+              <div class="stat-value">${formatNumber(totalMembers)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">DAU</div>
+              <div class="stat-value">${formatNumber(dau)}</div>
+              <div class="stat-sub">Daily Active Users</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">WAU</div>
+              <div class="stat-value">${formatNumber(wau)}</div>
+              <div class="stat-sub">Weekly Active Users</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">MAU</div>
+              <div class="stat-value">${formatNumber(mau)}</div>
+              <div class="stat-sub">Monthly Active Users</div>
+            </div>
+          </div>
+        `;
+
+        // Today's activity
+        html += `
+          <div class="stats-grid" style="margin-bottom: 24px;">
+            <div class="stat-card">
+              <div class="stat-label">Nutrition Logs Today</div>
+              <div class="stat-value">${formatNumber(healthOverview.nutritionLogsToday)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Sleep Logs Today</div>
+              <div class="stat-value">${formatNumber(healthOverview.sleepLogsToday)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Workouts Today</div>
+              <div class="stat-value">${formatNumber(healthOverview.workoutSessionsToday)}</div>
+            </div>
+          </div>
+        `;
+
+        // Two-column section
+        html += `<div class="section-grid">`;
+
+        // Recent Signups
+        html += `<div class="card">
+          <div class="card-header"><h3>Recent Signups</h3></div>
+          <div class="card-body no-pad">`;
+
+        const signups = activityFeed.recentSignups || [];
+        if (signups.length === 0) {
+          html += renderEmpty('\u263A', 'No recent signups');
+        } else {
+          html += `<table class="data-table"><thead><tr>
+            <th>Name</th><th>Email</th><th>Joined</th>
+          </tr></thead><tbody>`;
+          for (const s of signups.slice(0, 20)) {
+            html += `<tr>
+              <td>${escHtml(s.name)}</td>
+              <td class="text-secondary">${escHtml(s.email)}</td>
+              <td class="text-muted">${timeAgo(s.created_at)}</td>
+            </tr>`;
+          }
+          html += `</tbody></table>`;
+        }
+        html += `</div></div>`;
+
+        // Revenue Chart
+        html += `<div class="card">
+          <div class="card-header"><h3>Revenue</h3></div>
+          <div class="card-body">`;
+
+        const months = revenue.months || revenue.data || [];
+        if (Array.isArray(months) && months.length > 0) {
+          const maxRevenue = Math.max(...months.map(m => m.revenue || m.total || m.amount || 0), 1);
+          html += `<div class="chart-bars">`;
+          for (const m of months) {
+            const val = m.revenue || m.total || m.amount || 0;
+            const pct = (val / maxRevenue) * 100;
+            const label = m.month || m.label || m.period || '';
+            html += `<div class="chart-bar-col">
+              <div class="chart-bar-value">${formatCurrency(val)}</div>
+              <div class="chart-bar" style="height: ${Math.max(pct, 1)}%"></div>
+              <div class="chart-bar-label">${escHtml(label)}</div>
+            </div>`;
+          }
+          html += `</div>`;
+        } else {
+          html += `<div class="empty-state"><p class="text-muted">No revenue data available</p></div>`;
+        }
+
+        html += `</div></div>`;
+        html += `</div>`; // section-grid
+
+        content.innerHTML = html;
+      } catch (err) {
+        content.innerHTML = `<div class="empty-state"><p>Failed to load dashboard: ${escHtml(err.message)}</p></div>`;
+      }
+    }
+
+    // ========== Page: Gyms ==========
+    async function pageGyms() {
+      renderLayout('Gyms', renderLoading());
+      const content = document.getElementById('page-content');
+
+      try {
+        const [gymsData, breakdown] = await Promise.all([
+          api('/super/gyms?page=1&limit=50'),
+          api('/super/analytics/gym-breakdown').catch(() => ({ gyms: [] })),
+        ]);
+
+        const gyms = gymsData.gyms || gymsData.data || gymsData || [];
+        const memberCounts = {};
+        for (const g of (breakdown.gyms || [])) {
+          memberCounts[g.id] = {
+            total: parseInt(g.member_count) || 0,
+            active: parseInt(g.active_members) || 0,
+          };
+        }
+
+        let allGyms = Array.isArray(gyms) ? gyms : [];
+
+        function renderGymsTable(filteredGyms) {
+          if (filteredGyms.length === 0) {
+            return renderEmpty('\u2302', 'No gyms found');
+          }
+
+          const columns = [
+            { key: 'gym_name', label: 'Name' },
+            { key: 'city', label: 'City' },
+            { key: 'status', label: 'Status', render: (r) => statusBadge(r.status) },
+            {
+              key: 'members', label: 'Members',
+              render: (r) => {
+                const mc = memberCounts[r.id];
+                return mc ? `${formatNumber(mc.active)} / ${formatNumber(mc.total)}` : '-';
+              },
+            },
+            { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+          ];
+
+          return renderTable(columns, filteredGyms, {
+            onRowClick: true,
+            emptyIcon: '\u2302',
+            emptyMessage: 'No gyms found',
+          });
+        }
+
+        let html = `
+          <div class="page-title-row">
+            <h2>Gyms</h2>
+          </div>
+          <div class="search-bar">
+            <div class="search-bar-wrap">
+              <input type="text" id="gym-search" placeholder="Search gyms by name or city..." />
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body no-pad" id="gyms-table-container">
+              ${renderGymsTable(allGyms)}
+            </div>
+          </div>
+        `;
+
+        content.innerHTML = html;
+
+        // Search filter
+        const searchInput = document.getElementById('gym-search');
+        if (searchInput) {
+          searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase().trim();
+            const filtered = allGyms.filter(g =>
+              (g.gym_name || '').toLowerCase().includes(q) ||
+              (g.city || '').toLowerCase().includes(q) ||
+              (g.owner_email || '').toLowerCase().includes(q)
+            );
+            document.getElementById('gyms-table-container').innerHTML = renderGymsTable(filtered);
+            bindGymRowClicks();
+          });
+        }
+
+        function bindGymRowClicks() {
+          document.querySelectorAll('#gyms-table-container .data-table tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+              const id = row.dataset.id;
+              if (id) navigate(`/gyms/${id}`);
+            });
+          });
+        }
+        bindGymRowClicks();
+
+      } catch (err) {
+        content.innerHTML = `<div class="empty-state"><p>Failed to load gyms: ${escHtml(err.message)}</p></div>`;
+      }
+    }
+
+    // ========== Page: Gym Detail ==========
+    async function pageGymDetail(gymId) {
+      renderLayout('Gym Detail', renderLoading());
+      const content = document.getElementById('page-content');
+
+      try {
+        const [gym, features] = await Promise.all([
+          api(`/super/gyms/${gymId}`),
+          api(`/super/gyms/${gymId}/features`).catch(() => null),
+        ]);
+
+        const g = gym.gym || gym;
+
+        let html = `
+          <div class="detail-header">
+            <button class="back-btn" id="back-btn">\u2190</button>
+            <h2>${escHtml(g.gym_name || g.name || 'Gym')}</h2>
+            ${statusBadge(g.status)}
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3>Information</h3></div>
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Name</div>
+                  <div class="info-value">${escHtml(g.gym_name || g.name)}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Owner</div>
+                  <div class="info-value">${escHtml(g.owner_name || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Email</div>
+                  <div class="info-value">${escHtml(g.owner_email || g.email || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Phone</div>
+                  <div class="info-value">${escHtml(g.owner_phone || g.phone || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">City</div>
+                  <div class="info-value">${escHtml(g.city || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Address</div>
+                  <div class="info-value">${escHtml(g.address || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Members</div>
+                  <div class="info-value">${formatNumber(g.member_count ?? g.members_count ?? '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Created</div>
+                  <div class="info-value">${formatDate(g.created_at)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-8 mb-16">
+            ${g.status !== 'suspended' ? `<button class="btn btn-danger btn-sm" id="suspend-btn">Suspend Gym</button>` : ''}
+            ${g.status !== 'active' ? `<button class="btn btn-success btn-sm" id="activate-btn">Activate Gym</button>` : ''}
+          </div>
+        `;
+
+        // Feature toggles
+        if (features) {
+          const featureConfig = features.features || features.config || features;
+          const featureKeys = Object.keys(featureConfig).filter(k => typeof featureConfig[k] === 'boolean');
+
+          if (featureKeys.length > 0) {
+            html += `
+              <div class="card">
+                <div class="card-header">
+                  <h3>Feature Toggles</h3>
+                  <button class="btn btn-primary btn-sm" id="save-features-btn">Save Changes</button>
+                </div>
+                <div class="card-body" id="feature-toggles">
+            `;
+            for (const key of featureKeys) {
+              const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              html += `
+                <div class="toggle-row">
+                  <span class="toggle-label">${escHtml(label)}</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" data-feature="${escHtml(key)}" ${featureConfig[key] ? 'checked' : ''} />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              `;
+            }
+            html += `</div></div>`;
+          }
+        }
+
+        content.innerHTML = html;
+
+        // Back button
+        document.getElementById('back-btn')?.addEventListener('click', () => navigate('/gyms'));
+
+        // Suspend
+        document.getElementById('suspend-btn')?.addEventListener('click', async () => {
+          const modal = showModal(`
+            <h3>Suspend Gym</h3>
+            <p>Are you sure you want to suspend <strong>${escHtml(g.gym_name || g.name)}</strong>? Their owners and members will lose access.</p>
+            <div class="modal-actions">
+              <button class="btn btn-ghost btn-sm" id="cancel-modal">Cancel</button>
+              <button class="btn btn-danger btn-sm" id="confirm-suspend">Suspend</button>
+            </div>
+          `);
+          modal.querySelector('#cancel-modal').addEventListener('click', closeModal);
+          modal.querySelector('#confirm-suspend').addEventListener('click', async () => {
+            try {
+              await api(`/super/gyms/${gymId}/suspend`, { method: 'PATCH' });
+              toast('Gym suspended', 'success');
+              closeModal();
+              pageGymDetail(gymId);
+            } catch (err) {
+              toast(err.message, 'error');
+            }
+          });
+        });
+
+        // Activate
+        document.getElementById('activate-btn')?.addEventListener('click', async () => {
+          try {
+            await api(`/super/gyms/${gymId}/activate`, { method: 'PATCH' });
+            toast('Gym activated', 'success');
+            pageGymDetail(gymId);
+          } catch (err) {
+            toast(err.message, 'error');
+          }
+        });
+
+        // Save features
+        document.getElementById('save-features-btn')?.addEventListener('click', async () => {
+          const toggles = document.querySelectorAll('#feature-toggles input[type="checkbox"]');
+          const updatedFeatures = {};
+          toggles.forEach(t => {
+            updatedFeatures[t.dataset.feature] = t.checked;
+          });
+          try {
+            await api(`/super/gyms/${gymId}/features`, {
+              method: 'PUT',
+              body: JSON.stringify(updatedFeatures),
+            });
+            toast('Features updated', 'success');
+          } catch (err) {
+            toast(err.message, 'error');
+          }
+        });
+
+      } catch (err) {
+        content.innerHTML = `<div class="empty-state"><p>Failed to load gym: ${escHtml(err.message)}</p></div>`;
+      }
+    }
+
+    // ========== Page: Members ==========
+    async function pageMembers() {
+      renderLayout('Members', '');
+      const content = document.getElementById('page-content');
+
+      content.innerHTML = `
+        <div class="page-title-row">
+          <h2>Members</h2>
+        </div>
+        <div class="search-bar">
+          <div class="search-bar-wrap">
+            <input type="text" id="member-search" placeholder="Search members by name, email, or phone..." />
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body no-pad" id="members-results">
+            ${renderEmpty('\u263A', 'Search for members by name, email, or phone')}
+          </div>
+        </div>
+      `;
+
+      let searchTimeout = null;
+      const searchInput = document.getElementById('member-search');
+      const resultsContainer = document.getElementById('members-results');
+
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        const q = searchInput.value.trim();
+        if (q.length < 2) {
+          resultsContainer.innerHTML = renderEmpty('\u263A', 'Type at least 2 characters to search');
+          return;
+        }
+        resultsContainer.innerHTML = renderLoading();
+        searchTimeout = setTimeout(async () => {
+          try {
+            const data = await api(`/super/search?q=${encodeURIComponent(q)}`);
+            const members = data.results?.members || [];
+            const gyms = data.results?.gyms || [];
+
+            let allResults = [];
+
+            for (const m of members) {
+              allResults.push({
+                id: m.id,
+                name: m.name || '-',
+                email: m.email || m.phone || '-',
+                gym: m.gym_name || '-',
+                gym_id: m.gym_id,
+                status: m.status || '-',
+                type: 'member',
+              });
+            }
+
+            // Also show gym results
+            for (const g of gyms) {
+              allResults.push({
+                id: g.id,
+                name: g.gym_name || '-',
+                email: g.owner_email || '-',
+                gym: g.city || '-',
+                status: g.status || '-',
+                type: 'gym',
+              });
+            }
+
+            if (allResults.length === 0) {
+              resultsContainer.innerHTML = renderEmpty('\u2205', `No results for "${escHtml(q)}"`);
+              return;
+            }
+
+            const columns = [
+              {
+                key: 'type', label: 'Type',
+                render: (r) => r.type === 'gym'
+                  ? '<span class="badge badge-blue">GYM</span>'
+                  : '<span class="badge badge-muted">MEMBER</span>',
+              },
+              { key: 'name', label: 'Name' },
+              { key: 'email', label: 'Email / Phone' },
+              { key: 'gym', label: 'Gym / City' },
+              { key: 'status', label: 'Status', render: (r) => statusBadge(r.status) },
+            ];
+
+            resultsContainer.innerHTML = renderTable(columns, allResults, { onRowClick: true });
+
+            // Row clicks
+            resultsContainer.querySelectorAll('.data-table tbody tr').forEach(row => {
+              row.addEventListener('click', () => {
+                const id = row.dataset.id;
+                const type = allResults.find(r => r.id === id)?.type;
+                if (type === 'gym') navigate(`/gyms/${id}`);
+                else navigate(`/members/${id}`);
+              });
+            });
+          } catch (err) {
+            resultsContainer.innerHTML = `<div class="empty-state"><p>Search failed: ${escHtml(err.message)}</p></div>`;
+          }
+        }, 300);
+      });
+
+      searchInput.focus();
+    }
+
+    // ========== Page: Member Detail ==========
+    async function pageMemberDetail(memberId) {
+      renderLayout('Member Detail', renderLoading());
+      const content = document.getElementById('page-content');
+
+      try {
+        // Try to get member details — endpoint may not exist
+        let member = null;
+        try {
+          const data = await api(`/super/members/${memberId}`);
+          member = data.member || data;
+        } catch {
+          // Fallback: try search
+          member = null;
+        }
+
+        if (!member) {
+          content.innerHTML = `
+            <div class="detail-header">
+              <button class="back-btn" id="back-btn">\u2190</button>
+              <h2>Member</h2>
+            </div>
+            <div class="card"><div class="card-body">
+              <p class="text-secondary">Member detail endpoint not available. Use global search to find members.</p>
+            </div></div>
+          `;
+          document.getElementById('back-btn')?.addEventListener('click', () => navigate('/members'));
+          return;
+        }
+
+        const m = member;
+        let html = `
+          <div class="detail-header">
+            <button class="back-btn" id="back-btn">\u2190</button>
+            <h2>${escHtml(m.name || 'Member')}</h2>
+            ${statusBadge(m.status)}
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Profile</h3></div>
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Name</div>
+                  <div class="info-value">${escHtml(m.name || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Email</div>
+                  <div class="info-value">${escHtml(m.email || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Phone</div>
+                  <div class="info-value">${escHtml(m.phone || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Gym</div>
+                  <div class="info-value">${escHtml(m.gym_name || m.gym_id || '-')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Joined</div>
+                  <div class="info-value">${formatDate(m.created_at || m.joined_at)}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Status</div>
+                  <div class="info-value">${statusBadge(m.status)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Activity summary if available
+        if (m.activity || m.checkins_this_week != null) {
+          html += `
+            <div class="card">
+              <div class="card-header"><h3>Activity This Week</h3></div>
+              <div class="card-body">
+                <div class="stats-grid">
+                  <div class="stat-card">
+                    <div class="stat-label">Check-ins</div>
+                    <div class="stat-value">${formatNumber(m.checkins_this_week ?? m.activity?.checkins ?? 0)}</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-label">Workouts</div>
+                    <div class="stat-value">${formatNumber(m.workouts_this_week ?? m.activity?.workouts ?? 0)}</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-label">Nutrition Logs</div>
+                    <div class="stat-value">${formatNumber(m.nutrition_logs_this_week ?? m.activity?.nutrition ?? 0)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        content.innerHTML = html;
+        document.getElementById('back-btn')?.addEventListener('click', () => navigate('/members'));
+
+      } catch (err) {
+        content.innerHTML = `<div class="empty-state"><p>Failed to load member: ${escHtml(err.message)}</p></div>`;
+      }
+    }
+
+    // ========== Page: Activity Feed ==========
+    async function pageActivity() {
+      renderLayout('Activity Feed', renderLoading());
+      const content = document.getElementById('page-content');
+      let refreshTimer = null;
+
+      async function loadFeed() {
+        try {
+          const data = await api('/super/analytics/activity-feed?limit=100');
+          const signups = data.recentSignups || [];
+          const checkins = data.recentCheckins || [];
+
+          // Merge and sort by time
+          const items = [];
+          for (const s of signups) {
+            items.push({
+              type: 'signup',
+              name: s.name || s.email || 'Unknown',
+              time: s.created_at,
+              detail: 'signed up',
+              gymId: s.gym_id,
+            });
+          }
+          for (const c of checkins) {
+            items.push({
+              type: 'checkin',
+              name: c.name || 'Unknown',
+              time: c.checked_in_at,
+              detail: `checked in via ${c.method || 'manual'}`,
+              gymId: c.gym_id,
+            });
+          }
+
+          items.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+          let html = `
+            <div class="page-title-row">
+              <h2>Activity Feed</h2>
+              <span class="text-muted text-sm">Auto-refreshes every 30s</span>
+            </div>
+            <div class="card">
+              <div class="card-body no-pad" id="feed-container">
+          `;
+
+          if (items.length === 0) {
+            html += renderEmpty('\u26A1', 'No recent activity');
+          } else {
+            for (const item of items) {
+              const iconClass = item.type === 'signup' ? 'signup' : 'checkin';
+              const iconChar = item.type === 'signup' ? '\u2795' : '\u2714';
+              html += `
+                <div class="feed-item">
+                  <div class="feed-icon ${iconClass}">${iconChar}</div>
+                  <div class="feed-body">
+                    <div class="feed-text"><strong>${escHtml(item.name)}</strong> ${escHtml(item.detail)}</div>
+                    <div class="feed-time">${timeAgo(item.time)}</div>
+                  </div>
+                </div>
+              `;
+            }
+          }
+
+          html += `</div></div>`;
+          content.innerHTML = html;
+
+        } catch (err) {
+          content.innerHTML = `<div class="empty-state"><p>Failed to load activity: ${escHtml(err.message)}</p></div>`;
+        }
+      }
+
+      await loadFeed();
+
+      // Auto-refresh every 30s
+      refreshTimer = setInterval(loadFeed, 30000);
+
+      // Clean up on navigation (store cleanup fn)
+      window._activityCleanup = () => {
+        if (refreshTimer) clearInterval(refreshTimer);
+      };
+    }
+
+    // ========== Page: Team ==========
+    async function pageTeam() {
+      renderLayout('Team', renderLoading());
+      const content = document.getElementById('page-content');
+
+      async function loadTeam() {
+        try {
+          const data = await api('/super/team');
+          const admins = data.admins || data.team || data || [];
+
+          let html = `
+            <div class="page-title-row">
+              <h2>Team</h2>
+              <button class="btn btn-primary btn-sm" id="invite-btn">Invite Admin</button>
+            </div>
+            <div class="card">
+              <div class="card-body no-pad">
+          `;
+
+          if (!Array.isArray(admins) || admins.length === 0) {
+            html += renderEmpty('\u2630', 'No team members found. The /super/team endpoint may not be available yet.');
+          } else {
+            html += `<table class="data-table"><thead><tr>
+              <th>Name</th><th>Email</th><th>Role</th><th>Actions</th>
+            </tr></thead><tbody>`;
+            for (const admin of admins) {
+              html += `<tr data-id="${escHtml(admin.id)}">
+                <td>${escHtml(admin.name || '-')}</td>
+                <td>${escHtml(admin.email)}</td>
+                <td>${statusBadge(admin.role || 'admin')}</td>
+                <td>
+                  <button class="btn btn-ghost btn-sm reset-pw-btn" data-id="${escHtml(admin.id)}" data-email="${escHtml(admin.email)}">Reset Password</button>
+                  <button class="btn btn-danger btn-sm remove-btn" data-id="${escHtml(admin.id)}" data-name="${escHtml(admin.name || admin.email)}">Remove</button>
+                </td>
+              </tr>`;
+            }
+            html += `</tbody></table>`;
+          }
+
+          html += `</div></div>`;
+          content.innerHTML = html;
+
+          // Invite button
+          document.getElementById('invite-btn')?.addEventListener('click', () => {
+            const modal = showModal(`
+              <h3>Invite Admin</h3>
+              <form id="invite-form">
+                <div class="form-group">
+                  <label>Name</label>
+                  <input type="text" class="form-input" id="invite-name" placeholder="Full name" required />
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" class="form-input" id="invite-email" placeholder="admin@ivira.io" required />
+                </div>
+                <div class="modal-actions">
+                  <button type="button" class="btn btn-ghost btn-sm" id="cancel-invite">Cancel</button>
+                  <button type="submit" class="btn btn-primary btn-sm">Send Invite</button>
+                </div>
+              </form>
+            `);
+            modal.querySelector('#cancel-invite').addEventListener('click', closeModal);
+            modal.querySelector('#invite-form').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const name = document.getElementById('invite-name').value.trim();
+              const email = document.getElementById('invite-email').value.trim();
+              try {
+                await api('/super/team', {
+                  method: 'POST',
+                  body: JSON.stringify({ name, email }),
+                });
+                toast('Invite sent', 'success');
+                closeModal();
+                loadTeam();
+              } catch (err) {
+                toast(err.message, 'error');
+              }
+            });
+          });
+
+          // Remove buttons
+          document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const id = btn.dataset.id;
+              const name = btn.dataset.name;
+              const modal = showModal(`
+                <h3>Remove Admin</h3>
+                <p>Are you sure you want to remove <strong>${escHtml(name)}</strong> from the team?</p>
+                <div class="modal-actions">
+                  <button class="btn btn-ghost btn-sm" id="cancel-remove">Cancel</button>
+                  <button class="btn btn-danger btn-sm" id="confirm-remove">Remove</button>
+                </div>
+              `);
+              modal.querySelector('#cancel-remove').addEventListener('click', closeModal);
+              modal.querySelector('#confirm-remove').addEventListener('click', async () => {
+                try {
+                  await api(`/super/team/${id}`, { method: 'DELETE' });
+                  toast('Admin removed', 'success');
+                  closeModal();
+                  loadTeam();
+                } catch (err) {
+                  toast(err.message, 'error');
+                }
+              });
+            });
+          });
+
+          // Reset password buttons
+          document.querySelectorAll('.reset-pw-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const id = btn.dataset.id;
+              const email = btn.dataset.email;
+              const modal = showModal(`
+                <h3>Reset Password</h3>
+                <p>Send a password reset link to <strong>${escHtml(email)}</strong>?</p>
+                <div class="modal-actions">
+                  <button class="btn btn-ghost btn-sm" id="cancel-reset">Cancel</button>
+                  <button class="btn btn-primary btn-sm" id="confirm-reset">Reset</button>
+                </div>
+              `);
+              modal.querySelector('#cancel-reset').addEventListener('click', closeModal);
+              modal.querySelector('#confirm-reset').addEventListener('click', async () => {
+                try {
+                  await api(`/super/team/${id}/reset-password`, { method: 'POST' });
+                  toast('Password reset email sent', 'success');
+                  closeModal();
+                } catch (err) {
+                  toast(err.message, 'error');
+                }
+              });
+            });
+          });
+
+        } catch (err) {
+          content.innerHTML = `
+            <div class="page-title-row">
+              <h2>Team</h2>
+              <button class="btn btn-primary btn-sm" id="invite-btn">Invite Admin</button>
+            </div>
+            <div class="card"><div class="card-body">
+              <p class="text-secondary">Team endpoint not available yet. This will work once GET /super/team is implemented on the backend.</p>
+            </div></div>
+          `;
+        }
+      }
+
+      await loadTeam();
+    }
+
+    // ========== Router ==========
+    function cleanupPreviousPage() {
+      if (window._activityCleanup) {
+        window._activityCleanup();
+        window._activityCleanup = null;
+      }
+    }
+
+    async function router() {
+      cleanupPreviousPage();
+
+      if (!isLoggedIn()) {
+        const route = getRoute();
+        if (route !== '/login') {
+          navigate('/login');
+          return;
+        }
+        pageLogin();
+        return;
+      }
+
+      const route = getRoute();
+
+      // Parse route
+      if (route === '/login') {
+        // Already logged in, go to dashboard
+        navigate('/dashboard');
+        return;
+      }
+
+      if (route === '/' || route === '/dashboard') {
+        await pageDashboard();
+        return;
+      }
+
+      if (route === '/gyms') {
+        await pageGyms();
+        return;
+      }
+
+      // Gym detail: /gyms/:id
+      const gymMatch = route.match(/^\/gyms\/([a-f0-9-]+)$/i);
+      if (gymMatch) {
+        await pageGymDetail(gymMatch[1]);
+        return;
+      }
+
+      if (route === '/members') {
+        await pageMembers();
+        return;
+      }
+
+      // Member detail: /members/:id
+      const memberMatch = route.match(/^\/members\/([a-f0-9-]+)$/i);
+      if (memberMatch) {
+        await pageMemberDetail(memberMatch[1]);
+        return;
+      }
+
+      if (route === '/activity') {
+        await pageActivity();
+        return;
+      }
+
+      if (route === '/team') {
+        await pageTeam();
+        return;
+      }
+
+      // 404 fallback
+      renderLayout('Not Found', `
+        <div class="empty-state">
+          <div class="empty-icon">404</div>
+          <p>Page not found</p>
+          <a href="#/dashboard" class="btn btn-primary btn-sm mt-16">Go to Dashboard</a>
+        </div>
+      `);
+    }
+
+    // ========== Initialize ==========
+    window.addEventListener('hashchange', router);
+    window.addEventListener('load', () => {
+      if (!window.location.hash) {
+        window.location.hash = isLoggedIn() ? '#/dashboard' : '#/login';
+      } else {
+        router();
+      }
+    });
+
+    // Initial route
+    router();
+  </script>
+</body>
+</html>

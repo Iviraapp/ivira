@@ -416,6 +416,143 @@ export async function createAnnouncement(gymId, { memberId, type, title, body, m
   return announcement;
 }
 
+// ── Class-level booking / check-in helpers ──────────────────────────────────
+// These operate on the next upcoming session for a given class.
+
+async function getNextSessionForClass(gymId, classId, trxOrDb = db) {
+  const today = new Date().toISOString().slice(0, 10);
+  const session = await trxOrDb('class_sessions')
+    .where({ class_id: classId, gym_id: gymId })
+    .where('session_date', '>=', today)
+    .whereNot({ status: 'cancelled' })
+    .orderBy('session_date', 'asc')
+    .orderBy('start_time', 'asc')
+    .first();
+  return session;
+}
+
+export async function bookClass(gymId, classId, memberId) {
+  if (!memberId) throw new ValidationError('member_id is required');
+
+  const gymClass = await db('gym_classes')
+    .where({ id: classId, gym_id: gymId, is_active: true })
+    .first();
+  if (!gymClass) throw new NotFoundError('Class');
+
+  const session = await getNextSessionForClass(gymId, classId);
+  if (!session) {
+    throw new AppError('No upcoming session found for this class', 400, 'NO_SESSION');
+  }
+
+  return bookSession(gymId, session.id, memberId);
+}
+
+export async function cancelClassBooking(gymId, classId, memberId) {
+  if (!memberId) throw new ValidationError('member_id is required');
+
+  const gymClass = await db('gym_classes')
+    .where({ id: classId, gym_id: gymId })
+    .first();
+  if (!gymClass) throw new NotFoundError('Class');
+
+  // Find the member's active booking for any upcoming session of this class
+  const booking = await db('class_bookings as b')
+    .join('class_sessions as s', 'b.session_id', 's.id')
+    .where('s.class_id', classId)
+    .where('b.member_id', memberId)
+    .where('b.gym_id', gymId)
+    .whereNot('b.status', 'cancelled')
+    .where('s.session_date', '>=', new Date().toISOString().slice(0, 10))
+    .select('b.id')
+    .first();
+
+  if (!booking) throw new NotFoundError('Booking');
+
+  return cancelBooking(gymId, booking.id, memberId);
+}
+
+export async function getClassAttendees(gymId, classId) {
+  const gymClass = await db('gym_classes')
+    .where({ id: classId, gym_id: gymId })
+    .first();
+  if (!gymClass) throw new NotFoundError('Class');
+
+  // Return attendees across all upcoming sessions (or most recent if none upcoming)
+  const attendees = await db('class_bookings as b')
+    .join('class_sessions as s', 'b.session_id', 's.id')
+    .join('members as m', 'b.member_id', 'm.id')
+    .where('s.class_id', classId)
+    .where('b.gym_id', gymId)
+    .whereNot('b.status', 'cancelled')
+    .select(
+      'b.id as booking_id',
+      'b.status as booking_status',
+      'b.booked_at',
+      'b.checked_in_at',
+      'm.id as member_id',
+      'm.name as member_name',
+      'm.phone as member_phone',
+      'm.email as member_email',
+      's.session_date',
+      's.start_time',
+      's.end_time',
+    )
+    .orderBy('s.session_date', 'desc')
+    .orderBy('s.start_time', 'desc');
+
+  return { class: gymClass, attendees };
+}
+
+export async function classCheckin(gymId, classId, memberId) {
+  if (!memberId) throw new ValidationError('member_id is required');
+
+  const gymClass = await db('gym_classes')
+    .where({ id: classId, gym_id: gymId, is_active: true })
+    .first();
+  if (!gymClass) throw new NotFoundError('Class');
+
+  const session = await getNextSessionForClass(gymId, classId);
+  if (!session) {
+    throw new AppError('No upcoming session found for this class', 400, 'NO_SESSION');
+  }
+
+  const member = await db('members')
+    .where({ id: memberId, gym_id: gymId })
+    .first();
+  if (!member) throw new NotFoundError('Member');
+
+  // Find existing booking or create one
+  let booking = await db('class_bookings')
+    .where({ session_id: session.id, member_id: memberId, gym_id: gymId })
+    .whereNot({ status: 'cancelled' })
+    .first();
+
+  if (!booking) {
+    // Auto-book the member first
+    booking = await bookSession(gymId, session.id, memberId);
+  }
+
+  // Mark as attended
+  const [updated] = await db('class_bookings')
+    .where({ id: booking.id || booking.booking_id })
+    .update({ status: 'attended', checked_in_at: new Date() })
+    .returning('*');
+
+  // Record facility check-in event
+  await recordCheckinEvent(gymId, memberId, member.name, 'class_checkin');
+
+  eventBus.publish(gymId, 'class_checkin', {
+    classId,
+    className: gymClass.name,
+    sessionId: session.id,
+    memberId,
+    member_name: member.name,
+    timestamp: new Date().toISOString(),
+  });
+
+  return { ...updated, member_name: member.name, class_name: gymClass.name };
+}
+
 export async function getAtRiskMembers(gymId) {
   const members = await db('members')
     .where({ gym_id: gymId, at_risk: true, status: 'active' })

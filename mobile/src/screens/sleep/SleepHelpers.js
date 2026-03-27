@@ -129,22 +129,7 @@ export function getWeeklyBarData(logs) {
   return bars
 }
 
-export function generateDemoData() {
-  const logs = []
-  const now = new Date()
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
-    const bedHour = 22 + Math.floor(Math.random() * 2)
-    const bedMin = Math.floor(Math.random() * 60)
-    const wakeHour = 5 + Math.floor(Math.random() * 2)
-    const wakeMin = 30 + Math.floor(Math.random() * 30)
-    const quality = Math.floor(Math.random() * 3) + 3
-    logs.push({ id: `sleep-${dateStr}`, date: dateStr, bedHour, bedMin, wakeHour, wakeMin, quality, createdAt: date.toISOString() })
-  }
-  return logs
-}
+// generateDemoData removed — sleep screen shows empty state when no logs exist
 
 export function mapBackendLog(log) {
   const bedtime = log.bedtime ? new Date(log.bedtime) : null

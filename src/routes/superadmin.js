@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { nanoid } from 'nanoid';
 import config from '../config/index.js';
 import db from '../config/database.js';
 import * as superadminService from '../services/superadmin.service.js';
@@ -363,5 +364,241 @@ export default async function superadminRoutes(fastify) {
   fastify.get('/super/payouts/ledger', { preHandler: [verifySuperAdmin] }, async (request) => {
     const { gymId, page, limit } = request.query;
     return payoutService.getPayoutLedger(gymId || null, page || 1, limit || 50);
+  });
+
+  // ===== ANALYTICS =====
+
+  // GET /super/analytics/active-users - DAU/WAU/MAU
+  fastify.get('/super/analytics/active-users', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const now = new Date();
+    const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+
+    const [dau] = await db('members').where('updated_at', '>', dayAgo).count('id as count');
+    const [wau] = await db('members').where('updated_at', '>', weekAgo).count('id as count');
+    const [mau] = await db('members').where('updated_at', '>', monthAgo).count('id as count');
+    const [total] = await db('members').count('id as count');
+
+    return {
+      dau: parseInt(dau.count),
+      wau: parseInt(wau.count),
+      mau: parseInt(mau.count),
+      total: parseInt(total.count),
+      timestamp: now.toISOString(),
+    };
+  });
+
+  // GET /super/analytics/activity-feed - Recent signups and check-ins
+  fastify.get('/super/analytics/activity-feed', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const limit = Math.min(parseInt(request.query.limit) || 50, 200);
+
+    const recentSignups = await db('members')
+      .select('id', 'name', 'email', 'gym_id', 'created_at')
+      .orderBy('created_at', 'desc')
+      .limit(limit);
+
+    let recentCheckins = [];
+    try {
+      recentCheckins = await db('checkins')
+        .join('members', 'checkins.member_id', 'members.id')
+        .select('checkins.id', 'members.name', 'checkins.gym_id', 'checkins.checked_in_at', 'checkins.method')
+        .orderBy('checkins.checked_in_at', 'desc')
+        .limit(limit);
+    } catch {}
+
+    return { recentSignups, recentCheckins };
+  });
+
+  // GET /super/analytics/gym-breakdown - Per-gym member stats
+  fastify.get('/super/analytics/gym-breakdown', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const gymStats = await db('gyms')
+      .leftJoin('members', 'gyms.id', 'members.gym_id')
+      .select(
+        'gyms.id',
+        'gyms.gym_name',
+        'gyms.city',
+        'gyms.status',
+        'gyms.created_at',
+        db.raw('COUNT(members.id) as member_count'),
+        db.raw("COUNT(CASE WHEN members.status = 'active' THEN 1 END) as active_members")
+      )
+      .groupBy('gyms.id')
+      .orderBy('member_count', 'desc');
+
+    return { gyms: gymStats };
+  });
+
+  // GET /super/analytics/health-overview - Aggregated health data for today
+  fastify.get('/super/analytics/health-overview', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const today = new Date().toISOString().split('T')[0];
+
+    let nutritionToday = 0;
+    let sleepToday = 0;
+    let workoutsToday = 0;
+
+    try {
+      const [n] = await db('daily_nutrition_logs').where('log_date', today).count('id as count');
+      nutritionToday = parseInt(n.count);
+    } catch {}
+
+    try {
+      const [s] = await db('sleep_logs').where('date', today).count('id as count');
+      sleepToday = parseInt(s.count);
+    } catch {}
+
+    try {
+      const [w] = await db('workout_sessions').where('session_date', today).count('id as count');
+      workoutsToday = parseInt(w.count);
+    } catch {}
+
+    return {
+      today,
+      nutritionLogsToday: nutritionToday,
+      sleepLogsToday: sleepToday,
+      workoutSessionsToday: workoutsToday,
+    };
+  });
+
+  // ===== SYSTEM ADMIN TEAM MANAGEMENT =====
+
+  // GET /super/team - List all system admins
+  fastify.get('/super/team', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const admins = await db('super_admins')
+      .select('id', 'email', 'name', 'totp_enabled', 'created_at', 'updated_at')
+      .orderBy('created_at', 'asc');
+    return { admins };
+  });
+
+  // POST /super/team/invite - Invite new system admin
+  fastify.post('/super/team/invite', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { email, name } = request.body;
+    if (!email) return reply.code(400).send({ error: 'Email required' });
+
+    const existing = await db('super_admins').where({ email: email.toLowerCase() }).first();
+    if (existing) return reply.code(409).send({ error: 'Admin already exists' });
+
+    // Generate a temporary password
+    const tempPassword = nanoid(12);
+    const { scryptSync, randomBytes } = await import('node:crypto');
+    const salt = randomBytes(32);
+    const hash = scryptSync(tempPassword, salt, 64);
+    const passwordHash = salt.toString('hex') + ':' + hash.toString('hex');
+
+    const [admin] = await db('super_admins')
+      .insert({
+        email: email.toLowerCase(),
+        name: name || email.split('@')[0],
+        password_hash: passwordHash,
+      })
+      .returning(['id', 'email', 'name', 'created_at']);
+
+    // Log the action
+    await db('audit_logs').insert({
+      admin_id: request.admin.id,
+      action: 'team_invite',
+      target_type: 'super_admin',
+      target_id: admin.id,
+      details: JSON.stringify({ email: admin.email }),
+    }).catch(() => {});
+
+    return { admin, tempPassword };
+  });
+
+  // DELETE /super/team/:adminId - Remove system admin
+  fastify.delete('/super/team/:adminId', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { adminId } = request.params;
+
+    // Can't remove yourself
+    if (adminId === request.admin.id) {
+      return reply.code(400).send({ error: 'Cannot remove yourself' });
+    }
+
+    const deleted = await db('super_admins').where({ id: adminId }).del();
+    if (!deleted) return reply.code(404).send({ error: 'Admin not found' });
+
+    await db('audit_logs').insert({
+      admin_id: request.admin.id,
+      action: 'team_remove',
+      target_type: 'super_admin',
+      target_id: adminId,
+    }).catch(() => {});
+
+    return { success: true };
+  });
+
+  // PATCH /super/team/:adminId - Update system admin (name, reset password)
+  fastify.patch('/super/team/:adminId', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { adminId } = request.params;
+    const { name, resetPassword } = request.body;
+    const updates = {};
+
+    if (name) updates.name = name;
+
+    let newPassword = null;
+    if (resetPassword) {
+      newPassword = nanoid(12);
+      const { scryptSync, randomBytes } = await import('node:crypto');
+      const salt = randomBytes(32);
+      const hash = scryptSync(newPassword, salt, 64);
+      updates.password_hash = salt.toString('hex') + ':' + hash.toString('hex');
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return reply.code(400).send({ error: 'No updates provided' });
+    }
+
+    updates.updated_at = new Date();
+    const [admin] = await db('super_admins')
+      .where({ id: adminId })
+      .update(updates)
+      .returning(['id', 'email', 'name']);
+
+    if (!admin) return reply.code(404).send({ error: 'Admin not found' });
+
+    return { admin, ...(newPassword ? { newPassword } : {}) };
+  });
+
+  // ===== MEMBER DETAIL (ADMIN SUPPORT) =====
+
+  // GET /super/members/:memberId - Get detailed member info
+  fastify.get('/super/members/:memberId', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { memberId } = request.params;
+    const member = await db('members').where({ id: memberId }).first();
+    if (!member) return reply.code(404).send({ error: 'Member not found' });
+
+    // Get gym info if linked
+    let gym = null;
+    if (member.gym_id) {
+      gym = await db('gyms').where({ id: member.gym_id }).select('id', 'gym_name', 'city', 'status').first();
+    }
+
+    // Get recent activity counts
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    let recentCheckins = 0;
+    let recentWorkouts = 0;
+    let recentNutritionLogs = 0;
+
+    try {
+      const [c] = await db('checkins').where('member_id', memberId).where('checked_in_at', '>', weekAgo).count('id as count');
+      recentCheckins = parseInt(c.count);
+    } catch {}
+
+    try {
+      const [w] = await db('workout_sessions').where('member_id', memberId).where('session_date', '>', weekAgo).count('id as count');
+      recentWorkouts = parseInt(w.count);
+    } catch {}
+
+    try {
+      const [n] = await db('daily_nutrition_logs').where('member_id', memberId).where('log_date', '>', weekAgo).count('id as count');
+      recentNutritionLogs = parseInt(n.count);
+    } catch {}
+
+    return {
+      member,
+      gym,
+      activity: { recentCheckins, recentWorkouts, recentNutritionLogs },
+    };
   });
 }

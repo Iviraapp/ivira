@@ -32,7 +32,7 @@ import { SLEEP_COLORS, SLEEP_TIPS, QUALITY_EMOJIS, QUALITY_LABELS, SOUNDSCAPES, 
 import {
   calcDurationMinutes, formatDuration, formatTime12, getDayLabel,
   calcSleepScore, computeInsights, computeSleepDebt,
-  getWeeklyBarData, generateDemoData,
+  getWeeklyBarData,
   mapBackendLog, buildBackendPayload, serializeTags, parseTags,
 } from './sleep/SleepHelpers'
 import ScoreRing from './sleep/ScoreRing'
@@ -664,6 +664,24 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, o
     setReport(sleepReport)
     setTracking(false)
 
+    // Save to local storage so HealthContext can pick it up across screens
+    if (sleepReport) {
+      try {
+        const { setItem } = require('../lib/storage')
+        await setItem('ivira_last_sleep_log', JSON.stringify({
+          bedtime: sleepReport.bedtime,
+          wakeTime: sleepReport.wakeTime,
+          durationMinutes: sleepReport.totalMinutes,
+          score: sleepReport.score,
+          quality: Math.min(5, Math.max(1, Math.round(sleepReport.score / 20))),
+          stages: sleepReport.stageDurations,
+          efficiency: sleepReport.efficiency,
+          cycles: sleepReport.cycles,
+          date: new Date().toISOString(),
+        }))
+      } catch {}
+    }
+
     // Sync rich sleep data to backend
     if (sleepReport && gymId && memberId) {
       try {
@@ -1086,26 +1104,26 @@ export default function SleepTrackerScreen({ navigation }) {
             await AsyncStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(backendLogs)).catch(() => {})
           } else {
             const stored = await AsyncStorage.getItem(STORAGE_KEY_LOGS)
-            setLogs(stored ? JSON.parse(stored) : generateDemoData())
+            setLogs(stored ? JSON.parse(stored) : [])
           }
         } catch (apiErr) {
           console.warn('Sleep API fetch failed, using local data:', apiErr.message)
           const stored = await AsyncStorage.getItem(STORAGE_KEY_LOGS)
-          setLogs(stored ? JSON.parse(stored) : generateDemoData())
+          setLogs(stored ? JSON.parse(stored) : [])
         }
       } else {
         const stored = await AsyncStorage.getItem(STORAGE_KEY_LOGS)
         if (stored) {
           setLogs(JSON.parse(stored))
         } else {
-          setLogs(generateDemoData())
+          setLogs([])
         }
       }
       const storedGoal = await AsyncStorage.getItem(STORAGE_KEY_GOAL)
       if (storedGoal) setGoalHours(parseFloat(storedGoal))
     } catch (err) {
       console.warn('Failed to load sleep data:', err.message)
-      setLogs(generateDemoData())
+      setLogs([])
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -1291,6 +1309,36 @@ export default function SleepTrackerScreen({ navigation }) {
         }
       >
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+
+          {/* ── Empty State for New Users ──────────────── */}
+          {logs.length === 0 && !todayLog && (
+            <View style={[styles.emptyStateCard, { ...card, backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : card.backgroundColor, borderColor: SLEEP_COLORS.primary + '20' }]}>
+              <View style={[styles.emptyStateIconWrap, { backgroundColor: SLEEP_COLORS.primary + '12' }]}>
+                <Feather name="moon" size={36} color={SLEEP_COLORS.primary} />
+              </View>
+              <Text style={[styles.emptyStateTitle, { color: colors.text, fontFamily: FONT.semibold }]}>
+                Track Your First Night
+              </Text>
+              <Text style={[styles.emptyStateDesc, { color: colors.textSec, fontFamily: FONT.regular }]}>
+                Log your sleep below to start building your sleep profile. Consistent tracking helps you understand your patterns and improve recovery.
+              </Text>
+
+              <View style={styles.emptyStateTips}>
+                {[
+                  { icon: 'clock', text: 'Aim for 7–9 hours of sleep each night' },
+                  { icon: 'sunset', text: 'A regular bedtime improves sleep quality by 23%' },
+                  { icon: 'bar-chart-2', text: 'After a few nights, you\'ll see trends and a sleep score' },
+                ].map((tip, i) => (
+                  <View key={i} style={styles.emptyStateTipRow}>
+                    <Feather name={tip.icon} size={14} color={SLEEP_COLORS.primary} />
+                    <Text style={[styles.emptyStateTipText, { color: colors.textSec, fontFamily: FONT.regular }]}>
+                      {tip.text}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* ── Score Ring ──────────────────────────────── */}
           {todayScore !== null && (
@@ -1560,6 +1608,47 @@ export default function SleepTrackerScreen({ navigation }) {
 // ════════════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  emptyStateCard: {
+    padding: SPACING.lg,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    marginBottom: SPACING.lg,
+    alignItems: 'center',
+  },
+  emptyStateIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.md,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
+  },
+  emptyStateDesc: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+  },
+  emptyStateTips: {
+    width: '100%',
+    gap: SPACING.sm,
+  },
+  emptyStateTipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    paddingVertical: 4,
+  },
+  emptyStateTipText: {
+    fontSize: 13,
     flex: 1,
   },
   center: {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Dimensions, Alert } from 'react-native'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ScrollView, Dimensions, Alert, ActivityIndicator } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -12,23 +12,16 @@ const { width } = Dimensions.get('window')
 const TABS = ['Gym', 'City', 'Global']
 const PODIUM_COLORS = { 0: '#FFD700', 1: '#C0C0C0', 2: '#CD7F32' }
 
-const DEMO_CURRENT_USER_ID = 'demo-001'
-
-function generateLeaderboard() {
-  const names = [
-    'Arjun Mehta', 'Priya Sharma', 'Vikram Patel', 'Ananya Reddy',
-    'Rohan Gupta', 'Sneha Iyer', 'Karthik Nair', 'Divya Joshi',
-    'Aditya Kumar', 'Meera Desai', 'Rahul Verma', 'Pooja Singh',
-    'Nikhil Rao', 'Swati Kulkarni', 'Amit Choudhary',
-  ]
-  return names.map((name, i) => ({
-    id: i === 0 ? DEMO_CURRENT_USER_ID : `user-${i}`,
+function formatLeaderboardEntry(entry, index) {
+  const name = entry.name || entry.member_name || 'Member'
+  return {
+    id: entry.id || entry.member_id || `user-${index}`,
     name,
     initials: name.split(' ').map((n) => n[0]).join(''),
-    steps: Math.max(8000, Math.floor(25000 - i * 1200 + Math.random() * 800)),
-    streak: Math.max(1, Math.floor(30 - i * 1.8 + Math.random() * 3)),
-    rank: i + 1,
-  }))
+    steps: entry.steps || 0,
+    streak: entry.streak || entry.check_in_streak || 0,
+    rank: index + 1,
+  }
 }
 
 function PodiumCard({ entry, position }) {
@@ -94,21 +87,40 @@ export default function CommunityScreen({ embedded = false }) {
   const [tab, setTab] = useState('Gym')
   const [data, setData] = useState([])
   const [refreshing, setRefreshing] = useState(false)
+  const { gymId } = useAuth()
   const isElite = member?.subscription_tier === 'elite' || member?.plan_name?.toLowerCase().includes('pro') || false
-  const currentUserId = member?.id || DEMO_CURRENT_USER_ID
+  const currentUserId = member?.id || null
+  const [loading, setLoading] = useState(true)
+
+  const fetchLeaderboard = useCallback(async () => {
+    if (!gymId) {
+      setData([])
+      setLoading(false)
+      return
+    }
+    try {
+      const scope = tab.toLowerCase()
+      const res = await api.get(`/gyms/${gymId}/leaderboard?scope=${scope}`)
+      const entries = (res.data?.data || res.data || []).map(formatLeaderboardEntry)
+      setData(entries)
+    } catch {
+      setData([])
+    } finally {
+      setLoading(false)
+    }
+  }, [gymId, tab])
 
   useEffect(() => {
-    setData(generateLeaderboard())
-  }, [])
+    setLoading(true)
+    fetchLeaderboard()
+  }, [fetchLeaderboard])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    // Simulate refresh
-    await new Promise((r) => setTimeout(r, 800))
-    setData(generateLeaderboard())
+    await fetchLeaderboard()
     setRefreshing(false)
-  }, [])
+  }, [fetchLeaderboard])
 
   const top3 = data.slice(0, 3)
   const rest = data.slice(3)
@@ -185,24 +197,57 @@ export default function CommunityScreen({ embedded = false }) {
         </View>
       )}
 
-      <FlatList
-        data={rest}
-        renderItem={({ item }) => (
-          <LeaderboardRow item={item} isCurrentUser={item.id === currentUserId} />
-        )}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={COLORS.accent}
-            colors={[COLORS.accent]}
-          />
-        }
-      />
+      {loading ? (
+        <View style={[styles.emptyState, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator color={COLORS.accent} size="large" />
+        </View>
+      ) : data.length === 0 ? (
+        <ScrollView
+          contentContainerStyle={[styles.listContent, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} colors={[COLORS.accent]} />}
+        >
+          <View style={[styles.emptyIconCircle, { backgroundColor: isDark ? 'rgba(0,82,255,0.1)' : COLORS.accent + '10' }]}>
+            <Feather name="users" size={40} color={COLORS.accent} />
+          </View>
+          <Text style={[styles.emptyTitle, { color: colors.text, marginTop: 16, fontSize: 18, fontWeight: '700' }]}>No leaderboard yet</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textSec, marginTop: 8, fontSize: 14, textAlign: 'center', paddingHorizontal: 40 }]}>
+            {gymId ? 'Be the first to log activity and claim the top spot!' : 'Connect to a gym to join the leaderboard.'}
+          </Text>
+          {gymId && (
+            <View style={styles.emptyHints}>
+              {[
+                { icon: 'activity', text: 'Log steps, workouts, or check in to appear on the board' },
+                { icon: 'award', text: 'Top performers earn badges and bragging rights' },
+                { icon: 'trending-up', text: 'Compete with your gym, city, or go global' },
+              ].map((hint, i) => (
+                <View key={i} style={styles.emptyHintRow}>
+                  <Feather name={hint.icon} size={14} color={COLORS.accent} />
+                  <Text style={[styles.emptyHintText, { color: colors.textSec }]}>{hint.text}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={rest}
+          renderItem={({ item }) => (
+            <LeaderboardRow item={item} isCurrentUser={item.id === currentUserId} />
+          )}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={renderHeader}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.accent}
+              colors={[COLORS.accent]}
+            />
+          }
+        />
+      )}
     </View>
   )
 }
@@ -411,5 +456,30 @@ const styles = StyleSheet.create({
   leaderSteps: {
     fontSize: 15,
     fontWeight: '700',
+  },
+
+  // Empty state enhancements
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyHints: {
+    marginTop: 24,
+    paddingHorizontal: 32,
+    gap: 12,
+    width: '100%',
+  },
+  emptyHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  emptyHintText: {
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
   },
 })

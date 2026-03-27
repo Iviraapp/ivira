@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
 import { Users, ScanLine, TrendingUp, Clock, UserCheck, IndianRupee } from 'lucide-react'
 import { format } from 'date-fns'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 import api from '../lib/api'
 
 function StatCard({ icon: Icon, label, value, color, sub }) {
@@ -33,6 +34,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [recentCheckins, setRecentCheckins] = useState([])
   const [loading, setLoading] = useState(true)
+  const [revenueData, setRevenueData] = useState([])
+  const [attendanceData, setAttendanceData] = useState([])
+  const [expiringMembers, setExpiringMembers] = useState([])
 
   useEffect(() => {
     if (!gymId) return
@@ -43,6 +47,27 @@ export default function Dashboard() {
       setStats(statsRes.data)
       setRecentCheckins(checkinsRes.data?.checkins || [])
     }).finally(() => setLoading(false))
+  }, [gymId])
+
+  useEffect(() => {
+    if (!gymId) return
+    // Revenue trend - last 7 days
+    api.get(`/gyms/${gymId}/analytics/revenue?days=7`).then(res => {
+      setRevenueData(res.data?.daily || [])
+    }).catch(() => {
+      // Generate placeholder data
+      const days = Array.from({length: 7}, (_, i) => {
+        const d = new Date()
+        d.setDate(d.getDate() - (6 - i))
+        return { date: d.toLocaleDateString('en', {weekday: 'short'}), revenue: 0, checkins: 0 }
+      })
+      setRevenueData(days)
+    })
+
+    // Expiring memberships
+    api.get(`/gyms/${gymId}/members?status=active&expiring_within=7`).then(res => {
+      setExpiringMembers(res.data?.members || [])
+    }).catch(() => {})
   }, [gymId])
 
   if (loading) {
@@ -103,6 +128,45 @@ export default function Dashboard() {
           color="#8B5CF6"
         />
       </div>
+
+      {/* Revenue Trend */}
+      {revenueData.length > 0 && (
+        <div style={{ background: '#111827', borderRadius: 16, padding: '20px', border: '1px solid #1F2937', marginBottom: 24 }}>
+          <h3 style={{ color: '#F9FAFB', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Revenue Trend (7 Days)</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={revenueData}>
+              <defs>
+                <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" />
+              <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
+              <YAxis stroke="#6B7280" fontSize={12} />
+              <Tooltip contentStyle={{ background: '#1F2937', border: '1px solid #374151', borderRadius: 8, color: '#F9FAFB' }} />
+              <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="url(#revenueGrad)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Expiring Memberships */}
+      {expiringMembers.length > 0 && (
+        <div style={{ background: '#1C1400', borderRadius: 16, padding: '20px', border: '1px solid #F59E0B33', marginBottom: 24 }}>
+          <h3 style={{ color: '#F59E0B', fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
+            ⚠️ {expiringMembers.length} Membership{expiringMembers.length > 1 ? 's' : ''} Expiring Soon
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {expiringMembers.slice(0, 5).map(m => (
+              <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#111827', borderRadius: 8 }}>
+                <span style={{ color: '#F9FAFB', fontSize: 14 }}>{m.name}</span>
+                <span style={{ color: '#F59E0B', fontSize: 12 }}>{m.membership_end_date ? new Date(m.membership_end_date).toLocaleDateString() : 'N/A'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent Check-ins */}
       <div style={{

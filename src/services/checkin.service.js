@@ -6,6 +6,31 @@ import { NotFoundError, ValidationError } from '../utils/errors.js';
 import { distanceMeters, generateOTP, normalizePhone } from '../utils/validators.js';
 import { recordCheckinEvent } from './class.service.js';
 
+// Enrich check-in response with member profile + membership for bouncer screen
+async function enrichCheckinResponse(checkin, member, gymId) {
+  const membership = await db('memberships')
+    .where({ member_id: member.id, gym_id: gymId })
+    .orderBy('end_date', 'desc')
+    .first();
+
+  return {
+    ...checkin,
+    member_name: member.name,
+    member_phone: member.phone,
+    member_email: member.email,
+    member_photo: member.photo_url || null,
+    member_status: member.status,
+    member_joined: member.created_at,
+    membership: membership ? {
+      plan_name: membership.plan_name,
+      status: membership.status,
+      start_date: membership.start_date,
+      end_date: membership.end_date,
+      amount_paid: membership.amount_paid,
+    } : null,
+  };
+}
+
 // Generate a JWT-based QR token for a member (expires in 90 seconds)
 export async function generateQRToken(gymId, phone) {
   const normalizedPhone = normalizePhone(phone);
@@ -98,7 +123,7 @@ export async function qrCheckin(gymId, qrToken, { latitude, longitude, deviceId 
   // Fire-and-forget affiliate promo
   sendAffiliatePromo(member, gym).catch(() => {})
 
-  return { ...checkin, member_name: member.name };
+  return enrichCheckinResponse(checkin, member, gymId);
 }
 
 export async function requestOTP(gymId, phone) {
@@ -235,7 +260,7 @@ export async function manualCheckin(gymId, memberId, { staffName } = {}) {
   // Fire-and-forget affiliate promo
   sendAffiliatePromo(member, gym).catch(() => {})
 
-  return { ...checkin, member_name: member.name };
+  return enrichCheckinResponse(checkin, member, gymId);
 }
 
 // NFC tap check-in — optimized for sub-500ms response
@@ -309,7 +334,8 @@ export async function nfcCheckin(gymId, memberId, tagUid) {
     sendAffiliatePromo(member, gym).catch(() => {});
   }).catch(() => {});
 
-  return { ...checkin, member_name: member.name, response_time_ms: responseTimeMs };
+  const enriched = await enrichCheckinResponse(checkin, member, gymId);
+  return { ...enriched, response_time_ms: responseTimeMs };
 }
 
 // GPS proximity check-in — member proves physical presence via device location
@@ -369,7 +395,8 @@ export async function gpsCheckin(gymId, memberId, { latitude, longitude }) {
   }).catch(() => {});
   sendAffiliatePromo(member, gym).catch(() => {});
 
-  return { ...checkin, member_name: member.name, distance_meters: Math.round(distance) };
+  const enriched = await enrichCheckinResponse(checkin, member, gymId);
+  return { ...enriched, distance_meters: Math.round(distance) };
 }
 
 // Check-in affiliate promotion hook

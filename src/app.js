@@ -1,3 +1,12 @@
+import * as Sentry from '@sentry/node';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN || '',
+  environment: process.env.NODE_ENV || 'development',
+  tracesSampleRate: 0.1, // 10% of transactions
+  enabled: !!process.env.SENTRY_DSN,
+});
+
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import Fastify from 'fastify';
@@ -204,6 +213,21 @@ export async function buildApp(opts = {}) {
     return reply.send({ status: 'ok', ...result });
   });
 
+  // Health check endpoint for load balancers
+  fastify.get('/health', async (request, reply) => {
+    try {
+      await db.raw('SELECT 1')
+      return { status: 'ok', timestamp: new Date().toISOString(), uptime: process.uptime() }
+    } catch (err) {
+      return reply.code(503).send({ status: 'error', message: 'Database unreachable' })
+    }
+  })
+
+  // Request correlation IDs
+  fastify.addHook('onRequest', async (request) => {
+    request.correlationId = request.headers['x-correlation-id'] || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  })
+
   // Global error handler
   fastify.setErrorHandler((error, request, reply) => {
     if (error instanceof AppError) {
@@ -219,6 +243,10 @@ export async function buildApp(opts = {}) {
         error: 'VALIDATION_ERROR',
         message: error.message,
       });
+    }
+
+    if (error.statusCode >= 500 || !error.statusCode) {
+      Sentry.captureException(error);
     }
 
     fastify.log.error(error);

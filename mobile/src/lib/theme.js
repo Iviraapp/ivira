@@ -1,21 +1,23 @@
-// IVIRA — COCA-inspired theme
+// IVIRA Design System v2.0 — Premium Health & Fitness
+// Rich surfaces, deliberate type hierarchy, unified color semantics
+
 export const COLORS = {
-  bg: '#050505',       // Deep Obsidian
-  bgSec: '#121212',    // Nero Grey (cards)
-  bgTer: '#1A1A1A',
-  bgHover: '#222222',
-  text: '#FFFFFF',
-  textSec: '#94A3B8',  // Slate-400
-  textTer: 'rgba(255,255,255,0.60)',  // 60% white
-  border: '#1E1E1E',
-  borderStrong: '#2A2A2A',
-  accent: '#0052FF',   // COCA Blue
-  accentSoft: 'rgba(0,82,255,0.12)',
-  accentGlow: 'rgba(0,82,255,0.3)',
-  green: '#34A853',
-  amber: '#FBBC05',
-  red: '#EA4335',
-  cyan: '#4285F4',
+  bg: '#0A0E1A',        // Rich ink (was #050505)
+  bgSec: '#111827',     // Card surface (was #121212)
+  bgTer: '#1A2236',     // Tertiary (was #1A1A1A)
+  bgHover: '#1F2A40',   // Pressed (was #222222)
+  text: '#F8FAFC',      // Warm white (was #FFFFFF)
+  textSec: '#94A3B8',   // Slate-400
+  textTer: 'rgba(248,250,252,0.50)',
+  border: 'rgba(148,163,184,0.08)',
+  borderStrong: 'rgba(148,163,184,0.16)',
+  accent: '#0055FF',    // Electric Cobalt (was #0052FF)
+  accentSoft: 'rgba(0,85,255,0.12)',
+  accentGlow: 'rgba(0,85,255,0.30)',
+  green: '#34D399',     // Emerald-400
+  amber: '#FBBF24',     // Amber-400
+  red: '#F87171',       // Red-400
+  cyan: '#38BDF8',      // Sky-400
 }
 
 export const FONT = {
@@ -53,22 +55,22 @@ export const RADIUS = {
 }
 
 export const COLORS_LIGHT = {
-  bg: '#F4F1EC',          // Warm parchment off-white
-  bgSec: '#FFFFFF',       // Pure white cards
-  bgTer: '#EDE9E3',       // Warm stone gray
-  bgHover: '#E5E0D8',     // Pressed state
-  text: '#1A1714',         // Near-black warm
-  textSec: '#6B6560',      // Warm medium gray
-  textTer: 'rgba(26,23,20,0.42)', // Warm muted
-  border: 'rgba(0,0,0,0.06)',     // Ultra-subtle dividers
-  borderStrong: 'rgba(0,0,0,0.10)',
-  accent: '#0052FF',       // COCA Blue stays
-  accentSoft: 'rgba(0,82,255,0.08)',
-  accentGlow: 'rgba(0,82,255,0.12)',
-  green: '#2D9F4E',
-  amber: '#E5A100',
-  red: '#DC3626',
-  cyan: '#3B7FE3',
+  bg: '#F7F5F2',
+  bgSec: '#FFFFFF',
+  bgTer: '#EDE9E3',
+  bgHover: '#E5E0D8',
+  text: '#0F172A',
+  textSec: '#64748B',
+  textTer: 'rgba(15,23,42,0.40)',
+  border: 'rgba(15,23,42,0.06)',
+  borderStrong: 'rgba(15,23,42,0.12)',
+  accent: '#0055FF',
+  accentSoft: 'rgba(0,85,255,0.08)',
+  accentGlow: 'rgba(0,85,255,0.12)',
+  green: '#16A34A',
+  amber: '#D97706',
+  red: '#DC2626',
+  cyan: '#0284C7',
 }
 
 // Metabolic Gradient System
@@ -85,10 +87,10 @@ export const METABOLIC = {
 
 // Elite card presets (Glassmorphism)
 export const ELITE_CARD = {
-  backgroundColor: 'rgba(26, 26, 26, 0.8)',
+  backgroundColor: 'rgba(17, 24, 39, 0.85)',
   borderRadius: 24,
-  borderWidth: 1.5,
-  borderColor: 'rgba(255,255,255,0.12)',
+  borderWidth: 1,
+  borderColor: 'rgba(148,163,184,0.10)',
 }
 
 export const ELITE_CARD_LIGHT = {
@@ -96,15 +98,14 @@ export const ELITE_CARD_LIGHT = {
   borderRadius: 24,
   borderWidth: 0,
   borderColor: 'transparent',
-  // Soft warm shadow replaces borders in light mode
-  shadowColor: 'rgba(26,23,20,0.08)',
+  shadowColor: 'rgba(15,23,42,0.06)',
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 1,
-  shadowRadius: 12,
+  shadowRadius: 16,
   elevation: 3,
 }
 
-// Vibrant card accent palette — matches web CARD_ACCENTS
+// Vibrant card accent palette — 3px top border colors
 export const CARD_ACCENTS = [
   '#3B82F6', // Blue
   '#EF4444', // Red
@@ -122,9 +123,56 @@ export const CARD_ACCENTS = [
 
 // Active card glow — COCA Blue
 export const ELITE_GLOW = {
-  shadowColor: '#0052FF',
+  shadowColor: '#0055FF',
   shadowOffset: { width: 0, height: 4 },
   shadowOpacity: 0.3,
   shadowRadius: 10,
   elevation: 12,
+}
+
+// Typography Scale — use these for consistent hierarchy
+export const TYPE = {
+  displayLg: { fontFamily: 'Inter_800ExtraBold', fontSize: 48, lineHeight: 52 },
+  displayMd: { fontFamily: 'Inter_700Bold', fontSize: 36, lineHeight: 40 },
+  displaySm: { fontFamily: 'Inter_700Bold', fontSize: 28, lineHeight: 32 },
+  h1: { fontFamily: 'PlusJakartaSans_700Bold', fontSize: 24, lineHeight: 30 },
+  h2: { fontFamily: 'PlusJakartaSans_700Bold', fontSize: 20, lineHeight: 26 },
+  h3: { fontFamily: 'PlusJakartaSans_600SemiBold', fontSize: 17, lineHeight: 22 },
+  bodyLg: { fontFamily: 'PlusJakartaSans_400Regular', fontSize: 16, lineHeight: 24 },
+  body: { fontFamily: 'PlusJakartaSans_400Regular', fontSize: 14, lineHeight: 20 },
+  bodySm: { fontFamily: 'PlusJakartaSans_400Regular', fontSize: 13, lineHeight: 18 },
+  label: { fontFamily: 'PlusJakartaSans_600SemiBold', fontSize: 14, lineHeight: 18 },
+  labelSm: { fontFamily: 'PlusJakartaSans_600SemiBold', fontSize: 12, lineHeight: 16 },
+  caption: { fontFamily: 'PlusJakartaSans_500Medium', fontSize: 12, lineHeight: 16 },
+  overline: { fontFamily: 'PlusJakartaSans_600SemiBold', fontSize: 11, lineHeight: 14, letterSpacing: 1.2, textTransform: 'uppercase' },
+  numLg: { fontFamily: 'Inter_800ExtraBold', fontSize: 32, lineHeight: 36 },
+  numMd: { fontFamily: 'Inter_700Bold', fontSize: 22, lineHeight: 26 },
+  numSm: { fontFamily: 'Inter_600SemiBold', fontSize: 16, lineHeight: 20 },
+}
+
+// Shadow / Elevation system
+export const SHADOW = {
+  sm: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  md: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 4 },
+  lg: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 16, elevation: 8 },
+  xl: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.20, shadowRadius: 24, elevation: 12 },
+}
+
+// Unified semantic status colors
+export const STATUS = {
+  success: { dark: '#34D399', light: '#16A34A' },
+  warning: { dark: '#FBBF24', light: '#D97706' },
+  error: { dark: '#F87171', light: '#DC2626' },
+  info: { dark: '#38BDF8', light: '#0284C7' },
+}
+
+// Feature domain colors
+export const FEATURE = {
+  sleep: '#6C63FF',
+  activity: '#F97316',
+  fasting: '#8B5CF6',
+  nutrition: '#14B8A6',
+  heart: '#EF4444',
+  steps: '#F97316',
+  hydration: '#38BDF8',
 }

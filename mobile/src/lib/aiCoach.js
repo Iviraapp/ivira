@@ -622,29 +622,237 @@ const WEEKLY_WORKOUT_LINES = [
   (w) => ({ label: `${w} session${w > 1 ? 's' : ''} completed this week`, status: w >= 3 ? 'good' : 'neutral' }),
 ]
 
+// ---------------------------------------------------------------------------
+// Starter insights for new users (no tracking data yet)
+// ---------------------------------------------------------------------------
+const STARTER_TIPS_GENERAL = [
+  { label: 'Start by logging your first meal to track nutrition', status: 'neutral' },
+  { label: 'Set a daily step goal to stay active throughout the day', status: 'neutral' },
+  { label: 'Aim for 7\u20139 hours of sleep for optimal recovery', status: 'good' },
+  { label: 'Consistency matters more than intensity \u2014 build habits slowly', status: 'good' },
+  { label: 'Drink at least 8 glasses of water daily', status: 'neutral' },
+  { label: 'Try to move for at least 30 minutes each day', status: 'neutral' },
+]
+
+const STARTER_TIPS_BY_GOAL = {
+  weight_loss: [
+    { label: 'Track your meals to maintain a calorie deficit', status: 'attention' },
+    { label: 'Combine cardio with strength training for best results', status: 'good' },
+    { label: 'Focus on protein to stay full and preserve muscle', status: 'neutral' },
+  ],
+  muscle_gain: [
+    { label: 'Aim for 1.6\u20132.2g protein per kg of bodyweight', status: 'attention' },
+    { label: 'Progressive overload is key \u2014 increase weights gradually', status: 'good' },
+    { label: 'Rest days are when your muscles actually grow', status: 'neutral' },
+  ],
+  general_fitness: [
+    { label: 'Mix cardio, strength, and flexibility for balanced fitness', status: 'good' },
+    { label: 'Start with 3\u20134 workouts per week and build up', status: 'neutral' },
+    { label: 'Track your progress to stay motivated', status: 'neutral' },
+  ],
+  endurance: [
+    { label: 'Build a base with steady-state cardio before adding intervals', status: 'good' },
+    { label: 'Fuel properly \u2014 complex carbs are your friend', status: 'neutral' },
+    { label: 'Increase weekly distance by no more than 10%', status: 'attention' },
+  ],
+}
+
+// ---------------------------------------------------------------------------
+// Stage 2: Sparse Data (1-7 days) — mix real data with educational tips
+// ---------------------------------------------------------------------------
+const SPARSE_EDUCATION_TIPS = {
+  nutrition: [
+    { label: 'Track your meals to understand your eating patterns', status: 'neutral' },
+    { label: 'Protein at every meal supports muscle recovery', status: 'neutral' },
+    { label: 'Eating within 30 min post-workout maximises recovery', status: 'good' },
+  ],
+  sleep: [
+    { label: 'Consistent sleep schedules improve recovery by 23%', status: 'neutral' },
+    { label: 'Blue light before bed reduces melatonin — try a book instead', status: 'neutral' },
+    { label: 'Even 20 min extra sleep boosts next-day performance', status: 'good' },
+  ],
+  activity: [
+    { label: 'A 10-minute walk after meals improves digestion and blood sugar', status: 'neutral' },
+    { label: 'Morning sunlight + movement resets your circadian rhythm', status: 'good' },
+    { label: 'Active recovery days (walking, stretching) prevent burnout', status: 'neutral' },
+  ],
+}
+
+function _getSparseInsights(profile, dailyData) {
+  const d = dayOfYear()
+  const items = []
+
+  // Use whatever real data exists
+  if (dailyData?.calories > 0) {
+    const proteinVal = dailyData.protein || 0
+    if (proteinVal > 0) {
+      items.push({ label: `Nice! You hit ${proteinVal}g protein today. Keep it up`, status: 'good' })
+    } else {
+      items.push({ label: `${dailyData.calories} kcal logged today — tracking is the first step`, status: 'good' })
+    }
+  } else {
+    items.push(SPARSE_EDUCATION_TIPS.nutrition[d % SPARSE_EDUCATION_TIPS.nutrition.length])
+  }
+
+  if (dailyData?.sleep > 0) {
+    const hrs = dailyData.sleep
+    const status = hrs >= 7 && hrs <= 9 ? 'good' : hrs >= 6 ? 'neutral' : 'attention'
+    items.push({ label: `${hrs} hours last night. The sweet spot is 7–9h`, status })
+  } else {
+    items.push(SPARSE_EDUCATION_TIPS.sleep[d % SPARSE_EDUCATION_TIPS.sleep.length])
+  }
+
+  if (dailyData?.steps > 0) {
+    const stepGoal = dailyData.stepGoal || 10000
+    const remaining = Math.max(0, stepGoal - dailyData.steps)
+    if (remaining > 0) {
+      items.push({ label: `${dailyData.steps.toLocaleString()} steps so far — ${remaining.toLocaleString()} more to hit your goal`, status: 'neutral' })
+    } else {
+      items.push({ label: `${dailyData.steps.toLocaleString()} steps — goal smashed! Keep moving`, status: 'good' })
+    }
+  } else {
+    items.push(SPARSE_EDUCATION_TIPS.activity[d % SPARSE_EDUCATION_TIPS.activity.length])
+  }
+
+  if (dailyData?.workouts > 0) {
+    items.push({ label: `Great first workout! Try for 3 sessions this week`, status: 'good' })
+  } else {
+    // Add a goal-specific tip
+    const goalKey = profile?.goal?.toLowerCase?.()?.replace(/\s+/g, '_') || 'general_fitness'
+    const goalTips = STARTER_TIPS_BY_GOAL[goalKey] || STARTER_TIPS_BY_GOAL.general_fitness
+    items.push(goalTips[(d + 1) % goalTips.length])
+  }
+
+  return items.slice(0, 4)
+}
+
+// ---------------------------------------------------------------------------
+// Stage 1: No Data (Day 0) — actionable prompts & educational tips
+// ---------------------------------------------------------------------------
+const STAGE1_PROMPTS = [
+  { label: 'Log your first meal to start tracking nutrition', status: 'neutral', action: 'log_meal' },
+  { label: 'Track tonight\'s sleep to start building your sleep profile', status: 'neutral', action: 'log_sleep' },
+  { label: 'Take a 10-minute walk today — every step counts', status: 'good', action: 'log_steps' },
+  { label: 'Consistent sleep schedules improve recovery by 23%', status: 'good' },
+  { label: 'Set your step goal to stay motivated', status: 'neutral', action: 'set_step_goal' },
+  { label: 'Drinking water before meals helps control portions', status: 'neutral' },
+]
+
+function _getStage1Insights(profile) {
+  const d = dayOfYear()
+  const items = []
+
+  // Always start with an actionable prompt
+  items.push(STAGE1_PROMPTS[d % 3]) // Rotate between meal, sleep, steps prompts
+
+  // Add goal-specific advice
+  const goalKey = profile?.goal?.toLowerCase?.()?.replace(/\s+/g, '_') || 'general_fitness'
+  const goalTips = STARTER_TIPS_BY_GOAL[goalKey] || STARTER_TIPS_BY_GOAL.general_fitness
+  items.push(goalTips[d % goalTips.length])
+
+  // Add weight-based tip if available
+  if (profile?.weight && profile?.height) {
+    const heightM = profile.height > 100 ? profile.height / 100 : profile.height
+    const bmi = profile.weight / (heightM * heightM)
+    if (bmi < 18.5) {
+      items.push({ label: 'Focus on nutrient-dense meals to reach a healthy weight', status: 'attention' })
+    } else if (bmi >= 25) {
+      items.push({ label: 'Small daily calorie adjustments lead to sustainable results', status: 'neutral' })
+    } else {
+      items.push({ label: 'Your weight is in a healthy range — focus on staying active', status: 'good' })
+    }
+  } else {
+    items.push(STAGE1_PROMPTS[3 + (d % 3)]) // Educational tip
+  }
+
+  // Fill last slot
+  const remaining = 4 - items.length
+  for (let i = 0; i < remaining; i++) {
+    items.push(STARTER_TIPS_GENERAL[(d + i) % STARTER_TIPS_GENERAL.length])
+  }
+
+  return items.slice(0, 4)
+}
+
+/**
+ * Progressive insight system — returns contextual insights based on data maturity.
+ *
+ * @param {Object} params
+ * @param {Object} [params.profile] - { name, weight, height, goal, interests }
+ * @param {Object} [params.dailyData] - { steps, calories, protein, sleep, workouts, stepGoal }
+ * @param {Object} [params.weeklyData] - aggregated weekly stats (if available)
+ * @param {number} [params.dataAge] - days since first activity (0 = no data)
+ * @returns {Promise<{ weekLabel: string, items: Array<{ label: string, status: string, action?: string }> }>}
+ */
+export async function getProgressiveInsights({ profile, dailyData, weeklyData, dataAge }) {
+  if (!dataAge || dataAge === 0) {
+    return { weekLabel: 'Getting Started', items: _getStage1Insights(profile) }
+  }
+  if (dataAge <= 7) {
+    return { weekLabel: 'Early Progress', items: _getSparseInsights(profile, dailyData) }
+  }
+  // Stage 3: rich data — delegate to existing getWeeklyInsight
+  if (weeklyData) {
+    const result = await getWeeklyInsight(weeklyData, profile)
+    // getWeeklyInsight returns { title, insights } for rich data — normalize to { weekLabel, items }
+    if (result.items) return result // already in starter format
+    return {
+      weekLabel: result.title || 'Your Week',
+      items: (result.insights || []).map(label => ({ label, status: 'good' })),
+    }
+  }
+  // Fallback: has been around 7+ days but no weekly data available yet
+  return { weekLabel: 'Keep Going', items: _getSparseInsights(profile, dailyData) }
+}
+
+function _getStarterInsights(profile) {
+  const d = dayOfYear()
+  const items = []
+
+  // Add weight-based tip if available
+  if (profile?.weight && profile?.height) {
+    const heightM = profile.height > 100 ? profile.height / 100 : profile.height
+    const bmi = profile.weight / (heightM * heightM)
+    if (bmi < 18.5) {
+      items.push({ label: 'Focus on nutrient-dense meals to reach a healthy weight', status: 'attention' })
+    } else if (bmi >= 25) {
+      items.push({ label: 'Small daily calorie adjustments lead to sustainable results', status: 'neutral' })
+    } else {
+      items.push({ label: 'Your weight is in a healthy range \u2014 focus on staying active', status: 'good' })
+    }
+  }
+
+  // Add goal-specific tips
+  const goalKey = profile?.goal?.toLowerCase?.()?.replace(/\s+/g, '_') || 'general_fitness'
+  const goalTips = STARTER_TIPS_BY_GOAL[goalKey] || STARTER_TIPS_BY_GOAL.general_fitness
+  items.push(goalTips[d % goalTips.length])
+
+  // Fill remaining slots from general tips (rotate daily)
+  const remaining = 4 - items.length
+  for (let i = 0; i < remaining; i++) {
+    items.push(STARTER_TIPS_GENERAL[(d + i) % STARTER_TIPS_GENERAL.length])
+  }
+
+  return items.slice(0, 4)
+}
+
 /**
  * Generates a weekly trend summary.
  *
- * When called with no args (HealthScreen legacy), returns demo data in
- * { weekLabel, items } format.
+ * When called with no weeklyData (new user), returns personalized starter
+ * tips based on profile data in { weekLabel, items } format.
  *
  * When called with weeklyData object, returns { title, insights } format.
  *
  * @param {Object} [weeklyData]
+ * @param {Object} [profile] - { name, weight, height, goal, interests }
  * @returns {Promise<Object>}
  */
-export async function getWeeklyInsight(weeklyData) {
-  // Legacy call from HealthScreen — no args
+export async function getWeeklyInsight(weeklyData, profile) {
+  // No tracking data yet — show personalized starter tips based on profile
   if (!weeklyData) {
-    return {
-      weekLabel: 'This Week',
-      items: [
-        { label: '3 workouts logged \u2014 on track for your goal', status: 'good' },
-        { label: 'Avg 1,800 kcal/day \u2014 slightly under target', status: 'neutral' },
-        { label: 'Steps up 12% vs last week', status: 'good' },
-        { label: 'Protein intake below 80g on 2 days', status: 'attention' },
-      ],
-    }
+    const items = _getStarterInsights(profile)
+    return { weekLabel: 'Getting Started', items }
   }
 
   // New rich format

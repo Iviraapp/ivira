@@ -477,7 +477,7 @@ const DEMO_RECIPES = [
 function RecipeCard({ recipe, index, onPress, isFavorite, onToggleFavorite, colors, isDark }) {
   const scaleAnim = useRef(new Animated.Value(1)).current
   const bgColor = isDark ? CARD_COLORS[index % CARD_COLORS.length] : CARD_COLORS_LIGHT[index % CARD_COLORS_LIGHT.length]
-  const diffConf = DIFFICULTY[recipe.difficulty]
+  const diffConf = DIFFICULTY[recipe.difficulty] || DIFFICULTY.Easy
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, { toValue: 0.96, useNativeDriver: true }).start()
@@ -560,7 +560,7 @@ function RecipeDetailModal({ recipe, visible, onClose, isFavorite, onToggleFavor
 
   if (!recipe) return null
 
-  const diffConf = DIFFICULTY[recipe.difficulty]
+  const diffConf = DIFFICULTY[recipe.difficulty] || DIFFICULTY.Easy
   const nutritionItems = [
     { label: 'Calories',  value: `${recipe.calories}`,  unit: 'kcal', color: colors.amber },
     { label: 'Protein',   value: `${recipe.protein}`,   unit: 'g',    color: colors.green },
@@ -688,7 +688,7 @@ export default function RecipeScreen() {
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [recipes, setRecipes] = useState([])
+  const [recipes, setRecipes] = useState(DEMO_RECIPES)
 
   // Helper to map backend recipe to the format the UI expects
   const mapBackendRecipe = (r) => ({

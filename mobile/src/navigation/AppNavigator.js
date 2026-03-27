@@ -6,6 +6,7 @@ import { COLORS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import LoginScreen from '../screens/LoginScreen'
 import OnboardingScreen, { ONBOARDING_KEY } from '../screens/OnboardingScreen'
+import ProfileSetupScreen, { PROFILE_SETUP_KEY } from '../screens/ProfileSetupScreen'
 import TabNavigator from './TabNavigator'
 import SplashScreen from '../components/SplashScreen'
 import { getItem } from '../lib/storage'
@@ -104,8 +105,10 @@ function BiometricGate({ children }) {
       if (!result.success) {
         setTimeout(authenticate, 1000)
       }
-    } catch {
-      setAuthed(true) // Fail open if biometrics crash
+    } catch (e) {
+      console.warn('[biometric] Auth failed, retrying:', e?.message)
+      // Don't fail open — retry instead
+      setTimeout(authenticate, 1500)
     } finally {
       setChecking(false)
     }
@@ -131,10 +134,11 @@ function BiometricGate({ children }) {
 }
 
 export default function AppNavigator() {
-  const { token, loading } = useAuth()
+  const { token, member, loading } = useAuth()
   const { colors, isDark } = useTheme()
   const [showSplash, setShowSplash] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(null) // null = loading, true/false
+  const [showProfileSetup, setShowProfileSetup] = useState(null) // null = loading, true/false
 
   useEffect(() => {
     getItem(ONBOARDING_KEY).then(val => {
@@ -142,12 +146,33 @@ export default function AppNavigator() {
     }).catch(() => setShowOnboarding(true))
   }, [])
 
+  // Check if profile setup is needed after login
+  useEffect(() => {
+    if (!token || !member) {
+      setShowProfileSetup(false)
+      return
+    }
+    getItem(PROFILE_SETUP_KEY).then(val => {
+      if (val === 'true') {
+        setShowProfileSetup(false)
+      } else {
+        // Show if both weight and fitness_goal are missing
+        const needsSetup = !member.weight && !member.fitness_goal
+        setShowProfileSetup(needsSetup)
+      }
+    }).catch(() => setShowProfileSetup(false))
+  }, [token, member])
+
   if (loading || showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />
   }
 
   if (showOnboarding) {
     return <OnboardingScreen onComplete={() => setShowOnboarding(false)} />
+  }
+
+  if (token && showProfileSetup) {
+    return <ProfileSetupScreen onComplete={() => setShowProfileSetup(false)} />
   }
 
   // On web, skip NavigationContainer if it causes issues

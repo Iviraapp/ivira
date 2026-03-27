@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import {
   LayoutDashboard, Users, ScanLine, ClipboardList,
-  LogOut, Dumbbell, Menu, X, Globe, UserPlus,
+  LogOut, Dumbbell, Menu, X, Globe, UserPlus, Settings,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -13,6 +13,7 @@ const NAV = [
   { to: '/checkins', icon: ClipboardList, label: 'Check-ins' },
   { to: '/prospects', icon: UserPlus, label: 'Prospects' },
   { to: '/leads', icon: Globe, label: 'Lead Pool' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
 export default function Layout() {

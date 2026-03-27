@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0B0F19"
+      "backgroundColor": "#0A0E1A"
     },
     "assetBundlePatterns": [
       "assets/*"
@@ -34,7 +34,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0052FF"
+        "backgroundColor": "#0F328C"
       },
       "package": "com.ivira.member",
       "permissions": [
@@ -52,7 +52,8 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.BODY_SENSORS",
         "android.permission.HIGH_SAMPLING_RATE_SENSORS",
-        "android.permission.FOREGROUND_SERVICE"
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
     "plugins": [
@@ -90,13 +91,18 @@
           "androidAppId": "ca-app-pub-1836914755619181~7453478671",
           "iosAppId": "ca-app-pub-1836914755619181~7453478671"
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "extra": {
       "eas": {
         "projectId": "e554db55-7b14-4d81-b288-723ac43503c6"
       }
     },
-    "owner": "gymos2026"
+    "owner": "gymos2026",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/e554db55-7b14-4d81-b288-723ac43503c6"
+    }
   }
 }

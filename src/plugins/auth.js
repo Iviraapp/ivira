@@ -1,3 +1,22 @@
+/**
+ * IVIRA Role Hierarchy:
+ *
+ * 1. System Admin (role: 'super_admin') — IVIRA employees
+ *    - Platform-level access, manage all gyms and users
+ *    - Auth: super_admins table, JWT with role='super_admin'
+ *
+ * 2. Gym Admin (role: 'owner') — Gym owners
+ *    - Gym-level access, manage their gym's members and settings
+ *    - Auth: gyms table (owner_email), JWT with gymId + role='owner'
+ *
+ * 3. Staff (roles: 'manager'|'trainer'|'front_desk'|'cleaner') — Gym employees
+ *    - Scoped access within their gym based on role
+ *    - Auth: staff table, JWT with gymId + staffId + role
+ *
+ * 4. Member (role: 'member') — End users
+ *    - Own data only, can belong to a gym (B2B) or be independent (B2C)
+ *    - Auth: members table, JWT with memberId + gymId + role='member'
+ */
 import fp from 'fastify-plugin';
 import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
@@ -84,16 +103,30 @@ async function authPlugin(fastify) {
   });
 
   // Decorator to check if authenticated member matches the memberId in the URL
+  // Members can only access their own data; gym owners can access any member in their gym
   fastify.decorate('verifyMember', async (request, reply) => {
-    const { memberId } = request.params;
+    const { memberId, gymId } = request.params;
     if (!memberId) return;
 
-    // If route has memberId param, verify the authenticated member matches
-    if (request.user.role === 'member' && request.user.memberId && request.user.memberId !== memberId) {
-      return reply.code(403).send({ error: 'You can only access your own data' });
+    // Members: must match their own memberId
+    if (request.user.role === 'member') {
+      if (request.user.memberId && request.user.memberId !== memberId) {
+        return reply.code(403).send({ error: 'You can only access your own data' });
+      }
+      return;
     }
 
-    // For gym owners (non-member role), allow access to any member's data
+    // Gym owners / non-member roles: verify the member belongs to their gym
+    if (gymId && request.user.gymId) {
+      if (request.user.gymId !== gymId) {
+        return reply.code(403).send({ error: 'You do not have access to this gym' });
+      }
+      // Verify the target member actually belongs to this gym
+      const member = await fastify.db('members').where({ id: memberId, gym_id: gymId }).first();
+      if (!member) {
+        return reply.code(403).send({ error: 'Member not found in your gym' });
+      }
+    }
   });
 }
 

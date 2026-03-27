@@ -185,6 +185,45 @@ export default async function gymRoutes(fastify) {
     };
   });
 
+  // Daily revenue analytics — for dashboard chart (last N days)
+  fastify.get('/gyms/:gymId/analytics/revenue', authHooks, async (request) => {
+    const gymId = request.params.gymId;
+    const days = Math.min(parseInt(request.query.days) || 7, 90);
+
+    const result = await db.raw(`
+      SELECT
+        DATE(paid_at) as date,
+        COALESCE(SUM(amount_paise), 0) as revenue,
+        COUNT(*) as transactions
+      FROM payments
+      WHERE gym_id = ? AND status = 'captured' AND paid_at >= CURRENT_DATE - INTERVAL '1 day' * ?
+      GROUP BY DATE(paid_at)
+      ORDER BY date
+    `, [gymId, days]);
+
+    // Fill gaps with zero-revenue days
+    const revenueMap = {};
+    for (const row of result.rows) {
+      revenueMap[row.date] = { revenue: parseInt(row.revenue) / 100, transactions: parseInt(row.transactions) };
+    }
+
+    const daily = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayLabel = d.toLocaleDateString('en', { weekday: 'short' });
+      daily.push({
+        date: dayLabel,
+        fullDate: dateStr,
+        revenue: revenueMap[dateStr]?.revenue || 0,
+        transactions: revenueMap[dateStr]?.transactions || 0,
+      });
+    }
+
+    return { daily };
+  });
+
   // Analytics endpoint — monthly revenue, churn, peak hours
   fastify.get('/gyms/:gymId/analytics', authHooks, async (request) => {
     const gymId = request.params.gymId;

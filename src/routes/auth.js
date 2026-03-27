@@ -43,23 +43,30 @@ const emailOtpVerifySchema = {
 };
 
 export default async function authRoutes(fastify) {
+  const loginRateLimit = {
+    config: { rateLimit: { max: 10, timeWindow: '15 minutes' } }
+  }
+  const otpRateLimit = {
+    config: { rateLimit: { max: 5, timeWindow: '5 minutes' } }
+  }
+
   // Request email OTP for gym owner login
-  fastify.post('/auth/otp/email/request', { schema: emailOtpRequestSchema }, async (request) => {
+  fastify.post('/auth/otp/email/request', { schema: emailOtpRequestSchema, ...otpRateLimit }, async (request) => {
     return authService.requestEmailOTP(request.body.email);
   });
 
   // Verify email OTP and get JWT token
-  fastify.post('/auth/otp/email/verify', { schema: emailOtpVerifySchema }, async (request) => {
+  fastify.post('/auth/otp/email/verify', { schema: emailOtpVerifySchema, ...otpRateLimit }, async (request) => {
     return authService.verifyEmailOTP(request.body.email, request.body.otp);
   });
 
   // B2C: Request OTP for member login (no gymId required)
-  fastify.post('/auth/b2c/otp/request', { schema: emailOtpRequestSchema }, async (request) => {
+  fastify.post('/auth/b2c/otp/request', { schema: emailOtpRequestSchema, ...otpRateLimit }, async (request) => {
     return authService.requestB2CLoginOTP(request.body.email);
   });
 
   // B2C: Verify OTP and get JWT token + member data
-  fastify.post('/auth/b2c/otp/verify', { schema: emailOtpVerifySchema }, async (request) => {
+  fastify.post('/auth/b2c/otp/verify', { schema: emailOtpVerifySchema, ...otpRateLimit }, async (request) => {
     return authService.verifyB2CLoginOTP(request.body.email, request.body.otp);
   });
 
@@ -80,7 +87,7 @@ export default async function authRoutes(fastify) {
   });
 
   // Find gyms by email or phone (rate limited) — subdomain recovery
-  fastify.post('/auth/find-gyms', async (request, reply) => {
+  fastify.post('/auth/find-gyms', { ...otpRateLimit }, async (request, reply) => {
     const { contact } = request.body || {}
     if (!contact) return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'Email or phone required' })
 
@@ -108,7 +115,7 @@ export default async function authRoutes(fastify) {
   })
 
   // Verify OTP and return gyms — subdomain recovery
-  fastify.post('/auth/verify-subdomain-otp', async (request, reply) => {
+  fastify.post('/auth/verify-subdomain-otp', { ...otpRateLimit }, async (request, reply) => {
     const { contact, otp } = request.body || {}
     if (!contact || !otp) return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'Contact and OTP required' })
 
@@ -146,6 +153,7 @@ export default async function authRoutes(fastify) {
 
   // B2C: Register new member with name/phone and optional gym invite code
   fastify.post('/auth/b2c/register', {
+    ...otpRateLimit,
     schema: {
       body: {
         type: 'object',
@@ -302,15 +310,14 @@ export default async function authRoutes(fastify) {
     return { gym: { id: gym.id, name: gym.gym_name, invite_code: gym.invite_code, lat: gym.latitude, lng: gym.longitude }, members, actions: results };
   });
 
-  // Refresh JWT token (extend expiry without re-login)
-  fastify.post('/auth/refresh', { preHandler: [fastify.verifyToken] }, async (request) => {
-    const user = request.user;
-    // Issue a fresh 7-day token with the same claims
-    const token = jwt.sign(
-      { gymId: user.gymId, email: user.email, role: user.role || 'owner' },
-      config.jwt.secret,
-      { expiresIn: '7d' }
-    );
-    return { token };
+  // Refresh JWT token (extend expiry without re-login, supports expired tokens within 30-day grace window)
+  fastify.post('/auth/refresh', async (request, reply) => {
+    const authHeader = request.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return reply.code(401).send({ error: 'No token provided' });
+    }
+    const token = authHeader.split(' ')[1];
+    const result = await authService.refreshToken(token);
+    return result;
   });
 }

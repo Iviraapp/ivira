@@ -20,6 +20,7 @@ import { formatDate, formatTime, getInitials } from '../lib/utils'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { calculateBMI, getBMICategory } from '../lib/healthCalculator'
+import { startGymGeofencing, stopGymGeofencing, isGeofencingActive } from '../lib/gymGeofence'
 import api from '../lib/api'
 import { getItem, setItem } from '../lib/storage'
 
@@ -104,7 +105,7 @@ const CHECKIN_METHOD_ICONS = {
 }
 
 export default function ProfileScreen({ navigation }) {
-  const { member, gymId, logout, biometricAvailable, biometricEnabled, setBiometricEnabled, refreshProfile, connectGym } = useAuth()
+  const { member, gymId, gymInfo, logout, biometricAvailable, biometricEnabled, setBiometricEnabled, refreshProfile, connectGym } = useAuth()
   const { mode: themeMode, setMode: setThemeMode, colors, isDark, card } = useTheme()
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [qrModalVisible, setQrModalVisible] = useState(false)
@@ -128,11 +129,26 @@ export default function ProfileScreen({ navigation }) {
   // Leaderboard visibility state
   const [leaderboardVisible, setLeaderboardVisible] = useState(false)
 
+  // Gym proximity state
+  const [gymProximityEnabled, setGymProximityEnabled] = useState(false)
+
   // Photo upload state
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   // Profile picture state
   const [profilePhoto, setProfilePhoto] = useState(null)
+
+  // Edit Profile state
+  const [showEditProfile, setShowEditProfile] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editDob, setEditDob] = useState('')
+  const [editGender, setEditGender] = useState('')
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [editWeight, setEditWeight] = useState('')
+  const [editHeight, setEditHeight] = useState('')
+  const [editGoal, setEditGoal] = useState('')
 
   // Connect Gym state
   const [showConnectGym, setShowConnectGym] = useState(false)
@@ -148,6 +164,7 @@ export default function ProfileScreen({ navigation }) {
     if (member?.height_cm) setHeightCm(String(member.height_cm))
     if (member?.weight_kg) setWeightKg(String(member.weight_kg))
     getItem('leaderboard_visible').then(v => { if (v === 'true') setLeaderboardVisible(true) }).catch(() => {})
+    isGeofencingActive().then(active => setGymProximityEnabled(active)).catch(() => {})
     // Load profile photo from storage or member data
     if (member?.photo_url) {
       setProfilePhoto(member.photo_url)
@@ -410,6 +427,66 @@ export default function ProfileScreen({ navigation }) {
     }
   }
 
+  const handleGymProximityToggle = async (val) => {
+    setGymProximityEnabled(val)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    if (val) {
+      if (gymInfo?.latitude && gymInfo?.longitude) {
+        const started = await startGymGeofencing(gymInfo)
+        if (!started) {
+          setGymProximityEnabled(false)
+          Alert.alert('Location Required', 'Please enable location permissions to use gym proximity alerts.')
+        }
+      } else {
+        setGymProximityEnabled(false)
+        Alert.alert('Not Available', 'Your gym hasn\'t set its location yet. Contact your gym to enable this feature.')
+      }
+    } else {
+      await stopGymGeofencing()
+    }
+  }
+
+  const handleOpenEditProfile = () => {
+    setEditName(member?.name || '')
+    setEditPhone(member?.phone || '')
+    setEditEmail(member?.email || '')
+    setEditDob(member?.date_of_birth || member?.dob || '')
+    setEditGender(member?.gender || '')
+    setEditWeight(String(member?.weight || ''))
+    setEditHeight(String(member?.height || ''))
+    setEditGoal(member?.fitness_goal || '')
+    setShowEditProfile(true)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }
+
+  const handleSaveProfile = async () => {
+    const name = editName.trim()
+    if (!name) {
+      Alert.alert('Required', 'Name cannot be empty.')
+      return
+    }
+
+    setSavingProfile(true)
+    try {
+      const payload = { name }
+      if (editEmail.trim()) payload.email = editEmail.trim()
+      if (editDob.trim()) payload.date_of_birth = editDob.trim()
+      if (editGender) payload.gender = editGender
+      if (editWeight) payload.weight = parseFloat(editWeight)
+      if (editHeight) payload.height = parseFloat(editHeight)
+      if (editGoal) payload.fitness_goal = editGoal
+
+      await api.patch(`/gyms/${gymId}/members/${member.id}`, payload)
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      setShowEditProfile(false)
+      if (refreshProfile) refreshProfile()
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Failed to update profile.')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
   const handleConnectGym = async () => {
     const code = gymCode.trim()
     if (!code) {
@@ -468,6 +545,16 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.digitalIdText}>Digital Member ID</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Edit Profile Button */}
+          <TouchableOpacity
+            style={[styles.editProfileBtn, { borderColor: colors.border }]}
+            onPress={handleOpenEditProfile}
+            activeOpacity={0.7}
+          >
+            <Feather name="edit-2" size={14} color={COLORS.accent} />
+            <Text style={[styles.editProfileText, { color: COLORS.accent }]}>Edit Profile</Text>
+          </TouchableOpacity>
 
           {/* Membership info */}
           {membership && (
@@ -672,6 +759,15 @@ export default function ProfileScreen({ navigation }) {
               </View>
               <Feather name="chevron-right" size={18} color={colors.textTer} />
             </TouchableOpacity>
+            <View style={[styles.separator, { backgroundColor: colors.border }]} />
+            <SettingRow
+              icon="map-pin"
+              label="Gym Proximity Alerts"
+              sublabel="Notify when you're near your gym"
+              value={gymProximityEnabled}
+              onValueChange={handleGymProximityToggle}
+              colors={colors}
+            />
             <View style={[styles.separator, { backgroundColor: colors.border }]} />
             <View style={styles.settingRow}>
               <View style={styles.settingRowLeft}>
@@ -971,6 +1067,168 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
       </Modal>
 
+      {/* Edit Profile Modal */}
+      <Modal
+        visible={showEditProfile}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowEditProfile(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowEditProfile(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+            <View style={[styles.connectModalContent, card, { borderColor: 'rgba(0,82,255,0.2)' }]}>
+              <View style={[styles.modalHandle, { backgroundColor: colors.borderStrong }]} />
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Edit Profile</Text>
+
+              <View style={{ width: '100%', gap: SPACING.sm, marginTop: SPACING.md }}>
+                <View>
+                  <Text style={[styles.bodyStatsLabel, { color: colors.textSec, marginBottom: 4 }]}>Name</Text>
+                  <TextInput
+                    style={[styles.connectModalInput, { backgroundColor: colors.bgHover, color: colors.text, borderColor: colors.border }]}
+                    value={editName}
+                    onChangeText={setEditName}
+                    placeholder="Your name"
+                    placeholderTextColor={colors.textTer}
+                    autoCapitalize="words"
+                  />
+                </View>
+
+                <View>
+                  <Text style={[styles.bodyStatsLabel, { color: colors.textSec, marginBottom: 4 }]}>Phone</Text>
+                  <TextInput
+                    style={[styles.connectModalInput, { backgroundColor: colors.bgHover, color: colors.text, borderColor: colors.border, opacity: 0.6 }]}
+                    value={editPhone}
+                    editable={false}
+                    placeholderTextColor={colors.textTer}
+                  />
+                  <Text style={{ fontSize: 10, color: colors.textTer, marginTop: 2 }}>Phone number cannot be changed</Text>
+                </View>
+
+                <View>
+                  <Text style={[styles.bodyStatsLabel, { color: colors.textSec, marginBottom: 4 }]}>Email</Text>
+                  <TextInput
+                    style={[styles.connectModalInput, { backgroundColor: colors.bgHover, color: colors.text, borderColor: colors.border }]}
+                    value={editEmail}
+                    onChangeText={setEditEmail}
+                    placeholder="your@email.com"
+                    placeholderTextColor={colors.textTer}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View>
+                  <Text style={[styles.bodyStatsLabel, { color: colors.textSec, marginBottom: 4 }]}>Date of Birth</Text>
+                  <TextInput
+                    style={[styles.connectModalInput, { backgroundColor: colors.bgHover, color: colors.text, borderColor: colors.border }]}
+                    value={editDob}
+                    onChangeText={setEditDob}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor={colors.textTer}
+                    maxLength={10}
+                  />
+                </View>
+
+                <View>
+                  <Text style={[styles.bodyStatsLabel, { color: colors.textSec, marginBottom: 4 }]}>Gender</Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {['male', 'female', 'other'].map(g => (
+                      <TouchableOpacity
+                        key={g}
+                        style={[
+                          styles.genderChip,
+                          { backgroundColor: editGender === g ? COLORS.accent : colors.bgTer, borderColor: editGender === g ? COLORS.accent : colors.border },
+                        ]}
+                        onPress={() => setEditGender(g)}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: '600', color: editGender === g ? '#FFF' : colors.textSec }}>
+                          {g.charAt(0).toUpperCase() + g.slice(1)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Body Metrics */}
+                <View>
+                  <Text style={[styles.bodyStatsLabel, { color: colors.textSec, marginBottom: 4, marginTop: 12 }]}>Body Metrics</Text>
+                  <View style={{ flexDirection: 'row', gap: 12, marginBottom: 4 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 12, color: colors.textTer, fontWeight: '400', marginBottom: 4 }}>Weight (kg)</Text>
+                      <TextInput
+                        style={[styles.connectModalInput, { backgroundColor: colors.bgHover, color: colors.text, borderColor: colors.border }]}
+                        value={editWeight}
+                        onChangeText={setEditWeight}
+                        keyboardType="decimal-pad"
+                        placeholder="e.g. 75"
+                        placeholderTextColor={colors.textTer}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 12, color: colors.textTer, fontWeight: '400', marginBottom: 4 }}>Height (cm)</Text>
+                      <TextInput
+                        style={[styles.connectModalInput, { backgroundColor: colors.bgHover, color: colors.text, borderColor: colors.border }]}
+                        value={editHeight}
+                        onChangeText={setEditHeight}
+                        keyboardType="decimal-pad"
+                        placeholder="e.g. 175"
+                        placeholderTextColor={colors.textTer}
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Fitness Goal */}
+                <View>
+                  <Text style={[styles.bodyStatsLabel, { color: colors.textSec, marginBottom: 4, marginTop: 8 }]}>Fitness Goal</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {['Lose Fat', 'Build Muscle', 'Maintain', 'Get Fit', 'Flexibility'].map(g => (
+                      <TouchableOpacity
+                        key={g}
+                        style={[
+                          styles.genderChip,
+                          { backgroundColor: editGoal === g ? COLORS.accent : colors.bgTer, borderColor: editGoal === g ? COLORS.accent : colors.border },
+                        ]}
+                        onPress={() => setEditGoal(g)}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: '600', color: editGoal === g ? '#FFF' : colors.textSec }}>
+                          {g}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.connectModalBtn, savingProfile && { opacity: 0.6 }, { marginTop: SPACING.lg }]}
+                onPress={handleSaveProfile}
+                activeOpacity={0.7}
+                disabled={savingProfile}
+              >
+                {savingProfile ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.connectModalBtnText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalCloseBtn, { backgroundColor: colors.bgTer, marginTop: SPACING.sm }]}
+                onPress={() => setShowEditProfile(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.modalCloseBtnText, { color: colors.textSec }]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Connect Gym Modal */}
       <Modal
         visible={showConnectGym}
@@ -1186,6 +1444,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: COLORS.accent,
+  },
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: RADIUS.lg,
+    paddingVertical: SPACING.sm + 2,
+    marginTop: SPACING.sm,
+    gap: SPACING.xs,
+    width: '100%',
+  },
+  editProfileText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  genderChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
   },
   membershipInfo: {
     width: '100%',

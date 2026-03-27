@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { Platform } from 'react-native'
 import { getItem, setItem, deleteItem } from '../lib/storage'
 import api from '../lib/api'
+import { registerForPushNotifications, setupNotificationHandlers } from '../lib/pushNotifications'
+import { startGymGeofencing, stopGymGeofencing } from '../lib/gymGeofence'
 
 const AuthContext = createContext(null)
 
@@ -17,6 +19,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     restoreSession()
     checkBiometrics()
+    setupNotificationHandlers()
   }, [])
 
   const checkBiometrics = async () => {
@@ -56,12 +59,16 @@ export function AuthProvider({ children }) {
           const memberData = res.data?.member || res.data
           setMember(memberData)
           await setItem('ivira_member_data', JSON.stringify(memberData))
-        } catch {}
+        } catch (e) {
+          console.warn('[auth] Failed to refresh member profile:', e?.message)
+        }
 
         try {
           const gymRes = await api.get(`/gyms/${storedGymId}`)
           setGymInfo(gymRes.data?.gym || gymRes.data)
-        } catch {}
+        } catch (e) {
+          console.warn('[auth] Failed to fetch gym info:', e?.message)
+        }
       } else if (storedToken) {
         // B2C user without a gym
         setToken(storedToken)
@@ -77,9 +84,13 @@ export function AuthProvider({ children }) {
             const enrolled = await LocalAuth.isEnrolledAsync()
             if (compatible && enrolled) setBiometricEnabledState(true)
           }
-        } catch {}
+        } catch (e) {
+          console.warn('[auth] Failed to restore biometric preference:', e?.message)
+        }
       }
-    } catch {} finally {
+    } catch (e) {
+      console.warn('[auth] Session restore failed:', e?.message)
+    } finally {
       setLoading(false)
     }
   }
@@ -118,7 +129,9 @@ export function AuthProvider({ children }) {
     try {
       const gymRes = await api.get(`/gyms/${gymIdVal}`)
       setGymInfo(gymRes.data?.gym || gymRes.data)
-    } catch {}
+    } catch (e) {
+      console.warn('[auth] Failed to fetch gym info after login:', e?.message)
+    }
   }, [])
 
   const loginWithEmail = useCallback(async (gymIdVal, email, password) => {
@@ -140,10 +153,20 @@ export function AuthProvider({ children }) {
     try {
       const gymRes = await api.get(`/gyms/${gymIdVal}`)
       setGymInfo(gymRes.data?.gym || gymRes.data)
-    } catch {}
+    } catch (e) {
+      console.warn('[auth] Failed to fetch gym info after email login:', e?.message)
+    }
   }, [])
 
+  // Start geofencing whenever gym info becomes available
+  useEffect(() => {
+    if (gymInfo?.latitude && gymInfo?.longitude) {
+      startGymGeofencing(gymInfo).catch(() => {})
+    }
+  }, [gymInfo?.id])
+
   const logout = useCallback(async () => {
+    await stopGymGeofencing()
     await deleteItem('ivira_member_token')
     await deleteItem('ivira_gym_id')
     await deleteItem('ivira_member_data')
@@ -180,8 +203,15 @@ export function AuthProvider({ children }) {
       try {
         const gymRes = await api.get(`/gyms/${resolvedGymId}`)
         setGymInfo(gymRes.data?.gym || gymRes.data)
-      } catch {}
+      } catch (e) {
+        console.warn('[auth] Failed to fetch gym info after OTP verify:', e?.message)
+      }
     }
+
+    // Register for push notifications after successful login
+    registerForPushNotifications().catch(e =>
+      console.warn('[auth] Push registration failed:', e?.message)
+    )
   }, [])
 
   // B2C: connect to a gym via invite code
@@ -215,7 +245,9 @@ export function AuthProvider({ children }) {
       const memberData = res.data?.member || res.data
       setMember(memberData)
       await setItem('ivira_member_data', JSON.stringify(memberData))
-    } catch {}
+    } catch (e) {
+      console.warn('[auth] Failed to refresh profile:', e?.message)
+    }
   }, [gymId])
 
   return (

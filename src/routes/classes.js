@@ -50,6 +50,26 @@ const cancelBookingSchema = {
   },
 };
 
+const bookClassSchema = {
+  body: {
+    type: 'object',
+    required: ['member_id'],
+    properties: {
+      member_id: { type: 'string', format: 'uuid' },
+    },
+  },
+};
+
+const classCheckinSchema = {
+  body: {
+    type: 'object',
+    required: ['member_id'],
+    properties: {
+      member_id: { type: 'string', format: 'uuid' },
+    },
+  },
+};
+
 export default async function classRoutes(fastify) {
   const authHooks = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] };
   const memberAuth = { preHandler: [fastify.verifyToken] };
@@ -84,6 +104,39 @@ export default async function classRoutes(fastify) {
   fastify.delete('/gyms/:gymId/classes/:classId', authHooks, async (request) => {
     const gymClass = await classService.deleteClass(request.params.gymId, request.params.classId);
     return { class: gymClass, message: 'Class deactivated' };
+  });
+
+  // ── Class-level booking, attendees & check-in ───────────────────────
+
+  fastify.post('/gyms/:gymId/classes/:classId/book', { schema: bookClassSchema, ...authHooks }, async (request, reply) => {
+    const booking = await classService.bookClass(
+      request.params.gymId,
+      request.params.classId,
+      request.body.member_id,
+    );
+    return reply.code(201).send({ booking });
+  });
+
+  fastify.delete('/gyms/:gymId/classes/:classId/book/:memberId', authHooks, async (request) => {
+    const booking = await classService.cancelClassBooking(
+      request.params.gymId,
+      request.params.classId,
+      request.params.memberId,
+    );
+    return { booking, message: 'Booking cancelled' };
+  });
+
+  fastify.get('/gyms/:gymId/classes/:classId/attendees', authHooks, async (request) => {
+    return classService.getClassAttendees(request.params.gymId, request.params.classId);
+  });
+
+  fastify.post('/gyms/:gymId/classes/:classId/checkin', { schema: classCheckinSchema, ...authHooks }, async (request, reply) => {
+    const result = await classService.classCheckin(
+      request.params.gymId,
+      request.params.classId,
+      request.body.member_id,
+    );
+    return reply.code(200).send({ checkin: result });
   });
 
   // ── Sessions ──────────────────────────────────────────────────────────

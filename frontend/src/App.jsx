@@ -9,6 +9,7 @@ import Members from './pages/Members'
 import Checkins from './pages/Checkins'
 import Leads from './pages/Leads'
 import Prospects from './pages/Prospects'
+import Settings from './pages/Settings'
 
 const queryClient = new QueryClient()
 
@@ -38,6 +39,7 @@ export default function App() {
               <Route path="/checkins" element={<Checkins />} />
               <Route path="/leads" element={<Leads />} />
               <Route path="/prospects" element={<Prospects />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

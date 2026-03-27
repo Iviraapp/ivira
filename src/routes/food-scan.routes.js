@@ -137,7 +137,84 @@ function parseAIResponse(text) {
 }
 
 export default async function foodScanRoutes(fastify) {
-  const authHooks = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] };
+  const authHooks = { preHandler: [fastify.verifyToken] };
+
+  // GET /gyms/:gymId/members/:memberId/food/barcode/:barcode — Look up food by barcode
+  fastify.get('/gyms/:gymId/members/:memberId/food/barcode/:barcode', authHooks, async (request, reply) => {
+    const { barcode } = request.params;
+
+    try {
+      // Open Food Facts API — free, no key needed
+      const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+      if (!response.ok) {
+        return reply.code(404).send({ error: 'Product not found' });
+      }
+
+      const data = await response.json();
+      if (data.status !== 1 || !data.product) {
+        return reply.code(404).send({ error: 'Product not found in database' });
+      }
+
+      const p = data.product;
+      const nutriments = p.nutriments || {};
+      const serving = p.serving_size || p.quantity || '100g';
+
+      return {
+        found: true,
+        source: 'open_food_facts',
+        product: {
+          name: p.product_name || p.generic_name || 'Unknown Product',
+          brand: p.brands || '',
+          barcode,
+          serving,
+          calories: Math.round(nutriments['energy-kcal_serving'] || nutriments['energy-kcal_100g'] || 0),
+          protein: +(nutriments.proteins_serving || nutriments.proteins_100g || 0).toFixed(1),
+          carbs: +(nutriments.carbohydrates_serving || nutriments.carbohydrates_100g || 0).toFixed(1),
+          fat: +(nutriments.fat_serving || nutriments.fat_100g || 0).toFixed(1),
+          fiber: +(nutriments.fiber_serving || nutriments.fiber_100g || 0).toFixed(1),
+          sodium: +(nutriments.sodium_serving || nutriments.sodium_100g || 0).toFixed(3),
+          image_url: p.image_front_url || p.image_url || null,
+          confidence: 0.95,
+        },
+      };
+    } catch (err) {
+      request.log.error(err, 'Barcode lookup failed');
+      return reply.code(502).send({ error: 'Barcode lookup service unavailable' });
+    }
+  });
+
+  // GET /gyms/:gymId/members/:memberId/food/search?q=chicken — Search food database
+  fastify.get('/gyms/:gymId/members/:memberId/food/search', authHooks, async (request, reply) => {
+    const { q } = request.query;
+    if (!q || q.length < 2) {
+      return reply.code(400).send({ error: 'Search query must be at least 2 characters' });
+    }
+
+    try {
+      const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10`);
+      const data = await response.json();
+
+      const products = (data.products || []).map(p => {
+        const n = p.nutriments || {};
+        return {
+          name: p.product_name || p.generic_name || 'Unknown',
+          brand: p.brands || '',
+          barcode: p.code || '',
+          serving: p.serving_size || '100g',
+          calories: Math.round(n['energy-kcal_serving'] || n['energy-kcal_100g'] || 0),
+          protein: +(n.proteins_serving || n.proteins_100g || 0).toFixed(1),
+          carbs: +(n.carbohydrates_serving || n.carbohydrates_100g || 0).toFixed(1),
+          fat: +(n.fat_serving || n.fat_100g || 0).toFixed(1),
+          image_url: p.image_front_small_url || null,
+        };
+      }).filter(p => p.name !== 'Unknown' && p.calories > 0);
+
+      return { results: products, total: products.length };
+    } catch (err) {
+      request.log.error(err, 'Food search failed');
+      return reply.code(502).send({ error: 'Food search service unavailable' });
+    }
+  });
 
   // POST /gyms/:gymId/members/:memberId/food/scan — AI-powered food analysis
   fastify.post('/gyms/:gymId/members/:memberId/food/scan', authHooks, async (request, reply) => {

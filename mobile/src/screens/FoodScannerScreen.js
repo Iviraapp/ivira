@@ -24,6 +24,9 @@ import api from '../lib/api'
 import { formatDate } from '../lib/utils'
 import Haptics from '../lib/haptics'
 
+let ImagePicker = null
+try { ImagePicker = require('expo-image-picker') } catch {}
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack']
@@ -36,7 +39,10 @@ export default function FoodScannerScreen({ navigation, route }) {
   const { member, gymId } = useAuth()
 
   // State
-  const [activeTab, setActiveTab] = useState('scan') // 'scan' | 'history'
+  const [activeTab, setActiveTab] = useState('scan') // 'scan' | 'search' | 'history'
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searching, setSearching] = useState(false)
   const [imageUri, setImageUri] = useState(null)
   const [imageBase64, setImageBase64] = useState(null)
   const [scanning, setScanning] = useState(false)
@@ -112,8 +118,11 @@ export default function FoodScannerScreen({ navigation, route }) {
 
   // Pick image from camera
   const pickFromCamera = useCallback(async () => {
+    if (!ImagePicker) {
+      Alert.alert('Not Available', 'Camera is not available on this device.')
+      return
+    }
     try {
-      const ImagePicker = await import('expo-image-picker')
       const { status } = await ImagePicker.requestCameraPermissionsAsync()
       if (status !== 'granted') {
         Alert.alert('Permission Required', 'Camera access is needed to scan food photos.')
@@ -134,15 +143,19 @@ export default function FoodScannerScreen({ navigation, route }) {
         setSelectedItems({})
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       }
-    } catch {
+    } catch (err) {
+      console.log('[FoodScanner] Camera error:', err)
       Alert.alert('Error', 'Could not open camera. Please try again.')
     }
   }, [])
 
   // Pick image from gallery
   const pickFromGallery = useCallback(async () => {
+    if (!ImagePicker) {
+      Alert.alert('Not Available', 'Gallery is not available on this device.')
+      return
+    }
     try {
-      const ImagePicker = await import('expo-image-picker')
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
       if (status !== 'granted') {
         Alert.alert('Permission Required', 'Gallery access is needed to select food photos.')
@@ -163,10 +176,51 @@ export default function FoodScannerScreen({ navigation, route }) {
         setSelectedItems({})
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       }
-    } catch {
+    } catch (err) {
+      console.log('[FoodScanner] Gallery error:', err)
       Alert.alert('Error', 'Could not open gallery. Please try again.')
     }
   }, [])
+
+  // Search food database (Open Food Facts via backend)
+  const searchFood = useCallback(async (query) => {
+    if (!query || query.length < 2) return
+    setSearching(true)
+    try {
+      const res = await api.get(`/gyms/${gymId}/members/${member?.id}/food/search`, { params: { q: query } })
+      setSearchResults(res.data?.results || [])
+    } catch {
+      setSearchResults([])
+    } finally {
+      setSearching(false)
+    }
+  }, [gymId, member])
+
+  // Add food from search result to scan results
+  const addFoodFromSearch = useCallback((food) => {
+    const item = {
+      name: food.brand ? `${food.brand} ${food.name}` : food.name,
+      calories: food.calories || 0,
+      protein: food.protein || 0,
+      carbs: food.carbs || 0,
+      fat: food.fat || 0,
+      serving: food.serving || '1 serving',
+      confidence: 0.95,
+      quantity: 1,
+      total_calories: food.calories || 0,
+      total_protein: food.protein || 0,
+      total_carbs: food.carbs || 0,
+      total_fat: food.fat || 0,
+    }
+    setScanResult(prev => {
+      const items = prev?.items ? [...prev.items, item] : [item]
+      return { items }
+    })
+    setActiveTab('scan')
+    setSelectedItems(prev => ({ ...prev, [(prev ? Object.keys(prev).length : 0)]: true }))
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    animateResultsIn()
+  }, [animateResultsIn])
 
   // Analyze the food photo
   const analyzePhoto = useCallback(async () => {
@@ -204,10 +258,46 @@ export default function FoodScannerScreen({ navigation, route }) {
       animateResultsIn()
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-      Alert.alert(
-        'Analysis Failed',
-        err.response?.data?.message || 'Could not analyze the photo. Please try again with a clearer image.'
-      )
+      const serverMsg = err.response?.data?.message || err.response?.data?.error || ''
+      const isConfigError = serverMsg.includes('No vision') || err.response?.status === 502
+
+      if (isConfigError) {
+        // AI not configured — offer manual entry
+        Alert.alert(
+          'AI Scanner Unavailable',
+          'The AI food scanner is being set up. You can add nutrition info manually.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Enter Manually',
+              onPress: () => {
+                setScanResult({
+                  items: [{
+                    name: 'Food Item',
+                    calories: 0,
+                    protein: 0,
+                    carbs: 0,
+                    fat: 0,
+                    confidence: 1,
+                  }],
+                })
+                setSelectedItems({ 0: true })
+                // Open edit modal immediately
+                setTimeout(() => {
+                  setEditingItem(0)
+                  setEditValues({ name: 'Food Item', calories: '0', protein: '0', carbs: '0', fat: '0' })
+                  setEditModal(true)
+                }, 100)
+              },
+            },
+          ]
+        )
+      } else {
+        Alert.alert(
+          'Analysis Failed',
+          'Could not analyze the photo. Please try again with a clearer image.'
+        )
+      }
     } finally {
       setScanning(false)
     }
@@ -369,6 +459,14 @@ export default function FoodScannerScreen({ navigation, route }) {
           <Text style={[styles.tabText, { color: activeTab === 'scan' ? colors.accent : colors.textTer }]}>Scan</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          style={[styles.tab, activeTab === 'search' && { borderBottomColor: colors.accent, borderBottomWidth: 2 }]}
+          onPress={() => { setActiveTab('search'); Haptics.selectionAsync() }}
+          activeOpacity={0.7}
+        >
+          <Feather name="search" size={16} color={activeTab === 'search' ? colors.accent : colors.textTer} />
+          <Text style={[styles.tabText, { color: activeTab === 'search' ? colors.accent : colors.textTer }]}>Search</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'history' && { borderBottomColor: colors.accent, borderBottomWidth: 2 }]}
           onPress={() => { setActiveTab('history'); Haptics.selectionAsync() }}
           activeOpacity={0.7}
@@ -378,7 +476,83 @@ export default function FoodScannerScreen({ navigation, route }) {
         </TouchableOpacity>
       </View>
 
-      {activeTab === 'scan' ? (
+      {activeTab === 'search' ? (
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          {/* Food search */}
+          <View style={[{ padding: SPACING.md, borderRadius: RADIUS.lg, marginBottom: SPACING.md }, card]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Search Food Database</Text>
+            <Text style={{ fontSize: 12, color: colors.textTer, fontFamily: FONT.regular, marginBottom: SPACING.sm }}>
+              Search 2M+ products from Open Food Facts
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={[styles.searchInputRow, { flex: 1, backgroundColor: colors.bgTer, borderColor: colors.border }]}>
+                <Feather name="search" size={16} color={colors.textTer} />
+                <TextInput
+                  style={[styles.searchTextInput, { color: colors.text }]}
+                  placeholder="e.g. Premier Protein, Greek Yogurt..."
+                  placeholderTextColor={colors.textTer}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  onSubmitEditing={() => searchFood(searchQuery)}
+                  returnKeyType="search"
+                />
+              </View>
+              <TouchableOpacity
+                style={[styles.searchBtn, { backgroundColor: COLORS.accent, opacity: searching ? 0.6 : 1 }]}
+                onPress={() => searchFood(searchQuery)}
+                disabled={searching}
+              >
+                {searching ? <ActivityIndicator size="small" color="#FFF" /> : <Feather name="arrow-right" size={18} color="#FFF" />}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Search results */}
+          {searchResults.length > 0 && (
+            <View style={[{ padding: SPACING.md, borderRadius: RADIUS.lg }, card]}>
+              <Text style={{ fontSize: 13, color: colors.textSec, fontFamily: FONT.semibold, marginBottom: SPACING.sm }}>
+                {searchResults.length} results found
+              </Text>
+              {searchResults.map((food, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: idx < searchResults.length - 1 ? 1 : 0, borderColor: colors.border }]}
+                  onPress={() => addFoodFromSearch(food)}
+                  activeOpacity={0.7}
+                >
+                  {food.image_url ? (
+                    <Image source={{ uri: food.image_url }} style={{ width: 44, height: 44, borderRadius: 8, marginRight: 12 }} />
+                  ) : (
+                    <View style={{ width: 44, height: 44, borderRadius: 8, marginRight: 12, backgroundColor: colors.bgTer, alignItems: 'center', justifyContent: 'center' }}>
+                      <Feather name="box" size={18} color={colors.textTer} />
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text, fontFamily: FONT.semibold }} numberOfLines={1}>
+                      {food.brand ? `${food.brand} ` : ''}{food.name}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.regular, marginTop: 2 }}>
+                      {food.calories} cal · P {food.protein}g · C {food.carbs}g · F {food.fat}g · {food.serving}
+                    </Text>
+                  </View>
+                  <View style={{ backgroundColor: COLORS.accent + '20', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                    <Feather name="plus" size={14} color={COLORS.accent} />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {searchResults.length === 0 && !searching && searchQuery.length >= 2 && (
+            <View style={{ alignItems: 'center', paddingVertical: SPACING.xl }}>
+              <Feather name="search" size={40} color={colors.textTer} />
+              <Text style={{ color: colors.textTer, fontSize: 14, fontFamily: FONT.medium, marginTop: SPACING.sm }}>
+                No results found for "{searchQuery}"
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      ) : activeTab === 'scan' ? (
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -964,6 +1138,29 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontFamily: FONT.semibold,
+  },
+
+  // Search
+  searchInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 44,
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.md,
+    borderWidth: 1,
+  },
+  searchTextInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: FONT.regular,
+  },
+  searchBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   // Scroll

@@ -266,6 +266,37 @@ export async function verifyB2CLoginOTP(email, code) {
   return { token, member, gymId };
 }
 
+export async function refreshToken(token) {
+  try {
+    // Try normal verify first
+    let decoded = jwt.verify(token, config.jwt.secret);
+    // Token still valid — issue fresh one
+    const newToken = jwt.sign(
+      { ...decoded, iat: undefined, exp: undefined },
+      config.jwt.secret,
+      { expiresIn: '7d' }
+    );
+    return { token: newToken };
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      // Allow refresh within 30 days of expiry
+      const decoded = jwt.decode(token);
+      if (!decoded) throw new UnauthorizedError('Invalid token');
+      const expiredAt = new Date(decoded.exp * 1000);
+      const daysSinceExpiry = (Date.now() - expiredAt.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSinceExpiry > 30) throw new UnauthorizedError('Token too old to refresh');
+
+      const newToken = jwt.sign(
+        { gymId: decoded.gymId, memberId: decoded.memberId, email: decoded.email, role: decoded.role },
+        config.jwt.secret,
+        { expiresIn: '7d' }
+      );
+      return { token: newToken };
+    }
+    throw new UnauthorizedError('Invalid token');
+  }
+}
+
 export async function updateGym(gymId, updates) {
   const allowed = ['gym_name', 'address', 'latitude', 'longitude', 'logo_url', 'city', 'preferred_language', 'onboarding_step'];
   const filtered = Object.fromEntries(

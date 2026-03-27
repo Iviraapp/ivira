@@ -33,7 +33,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 // Default nutrition values when API data is unavailable
 const DEFAULT_DAILY_NUTRITION = { items: [], totals: { calories: 0, protein: 0, carbs: 0, fats: 0 } }
-const DEFAULT_NUTRITION_GOAL = { calories: 2000, protein: 120, carbs: 250, fats: 65 }
+const DEFAULT_NUTRITION_GOAL = { calorie_goal: 2000, protein_goal: 120, carb_goal: 250, fat_goal: 65 }
 import {
   requestHealthPermissions,
   requestExtendedPermissions,
@@ -43,16 +43,13 @@ import {
   getRestingHeartRate,
   getHRV,
   isWearableConnected,
-  DEMO_STEPS,
-  DEMO_HEART_RATE,
-  DEMO_RESTING_HR,
-  DEMO_HRV,
 } from '../lib/healthKit'
+import { useHealth } from '../context/HealthContext'
 import NutritionGoalSetup from '../components/NutritionGoalSetup'
 import WaterTracker from '../components/WaterTracker'
 import AdBanner from '../components/AdBanner'
 import { getItem, setItem } from '../lib/storage'
-import { getWeeklyInsight } from '../lib/aiCoach'
+import { getWeeklyInsight, getProgressiveInsights } from '../lib/aiCoach'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const RING_SIZE = 140
@@ -71,7 +68,7 @@ const MEAL_LABELS = {
   dinner: 'Dinner',
   snack: 'Snack',
 }
-const MOCK_FOODS = [
+const COMMON_FOODS = [
   { name: '1 Scoop Whey Protein', calories: 120, protein: 24, carbs: 3, fats: 1 },
   { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fats: 3.6 },
   { name: 'Brown Rice (1 cup)', calories: 216, protein: 5, carbs: 45, fats: 1.8 },
@@ -85,6 +82,15 @@ const MOCK_FOODS = [
 export default function HealthScreen({ navigation }) {
   const { member, gymId } = useAuth()
   const { colors, card } = useTheme()
+
+  // Steps + HR from shared HealthContext (real-time sync across all screens)
+  const {
+    steps: contextSteps, stepSource: contextStepSource, stepGoal: contextStepGoal,
+    stepMode: contextStepMode, setManualSteps: contextSetManualSteps,
+    setStepMode: contextSetStepMode, setStepGoal: contextSetStepGoal,
+    heartRate: contextHR, restingHR: contextRHR, hrv: contextHRV,
+    wearableConnected: contextWearable, fetchSteps: contextFetchSteps,
+  } = useHealth()
 
   const [steps, setSteps] = useState(0)
   const [syncing, setSyncing] = useState(false)
@@ -174,10 +180,36 @@ export default function HealthScreen({ navigation }) {
     }
   }, [animSteps, goalCelebrated])
 
-  // Fetch weekly AI insight
+  // Fetch progressive AI insights — adapts to user's data maturity
   useEffect(() => {
     let cancelled = false
-    getWeeklyInsight().then(data => {
+    const profileData = member ? {
+      name: member.name,
+      weight: member.weight,
+      height: member.height,
+      goal: member.fitness_goal || member.goal,
+      interests: member.interests,
+    } : null
+
+    // Calculate data age from member's created_at or joined date
+    let dataAge = 0
+    if (member?.created_at || member?.joined_at) {
+      const joinDate = new Date(member.created_at || member.joined_at)
+      const now = new Date()
+      dataAge = Math.floor((now - joinDate) / (1000 * 60 * 60 * 24))
+    }
+
+    // Gather today's data from screen state
+    const dailyData = {
+      steps: steps || 0,
+      calories: daily?.totals?.calories || 0,
+      protein: daily?.totals?.protein || 0,
+      sleep: 0, // Will be populated if sleep data is available
+      workouts: 0,
+      stepGoal: stepGoal || DEFAULT_STEP_GOAL,
+    }
+
+    getProgressiveInsights({ profile: profileData, dailyData, weeklyData: null, dataAge }).then(data => {
       if (!cancelled) {
         setWeeklyInsight(data)
         Animated.timing(insightFadeAnim, {
@@ -188,7 +220,7 @@ export default function HealthScreen({ navigation }) {
       }
     }).catch(() => {})
     return () => { cancelled = true }
-  }, [insightFadeAnim])
+  }, [insightFadeAnim, member, steps, daily, stepGoal])
 
   // Check if user has a custom nutrition goal
   useEffect(() => {
@@ -210,31 +242,13 @@ export default function HealthScreen({ navigation }) {
     }).catch(() => {})
   }, [])
 
-  // Fetch heart rate data from wearable
+  // Heart rate data — bridged from HealthContext (avoids duplicate API calls)
   useEffect(() => {
-    let cancelled = false
-    const fetchHeartData = async () => {
-      try {
-        await requestExtendedPermissions()
-        const [hr, rhr, hrvData, wearable] = await Promise.all([
-          getLatestHeartRate(),
-          getRestingHeartRate(),
-          getHRV(),
-          isWearableConnected(),
-        ])
-        if (!cancelled) {
-          setHeartRate(hr)
-          setRestingHR(rhr)
-          setHrv(hrvData)
-          setHasWearable(wearable)
-        }
-      } catch {}
-    }
-    fetchHeartData()
-    // Refresh every 60s
-    const interval = setInterval(fetchHeartData, 60000)
-    return () => { cancelled = true; clearInterval(interval) }
-  }, [])
+    if (contextHR) setHeartRate(contextHR)
+    if (contextRHR) setRestingHR(contextRHR)
+    if (contextHRV) setHrv(contextHRV)
+    setHasWearable(contextWearable)
+  }, [contextHR, contextRHR, contextHRV, contextWearable])
 
   // Load saved step mode + manual steps from storage
   useEffect(() => {
@@ -290,14 +304,16 @@ export default function HealthScreen({ navigation }) {
       try {
         const granted = await requestHealthPermissions()
         if (granted) {
-          const todaySteps = await getTodaySteps()
-          setSteps(todaySteps)
+          const result = await getTodaySteps()
+          const stepCount = typeof result === 'object' ? result.steps : result
+          const source = typeof result === 'object' ? result.source : null
+          setSteps(stepCount)
           setLastSynced(new Date())
-          if (todaySteps !== DEMO_STEPS) {
+          if (source) {
             setStepSource('health')
           }
           if (gymId && member?.id) {
-            syncStepsToBackend(gymId, member.id, todaySteps)
+            syncStepsToBackend(gymId, member.id, stepCount)
           }
         }
       } catch {}
@@ -338,83 +354,16 @@ export default function HealthScreen({ navigation }) {
     return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
   }
 
-  // Step tracking — Health APIs (primary) → Pedometer (fallback) → Demo
+  // Step tracking — bridged from shared HealthContext for real-time sync
+  // HealthContext handles all native health API polling, pedometer fallback, and backend sync.
+  // Local `steps` state is kept in sync with context for backward compatibility.
   useEffect(() => {
-    let cancelled = false
-
-    const startStepTracking = async () => {
-      // 1. Try native health APIs first
-      try {
-        const granted = await requestHealthPermissions()
-        if (granted && !cancelled) {
-          const steps = await getTodaySteps()
-          if (steps !== DEMO_STEPS) {
-            setSteps(steps)
-            setStepSource('health')
-            setLastSynced(new Date())
-            // Sync to backend (fire-and-forget)
-            if (gymId && member?.id) {
-              syncStepsToBackend(gymId, member.id, steps)
-            }
-            // Re-fetch from health platform every 60s
-            healthSyncRef.current = setInterval(async () => {
-              if (cancelled) return
-              try {
-                const updated = await getTodaySteps()
-                if (updated !== DEMO_STEPS) {
-                  setSteps(updated)
-                  setLastSynced(new Date())
-                  if (gymId && member?.id) {
-                    syncStepsToBackend(gymId, member.id, updated)
-                  }
-                }
-              } catch {}
-            }, 60_000)
-            return // Health API working — skip pedometer
-          }
-        }
-      } catch {}
-
-      // 2. Fallback: device pedometer (expo-sensors)
-      if (Pedometer && !cancelled) {
-        try {
-          const available = await Pedometer.isAvailableAsync()
-          if (available) {
-            setStepSource('pedometer')
-            const start = new Date()
-            start.setHours(0, 0, 0, 0)
-            try {
-              const result = await Pedometer.getStepCountAsync(start, new Date())
-              if (result?.steps) {
-                setSteps(result.steps)
-                setLastSynced(new Date())
-              }
-            } catch {}
-            // Live delta updates
-            pedometerSubRef.current = Pedometer.watchStepCount((result) => {
-              setSteps((prev) => prev + (result?.steps || 0))
-              setLastSynced(new Date())
-            })
-            return
-          }
-        } catch {}
-      }
-
-      // 3. No health data available — show demo
-      if (!cancelled) {
-        setSteps(DEMO_STEPS)
-        setStepSource('demo')
-        setLastSynced(new Date())
-      }
+    if (stepMode === 'auto' && contextSteps > 0) {
+      setSteps(contextSteps)
+      setStepSource(contextStepSource)
+      setLastSynced(new Date())
     }
-
-    startStepTracking()
-    return () => {
-      cancelled = true
-      if (pedometerSubRef.current) { pedometerSubRef.current.remove(); pedometerSubRef.current = null }
-      if (healthSyncRef.current) { clearInterval(healthSyncRef.current); healthSyncRef.current = null }
-    }
-  }, [gymId, member?.id])
+  }, [contextSteps, contextStepSource, stepMode])
 
   // Load data on mount
   useEffect(() => {
@@ -458,14 +407,16 @@ export default function HealthScreen({ navigation }) {
     try {
       const granted = await requestHealthPermissions()
       if (granted) {
-        const todaySteps = await getTodaySteps()
-        setSteps(todaySteps)
+        const result = await getTodaySteps()
+        const stepCount = typeof result === 'object' ? result.steps : result
+        const source = typeof result === 'object' ? result.source : null
+        setSteps(stepCount)
         setLastSynced(new Date())
-        if (todaySteps !== DEMO_STEPS) {
+        if (source) {
           setStepSource('health')
         }
         if (gymId && member?.id) {
-          syncStepsToBackend(gymId, member.id, todaySteps)
+          syncStepsToBackend(gymId, member.id, stepCount)
         }
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
       }
@@ -506,7 +457,13 @@ export default function HealthScreen({ navigation }) {
   }
 
   const totals = daily?.totals || { calories: 0, protein: 0, carbs: 0, fats: 0 }
-  const goals = goal || { calorie_goal: 2000, protein_goal: 120, carb_goal: 250, fat_goal: 65 }
+  const rawGoal = goal || DEFAULT_NUTRITION_GOAL
+  const goals = {
+    calorie_goal: rawGoal.calorie_goal ?? rawGoal.calories ?? 2000,
+    protein_goal: rawGoal.protein_goal ?? rawGoal.protein ?? 120,
+    carb_goal: rawGoal.carb_goal ?? rawGoal.carbs ?? 250,
+    fat_goal: rawGoal.fat_goal ?? rawGoal.fats ?? 65,
+  }
   const caloriesRemaining = Math.max(goals.calorie_goal - totals.calories, 0)
   const effectiveSteps = stepMode === 'manual' ? manualSteps : steps
   const stepProgress = Math.min(effectiveSteps / stepGoal, 1)
@@ -570,7 +527,7 @@ export default function HealthScreen({ navigation }) {
                 <Feather name="zap" size={16} color={colors.accent} />
                 <Text style={[styles.aiInsightTitle, { color: colors.text }]}>AI Insights</Text>
               </View>
-              <Text style={[styles.aiInsightSubtitle, { color: colors.textSec }]}>This Week</Text>
+              <Text style={[styles.aiInsightSubtitle, { color: colors.textSec }]}>{weeklyInsight?.weekLabel || 'This Week'}</Text>
             </View>
             <View style={styles.aiInsightList}>
               {weeklyInsight.items.map((item, i) => (
@@ -987,7 +944,7 @@ export default function HealthScreen({ navigation }) {
                 />
               </View>
               <FlatList
-                data={MOCK_FOODS.filter((f) =>
+                data={COMMON_FOODS.filter((f) =>
                   f.name.toLowerCase().includes(foodSearch.toLowerCase())
                 )}
                 keyExtractor={(item) => item.name}
@@ -1225,6 +1182,7 @@ function StepRing({ progress, steps, stepGoal, isGoalMet, pulseAnim, glowAnim, c
           ]}
         />
       )}
+      {Svg && Circle ? (
       <Svg width={RING_SIZE} height={RING_SIZE}>
         {/* Background track */}
         <Circle
@@ -1249,6 +1207,9 @@ function StepRing({ progress, steps, stepGoal, isGoalMet, pulseAnim, glowAnim, c
           transform={`rotate(-90 ${center} ${center})`}
         />
       </Svg>
+      ) : (
+      <View style={{ width: RING_SIZE, height: RING_SIZE, borderRadius: RING_SIZE / 2, borderWidth: strokeWidth, borderColor: ringColor, justifyContent: 'center', alignItems: 'center' }} />
+      )}
       {/* Center content */}
       <View style={styles.ringCenter}>
         <Text style={[styles.stepCount, { color: isGoalMet ? COLORS.green : themeColors.text }]}>
@@ -1279,6 +1240,7 @@ function CalorieRing({ caloriesRemaining, calorieGoal }) {
 
   return (
     <View style={styles.ringContainer}>
+      {Svg && Circle ? (
       <Svg width={RING_SIZE} height={RING_SIZE}>
         <Circle
           cx={center}
@@ -1301,6 +1263,9 @@ function CalorieRing({ caloriesRemaining, calorieGoal }) {
           transform={`rotate(-90 ${center} ${center})`}
         />
       </Svg>
+      ) : (
+      <View style={{ width: RING_SIZE, height: RING_SIZE, borderRadius: RING_SIZE / 2, borderWidth: strokeWidth, borderColor: COLORS.accent, justifyContent: 'center', alignItems: 'center' }} />
+      )}
       <View style={styles.ringCenter}>
         <Text style={[styles.calorieRingCount, { color: colors.text }]}>{caloriesRemaining}</Text>
         <Text style={[styles.calorieRingLabel, { color: colors.textSec }]}>kcal left</Text>

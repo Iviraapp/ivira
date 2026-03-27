@@ -4,7 +4,7 @@ import { Platform } from 'react-native'
 import Constants from 'expo-constants'
 import api from './api'
 
-export const DEMO_STEPS = 6847
+export const DEMO_STEPS = 0 // No fake step data — show empty state
 const isExpoGo = Constants.appOwnership === 'expo'
 
 // Safely try to load optional native modules at startup.
@@ -134,7 +134,7 @@ export async function isHealthConnectAvailable() {
  */
 export async function getTodaySteps() {
   if (isExpoGo || Platform.OS === 'web') {
-    return { steps: DEMO_STEPS, source: null }
+    return { steps: 0, source: null }
   }
 
   const now = new Date()
@@ -206,13 +206,7 @@ export async function syncStepsToBackend(gymId, memberId, steps) {
 
 // ── Sleep Tracking ──────────────────────────────────────────────
 
-export const DEMO_SLEEP = {
-  bedtime: (() => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(23, 15, 0, 0); return d.toISOString() })(),
-  wakeTime: (() => { const d = new Date(); d.setHours(6, 42, 0, 0); return d.toISOString() })(),
-  durationMinutes: 447,
-  quality: 4,
-  source: null,
-}
+export const DEMO_SLEEP = null // No fake sleep data
 
 /**
  * Request permission to read sleep data.
@@ -264,7 +258,7 @@ export async function requestSleepPermissions() {
  */
 export async function getLastNightSleep() {
   if (isExpoGo || Platform.OS === 'web') {
-    return { ...DEMO_SLEEP }
+    return null
   }
 
   const now = new Date()
@@ -391,9 +385,9 @@ export async function syncSleepToBackend(gymId, memberId, sleepData) {
 
 // ── Heart Rate / HRV / Resting HR ─────────────────────────────
 
-export const DEMO_HEART_RATE = { bpm: 72, timestamp: new Date().toISOString(), source: null }
-export const DEMO_RESTING_HR = { bpm: 62, source: null }
-export const DEMO_HRV = { ms: 45, source: null }
+export const DEMO_HEART_RATE = null // No fake heart rate data
+export const DEMO_RESTING_HR = null // No fake resting HR data
+export const DEMO_HRV = null // No fake HRV data
 
 /**
  * Request extended health permissions including heart rate data.
@@ -451,7 +445,7 @@ export async function requestExtendedPermissions() {
  */
 export async function getLatestHeartRate() {
   if (isExpoGo || Platform.OS === 'web') {
-    return { ...DEMO_HEART_RATE }
+    return null
   }
 
   const now = new Date()
@@ -513,7 +507,7 @@ export async function getLatestHeartRate() {
  */
 export async function getRestingHeartRate() {
   if (isExpoGo || Platform.OS === 'web') {
-    return { ...DEMO_RESTING_HR }
+    return null
   }
 
   const now = new Date()
@@ -569,7 +563,7 @@ export async function getRestingHeartRate() {
  */
 export async function getHRV() {
   if (isExpoGo || Platform.OS === 'web') {
-    return { ...DEMO_HRV }
+    return null
   }
 
   const now = new Date()
@@ -624,16 +618,7 @@ export async function getHRV() {
  */
 export async function getHeartRateSamples(hours = 24) {
   if (isExpoGo || Platform.OS === 'web') {
-    // Generate demo data
-    const samples = []
-    const now = Date.now()
-    for (let i = 0; i < 24; i++) {
-      samples.push({
-        bpm: 60 + Math.floor(Math.random() * 30),
-        timestamp: new Date(now - (23 - i) * 3600000).toISOString(),
-      })
-    }
-    return samples
+    return []
   }
 
   const now = new Date()

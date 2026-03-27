@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
+import db from '../config/database.js';
 import * as memberService from '../services/member.service.js';
 
 const addMemberSchema = {
@@ -113,5 +114,80 @@ export default async function memberRoutes(fastify) {
       request.body
     );
     return { member };
+  });
+
+  // GET /gyms/:gymId/members/:memberId/export — GDPR data export
+  fastify.get('/gyms/:gymId/members/:memberId/export', authHooks, async (request, reply) => {
+    const { gymId, memberId } = request.params;
+
+    const [member, memberships, checkins, payments, workouts, nutrition] = await Promise.all([
+      db('members').where({ id: memberId, gym_id: gymId }).first(),
+      db('memberships').where({ member_id: memberId, gym_id: gymId }),
+      db('checkins').where({ member_id: memberId, gym_id: gymId }).orderBy('checked_in_at', 'desc').limit(100),
+      db('payments').where({ member_id: memberId, gym_id: gymId }).orderBy('created_at', 'desc').limit(100),
+      db('workout_sessions').where({ member_id: memberId, gym_id: gymId }).orderBy('created_at', 'desc').limit(50),
+      db('nutrition_logs').where({ member_id: memberId, gym_id: gymId }).orderBy('date', 'desc').limit(100),
+    ]);
+
+    if (!member) return reply.code(404).send({ error: 'Member not found' });
+
+    return {
+      exported_at: new Date().toISOString(),
+      member: { name: member.name, phone: member.phone, email: member.email, status: member.status, created_at: member.created_at },
+      memberships,
+      checkins,
+      payments: payments.map(p => ({ ...p, amount: p.amount_paise / 100 })),
+      workouts,
+      nutrition,
+    };
+  });
+
+  // POST /gyms/:gymId/members/:memberId/memberships/:membershipId/pause — Pause membership
+  fastify.post('/gyms/:gymId/members/:memberId/memberships/:membershipId/pause', authHooks, async (request, reply) => {
+    const { gymId, memberId, membershipId } = request.params;
+    const { reason } = request.body || {};
+
+    const membership = await db('memberships').where({ id: membershipId, member_id: memberId, gym_id: gymId }).first();
+    if (!membership) return reply.code(404).send({ error: 'Membership not found' });
+    if (membership.status !== 'active') return reply.code(409).send({ error: 'Only active memberships can be paused' });
+
+    const [updated] = await db('memberships')
+      .where({ id: membershipId })
+      .update({
+        status: 'paused',
+        paused_at: new Date(),
+        pause_reason: reason || null,
+        updated_at: new Date(),
+      })
+      .returning('*');
+
+    return { membership: updated, message: 'Membership paused' };
+  });
+
+  // POST /gyms/:gymId/members/:memberId/memberships/:membershipId/resume — Resume membership
+  fastify.post('/gyms/:gymId/members/:memberId/memberships/:membershipId/resume', authHooks, async (request, reply) => {
+    const { gymId, memberId, membershipId } = request.params;
+
+    const membership = await db('memberships').where({ id: membershipId, member_id: memberId, gym_id: gymId }).first();
+    if (!membership) return reply.code(404).send({ error: 'Membership not found' });
+    if (membership.status !== 'paused') return reply.code(409).send({ error: 'Only paused memberships can be resumed' });
+
+    // Extend end_date by the number of days paused
+    const pausedDays = Math.ceil((Date.now() - new Date(membership.paused_at).getTime()) / (1000 * 60 * 60 * 24));
+    const newEndDate = new Date(membership.end_date);
+    newEndDate.setDate(newEndDate.getDate() + pausedDays);
+
+    const [updated] = await db('memberships')
+      .where({ id: membershipId })
+      .update({
+        status: 'active',
+        end_date: newEndDate.toISOString().split('T')[0],
+        paused_at: null,
+        pause_reason: null,
+        updated_at: new Date(),
+      })
+      .returning('*');
+
+    return { membership: updated, message: `Membership resumed. Extended by ${pausedDays} days.` };
   });
 }

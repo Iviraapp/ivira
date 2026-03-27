@@ -64,6 +64,7 @@ import FastingTimer from '../components/FastingTimer'
 import AdBanner, { showInterstitialAd } from '../components/AdBanner'
 import { canAddToWallet, addMembershipToWallet } from '../lib/wallet'
 import { requestHealthPermissions, requestSleepPermissions, getTodaySteps, getLastNightSleep, syncStepsToBackend, syncSleepToBackend, isHealthConnectAvailable } from '../lib/healthKit'
+import { useHealth } from '../context/HealthContext'
 import { requestAllPermissions } from '../lib/permissions'
 
 import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion } from '../lib/aiCoach'
@@ -131,17 +132,13 @@ export default function HomeScreen({ navigation, route }) {
   const [nutritionTotals, setNutritionTotals] = useState({ calories: 0, protein: 0, carbs: 0, fats: 0 })
   const [nutritionGoal, setNutritionGoal] = useState({ calories: 2000, protein: 120, carbs: 250, fats: 65 })
 
-  // Step counter state
-  const [stepCount, setStepCount] = useState(0)
-  const [stepSource, setStepSource] = useState(null) // 'health', 'pedometer', 'unavailable', or null
-  const lastMilestoneRef = useRef(0)
+  // Health data from shared context (real-time sync across all screens)
+  const { steps: stepCount, stepSource, activeMinutes, sleepData, sleepSource, fetchSleep } = useHealth()
   const [activeSeconds, setActiveSeconds] = useState(0)
-  const activeTimerRef = useRef(null)
+  const lastMilestoneRef = useRef(0)
   const healthSyncRef = useRef(null)
 
-  // Sleep tracking state
-  const [sleepData, setSleepData] = useState(null)
-  const [sleepSource, setSleepSource] = useState(null)
+  // Sleep modal state
   const [sleepLogModalVisible, setSleepLogModalVisible] = useState(false)
   const [manualSleepForm, setManualSleepForm] = useState({ bedHour: '23', bedMin: '00', wakeHour: '06', wakeMin: '30', quality: 4 })
 
@@ -228,154 +225,25 @@ export default function HomeScreen({ navigation, route }) {
     canAddToWallet().then(setWalletAvailable).catch(() => {})
   }, [])
 
-  // Step tracking — Health Connect (primary) → Pedometer (fallback) → Demo
+  // Step tracking is now handled by HealthContext (shared across all screens)
+  // The old per-screen polling has been removed to prevent duplicate fetches
+  // and ensure step count is always in sync.
+
+  // Legacy cleanup (remove old step tracking refs)
   useEffect(() => {
-    let pedometerSub = null
-    let cancelled = false
-
-    const startTracking = async () => {
-      // 1. Try Google Health Connect first (Samsung has it built-in on Android 14+)
-      try {
-        const granted = await requestHealthPermissions()
-        if (granted && !cancelled) {
-          const result = await getTodaySteps()
-          if (result.source) {
-            // Real health data from native API
-            setStepCount(result.steps)
-            setStepSource('health')
-            lastMilestoneRef.current = Math.floor(result.steps / 1000)
-
-            // Sync to backend
-            if (gymId && member?.id) {
-              syncStepsToBackend(gymId, member.id, result.steps)
-            }
-
-            // Re-fetch from health platform every 60s
-            healthSyncRef.current = setInterval(async () => {
-              if (cancelled) return
-              try {
-                const updated = await getTodaySteps()
-                if (updated.source) {
-                  setStepCount((prev) => {
-                    const newMilestone = Math.floor(updated.steps / 1000)
-                    if (newMilestone > lastMilestoneRef.current) {
-                      lastMilestoneRef.current = newMilestone
-                      Haptics.tick()
-                    }
-                    return updated.steps
-                  })
-                  if (gymId && member?.id) {
-                    syncStepsToBackend(gymId, member.id, updated.steps)
-                  }
-                }
-              } catch {}
-            }, 60_000)
-            return // Health Connect working — skip pedometer
-          }
-        }
-      } catch {}
-
-      // 2. Fallback: device pedometer (expo-sensors)
-      // Request ACTIVITY_RECOGNITION permission on Android for pedometer access
-      if (Pedometer && !cancelled) {
-        try {
-          if (Platform.OS === 'android') {
-            try {
-              const { PermissionsAndroid } = require('react-native')
-              await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION,
-                {
-                  title: 'Step Counter',
-                  message: 'I V I R A needs access to your step counter to track daily movement.',
-                  buttonPositive: 'Allow',
-                },
-              )
-            } catch {}
-          }
-          const available = await Pedometer.isAvailableAsync()
-          if (available) {
-            setStepSource('pedometer')
-            const start = new Date()
-            start.setHours(0, 0, 0, 0)
-            try {
-              const result = await Pedometer.getStepCountAsync(start, new Date())
-              if (result?.steps) {
-                setStepCount(result.steps)
-                lastMilestoneRef.current = Math.floor(result.steps / 1000)
-              }
-            } catch {}
-            // Live delta updates
-            pedometerSub = Pedometer.watchStepCount((result) => {
-              setStepCount((prev) => {
-                const newCount = prev + (result?.steps || 0)
-                const newMilestone = Math.floor(newCount / 1000)
-                if (newMilestone > lastMilestoneRef.current) {
-                  lastMilestoneRef.current = newMilestone
-                  Haptics.tick()
-                }
-                return newCount
-              })
-            })
-            return
-          }
-        } catch {}
-      }
-
-      // 3. No health data available — show unavailable with setup hint
-      if (!cancelled) {
-        setStepCount(0)
-        setStepSource('unavailable')
-        lastMilestoneRef.current = 0
-      }
-    }
-
-    startTracking()
+    // No-op — step tracking moved to HealthContext
     return () => {
-      cancelled = true
-      if (pedometerSub) pedometerSub.remove()
       if (healthSyncRef.current) clearInterval(healthSyncRef.current)
     }
-  }, [gymId, member?.id])
+  }, [])
 
-  // Active time timer — counts up once steps > 0
+  // Active time — derived from HealthContext activeMinutes
   useEffect(() => {
-    if (stepCount > 0 && !activeTimerRef.current) {
-      activeTimerRef.current = setInterval(() => {
-        setActiveSeconds(s => s + 1)
-      }, 1000)
-    }
-    return () => {
-      if (activeTimerRef.current) {
-        clearInterval(activeTimerRef.current)
-        activeTimerRef.current = null
-      }
-    }
-  }, [stepCount > 0])
+    setActiveSeconds(activeMinutes * 60)
+  }, [activeMinutes])
 
-  // Sleep tracking — fetch last night's data from HealthKit / Health Connect
-  useEffect(() => {
-    let cancelled = false
-    const fetchSleep = async () => {
-      try {
-        await requestSleepPermissions()
-        const data = await getLastNightSleep()
-        if (data && !cancelled) {
-          setSleepData(data)
-          setSleepSource(data.source || 'device')
-          // Sync to backend
-          if (gymId && member?.id) {
-            syncSleepToBackend(gymId, member.id, data)
-          }
-        } else if (!cancelled) {
-          setSleepSource('unavailable')
-        }
-      } catch {
-        if (!cancelled) setSleepSource('unavailable')
-      }
-    }
-    fetchSleep()
-    return () => { cancelled = true }
-  }, [gymId, member?.id])
+  // Sleep data now comes from HealthContext (shared across all screens)
+  // No per-screen fetch needed — HealthContext handles Health Connect + engine fallback
 
   // Fetch AI workout suggestion
   const fetchAiWorkout = useCallback(async () => {
@@ -734,7 +602,7 @@ export default function HomeScreen({ navigation, route }) {
   const handleBookClass = useCallback(async (cls) => {
     if (bookedClasses[cls.id]) return
     setBookingClassId(cls.id)
-    Haptics.tick()
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
 
     try {
       await api.post(`/gyms/${gymId}/bookings`, { service_id: cls.id })
@@ -894,6 +762,7 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.fuelBody}>
             {/* Mini calorie ring */}
             <View style={styles.fuelRingWrap}>
+              {Svg && Circle ? (
               <Svg width={MINI_RING_SIZE} height={MINI_RING_SIZE} viewBox={`0 0 ${MINI_RING_SIZE} ${MINI_RING_SIZE}`}>
                 <Circle
                   cx={MINI_RING_SIZE / 2}
@@ -917,6 +786,9 @@ export default function HomeScreen({ navigation, route }) {
                   origin={`${MINI_RING_SIZE / 2}, ${MINI_RING_SIZE / 2}`}
                 />
               </Svg>
+              ) : (
+                <View style={{ width: MINI_RING_SIZE, height: MINI_RING_SIZE, borderRadius: MINI_RING_SIZE / 2, borderWidth: MINI_STROKE, borderColor: colors.borderStrong }} />
+              )}
               <View style={styles.fuelRingContent}>
                 <Text style={[styles.fuelRingValue, { color: colors.text }]}>{caloriesRemaining}</Text>
                 <Text style={[styles.fuelRingLabel, { color: colors.textTer }]}>kcal left</Text>
@@ -1081,21 +953,18 @@ export default function HomeScreen({ navigation, route }) {
                   <Feather
                     name={stepSource === 'health' ? 'heart' : stepSource === 'pedometer' ? 'smartphone' : 'info'}
                     size={10}
-                    color={stepSource === 'health' || stepSource === 'pedometer' ? COLORS.green : stepSource === 'demo' ? '#F97316' : colors.textTer}
+                    color={stepSource === 'health' || stepSource === 'pedometer' ? COLORS.green : colors.textTer}
                   />
                   <Text style={[
                     styles.stepSourceText,
                     { color: colors.textTer },
                     (stepSource === 'health' || stepSource === 'pedometer') && { color: COLORS.green },
-                    stepSource === 'demo' && { color: '#F97316' },
                   ]}>
                     {stepSource === 'health'
                       ? (Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect')
                       : stepSource === 'pedometer'
                         ? 'Pedometer'
-                        : stepSource === 'demo'
-                          ? 'Sample Data'
-                          : 'Unavailable'}
+                        : 'No source'}
                   </Text>
                 </View>
               )}
@@ -1358,6 +1227,99 @@ export default function HomeScreen({ navigation, route }) {
                 </TouchableOpacity>
               </View>
             )}
+          </View>
+        </MotiView>
+
+        {/* Training Readiness Score */}
+        <MotiView
+          from={{ opacity: 0, translateY: 50 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 290 }}
+        >
+          <View style={[styles.movementCard, card]}>
+            <View style={styles.movementHeader}>
+              <Feather name="zap" size={18} color="#F59E0B" />
+              <Text style={[styles.movementTitle, { color: colors.text }]}>Training Readiness</Text>
+            </View>
+            {(() => {
+              // Calculate readiness score from available health signals
+              let score = 70 // baseline
+              let factors = []
+
+              // Sleep factor (0-30 points)
+              if (sleepData?.durationMinutes) {
+                const sleepScore = Math.min(30, Math.round((sleepData.durationMinutes / 480) * 30))
+                score = score - 30 + sleepScore
+                factors.push({
+                  label: 'Sleep',
+                  value: `${Math.floor(sleepData.durationMinutes / 60)}h ${sleepData.durationMinutes % 60}m`,
+                  good: sleepData.durationMinutes >= 420,
+                  icon: 'moon',
+                })
+              } else {
+                score -= 10
+                factors.push({ label: 'Sleep', value: 'No data', good: false, icon: 'moon' })
+              }
+
+              // Activity factor (0-20 points)
+              const stepPct = Math.min(1, stepCount / 10000)
+              score = score - 10 + Math.round(stepPct * 20)
+              factors.push({
+                label: 'Activity',
+                value: `${stepCount.toLocaleString()} steps`,
+                good: stepCount >= 5000,
+                icon: 'activity',
+              })
+
+              // Recovery (rest day bonus) — if low steps, body is recovering
+              if (stepCount < 2000 && sleepData?.durationMinutes >= 420) {
+                score = Math.min(100, score + 5)
+                factors.push({ label: 'Recovery', value: 'Rest day bonus', good: true, icon: 'heart' })
+              }
+
+              score = Math.max(0, Math.min(100, score))
+              const scoreColor = score >= 80 ? '#22C55E' : score >= 60 ? '#F59E0B' : '#EF4444'
+              const readinessLabel = score >= 80 ? 'Ready to Train' : score >= 60 ? 'Moderate' : 'Rest Recommended'
+
+              return (
+                <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.md }}>
+                  {/* Score display */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm }}>
+                    <Text style={{ fontSize: 36, fontWeight: '900', color: scoreColor, fontFamily: FONT.numExtraBold }}>
+                      {score}
+                    </Text>
+                    <View style={{ marginLeft: 12, flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: scoreColor, fontFamily: FONT.bold }}>
+                        {readinessLabel}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.regular, marginTop: 2 }}>
+                        Based on sleep, activity & recovery
+                      </Text>
+                    </View>
+                    {/* Score bar */}
+                    <View style={{ width: 60, height: 6, borderRadius: 3, backgroundColor: colors.bgTer }}>
+                      <View style={{ width: `${score}%`, height: 6, borderRadius: 3, backgroundColor: scoreColor }} />
+                    </View>
+                  </View>
+
+                  {/* Factor pills */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                    {factors.map((f, i) => (
+                      <View key={i} style={{
+                        flexDirection: 'row', alignItems: 'center', gap: 4,
+                        paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20,
+                        backgroundColor: f.good ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                      }}>
+                        <Feather name={f.icon} size={11} color={f.good ? '#22C55E' : '#EF4444'} />
+                        <Text style={{ fontSize: 11, color: f.good ? '#22C55E' : '#EF4444', fontFamily: FONT.medium }}>
+                          {f.label}: {f.value}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )
+            })()}
           </View>
         </MotiView>
 
@@ -1907,7 +1869,7 @@ export default function HomeScreen({ navigation, route }) {
                 setSleepData(newSleep)
                 setSleepSource('manual')
                 setSleepLogModalVisible(false)
-                Haptics.tick()
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
 
                 // Sync to backend
                 if (gymId && member?.id) {
