@@ -217,15 +217,7 @@ export async function buildApp(opts = {}) {
     return reply.send({ status: 'ok', ...result });
   });
 
-  // Health check endpoint for load balancers
-  fastify.get('/health', async (request, reply) => {
-    try {
-      await db.raw('SELECT 1')
-      return { status: 'ok', timestamp: new Date().toISOString(), uptime: process.uptime() }
-    } catch (err) {
-      return reply.code(503).send({ status: 'error', message: 'Database unreachable' })
-    }
-  })
+  // Health check is registered via healthRoutes plugin (routes/health.js)
 
   // Request correlation IDs
   fastify.addHook('onRequest', async (request) => {
