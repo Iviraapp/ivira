@@ -2,7 +2,7 @@
  * Pods — Accountability engine tables.
  * Tables: goal_types, pods, pod_members, pod_commitments, pod_feed, pod_nudges, pod_health
  */
-exports.up = function (knex) {
+export function up(knex) {
   return knex.schema
     // Goal types (gym, study, meditation, productivity, etc.)
     .createTable('goal_types', (t) => {
@@ -108,7 +108,7 @@ exports.up = function (knex) {
     )
 }
 
-exports.down = function (knex) {
+export function down(knex) {
   return knex.schema
     .dropTableIfExists('pod_health')
     .dropTableIfExists('pod_nudges')
