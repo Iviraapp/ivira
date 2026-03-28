@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 
 const FONT_BRAND = "'Satoshi', 'General Sans', 'Inter', sans-serif"
 const FONT_BODY  = "'General Sans', 'Inter', -apple-system, sans-serif"
-const COBALT     = '#1A3A8F'
+const COBALT     = '#10B981'
 const ACCENT     = '#3B82F6'
 
 function isDesktop() {
@@ -42,10 +42,10 @@ export default function PWAInstallPrompt() {
   // Theme-adaptive colors
   const c = {
     bg:     isDark ? '#0A0A0A' : '#FFFFFF',
-    border: isDark ? 'rgba(26,58,143,0.3)' : 'rgba(26,58,143,0.15)',
+    border: isDark ? 'rgba(16,185,129,0.3)' : 'rgba(16,185,129,0.15)',
     shadow: isDark
-      ? '0 12px 48px rgba(0,0,0,0.7), 0 0 24px rgba(26,58,143,0.1)'
-      : '0 12px 48px rgba(0,0,0,0.12), 0 0 24px rgba(26,58,143,0.06)',
+      ? '0 12px 48px rgba(0,0,0,0.7), 0 0 24px rgba(16,185,129,0.1)'
+      : '0 12px 48px rgba(0,0,0,0.12), 0 0 24px rgba(16,185,129,0.06)',
     text:   isDark ? '#FFFFFF' : '#111111',
     sub:    isDark ? '#777777' : '#888888',
     dim:    isDark ? '#444444' : '#AAAAAA',
@@ -151,7 +151,7 @@ export default function PWAInstallPrompt() {
           {/* Icon */}
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <img src="/icons/icon-96.png" alt="I V I R A"
-              style={{ width: 56, height: 56, borderRadius: 14, boxShadow: `0 0 20px rgba(26,58,143,0.25)` }} />
+              style={{ width: 56, height: 56, borderRadius: 14, boxShadow: `0 0 20px rgba(16,185,129,0.25)` }} />
           </div>
 
           <h3 style={{
@@ -175,7 +175,7 @@ export default function PWAInstallPrompt() {
           }}>
             {(desktop
               ? [
-                  { icon: '⚡', label: 'Instant access' },
+                  { icon: '✨', label: 'Instant access' },
                   { icon: '🔔', label: 'Smart alerts' },
                   { icon: '📊', label: 'Live dashboard' },
                   { icon: '🔒', label: 'Offline ready' },
@@ -204,7 +204,7 @@ export default function PWAInstallPrompt() {
               fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700,
               background: COBALT, color: '#FFFFFF', border: 'none', borderRadius: 12,
               padding: '14px 24px', cursor: 'pointer', width: '100%',
-              boxShadow: '0 2px 10px rgba(26,58,143,0.3)',
+              boxShadow: '0 2px 10px rgba(16,185,129,0.3)',
               transition: 'all 0.3s',
             }}>
               Sign In as Member
@@ -281,7 +281,7 @@ export default function PWAInstallPrompt() {
           fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700,
           background: COBALT, color: '#FFFFFF', border: 'none', borderRadius: 10,
           padding: '12px 24px', cursor: 'pointer', width: '100%',
-          boxShadow: '0 2px 8px rgba(26,58,143,0.25)',
+          boxShadow: '0 2px 8px rgba(16,185,129,0.25)',
         }}>
           Go to {auth.userRole === 'owner' ? 'Dashboard' : 'Member Hub'}
         </button>
@@ -310,7 +310,7 @@ export default function PWAInstallPrompt() {
         style={{
           width: 48, height: 48, borderRadius: 12,
           flexShrink: 0, objectFit: 'cover',
-          boxShadow: '0 0 16px rgba(26,58,143,0.3)',
+          boxShadow: '0 0 16px rgba(16,185,129,0.3)',
         }} />
 
       <div style={{ flex: 1 }}>

@@ -14,9 +14,9 @@ const N = {
   text: '#E2E8F0',
   textSec: '#94A3B8',
   textTer: '#64748B',
-  accent: '#1A3A8F',
-  accentSoft: 'rgba(26,58,143,0.12)',
-  accentGlow: 'rgba(26,58,143,0.25)',
+  accent: '#10B981',
+  accentSoft: 'rgba(16,185,129,0.12)',
+  accentGlow: 'rgba(16,185,129,0.25)',
   red: '#EF4444',
   green: '#22C55E',
   amber: '#F59E0B',
@@ -65,7 +65,7 @@ export default function AdminLayout() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 36, height: 36, borderRadius: 8,
-              background: 'linear-gradient(135deg, #1A3A8F, #3B6FD4)',
+              background: 'linear-gradient(135deg, #10B981, #3B6FD4)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 700, fontSize: 16,
             }}>G</div>
@@ -130,7 +130,7 @@ export default function AdminLayout() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '4px 12px', borderRadius: 6,
-            background: 'rgba(26,58,143,0.08)', border: `1px solid ${N.accent}40`,
+            background: 'rgba(16,185,129,0.08)', border: `1px solid ${N.accent}40`,
           }}>
             <Shield size={13} color={N.accent} />
             <span style={{ fontSize: 11, fontWeight: 700, color: N.accent, letterSpacing: '1px', textTransform: 'uppercase' }}>

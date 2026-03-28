@@ -79,7 +79,7 @@ export default function AIChatModal({ visible, onClose }) {
     {
       id: '1',
       role: 'ai',
-      text: "Hey! I'm your AI fitness coach. Ask me anything about workouts, nutrition, recovery, or your fitness goals. 💪",
+      text: "Hey! I'm your AI fitness coach. Ask me anything about workouts, nutrition, recovery, or your fitness goals. 🙌",
     },
   ])
   const [input, setInput] = useState('')

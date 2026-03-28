@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 const ff = "'General Sans', 'Inter', -apple-system, sans-serif"
 
-const ACCENT = '#1A3A8F'
+const ACCENT = '#10B981'
 const ACCENT_LIGHT = '#3B82F6'
 
 // Role-specific visual configs — no static images, pure CSS
@@ -19,10 +19,10 @@ const MESH_AUTH_LIGHT = `
 const HERO_THEMES = {
   owner: {
     gradient: {
-      dark: 'linear-gradient(135deg, #050A1A 0%, #0A1628 35%, #122044 70%, #1A3A8F 100%)',
+      dark: 'linear-gradient(135deg, #050A1A 0%, #0A1628 35%, #122044 70%, #10B981 100%)',
       light: MESH_AUTH_LIGHT,
     },
-    accent: '#1A3A8F',
+    accent: '#10B981',
     pattern: 'owner',
   },
   member: {
@@ -100,12 +100,12 @@ function HeroPattern({ role, isDark }) {
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity }} viewBox="0 0 400 400">
         {[0, 1, 2, 3, 4].map(i => (
           <g key={i}>
-            <rect x={60 + i * 70} y={50 + i * 50} width="45" height="45" rx="8" fill="none" stroke={isDark ? '#3B82F6' : '#1A3A8F'} strokeWidth="1" />
-            <rect x={30 + i * 65} y={180 + i * 30} width="30" height="30" rx="6" fill={isDark ? '#3B82F6' : '#1A3A8F'} opacity="0.3" />
+            <rect x={60 + i * 70} y={50 + i * 50} width="45" height="45" rx="8" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="1" />
+            <rect x={30 + i * 65} y={180 + i * 30} width="30" height="30" rx="6" fill={isDark ? '#3B82F6' : '#10B981'} opacity="0.3" />
           </g>
         ))}
-        <circle cx="300" cy="80" r="40" fill="none" stroke={isDark ? '#3B82F6' : '#1A3A8F'} strokeWidth="0.8" />
-        <circle cx="100" cy="300" r="60" fill="none" stroke={isDark ? '#3B82F6' : '#1A3A8F'} strokeWidth="0.5" />
+        <circle cx="300" cy="80" r="40" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.8" />
+        <circle cx="100" cy="300" r="60" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.5" />
       </svg>
     )
   }
@@ -114,11 +114,11 @@ function HeroPattern({ role, isDark }) {
     // Organic shapes — fitness/energy
     return (
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity }} viewBox="0 0 400 400">
-        <circle cx="320" cy="80" r="80" fill="none" stroke={isDark ? '#3B82F6' : '#1A3A8F'} strokeWidth="1" />
-        <circle cx="320" cy="80" r="50" fill="none" stroke={isDark ? '#3B82F6' : '#1A3A8F'} strokeWidth="0.5" />
-        <circle cx="80" cy="320" r="90" fill={isDark ? '#3B82F6' : '#1A3A8F'} opacity="0.1" />
-        <path d="M50 200 Q 150 100, 250 200 T 400 200" fill="none" stroke={isDark ? '#3B82F6' : '#1A3A8F'} strokeWidth="0.8" />
-        <path d="M0 250 Q 100 180, 200 250 T 400 250" fill="none" stroke={isDark ? '#3B82F6' : '#1A3A8F'} strokeWidth="0.5" />
+        <circle cx="320" cy="80" r="80" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="1" />
+        <circle cx="320" cy="80" r="50" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.5" />
+        <circle cx="80" cy="320" r="90" fill={isDark ? '#3B82F6' : '#10B981'} opacity="0.1" />
+        <path d="M50 200 Q 150 100, 250 200 T 400 200" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.8" />
+        <path d="M0 250 Q 100 180, 200 250 T 400 250" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.5" />
       </svg>
     )
   }
@@ -192,9 +192,9 @@ export default function AuthLayout({
   // Derived colors
   const pageBg = isDark ? '#050505' : '#F0F4FF'
   const cardBg = isDark ? '#121212' : 'rgba(255,255,255,0.90)'
-  const cardBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(26,58,143,0.12)'
+  const cardBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(16,185,129,0.12)'
   const cardShadow = isDark
-    ? '0 8px 40px rgba(0,0,0,0.5), 0 0 80px rgba(26,58,143,0.06)'
+    ? '0 8px 40px rgba(0,0,0,0.5), 0 0 80px rgba(16,185,129,0.06)'
     : '0 8px 40px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)'
   const heroTextPrimary = isDark ? '#FFFFFF' : '#0F172A'
   const heroTextSec = isDark ? 'rgba(255,255,255,0.6)' : '#475569'
@@ -273,7 +273,7 @@ export default function AuthLayout({
           position: 'absolute', inset: 0,
           backgroundImage: isDark
             ? 'radial-gradient(ellipse 80% 50% at 30% 40%, rgba(59,130,246,0.06), transparent 60%)'
-            : 'radial-gradient(ellipse 80% 50% at 30% 40%, rgba(26,58,143,0.04), transparent 60%)',
+            : 'radial-gradient(ellipse 80% 50% at 30% 40%, rgba(16,185,129,0.04), transparent 60%)',
         }} />
 
         {/* Content */}
@@ -415,7 +415,7 @@ export default function AuthLayout({
 // Expose theme helpers for login forms to use
 export function useAuthTheme() {
   const { theme, isDark } = useTheme()
-  const ACCENT = '#1A3A8F'
+  const ACCENT = '#10B981'
 
   return {
     theme,
@@ -425,10 +425,10 @@ export function useAuthTheme() {
     textSec: isDark ? 'rgba(255,255,255,0.6)' : '#64748B',
     textTer: isDark ? 'rgba(255,255,255,0.35)' : '#94A3B8',
     inputBg: isDark ? '#0A0A0A' : '#FFFFFF',
-    inputBorder: isDark ? '#1F1F1F' : 'rgba(26,58,143,0.15)',
-    inputBorderHover: isDark ? '#333' : 'rgba(26,58,143,0.25)',
+    inputBorder: isDark ? '#1F1F1F' : 'rgba(16,185,129,0.15)',
+    inputBorderHover: isDark ? '#333' : 'rgba(16,185,129,0.25)',
     accent: ACCENT,
-    focusGlow: '0 0 0 3px rgba(26,58,143,0.15)',
+    focusGlow: '0 0 0 3px rgba(16,185,129,0.15)',
     errorColor: '#EA4335',
     ff: "'General Sans', 'Inter', -apple-system, sans-serif",
     // Input style generator
@@ -470,7 +470,7 @@ export function useAuthTheme() {
     // Focus handlers
     onFocus: (e) => {
       e.target.style.borderColor = ACCENT
-      e.target.style.boxShadow = '0 0 0 3px rgba(26,58,143,0.15)'
+      e.target.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.15)'
     },
     onBlur: (e, hasError, customBorder) => {
       e.target.style.borderColor = hasError

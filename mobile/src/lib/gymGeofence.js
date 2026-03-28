@@ -37,7 +37,7 @@ if (TaskManager) {
       if (Notifications) {
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: 'You\'re near your gym! 💪',
+            title: 'You\'re near your gym! 🎯',
             body: 'Ready for a workout? Open IVIRA to start tracking.',
             data: { type: 'gym_nearby', gymId: data.region.identifier },
             sound: true,

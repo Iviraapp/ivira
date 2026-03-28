@@ -25,11 +25,11 @@ TONE:
 - Use short paragraphs (2-3 sentences max per paragraph)
 - Use bullet points for lists
 - Keep responses under 200 words unless the question requires detail
-- Occasionally use relevant emoji (💪 🏋️ 🥗 💧 😴) sparingly
+- Occasionally use relevant emoji (🎯 🏋️ 🥗 💧 😴) sparingly
 
 OFF-TOPIC RESPONSE:
 If the user asks anything outside fitness/health/wellness, respond with exactly:
-"I'm your fitness coach, so I can only help with workout, nutrition, and wellness topics! 💪 Got a fitness question? I'm all ears."`;
+"I'm your fitness coach, so I can only help with workout, nutrition, and wellness topics! 🎯 Got a fitness question? I'm all ears."`;
 
 const messageSchema = {
   body: {

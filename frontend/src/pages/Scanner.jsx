@@ -452,8 +452,8 @@ export default function Scanner() {
               style={{
                 padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
                 cursor: 'pointer', border: '1px solid',
-                background: autoDismiss === opt.value ? '#0052FF' : 'transparent',
-                borderColor: autoDismiss === opt.value ? '#0052FF' : '#333',
+                background: autoDismiss === opt.value ? '#10B981' : 'transparent',
+                borderColor: autoDismiss === opt.value ? '#10B981' : '#333',
                 color: autoDismiss === opt.value ? '#fff' : '#666',
               }}
             >
@@ -486,7 +486,7 @@ export default function Scanner() {
                   <ScanLine size={48} color="#333" />
                   <p style={{ color: '#555', fontSize: 14 }}>Camera not active</p>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={startScanner} style={btnStyle('#0052FF')}>
+                    <button onClick={startScanner} style={btnStyle('#10B981')}>
                       <Camera size={16} /> Start Camera
                     </button>
                     <button onClick={() => setManualMode(true)} style={btnStyle('#333')}>
@@ -504,13 +504,13 @@ export default function Scanner() {
                   <CameraOff size={16} /> Stop Camera
                 </button>
               ) : (
-                <button onClick={startScanner} style={btnStyle('#0052FF')}>
+                <button onClick={startScanner} style={btnStyle('#10B981')}>
                   <Camera size={16} /> {manualMode ? 'Switch to Camera' : 'Start Camera'}
                 </button>
               )}
               <button
                 onClick={() => { setManualMode(!manualMode); if (scanning) stopScanner() }}
-                style={btnStyle(manualMode ? '#0052FF' : '#333')}
+                style={btnStyle(manualMode ? '#10B981' : '#333')}
               >
                 <Keyboard size={16} /> Manual Entry
               </button>
@@ -540,8 +540,8 @@ export default function Scanner() {
             {/* Result banner */}
             {processing && (
               <div style={{
-                padding: '14px 20px', background: '#0052FF15', borderTop: '1px solid #1a1a2e',
-                display: 'flex', alignItems: 'center', gap: 10, color: '#0052FF',
+                padding: '14px 20px', background: '#10B98115', borderTop: '1px solid #1a1a2e',
+                display: 'flex', alignItems: 'center', gap: 10, color: '#10B981',
               }}>
                 <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
                 <span style={{ fontSize: 14, fontWeight: 500 }}>Processing check-in...</span>
@@ -630,7 +630,7 @@ export default function Scanner() {
                     <span style={{
                       padding: '2px 6px', borderRadius: 4, fontSize: 10,
                       fontWeight: 600, textTransform: 'uppercase',
-                      background: '#0052FF20', color: '#0052FF',
+                      background: '#10B98120', color: '#10B981',
                     }}>
                       {entry.method || 'qr'}
                     </span>

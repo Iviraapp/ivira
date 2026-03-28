@@ -7,7 +7,7 @@ const FONT = "'Inter', -apple-system, sans-serif"
 const M = {
   bg: '#050505', card: '#121212', border: '#1F1F1F',
   text: '#FFFFFF', textSec: 'rgba(255,255,255,0.6)', textTer: 'rgba(255,255,255,0.35)',
-  accent: '#1A3A8F', accentSoft: 'rgba(26,58,143,0.12)', accentGlow: 'rgba(26,58,143,0.3)',
+  accent: '#10B981', accentSoft: 'rgba(16,185,129,0.12)', accentGlow: 'rgba(16,185,129,0.3)',
   green: '#34A853',
 }
 
@@ -17,7 +17,7 @@ function fireConfetti(canvas) {
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
   const particles = []
-  const colors = ['#1A3A8F', '#3B6FD4', '#34A853', '#FBBC05', '#EA4335', '#FFFFFF']
+  const colors = ['#10B981', '#3B6FD4', '#34A853', '#FBBC05', '#EA4335', '#FFFFFF']
 
   for (let i = 0; i < 150; i++) {
     particles.push({

@@ -214,14 +214,14 @@ export default function Sidebar({ open, onClose }) {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                     padding: `${sp(9)}px ${sp(12)}px`, borderRadius: 8,
-                    border: '1px solid #1A3A8F', cursor: 'pointer',
+                    border: '1px solid #10B981', cursor: 'pointer',
                     fontSize: 13, fontWeight: 500, background: '#0A0A0A',
-                    color: '#1A3A8F', transition: 'all 0.15s ease',
+                    color: '#10B981', transition: 'all 0.15s ease',
                     textAlign: 'left', fontFamily: FONT, marginBottom: 4,
-                    textShadow: '0 0 8px rgba(26,58,143,0.4)',
+                    textShadow: '0 0 8px rgba(16,185,129,0.4)',
                   }}
                 >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1A3A8F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M12 2l2.09 6.26L20.18 9l-5 4.27L16.82 20 12 16.77 7.18 20l1.64-6.73L3.82 9l6.09-.74z" />
                   </svg>
                   <span style={{ flex: 1 }}>Priority Support</span>

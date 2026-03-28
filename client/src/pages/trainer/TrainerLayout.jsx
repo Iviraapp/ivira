@@ -39,7 +39,7 @@ export default function TrainerLayout() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 36, height: 36, borderRadius: 8,
-              background: 'linear-gradient(135deg, #1A3A8F, #3B6FD4)',
+              background: 'linear-gradient(135deg, #10B981, #3B6FD4)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 700, fontSize: 16,
             }}>G</div>

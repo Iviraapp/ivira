@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { Dumbbell, Mail, KeyRound, Loader2 } from 'lucide-react'
+import { Activity, Mail, KeyRound, Loader2 } from 'lucide-react'
 
 export default function Login() {
   const { requestOtp, verifyOtp } = useAuth()
@@ -53,10 +53,10 @@ export default function Login() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
             width: 56, height: 56, borderRadius: 16, margin: '0 auto 16px',
-            background: 'linear-gradient(135deg, #0052FF, #0040CC)',
+            background: 'linear-gradient(135deg, #10B981, #059669)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Dumbbell size={28} color="#fff" />
+            <Activity size={28} color="#fff" />
           </div>
           <h1 style={{ color: '#fff', fontSize: 22, fontWeight: 700, margin: 0, letterSpacing: 2 }}>IVIRA</h1>
           <p style={{ color: '#666', fontSize: 14, margin: '6px 0 0' }}>Owner Dashboard</p>
@@ -87,7 +87,7 @@ export default function Login() {
               type="submit"
               disabled={loading || !email}
               style={{
-                width: '100%', padding: '12px', background: '#0052FF', color: '#fff',
+                width: '100%', padding: '12px', background: '#10B981', color: '#fff',
                 border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
                 cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -128,7 +128,7 @@ export default function Login() {
               type="submit"
               disabled={loading || otp.length < 4}
               style={{
-                width: '100%', padding: '12px', background: '#0052FF', color: '#fff',
+                width: '100%', padding: '12px', background: '#10B981', color: '#fff',
                 border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
                 cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -154,7 +154,7 @@ export default function Login() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         input::placeholder { color: #444; }
-        input:focus { border-color: #0052FF !important; }
+        input:focus { border-color: #10B981 !important; }
       `}</style>
     </div>
   )

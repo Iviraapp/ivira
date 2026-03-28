@@ -34,7 +34,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0F328C"
+        "backgroundColor": "#10B981"
       },
       "package": "com.ivira.member",
       "permissions": [
@@ -63,7 +63,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#0052FF"
+          "color": "#10B981"
         }
       ],
       "expo-font",

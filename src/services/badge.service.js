@@ -3,10 +3,10 @@ import db from '../config/database.js'
 const BADGE_DEFINITIONS = [
   { type: 'first_checkin', name: 'First Step', icon: '👟' },
   { type: 'streak_7', name: '7-Day Warrior', icon: '🔥' },
-  { type: 'streak_30', name: '30-Day Beast', icon: '💪' },
+  { type: 'streak_30', name: '30-Day Beast', icon: '🎯' },
   { type: 'streak_100', name: '100-Day Legend', icon: '🏆' },
   { type: 'early_bird', name: '5 AM Club', icon: '🌅' },
-  { type: 'consistency_30', name: 'Iron Regular', icon: '⚡' },
+  { type: 'consistency_30', name: 'Iron Regular', icon: '✨' },
   { type: 'power_lifter', name: 'Power Lifter', icon: '🏋️' },
   { type: 'social_butterfly', name: 'Social Butterfly', icon: '🦋' },
 ]

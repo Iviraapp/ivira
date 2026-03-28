@@ -94,7 +94,7 @@ export default function TrainerDashboard() {
               borderRadius: 14, padding: '16px 20px',
               border: `1px solid ${isNext ? theme.brandAccent + '60' : theme.border}`,
               borderLeft: isNext ? `3px solid ${theme.brandAccent}` : `1px solid ${theme.border}`,
-              boxShadow: isNext ? `0 0 20px rgba(26,58,143,0.15)` : 'none',
+              boxShadow: isNext ? `0 0 20px rgba(16,185,129,0.15)` : 'none',
               minHeight: 48,
             }}>
               {/* Timeline dot */}

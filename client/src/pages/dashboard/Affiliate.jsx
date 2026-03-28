@@ -146,7 +146,7 @@ export default function Affiliate() {
     {
       title: 'Conversions', value: earnings.conversions ?? 0,
       icon: <TrendingUp size={20} color={t.accent} />,
-      color: t.accent, bgColor: 'rgba(26,58,143,0.08)',
+      color: t.accent, bgColor: 'rgba(16,185,129,0.08)',
     },
     {
       title: 'Total Earned', value: formatPaise(earnings.totalEarned ?? 0),
@@ -434,7 +434,7 @@ export default function Affiliate() {
                       <div
                         style={{
                           width: 48, height: 48, borderRadius: '50%',
-                          background: `linear-gradient(135deg, #1A3A8F, #4285F4)`,
+                          background: `linear-gradient(135deg, #10B981, #4285F4)`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 20, fontWeight: 700, color: '#FFFFFF',
                           fontFamily: "'Inter', sans-serif",

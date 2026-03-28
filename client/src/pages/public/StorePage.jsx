@@ -7,7 +7,7 @@ import { ShoppingBag, Search } from 'lucide-react'
 const T = {
   bg: '#000000', bgSec: '#0A0A0A', bgTer: '#141414',
   text: '#FFFFFF', textSec: '#A0A0A0', textTer: '#666666',
-  border: '#1A1A1A', accent: '#1A3A8F', green: '#34A853', amber: '#FBBC05', red: '#EA4335',
+  border: '#1A1A1A', accent: '#10B981', green: '#34A853', amber: '#FBBC05', red: '#EA4335',
 }
 
 const font = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"

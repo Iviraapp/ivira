@@ -4,7 +4,7 @@
 
 set -e
 
-BRAND_BLUE="#1A3A8F"
+BRAND_BLUE="#10B981"
 BLACK="#000000"
 
 echo "Generating IVIRA app assets..."

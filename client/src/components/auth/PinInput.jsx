@@ -72,7 +72,7 @@ export default function PinInput({ value, onChange, onComplete, error, shaking }
           }}
           onFocus={(e) => {
             e.target.style.borderColor = accent
-            e.target.style.boxShadow = `0 0 0 3px rgba(26,58,143,0.2), 0 0 12px rgba(26,58,143,0.15)`
+            e.target.style.boxShadow = `0 0 0 3px rgba(16,185,129,0.2), 0 0 12px rgba(16,185,129,0.15)`
             e.target.select()
           }}
           onBlur={(e) => {

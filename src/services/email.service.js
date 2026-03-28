@@ -146,7 +146,7 @@ export async function sendOTPEmail(email, otp) {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:380px;border-radius:16px;overflow:hidden;">
                 <!-- Gradient top bar -->
                 <tr>
-                  <td style="height:4px;background:linear-gradient(90deg,#0055FF 0%,#3B6AE0 50%,#0055FF 100%);font-size:0;line-height:0;">&nbsp;</td>
+                  <td style="height:4px;background:linear-gradient(90deg,#10B981 0%,#34D399 50%,#10B981 100%);font-size:0;line-height:0;">&nbsp;</td>
                 </tr>
                 <tr>
                   <td align="center" style="padding:32px 24px;background-color:#0B1224;border-left:1px solid #151E33;border-right:1px solid #151E33;border-bottom:1px solid #151E33;border-radius:0 0 16px 16px;">
@@ -180,7 +180,7 @@ export async function sendOTPEmail(email, otp) {
           <!-- What's waiting for you -->
           <tr>
             <td align="center" style="padding-bottom:12px;">
-              <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#3B6AE0;line-height:1;">
+              <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#34D399;line-height:1;">
                 What&rsquo;s waiting inside
               </p>
             </td>

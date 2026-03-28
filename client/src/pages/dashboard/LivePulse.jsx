@@ -9,7 +9,7 @@ const FONT_M = "'JetBrains Mono', monospace"
 
 const EVENT_COLORS = {
   checkin: '#22C55E',
-  payment: '#1A3A8F',
+  payment: '#10B981',
   new_member: '#06B6D4',
   expired: '#EF4444',
   milestone: '#F59E0B',

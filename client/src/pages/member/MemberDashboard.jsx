@@ -58,7 +58,7 @@ function CheckinSheet({ open, onClose, gymId, memberId }) {
 /* ────────── ACTION HUB (2x2 TILES) ────────── */
 function ActionHub({ onTabChange }) {
   const actions = [
-    { label: 'Book a Class', icon: Calendar, color: '#1A3A8F', bg: '#1A3A8F18', tab: 'classes' },
+    { label: 'Book a Class', icon: Calendar, color: '#10B981', bg: '#10B98118', tab: 'classes' },
     { label: 'Find a Trainer', icon: Users, color: '#34A853', bg: '#34A85318', tab: 'classes' },
     { label: 'My Workouts', icon: Dumbbell, color: '#FBBC05', bg: '#FBBC0518', tab: 'health' },
     { label: 'Join a Challenge', icon: Target, color: '#EA4335', bg: '#EA433518', tab: 'rewards' },

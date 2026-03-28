@@ -7,7 +7,7 @@ import { Target, Phone, MessageCircle, ChevronDown, ArrowUpDown, RefreshCw, User
 const STATUSES = ['new', 'contacted', 'qualified', 'converted', 'lost']
 
 const STATUS_STYLES = {
-  new: { border: '#1A3A8F', bg: '#1A3A8F18', color: '#3B6FD4' },
+  new: { border: '#10B981', bg: '#10B98118', color: '#3B6FD4' },
   contacted: { border: '#F59E0B', bg: '#F59E0B18', color: '#FBBF24' },
   qualified: { border: '#06B6D4', bg: '#06B6D418', color: '#22D3EE' },
   converted: { border: '#10B981', bg: '#10B98118', color: '#34D399' },
@@ -145,7 +145,7 @@ export default function AdminLeads() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Target size={24} color="#1A3A8F" />
+          <Target size={24} color="#10B981" />
           <h1 style={{ fontSize: 24, fontWeight: 700, color: theme.text, margin: 0 }}>
             Lead Pipeline
           </h1>
@@ -168,7 +168,7 @@ export default function AdminLeads() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
         <div style={statCardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <UserPlus size={18} color="#1A3A8F" />
+            <UserPlus size={18} color="#10B981" />
             <span style={{ fontSize: 13, fontWeight: 500, color: theme.textSec }}>Total Leads (MTD)</span>
           </div>
           <div style={{ fontSize: 32, fontWeight: 700, color: theme.text, fontFamily: fontMono }}>
@@ -267,7 +267,7 @@ export default function AdminLeads() {
                     key={lead.id}
                     style={{
                       borderBottom: '1px solid #1F1F1F',
-                      borderLeft: priority ? '3px solid #1A3A8F' : '3px solid transparent',
+                      borderLeft: priority ? '3px solid #10B981' : '3px solid transparent',
                       transition: 'background 0.15s',
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
@@ -383,8 +383,8 @@ export default function AdminLeads() {
                           style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: 32, height: 32, borderRadius: 6,
-                            background: lead.notes ? '#1A3A8F18' : 'transparent',
-                            border: `1px solid ${lead.notes ? '#1A3A8F40' : '#1F1F1F'}`,
+                            background: lead.notes ? '#10B98118' : 'transparent',
+                            border: `1px solid ${lead.notes ? '#10B98140' : '#1F1F1F'}`,
                             color: lead.notes ? '#3B6FD4' : theme.textSec,
                             cursor: 'pointer', transition: 'all 0.15s',
                           }}
@@ -402,13 +402,13 @@ export default function AdminLeads() {
                               display: 'flex', alignItems: 'center', gap: 6,
                               padding: '6px 12px', borderRadius: 6,
                               fontSize: 12, fontWeight: 600, fontFamily: font,
-                              background: '#1A3A8F', border: 'none',
+                              background: '#10B981', border: 'none',
                               color: '#fff', cursor: 'pointer',
                               opacity: converting === lead.id ? 0.6 : 1,
                               transition: 'all 0.15s',
                             }}
                             onMouseEnter={(e) => { if (converting !== lead.id) e.currentTarget.style.background = '#6D28D9' }}
-                            onMouseLeave={(e) => e.currentTarget.style.background = '#1A3A8F'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
                           >
                             <UserPlus size={12} />
                             {converting === lead.id ? 'Converting...' : 'Convert'}
@@ -452,7 +452,7 @@ export default function AdminLeads() {
                               fontFamily: font, resize: 'vertical', outline: 'none',
                               boxSizing: 'border-box',
                             }}
-                            onFocus={(e) => e.target.style.borderColor = '#1A3A8F'}
+                            onFocus={(e) => e.target.style.borderColor = '#10B981'}
                             onBlur={(e) => e.target.style.borderColor = '#2A2A2A'}
                           />
                           <button
@@ -460,11 +460,11 @@ export default function AdminLeads() {
                             style={{
                               marginTop: 8, padding: '6px 16px', borderRadius: 6,
                               fontSize: 12, fontWeight: 600, fontFamily: font,
-                              background: '#1A3A8F', border: 'none', color: '#fff',
+                              background: '#10B981', border: 'none', color: '#fff',
                               cursor: 'pointer', transition: 'background 0.15s',
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.background = '#6D28D9'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = '#1A3A8F'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
                           >
                             Save Notes
                           </button>

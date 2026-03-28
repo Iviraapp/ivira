@@ -1,11 +1,11 @@
 {
-  "name": "I V I R A - Fitness & Gym Platform",
+  "name": "IVIRA",
   "short_name": "IVIRA",
   "description": "Gym management for owners. Workout tracking, nutrition & QR check-in for members.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0E1A",
-  "theme_color": "#0055FF",
+  "theme_color": "#10B981",
   "orientation": "portrait-primary",
   "categories": ["business", "fitness", "productivity"],
   "icons": [

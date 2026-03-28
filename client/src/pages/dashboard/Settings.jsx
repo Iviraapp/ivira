@@ -903,7 +903,7 @@ function DataPrivacyTab({ gymId, theme, sp }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: sp(28) }}>
           <div style={{
-            width: 34, height: 34, borderRadius: 8, background: 'rgba(26,58,143,0.1)',
+            width: 34, height: 34, borderRadius: 8, background: 'rgba(16,185,129,0.1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Shield size={18} color={theme.accent} />

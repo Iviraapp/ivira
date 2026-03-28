@@ -29,7 +29,7 @@ const STORAGE_KEY = 'ivira_unlocked_badges'
 
 const CATEGORIES = [
   { key: 'fasting',  label: 'Fasting',   icon: '🔥', color: '#8B5CF6' },
-  { key: 'workout',  label: 'Workout',   icon: '💪', color: '#F97316' },
+  { key: 'workout',  label: 'Workout',   icon: '🎯', color: '#F97316' },
   { key: 'nutrition', label: 'Nutrition', icon: '🥗', color: '#14B8A6' },
   { key: 'social',   label: 'Social',    icon: '🤝', color: '#EC4899' },
   { key: 'special',  label: 'Special',   icon: '⭐', color: '#EAB308' },
@@ -429,7 +429,7 @@ export default function AchievementsScreen({ navigation }) {
           {/* Stats row */}
           <View style={styles.statsRow}>
             {renderStatCard('🏆', `${unlockedCount}/${ALL_BADGES.length}`, 'Badges', '#EAB308')}
-            {renderStatCard('⚡', levelInfo.title, `Level ${levelInfo.level}`, COLORS.accent)}
+            {renderStatCard('✨', levelInfo.title, `Level ${levelInfo.level}`, COLORS.accent)}
             {renderStatCard(
               rarestBadge?.emoji || '🔒',
               rarestBadge?.name || '—',

@@ -30,7 +30,7 @@ export default function CookieConsent() {
 
   if (!visible) return null
 
-  const BRAND = '#1A3A8F'
+  const BRAND = '#10B981'
 
   return (
     <>
@@ -45,7 +45,7 @@ export default function CookieConsent() {
         }
         .ivira-cookie-accept:hover { opacity: 0.9; }
         .ivira-cookie-decline:hover {
-          background: ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(26,58,143,0.06)'} !important;
+          background: ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(16,185,129,0.06)'} !important;
         }
       `}</style>
       <div style={{
@@ -78,7 +78,7 @@ export default function CookieConsent() {
           {/* Cookie icon */}
           <div style={{
             width: 32, height: 32, borderRadius: 8,
-            background: isDark ? 'rgba(26,58,143,0.2)' : 'rgba(26,58,143,0.08)',
+            background: isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.08)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>

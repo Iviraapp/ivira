@@ -81,7 +81,7 @@ export default function SubdomainRecoveryModal({ open, onClose }) {
         {step === 'contact' && (
           <>
             <div style={{
-              fontSize: 10, fontWeight: 700, color: '#1A3A8F',
+              fontSize: 10, fontWeight: 700, color: '#10B981',
               letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8,
             }}>ACCOUNT RECOVERY</div>
             <h2 style={{
@@ -107,14 +107,14 @@ export default function SubdomainRecoveryModal({ open, onClose }) {
                 outline: 'none', boxSizing: 'border-box',
                 transition: 'border-color 0.2s',
               }}
-              onFocus={e => e.target.style.borderColor = '#1A3A8F'}
+              onFocus={e => e.target.style.borderColor = '#10B981'}
               onBlur={e => e.target.style.borderColor = '#1F1F1F'}
               autoFocus
             />
             {error && <p style={{ fontSize: 12, color: '#EA4335', marginTop: 8, marginBottom: 0 }}>{error}</p>}
             <button onClick={handleFindGyms} disabled={loading} style={{
               width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
-              background: '#1A3A8F', color: '#fff', fontSize: 14, fontWeight: 700,
+              background: '#10B981', color: '#fff', fontSize: 14, fontWeight: 700,
               cursor: loading ? 'wait' : 'pointer', marginTop: 16, fontFamily: FONT,
               opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s',
             }}>{loading ? 'Sending OTP...' : 'Find My Gyms'}</button>
@@ -128,7 +128,7 @@ export default function SubdomainRecoveryModal({ open, onClose }) {
         {step === 'otp' && (
           <>
             <div style={{
-              fontSize: 10, fontWeight: 700, color: '#1A3A8F',
+              fontSize: 10, fontWeight: 700, color: '#10B981',
               letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8,
             }}>VERIFY IDENTITY</div>
             <h2 style={{
@@ -152,14 +152,14 @@ export default function SubdomainRecoveryModal({ open, onClose }) {
                 outline: 'none', boxSizing: 'border-box', textAlign: 'center',
                 letterSpacing: '8px', transition: 'border-color 0.2s',
               }}
-              onFocus={e => e.target.style.borderColor = '#1A3A8F'}
+              onFocus={e => e.target.style.borderColor = '#10B981'}
               onBlur={e => e.target.style.borderColor = '#1F1F1F'}
               autoFocus
             />
             {error && <p style={{ fontSize: 12, color: '#EA4335', marginTop: 8, marginBottom: 0 }}>{error}</p>}
             <button onClick={handleVerifyOTP} disabled={loading} style={{
               width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
-              background: '#1A3A8F', color: '#fff', fontSize: 14, fontWeight: 700,
+              background: '#10B981', color: '#fff', fontSize: 14, fontWeight: 700,
               cursor: loading ? 'wait' : 'pointer', marginTop: 16, fontFamily: FONT,
               opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s',
             }}>{loading ? 'Verifying...' : 'Verify & Show Gyms'}</button>
@@ -202,13 +202,13 @@ export default function SubdomainRecoveryModal({ open, onClose }) {
                       textDecoration: 'none', transition: 'all 0.2s',
                       cursor: 'pointer',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#1A3A8F'; e.currentTarget.style.background = '#141414' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#10B981'; e.currentTarget.style.background = '#141414' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = '#1F1F1F'; e.currentTarget.style.background = '#0A0A0A' }}
                   >
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#EDEDED', marginBottom: 4, fontFamily: FONT }}>
                       {gym.gym_name}
                     </div>
-                    <div style={{ fontSize: 12, color: '#1A3A8F', fontFamily: FONT_M }}>
+                    <div style={{ fontSize: 12, color: '#10B981', fontFamily: FONT_M }}>
                       {gym.subdomain ? `${gym.subdomain}.ivira.app` : 'No subdomain set'}
                     </div>
                     {gym.owner_name && (

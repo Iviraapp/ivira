@@ -20,7 +20,7 @@ export default function Button({
     primary: {
       background: theme.brandAccent,
       color: '#fff',
-      boxShadow: `0 2px 12px rgba(26,58,143,0.25)`,
+      boxShadow: `0 2px 12px rgba(16,185,129,0.25)`,
     },
     secondary: {
       background: 'transparent',

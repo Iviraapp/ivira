@@ -11,7 +11,7 @@ const MESH_GRADIENT = `
   linear-gradient(135deg, #e8eeff 0%, #dce4fc 25%, #d0dcfa 50%, #c8d8f8 75%, #e0e8ff 100%)
 `
 const MESH_GRADIENT_DARK = `
-  radial-gradient(ellipse 80% 60% at 10% 20%, rgba(26,58,143,0.20), transparent 55%),
+  radial-gradient(ellipse 80% 60% at 10% 20%, rgba(16,185,129,0.20), transparent 55%),
   radial-gradient(ellipse 70% 50% at 80% 10%, rgba(59,130,246,0.12), transparent 50%),
   radial-gradient(ellipse 60% 80% at 50% 80%, rgba(99,102,241,0.10), transparent 55%),
   linear-gradient(135deg, #050508 0%, #0A0A14 50%, #080812 100%)
@@ -28,14 +28,14 @@ const THEMES = {
     // Monochrome accent for general UI
     accent: '#FFFFFF', accentSoft: 'rgba(255,255,255,0.08)',
     // Brand blue — ONLY for active nav + primary CTA buttons
-    brandAccent: '#1A3A8F', brandAccentSoft: 'rgba(26,58,143,0.15)',
+    brandAccent: '#10B981', brandAccentSoft: 'rgba(16,185,129,0.15)',
     // Status colors
     green: '#34A853', amber: '#FBBC05', red: '#EA4335', cyan: '#4285F4',
     // Borders
     border: '#262626', borderFocus: 'rgba(255,255,255,0.3)',
     borderStrong: '#333333',
     // Brand gradient (logo only)
-    grad: 'linear-gradient(135deg, #1A3A8F, #3B82F6)',
+    grad: 'linear-gradient(135deg, #10B981, #3B82F6)',
     // Preview
     previewBg: '#ffffff', previewText: '#333',
     // Navigation
@@ -53,16 +53,16 @@ const THEMES = {
     // Text
     text: '#0F172A', textSec: '#475569', textTer: '#94A3B8',
     // Monochrome accent for general UI
-    accent: '#1A3A8F', accentSoft: 'rgba(26,58,143,0.08)',
+    accent: '#10B981', accentSoft: 'rgba(16,185,129,0.08)',
     // Brand blue — ONLY for active nav + primary CTA buttons
-    brandAccent: '#1A3A8F', brandAccentSoft: 'rgba(26,58,143,0.08)',
+    brandAccent: '#10B981', brandAccentSoft: 'rgba(16,185,129,0.08)',
     // Status colors
     green: '#34A853', amber: '#FBBC05', red: '#EA4335', cyan: '#4285F4',
     // Borders
-    border: 'rgba(26,58,143,0.12)', borderFocus: 'rgba(26,58,143,0.3)',
-    borderStrong: 'rgba(26,58,143,0.18)',
+    border: 'rgba(16,185,129,0.12)', borderFocus: 'rgba(16,185,129,0.3)',
+    borderStrong: 'rgba(16,185,129,0.18)',
     // Brand gradient
-    grad: 'linear-gradient(135deg, #1A3A8F, #3B82F6)',
+    grad: 'linear-gradient(135deg, #10B981, #3B82F6)',
     // Preview
     previewBg: '#ffffff', previewText: '#333',
     // Navigation

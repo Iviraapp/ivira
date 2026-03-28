@@ -3,7 +3,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../lib/api'
 
-const BRAND = '#1A3A8F'
+const BRAND = '#10B981'
 const FONT = "'Inter', -apple-system, sans-serif"
 const FONT_NUM = "'JetBrains Mono', monospace"
 

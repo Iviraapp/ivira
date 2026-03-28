@@ -83,7 +83,7 @@ function OfferModal({ prospect, onClose, onSend }) {
         }}>
           <div>
             <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Gift size={18} color="#0052FF" />
+              <Gift size={18} color="#10B981" />
               Send Offer to {prospect.first_name}
             </h3>
             <p style={{ color: '#888', fontSize: 13, margin: '4px 0 0' }}>
@@ -110,8 +110,8 @@ function OfferModal({ prospect, onClose, onSend }) {
                 <button key={tier.id} onClick={() => setSelectedTier(tier)} style={{
                   display: 'flex', alignItems: 'center', gap: 12, width: '100%',
                   padding: '14px 16px', borderRadius: 10,
-                  background: isSelected ? '#0052FF12' : '#111118',
-                  border: isSelected ? '1px solid #0052FF40' : '1px solid #1a1a2e',
+                  background: isSelected ? '#10B98112' : '#111118',
+                  border: isSelected ? '1px solid #10B98140' : '1px solid #1a1a2e',
                   cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
                 }}>
                   <div style={{ flex: 1 }}>
@@ -128,10 +128,10 @@ function OfferModal({ prospect, onClose, onSend }) {
                     </div>
                     <span style={{ color: '#555', fontSize: 12 }}>{tier.duration}</span>
                   </div>
-                  <span style={{ color: isSelected ? '#0052FF' : '#888', fontSize: 15, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ color: isSelected ? '#10B981' : '#888', fontSize: 15, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                     {tier.price}
                   </span>
-                  {isSelected && <CheckCircle size={16} color="#0052FF" />}
+                  {isSelected && <CheckCircle size={16} color="#10B981" />}
                 </button>
               )
             })}
@@ -156,15 +156,15 @@ function OfferModal({ prospect, onClose, onSend }) {
           {/* Generated code preview */}
           {selectedTier && (
             <div style={{
-              marginTop: 16, padding: 14, background: '#0052FF08',
-              border: '1px solid #0052FF20', borderRadius: 10,
+              marginTop: 16, padding: 14, background: '#10B98108',
+              border: '1px solid #10B98120', borderRadius: 10,
             }}>
               <p style={{ color: '#888', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 8px' }}>
                 Invite code (auto-generated)
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <code style={{
-                  color: '#0052FF', fontSize: 18, fontWeight: 800,
+                  color: '#10B981', fontSize: 18, fontWeight: 800,
                   letterSpacing: 2, fontFamily: 'monospace',
                 }}>
                   {generatedCode}
@@ -204,7 +204,7 @@ function OfferModal({ prospect, onClose, onSend }) {
             onClick={handleSend}
             style={{
               padding: '10px 24px', borderRadius: 10,
-              background: selectedTier && !sent ? '#0052FF' : '#1a1a2e',
+              background: selectedTier && !sent ? '#10B981' : '#1a1a2e',
               border: 'none', color: '#fff', fontSize: 13, fontWeight: 600,
               cursor: selectedTier && !sent ? 'pointer' : 'not-allowed',
               opacity: selectedTier && !sent ? 1 : 0.5,
@@ -241,7 +241,7 @@ function ProspectCard({ prospect, onSendOffer }) {
     <div style={{
       background: '#0d0d14', border: '1px solid #1a1a2e', borderRadius: 14,
       padding: 22, transition: 'border-color 0.15s',
-      borderLeft: isNew ? '3px solid #0052FF' : '3px solid #22C55E',
+      borderLeft: isNew ? '3px solid #10B981' : '3px solid #22C55E',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         {/* Left */}
@@ -250,9 +250,9 @@ function ProspectCard({ prospect, onSendOffer }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <div style={{
               width: 42, height: 42, borderRadius: 21,
-              background: isNew ? '#0052FF15' : '#22C55E15',
+              background: isNew ? '#10B98115' : '#22C55E15',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: isNew ? '#0052FF' : '#22C55E',
+              color: isNew ? '#10B981' : '#22C55E',
               fontSize: 16, fontWeight: 700,
             }}>
               {prospect.first_name[0]}
@@ -272,7 +272,7 @@ function ProspectCard({ prospect, onSendOffer }) {
             {isNew && (
               <span style={{
                 padding: '3px 10px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                background: '#0052FF20', color: '#0052FF',
+                background: '#10B98120', color: '#10B981',
                 textTransform: 'uppercase', letterSpacing: 0.5,
                 animation: 'pulse 2s infinite',
               }}>
@@ -359,7 +359,7 @@ function ProspectCard({ prospect, onSendOffer }) {
               onClick={() => onSendOffer(prospect)}
               style={{
                 padding: '12px 24px', borderRadius: 10,
-                background: '#0052FF', border: 'none',
+                background: '#10B981', border: 'none',
                 color: '#fff', fontSize: 14, fontWeight: 700,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
                 whiteSpace: 'nowrap', transition: 'opacity 0.15s',
@@ -414,7 +414,7 @@ export default function Prospects() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg, #0052FF, #0040CC)',
+            background: 'linear-gradient(135deg, #10B981, #059669)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <UserPlus size={18} color="#fff" />
@@ -433,16 +433,16 @@ export default function Prospects() {
       {/* Motivating banner */}
       {newCount > 0 && (
         <div style={{
-          background: 'linear-gradient(135deg, #0052FF10, #8B5CF610)',
-          border: '1px solid #0052FF20', borderRadius: 14,
+          background: 'linear-gradient(135deg, #10B98110, #8B5CF610)',
+          border: '1px solid #10B98120', borderRadius: 14,
           padding: '18px 22px', marginBottom: 24,
           display: 'flex', alignItems: 'center', gap: 14,
         }}>
           <div style={{
             width: 44, height: 44, borderRadius: 12,
-            background: '#0052FF20', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: '#10B98120', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Zap size={22} color="#0052FF" />
+            <Zap size={22} color="#10B981" />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>

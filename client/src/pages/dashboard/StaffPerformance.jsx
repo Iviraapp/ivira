@@ -118,8 +118,8 @@ function AnimationStyles() {
         to { opacity: 1; transform: translateY(0); }
       }
       @keyframes spPulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(26,58,143,0.4); }
-        50% { box-shadow: 0 0 20px 4px rgba(26,58,143,0.15); }
+        0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+        50% { box-shadow: 0 0 20px 4px rgba(16,185,129,0.15); }
       }
       @keyframes spModalIn {
         from { opacity: 0; transform: scale(0.95) translateY(10px); }
@@ -269,8 +269,8 @@ function LeaderboardTab({ rankedStaff, theme, sp }) {
 
   const getRankStyle = (rank) => {
     if (rank === 1) return {
-      border: `2px solid #1A3A8F`,
-      boxShadow: '0 0 40px rgba(26,58,143,0.25)',
+      border: `2px solid #10B981`,
+      boxShadow: '0 0 40px rgba(16,185,129,0.25)',
       animation: 'spPulse 3s ease-in-out infinite',
     }
     if (rank === 2) return {
@@ -284,7 +284,7 @@ function LeaderboardTab({ rankedStaff, theme, sp }) {
   }
 
   const getRankIcon = (rank) => {
-    if (rank === 1) return <Trophy size={18} color="#1A3A8F" />
+    if (rank === 1) return <Trophy size={18} color="#10B981" />
     if (rank === 2) return <Award size={16} color={theme.textSec} />
     if (rank === 3) return <Award size={16} color={theme.textTer} />
     return null
@@ -313,13 +313,13 @@ function LeaderboardTab({ rankedStaff, theme, sp }) {
               {getRankIcon(i + 1)}
               <span style={{
                 fontSize: 22, fontWeight: 800, fontFamily: FONT_M,
-                color: i === 0 ? '#1A3A8F' : theme.textTer,
+                color: i === 0 ? '#10B981' : theme.textTer,
               }}>#{i + 1}</span>
             </div>
             {/* Avatar + Info */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
               <Avatar name={s.name} size={56} style={{
-                border: i === 0 ? '2px solid #1A3A8F' : `1px solid ${theme.border}`,
+                border: i === 0 ? '2px solid #10B981' : `1px solid ${theme.border}`,
                 marginBottom: sp(12),
               }} />
               <div style={{
@@ -374,14 +374,14 @@ function LeaderboardTab({ rankedStaff, theme, sp }) {
                     marginBottom: 6,
                   }}>
                     <span style={{ fontSize: 11, color: theme.textTer, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: 0.5 }}>Score</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#1A3A8F', fontFamily: FONT_M }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#10B981', fontFamily: FONT_M }}>
                       {Math.min(100, Math.round((s.metrics.bookings_count / 40) * 100))}
                     </span>
                   </div>
-                  <div style={{ height: 4, borderRadius: 2, background: 'rgba(26,58,143,0.15)' }}>
+                  <div style={{ height: 4, borderRadius: 2, background: 'rgba(16,185,129,0.15)' }}>
                     <div style={{
                       height: '100%', borderRadius: 2,
-                      background: 'linear-gradient(90deg, #1A3A8F, #9F67FF)',
+                      background: 'linear-gradient(90deg, #10B981, #9F67FF)',
                       width: `${Math.min(100, Math.round((s.metrics.bookings_count / 40) * 100))}%`,
                       transition: 'width 0.5s ease-out',
                     }} />
@@ -487,7 +487,7 @@ function RevenueTab({ rankedStaff, theme, sp }) {
 
         <div style={{ display: 'flex', gap: sp(4), marginBottom: sp(16), borderRadius: 10, overflow: 'hidden', height: 40 }}>
           <div style={{
-            width: '85%', background: 'linear-gradient(135deg, #1A3A8F, #9F67FF)',
+            width: '85%', background: 'linear-gradient(135deg, #10B981, #9F67FF)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 13, fontWeight: 700, color: '#FFFFFF', fontFamily: FONT_M,
           }}>85% Trainer</div>
@@ -504,7 +504,7 @@ function RevenueTab({ rankedStaff, theme, sp }) {
         </div>
         <div style={{ display: 'flex', gap: sp(16), flexWrap: 'wrap' }}>
           {[
-            { label: 'Trainer Share', pct: '85%', color: '#1A3A8F' },
+            { label: 'Trainer Share', pct: '85%', color: '#10B981' },
             { label: 'Gym Share', pct: '10%', color: theme.green },
             { label: 'Platform Fee', pct: '5%', color: theme.cyan },
           ].map(item => (
@@ -555,7 +555,7 @@ function RevenueTab({ rankedStaff, theme, sp }) {
                 background: theme.bgSec, width: `${Math.max(barWidth, 10)}%`,
                 transition: 'width 0.5s ease-out',
               }}>
-                <div style={{ width: '85%', background: 'linear-gradient(135deg, #1A3A8F, #9F67FF)' }} />
+                <div style={{ width: '85%', background: 'linear-gradient(135deg, #10B981, #9F67FF)' }} />
                 <div style={{ width: '10%', background: theme.green }} />
                 <div style={{ width: '5%', background: theme.cyan }} />
               </div>
@@ -613,7 +613,7 @@ function RevenueTab({ rankedStaff, theme, sp }) {
                   <td style={{ padding: `${sp(12)}px ${sp(16)}px`, fontFamily: FONT_M, fontSize: 14, fontWeight: 700, color: theme.text }}>
                     {formatPaise(gross)}
                   </td>
-                  <td style={{ padding: `${sp(12)}px ${sp(16)}px`, fontFamily: FONT_M, fontSize: 14, color: '#1A3A8F', fontWeight: 600 }}>
+                  <td style={{ padding: `${sp(12)}px ${sp(16)}px`, fontFamily: FONT_M, fontSize: 14, color: '#10B981', fontWeight: 600 }}>
                     {formatPaise(Math.round(gross * 0.85))}
                   </td>
                   <td style={{ padding: `${sp(12)}px ${sp(16)}px`, fontFamily: FONT_M, fontSize: 14, color: theme.green, fontWeight: 600 }}>

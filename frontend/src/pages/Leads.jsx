@@ -65,7 +65,7 @@ const MOCK_PARTNER_GYMS = [
 
 const STATUS_STYLES = {
   pending:   { bg: '#F9731620', color: '#F97316', label: 'Pending' },
-  routed:    { bg: '#0052FF20', color: '#0052FF', label: 'Routed' },
+  routed:    { bg: '#10B98120', color: '#10B981', label: 'Routed' },
   closed:    { bg: '#22C55E20', color: '#22C55E', label: 'Closed' },
   suggested: { bg: '#8B5CF620', color: '#8B5CF6', label: 'Suggested' },
 }
@@ -147,23 +147,23 @@ function RouteModal({ lead, gyms, onClose, onRoute }) {
               <button key={gym.id} onClick={() => setSelected(gym)} style={{
                 display: 'flex', alignItems: 'center', gap: 12, width: '100%',
                 padding: '12px 14px', borderRadius: 10, marginBottom: 6,
-                background: isSelected ? '#0052FF15' : '#111118',
-                border: isSelected ? '1px solid #0052FF40' : '1px solid transparent',
+                background: isSelected ? '#10B98115' : '#111118',
+                border: isSelected ? '1px solid #10B98140' : '1px solid transparent',
                 cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
               }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
-                  background: isSelected ? '#0052FF20' : '#1a1a2e',
+                  background: isSelected ? '#10B98120' : '#1a1a2e',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <Building2 size={18} color={isSelected ? '#0052FF' : '#555'} />
+                  <Building2 size={18} color={isSelected ? '#10B981' : '#555'} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{gym.name}</div>
                   <div style={{ color: '#888', fontSize: 12 }}>{gym.area}, {gym.city}</div>
                 </div>
                 <div style={{ color: '#555', fontSize: 12 }}>{gym.members} members</div>
-                {isSelected && <CheckCircle size={18} color="#0052FF" />}
+                {isSelected && <CheckCircle size={18} color="#10B981" />}
               </button>
             )
           })}
@@ -191,7 +191,7 @@ function RouteModal({ lead, gyms, onClose, onRoute }) {
             onClick={() => { onRoute(lead, selected); onClose() }}
             style={{
               padding: '10px 24px', borderRadius: 10,
-              background: selected ? '#0052FF' : '#1a1a2e',
+              background: selected ? '#10B981' : '#1a1a2e',
               border: 'none', color: '#fff', fontSize: 13, fontWeight: 600,
               cursor: selected ? 'pointer' : 'not-allowed',
               opacity: selected ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: 6,
@@ -447,7 +447,7 @@ export default function Leads() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
           <div style={{
             width: 32, height: 32, borderRadius: 8,
-            background: 'linear-gradient(135deg, #0052FF, #0040CC)',
+            background: 'linear-gradient(135deg, #10B981, #059669)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Globe size={16} color="#fff" />
@@ -466,7 +466,7 @@ export default function Leads() {
         {[
           { key: 'all', label: 'All Leads', icon: Users, color: '#fff' },
           { key: 'pending', label: 'Pending', icon: AlertCircle, color: '#F97316' },
-          { key: 'routed', label: 'Routed', icon: Send, color: '#0052FF' },
+          { key: 'routed', label: 'Routed', icon: Send, color: '#10B981' },
           { key: 'closed', label: 'Closed', icon: CheckCircle, color: '#22C55E' },
           { key: 'suggested', label: 'Suggested', icon: Sparkles, color: '#8B5CF6' },
         ].map(f => (
@@ -633,11 +633,11 @@ export default function Leads() {
                   {lead.routed_to && (
                     <div style={{
                       marginTop: 8, display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '6px 10px', background: '#0052FF10', borderRadius: 8,
+                      padding: '6px 10px', background: '#10B98110', borderRadius: 8,
                       width: 'fit-content',
                     }}>
-                      <Building2 size={13} color="#0052FF" />
-                      <span style={{ color: '#0052FF', fontSize: 12, fontWeight: 600 }}>
+                      <Building2 size={13} color="#10B981" />
+                      <span style={{ color: '#10B981', fontSize: 12, fontWeight: 600 }}>
                         Routed to {lead.routed_to}
                       </span>
                       {lead.routed_at && (
@@ -656,7 +656,7 @@ export default function Leads() {
                       onClick={() => setRouteModal(lead)}
                       style={{
                         padding: '10px 20px', borderRadius: 10,
-                        background: '#0052FF', border: 'none',
+                        background: '#10B981', border: 'none',
                         color: '#fff', fontSize: 13, fontWeight: 600,
                         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                         whiteSpace: 'nowrap', transition: 'opacity 0.15s',

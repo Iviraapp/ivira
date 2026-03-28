@@ -11,10 +11,10 @@ const SURFACE      = '#111111'
 const CARBON       = '#111111'
 const GRAPHITE     = '#161616'
 const DEEP_BLUE    = '#0A0A0A'
-const IVIRA_BLUE   = '#1A3A8F'
+const IVIRA_BLUE   = '#10B981'
 const COBALT       = '#2250B0'
 const SKY_ACCENT   = '#3B82F6'
-const BLUE_GLOW    = 'rgba(26,58,143,0.15)'
+const BLUE_GLOW    = 'rgba(16,185,129,0.15)'
 const ACCENT       = '#3B82F6'
 const ACCENT_DARK  = '#2563EB'
 const ACCENT_GLOW  = 'rgba(59,130,246,0.08)'
@@ -575,7 +575,7 @@ function ConciergeLeadCapture({ isDark, t, navigate }) {
           border: `1px solid ${focused ? IVIRA_BLUE + '66' : t.cardBorder}`,
           borderRadius: 14, padding: '14px 20px',
           transition: 'border-color 0.3s, box-shadow 0.3s',
-          boxShadow: focused ? `0 0 20px rgba(26,58,143,0.12)` : 'none',
+          boxShadow: focused ? `0 0 20px rgba(16,185,129,0.12)` : 'none',
         }}>
           {icons.search(IVIRA_BLUE)}
           <input
@@ -686,10 +686,10 @@ export default function Landing() {
     textSec:   isDark ? PLATINUM : '#334155',
     textMuted: isDark ? SILVER : '#1E293B',
     textDim:   isDark ? GUNMETAL : '#475569',
-    border:    isDark ? `${GUNMETAL}33` : 'rgba(26,58,143,0.12)',
+    border:    isDark ? `${GUNMETAL}33` : 'rgba(16,185,129,0.12)',
     cardBg:    isDark ? SURFACE : 'rgba(255,255,255,0.95)',
-    cardBorder:isDark ? 'rgba(255,255,255,0.05)' : 'rgba(26,58,143,0.15)',
-    cardShadow:isDark ? 'none' : '0 4px 24px rgba(26,58,143,0.12)',
+    cardBorder:isDark ? 'rgba(255,255,255,0.05)' : 'rgba(16,185,129,0.15)',
+    cardShadow:isDark ? 'none' : '0 4px 24px rgba(16,185,129,0.12)',
     navBg:     isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.85)',
     navBgClear:isDark ? 'transparent' : 'rgba(255,255,255,0.5)',
     carbonBg:  isDark ? carbonFiberBg : {},
@@ -803,10 +803,10 @@ export default function Landing() {
               background: IVIRA_BLUE, color: WHITE,
               border: 'none', borderRadius: 8,
               padding: '9px 20px', cursor: 'pointer', transition: 'all 0.3s',
-              boxShadow: '0 2px 8px rgba(26,58,143,0.3)',
+              boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
             }}
-            onMouseEnter={e => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 4px 14px rgba(26,58,143,0.45)' }}
-            onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 2px 8px rgba(26,58,143,0.3)' }}>
+            onMouseEnter={e => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 4px 14px rgba(16,185,129,0.45)' }}
+            onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 2px 8px rgba(16,185,129,0.3)' }}>
               Get Started
             </button>
             {/* Theme toggle */}
@@ -900,7 +900,7 @@ export default function Landing() {
                       padding: '14px 20px', cursor: 'pointer', width: '100%',
                       textDecoration: 'none', textAlign: 'center',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                      boxShadow: '0 2px 10px rgba(26,58,143,0.3)',
+                      boxShadow: '0 2px 10px rgba(16,185,129,0.3)',
                     }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                       Download APK (Beta)
@@ -1050,7 +1050,7 @@ export default function Landing() {
                   fontFamily: FONT_BODY, fontSize: 15, fontWeight: 700,
                   background: IVIRA_BLUE, color: WHITE, border: 'none', borderRadius: 12,
                   padding: '16px 32px', cursor: 'pointer', transition: 'all 0.3s',
-                  boxShadow: '0 4px 16px rgba(26,58,143,0.35)',
+                  boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
                   textDecoration: 'none', width: '100%', textAlign: 'center',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 }}>
@@ -1092,7 +1092,7 @@ export default function Landing() {
                   fontFamily: FONT_BODY, fontSize: 15, fontWeight: 700,
                   background: IVIRA_BLUE, color: WHITE, border: 'none', borderRadius: 12,
                   padding: '16px 32px', cursor: 'pointer', transition: 'all 0.3s',
-                  boxShadow: '0 4px 16px rgba(26,58,143,0.35)',
+                  boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
                   width: '100%', textAlign: 'center',
                 }}>
                   Open Member Hub
@@ -1114,10 +1114,10 @@ export default function Landing() {
                   fontFamily: FONT_BODY, fontSize: 15, fontWeight: 700,
                   background: IVIRA_BLUE, color: WHITE, border: 'none', borderRadius: 10,
                   padding: '14px 32px', cursor: 'pointer', transition: 'all 0.3s',
-                  boxShadow: '0 4px 16px rgba(26,58,143,0.35)',
+                  boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
                 }}
-                onMouseEnter={e => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 8px 28px rgba(26,58,143,0.5)' }}
-                onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 16px rgba(26,58,143,0.35)' }}>
+                onMouseEnter={e => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 8px 28px rgba(16,185,129,0.5)' }}
+                onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 16px rgba(16,185,129,0.35)' }}>
                   Start Your 14-Day Free Trial
                 </button>
                 <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
@@ -1399,7 +1399,7 @@ export default function Landing() {
                     e.currentTarget.style.boxShadow = `0 0 24px ${card.accent}25`
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(26,58,143,0.14)'
+                    e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(16,185,129,0.14)'
                     e.currentTarget.style.boxShadow = 'none'
                   }}>
                     {/* Accent gradient line */}
@@ -1937,7 +1937,7 @@ export default function Landing() {
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.borderColor = plan.best ? IVIRA_BLUE : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)')
-                    e.currentTarget.style.boxShadow = plan.best ? `0 0 30px rgba(26,58,143,0.3)` : (isDark ? '0 0 20px rgba(255,255,255,0.05)' : '0 4px 20px rgba(0,0,0,0.08)')
+                    e.currentTarget.style.boxShadow = plan.best ? `0 0 30px rgba(16,185,129,0.3)` : (isDark ? '0 0 20px rgba(255,255,255,0.05)' : '0 4px 20px rgba(0,0,0,0.08)')
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.borderColor = plan.best ? IVIRA_BLUE + '66' : t.cardBorder
@@ -2066,16 +2066,16 @@ export default function Landing() {
 
               {/* Download APK - Available to all users */}
               <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
-                background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
-                border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
+                background: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.06)',
+                border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(16,185,129,0.2)'}`,
                 borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
                 display: 'flex', alignItems: 'center',
                 gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
-                boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
+                boxShadow: isDark ? '0 4px 20px rgba(16,185,129,0.2)' : '0 4px 20px rgba(16,185,129,0.1)',
                 position: 'relative',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
+              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(16,185,129,0.25)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(16,185,129,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(16,185,129,0.2)' : '0 4px 20px rgba(16,185,129,0.1)' }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
                   background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
@@ -2097,16 +2097,16 @@ export default function Landing() {
 
               {/* Open Web App */}
               <a href="/member/login" style={{
-                background: isDark ? 'rgba(26,58,143,0.15)' : 'rgba(26,58,143,0.06)',
-                border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'}`,
+                background: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.06)',
+                border: `2px solid ${isDark ? 'rgba(59,130,246,0.4)' : 'rgba(16,185,129,0.2)'}`,
                 borderRadius: 14, padding: '20px 32px', cursor: 'pointer',
                 display: 'flex', alignItems: 'center',
                 gap: 14, transition: 'all 0.3s', minWidth: 200, textDecoration: 'none',
-                boxShadow: isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)',
+                boxShadow: isDark ? '0 4px 20px rgba(16,185,129,0.2)' : '0 4px 20px rgba(16,185,129,0.1)',
                 position: 'relative',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(26,58,143,0.25)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(26,58,143,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(26,58,143,0.2)' : '0 4px 20px rgba(26,58,143,0.1)' }}>
+              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(16,185,129,0.25)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(59,130,246,0.4)' : 'rgba(16,185,129,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isDark ? '0 4px 20px rgba(16,185,129,0.2)' : '0 4px 20px rgba(16,185,129,0.1)' }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
                   background: `linear-gradient(135deg, ${IVIRA_BLUE}, ${ACCENT})`,
@@ -2130,8 +2130,8 @@ export default function Landing() {
             {/* Feedback prompt */}
             <div style={{
               marginTop: 32, padding: '16px 24px',
-              background: isDark ? 'rgba(59,130,246,0.06)' : 'rgba(26,58,143,0.04)',
-              border: `1px solid ${isDark ? 'rgba(59,130,246,0.15)' : 'rgba(26,58,143,0.1)'}`,
+              background: isDark ? 'rgba(59,130,246,0.06)' : 'rgba(16,185,129,0.04)',
+              border: `1px solid ${isDark ? 'rgba(59,130,246,0.15)' : 'rgba(16,185,129,0.1)'}`,
               borderRadius: 12, maxWidth: 520, margin: '32px auto 0',
               display: 'flex', alignItems: 'center', gap: 12,
             }}>

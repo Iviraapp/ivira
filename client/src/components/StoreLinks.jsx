@@ -105,7 +105,7 @@ export default function StoreLinks({ variant = 'hero' }) {
         padding: isHero ? '12px 28px' : '8px 20px',
         borderRadius: 10,
         border: '1px solid rgba(255,255,255,0.1)',
-        background: '#1A3A8F',
+        background: '#10B981',
         color: '#fff',
         fontSize: isHero ? 15 : 13,
         fontWeight: 700,

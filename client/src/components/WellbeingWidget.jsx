@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom'
 const FONT_BRAND = "'Satoshi', 'General Sans', 'Inter', sans-serif"
 const FONT_BODY  = "'General Sans', 'Inter', -apple-system, sans-serif"
 const FONT_NAV   = "'General Sans', 'Inter', sans-serif"
-const COBALT     = '#1A3A8F'
+const COBALT     = '#10B981'
 const MATTE      = '#0A0A0A'
 const SURFACE    = '#161616'
 const CRIMSON    = '#DC143C'
@@ -206,10 +206,10 @@ export default function WellbeingWidget() {
       {nudgeVisible && nudgeType && (
         <div style={{
           padding: '8px 16px',
-          background: nudgeType === 'hydration' ? 'rgba(26,58,143,0.15)'
+          background: nudgeType === 'hydration' ? 'rgba(16,185,129,0.15)'
             : nudgeType === 'movement' ? 'rgba(220,20,60,0.1)'
             : 'rgba(34,197,94,0.1)',
-          borderBottom: `1px solid ${nudgeType === 'hydration' ? 'rgba(26,58,143,0.3)'
+          borderBottom: `1px solid ${nudgeType === 'hydration' ? 'rgba(16,185,129,0.3)'
             : nudgeType === 'movement' ? 'rgba(220,20,60,0.2)'
             : 'rgba(34,197,94,0.2)'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -266,8 +266,8 @@ export default function WellbeingWidget() {
         }} style={{
           fontFamily: FONT_NAV, fontSize: 9, fontWeight: 700,
           letterSpacing: '0.15em', textTransform: 'uppercase',
-          color: COBALT, background: 'rgba(26,58,143,0.1)',
-          border: '1px solid rgba(26,58,143,0.2)',
+          color: COBALT, background: 'rgba(16,185,129,0.1)',
+          border: '1px solid rgba(16,185,129,0.2)',
           borderRadius: 6, padding: '5px 10px', cursor: 'pointer',
         }}>ENABLE ALERTS</button>
 

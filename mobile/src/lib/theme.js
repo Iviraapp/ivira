@@ -11,9 +11,9 @@ export const COLORS = {
   textTer: 'rgba(248,250,252,0.50)',
   border: 'rgba(148,163,184,0.08)',
   borderStrong: 'rgba(148,163,184,0.16)',
-  accent: '#0055FF',    // Electric Cobalt (was #0052FF)
-  accentSoft: 'rgba(0,85,255,0.12)',
-  accentGlow: 'rgba(0,85,255,0.30)',
+  accent: '#10B981',    // IVIRA Emerald
+  accentSoft: 'rgba(16,185,129,0.12)',
+  accentGlow: 'rgba(16,185,129,0.25)',
   green: '#34D399',     // Emerald-400
   amber: '#FBBF24',     // Amber-400
   red: '#F87171',       // Red-400
@@ -64,9 +64,9 @@ export const COLORS_LIGHT = {
   textTer: 'rgba(15,23,42,0.40)',
   border: 'rgba(15,23,42,0.06)',
   borderStrong: 'rgba(15,23,42,0.12)',
-  accent: '#0055FF',
-  accentSoft: 'rgba(0,85,255,0.08)',
-  accentGlow: 'rgba(0,85,255,0.12)',
+  accent: '#10B981',
+  accentSoft: 'rgba(16,185,129,0.08)',
+  accentGlow: 'rgba(16,185,129,0.12)',
   green: '#16A34A',
   amber: '#D97706',
   red: '#DC2626',
@@ -123,7 +123,7 @@ export const CARD_ACCENTS = [
 
 // Active card glow — COCA Blue
 export const ELITE_GLOW = {
-  shadowColor: '#0055FF',
+  shadowColor: '#10B981',
   shadowOffset: { width: 0, height: 4 },
   shadowOpacity: 0.3,
   shadowRadius: 10,

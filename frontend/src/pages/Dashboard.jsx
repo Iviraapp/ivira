@@ -87,7 +87,7 @@ export default function Dashboard() {
       {/* Quick Action */}
       <Link to="/scanner" style={{
         display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px',
-        background: 'linear-gradient(135deg, #0052FF, #0040CC)', borderRadius: 12,
+        background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: 12,
         textDecoration: 'none', marginBottom: 24, transition: 'opacity 0.15s',
       }}>
         <ScanLine size={24} color="#fff" />
@@ -103,7 +103,7 @@ export default function Dashboard() {
           icon={Users}
           label="Total Members"
           value={stats?.totalMembers ?? stats?.members?.total ?? '—'}
-          color="#0052FF"
+          color="#10B981"
           sub="Active members"
         />
         <StatCard
@@ -177,7 +177,7 @@ export default function Dashboard() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <h2 style={{ color: '#fff', fontSize: 16, fontWeight: 600, margin: 0 }}>Recent Check-ins</h2>
-          <Link to="/checkins" style={{ color: '#0052FF', fontSize: 13, textDecoration: 'none' }}>
+          <Link to="/checkins" style={{ color: '#10B981', fontSize: 13, textDecoration: 'none' }}>
             View all →
           </Link>
         </div>
@@ -211,8 +211,8 @@ export default function Dashboard() {
                     <span style={{
                       padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
                       textTransform: 'uppercase', letterSpacing: 0.5,
-                      background: ci.method === 'qr' ? '#0052FF20' : ci.method === 'nfc' ? '#22C55E20' : '#F9731620',
-                      color: ci.method === 'qr' ? '#0052FF' : ci.method === 'nfc' ? '#22C55E' : '#F97316',
+                      background: ci.method === 'qr' ? '#10B98120' : ci.method === 'nfc' ? '#22C55E20' : '#F9731620',
+                      color: ci.method === 'qr' ? '#10B981' : ci.method === 'nfc' ? '#22C55E' : '#F97316',
                     }}>
                       {ci.method}
                     </span>

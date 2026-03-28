@@ -28,11 +28,11 @@ const FAVORITES_KEY = '@ivira_recipe_favorites'
 // ─── Filter Categories ───────────────────────────────────────
 const CATEGORIES = [
   { id: 'all',          label: 'All',           icon: '🍽️' },
-  { id: 'high_protein', label: 'High Protein',  icon: '💪' },
+  { id: 'high_protein', label: 'High Protein',  icon: '🥩' },
   { id: 'low_carb',     label: 'Low Carb',      icon: '🥬' },
   { id: 'vegan',        label: 'Vegan',          icon: '🌱' },
   { id: 'keto',         label: 'Keto',           icon: '🥑' },
-  { id: 'quick',        label: 'Quick',          icon: '⚡' },
+  { id: 'quick',        label: 'Quick',          icon: '⏱️' },
 ]
 
 // ─── Difficulty Config ───────────────────────────────────────

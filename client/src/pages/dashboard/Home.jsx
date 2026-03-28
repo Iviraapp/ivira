@@ -286,7 +286,7 @@ function AtRiskTable({ gymId, theme, sp }) {
                   <button
                     onClick={() => {
                       const phone = (m.phone || '').replace(/[^0-9]/g, '')
-                      const msg = encodeURIComponent(`Hi ${m.name}! We haven't seen you at the gym in a while. Your fitness journey is waiting! Come back and let's crush those goals together 💪`)
+                      const msg = encodeURIComponent(`Hi ${m.name}! We haven't seen you at the gym in a while. Your fitness journey is waiting! Come back and let's crush those goals together 🙌`)
                       window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
                     }}
                     className="whatsapp-nudge-btn"
@@ -704,7 +704,7 @@ const SOURCE_LABELS = {
 const SOURCE_COLORS = {
   membership: '#22C55E',
   class_booking: '#3B82F6',
-  affiliate: '#1A3A8F',
+  affiliate: '#10B981',
   store: '#F59E0B',
   ad_revenue: '#06B6D4',
 }

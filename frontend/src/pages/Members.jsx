@@ -84,7 +84,7 @@ export default function Members() {
           </button>
           <button style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px',
-            background: '#0052FF', color: '#fff', border: 'none', borderRadius: 8,
+            background: '#10B981', color: '#fff', border: 'none', borderRadius: 8,
             fontSize: 13, fontWeight: 600, cursor: 'pointer',
           }}>
             <UserPlus size={16} /> Add Member

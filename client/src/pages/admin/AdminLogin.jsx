@@ -109,7 +109,7 @@ export default function AdminLogin() {
       {step === 'email' && (
         <>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: `linear-gradient(135deg, ${accent}, #3B6FD4)`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 0 40px rgba(26,58,143,0.25)' }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: `linear-gradient(135deg, ${accent}, #3B6FD4)`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 0 40px rgba(16,185,129,0.25)' }}>
               <span style={{ fontSize: 24, fontWeight: 900, color: '#fff', fontFamily: ff }}>G</span>
             </div>
             <h2 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: textPrimary, letterSpacing: '-0.02em', fontFamily: ff }}>

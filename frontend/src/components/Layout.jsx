@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import {
   LayoutDashboard, Users, ScanLine, ClipboardList,
-  LogOut, Dumbbell, Menu, X, Globe, UserPlus, Settings,
+  LogOut, Activity, Menu, X, Globe, UserPlus, Settings,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -57,10 +57,10 @@ export default function Layout() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 36, height: 36, borderRadius: 10,
-              background: 'linear-gradient(135deg, #0052FF, #0040CC)',
+              background: 'linear-gradient(135deg, #10B981, #059669)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Dumbbell size={18} color="#fff" />
+              <Activity size={18} color="#fff" />
             </div>
             <div>
               <div style={{ color: '#fff', fontWeight: 700, fontSize: 15, letterSpacing: 2 }}>IVIRA</div>
@@ -86,7 +86,7 @@ export default function Layout() {
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 12px', borderRadius: 8, marginBottom: 4,
                 color: isActive ? '#fff' : '#888',
-                background: isActive ? '#0052FF15' : 'transparent',
+                background: isActive ? '#10B98115' : 'transparent',
                 textDecoration: 'none', fontSize: 14, fontWeight: 500,
                 transition: 'all 0.15s',
               })}

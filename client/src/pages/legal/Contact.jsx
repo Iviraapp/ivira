@@ -38,7 +38,7 @@ export default function Contact() {
   }
 
   const cardLink = {
-    color: '#1A3A8F',
+    color: '#10B981',
     textDecoration: 'none',
     fontSize: 14,
     fontFamily: FONT,

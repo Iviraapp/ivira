@@ -560,7 +560,7 @@ function maskPhone(phone) {
 function generateNudgeMessage(name, daysOverdue, plan) {
   const firstName = (name || 'Member').split(' ')[0];
   if (daysOverdue <= 3) {
-    return `Hi ${firstName}! Your ${plan || 'membership'} renewal is due. Tap here to renew and keep your streak going! 💪`;
+    return `Hi ${firstName}! Your ${plan || 'membership'} renewal is due. Tap here to renew and keep your streak going! 🙌`;
   }
   if (daysOverdue <= 7) {
     return `Hey ${firstName}, your ${plan || 'membership'} expired ${daysOverdue} days ago. Renew now to avoid losing your progress data.`;

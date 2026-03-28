@@ -4,12 +4,12 @@ const FONT = "'Inter', -apple-system, sans-serif"
 
 // Generate a deterministic color from name
 function nameToColor(name) {
-  if (!name) return '#1A3A8F'
+  if (!name) return '#10B981'
   let hash = 0
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash)
   }
-  const colors = ['#1A3A8F', '#34A853', '#4285F4', '#FBBC05', '#EA4335', '#FF6D00', '#00BCD4']
+  const colors = ['#10B981', '#34A853', '#4285F4', '#FBBC05', '#EA4335', '#FF6D00', '#00BCD4']
   return colors[Math.abs(hash) % colors.length]
 }
 

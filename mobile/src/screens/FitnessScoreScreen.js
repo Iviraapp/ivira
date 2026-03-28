@@ -339,7 +339,7 @@ export default function FitnessScoreScreen({ navigation }) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `My IVIRA Fitness Score is ${totalScore}/100! ${getScoreLabel(totalScore)} 💪\n\nBreakdown:\n${dimensions.map((d) => `${d.label}: ${d.value}/20`).join('\n')}\n\nTrack your fitness with IVIRA!`,
+        message: `My IVIRA Fitness Score is ${totalScore}/100! ${getScoreLabel(totalScore)} 🙌\n\nBreakdown:\n${dimensions.map((d) => `${d.label}: ${d.value}/20`).join('\n')}\n\nTrack your fitness with IVIRA!`,
       })
     } catch {}
   }

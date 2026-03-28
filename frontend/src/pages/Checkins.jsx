@@ -5,7 +5,7 @@ import { format } from 'date-fns'
 import api from '../lib/api'
 
 const METHOD_COLORS = {
-  qr: { bg: '#0052FF20', text: '#0052FF' },
+  qr: { bg: '#10B98120', text: '#10B981' },
   nfc: { bg: '#22C55E20', text: '#22C55E' },
   otp: { bg: '#F9731620', text: '#F97316' },
   manual: { bg: '#8B5CF620', text: '#8B5CF6' },
