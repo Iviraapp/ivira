@@ -1,4 +1,6 @@
 import * as workoutSessionService from '../services/workout-session.service.js';
+import { syncExercises, getMuscleList } from '../services/wger-sync.service.js';
+import db from '../config/database.js';
 
 const startSessionSchema = {
   body: {
@@ -120,5 +122,60 @@ export default async function workoutSessionRoutes(fastify) {
     const { sessionId } = request.params;
     const session = await workoutSessionService.getSessionById(sessionId);
     return session;
+  });
+
+  // POST /gyms/:gymId/exercises/sync-wger - Sync wger exercise database (admin only)
+  fastify.post('/gyms/:gymId/exercises/sync-wger', {
+    preHandler: [fastify.verifyToken],
+  }, async (request, reply) => {
+    // Only gym owners can trigger sync
+    const gym = request.gym || await db('gyms').where({ id: request.params.gymId }).first();
+    if (!gym || gym.owner_id !== request.user?.id) {
+      return reply.code(403).send({ error: 'Only gym owners can sync exercises' });
+    }
+    const result = await syncExercises(db);
+    return result;
+  });
+
+  // GET /exercises/muscles - Get all muscle groups with SVG image URLs
+  fastify.get('/exercises/muscles', async (request, reply) => {
+    const muscles = await getMuscleList(db);
+    return muscles;
+  });
+
+  // GET /exercises/browse - Public exercise browser (no auth, for discovery)
+  fastify.get('/exercises/browse', async (request, reply) => {
+    const { category, muscle, equipment, search, page = 1, limit = 50 } = request.query;
+    const pg = Math.min(Math.max(parseInt(page) || 1, 1), 100);
+    const lim = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
+    const offset = (pg - 1) * lim;
+
+    let query = db('exercises')
+      .where({ is_default: true })
+      .orderBy('name', 'asc');
+
+    if (category) query = query.andWhere({ category });
+    if (equipment) query = query.andWhere({ equipment });
+    if (search) {
+      query = query.andWhere(function () {
+        this.whereILike('name', `%${search}%`)
+          .orWhereILike('muscle_group', `%${search}%`)
+          .orWhereILike('equipment', `%${search}%`);
+      });
+    }
+    if (muscle) {
+      query = query.andWhere(function () {
+        this.whereILike('muscle_group', `%${muscle}%`)
+          .orWhereRaw("muscles_primary::text ILIKE ?", [`%${muscle}%`]);
+      });
+    }
+
+    const [{ count }] = await query.clone().count();
+    const exercises = await query.limit(lim).offset(offset);
+
+    return {
+      exercises,
+      pagination: { page: pg, limit: lim, total: parseInt(count), pages: Math.ceil(parseInt(count) / lim) },
+    };
   });
 }

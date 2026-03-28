@@ -4,9 +4,9 @@ import { getItem, setItem } from './storage'
 let Location = null
 let TaskManager = null
 let Notifications = null
-try { Location = require('expo-location') } catch {}
-try { TaskManager = require('expo-task-manager') } catch {}
-try { Notifications = require('expo-notifications') } catch {}
+try { Location = require('expo-location') } catch (err) { console.warn('[Geofence] Location load:', err?.message) }
+try { TaskManager = require('expo-task-manager') } catch (err) { console.warn('[Geofence] TaskManager load:', err?.message) }
+try { Notifications = require('expo-notifications') } catch (err) { console.warn('[Geofence] Notifications load:', err?.message) }
 
 const GEOFENCE_TASK = 'IVIRA_GYM_GEOFENCE'
 const GEOFENCE_RADIUS = 200 // meters
@@ -146,7 +146,8 @@ export async function isGeofencingActive() {
   if (!TaskManager) return false
   try {
     return await TaskManager.isTaskRegisteredAsync(GEOFENCE_TASK)
-  } catch {
+  } catch (err) {
+    console.warn('[Geofence] isGeofencingActive:', err?.message)
     return false
   }
 }

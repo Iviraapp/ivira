@@ -243,7 +243,8 @@ export async function requestSleepPermissions() {
           { accessType: 'read', recordType: 'SleepSession' },
         ])
         return granted.length > 0
-      } catch {
+      } catch (err) {
+        console.warn('[HealthKit] Sleep HC permission:', err?.message)
         return false
       }
     }
@@ -430,7 +431,8 @@ export async function requestExtendedPermissions() {
           { accessType: 'read', recordType: 'RestingHeartRate' },
         ])
         return granted.length > 0
-      } catch {
+      } catch (err) {
+        console.warn('[HealthKit] Extended HC permission:', err?.message)
         return false
       }
     }

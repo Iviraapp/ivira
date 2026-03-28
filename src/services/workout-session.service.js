@@ -304,7 +304,7 @@ export async function getPersonalRecords(memberId) {
   return records;
 }
 
-export async function getExercises({ category, search, gymId }) {
+export async function getExercises({ category, search, gymId, muscle }) {
   let query = db('exercises')
     .where(function () {
       this.where({ is_default: true }).orWhere({ gym_id: gymId || null });
@@ -321,6 +321,13 @@ export async function getExercises({ category, search, gymId }) {
       this.whereILike('name', `%${search}%`)
         .orWhereILike('muscle_group', `%${search}%`)
         .orWhereILike('equipment', `%${search}%`);
+    });
+  }
+
+  if (muscle) {
+    query = query.andWhere(function () {
+      this.whereILike('muscle_group', `%${muscle}%`)
+        .orWhereRaw("muscles_primary::text ILIKE ?", [`%${muscle}%`]);
     });
   }
 

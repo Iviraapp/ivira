@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,
   Alert, Animated, ActivityIndicator, Modal, FlatList, Platform, RefreshControl,
+  Image,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -82,13 +83,158 @@ const WORKOUT_TEMPLATES = {
   cardio: ['treadmill', 'cycling', 'jump-rope'],
 }
 
+// ── Exercise Detail Modal ────────────────────────────────────────
+function ExerciseDetailModal({ visible, exercise, onClose, onAdd, colors }) {
+  if (!exercise) return null
+  const muscles = (() => {
+    try { return typeof exercise.muscles_primary === 'string' ? JSON.parse(exercise.muscles_primary) : (exercise.muscles_primary || []) } catch { return [] }
+  })()
+  const secondaryMuscles = (() => {
+    try { return typeof exercise.muscles_secondary === 'string' ? JSON.parse(exercise.muscles_secondary) : (exercise.muscles_secondary || []) } catch { return [] }
+  })()
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
+      <View style={[styles.pickerOverlay, { backgroundColor: 'rgba(0,0,0,0.85)' }]}>
+        <View style={[styles.detailContainer, { backgroundColor: colors.bg }]}>
+          <View style={styles.pickerHeader}>
+            <Text style={[styles.pickerTitle, { color: colors.text, flex: 1 }]} numberOfLines={2}>{exercise.name}</Text>
+            <TouchableOpacity onPress={onClose} style={[styles.pickerClose, { backgroundColor: colors.bgTer }]}>
+              <Feather name="x" size={18} color={colors.textSec} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: SPACING.lg, paddingBottom: 100 }}>
+            {/* Exercise images */}
+            {(exercise.image_url || exercise.image_url_secondary) && (
+              <View style={styles.detailImages}>
+                {exercise.image_url && (
+                  <Image source={{ uri: exercise.image_url }} style={styles.detailImage} resizeMode="contain" />
+                )}
+                {exercise.image_url_secondary && (
+                  <Image source={{ uri: exercise.image_url_secondary }} style={styles.detailImage} resizeMode="contain" />
+                )}
+              </View>
+            )}
+
+            {/* Category & equipment badges */}
+            <View style={styles.detailBadges}>
+              <View style={[styles.detailBadge, { backgroundColor: COLORS.accentSoft }]}>
+                <Feather name="layers" size={11} color={COLORS.accent} />
+                <Text style={[styles.detailBadgeText, { color: COLORS.accent }]}>{exercise.category}</Text>
+              </View>
+              <View style={[styles.detailBadge, { backgroundColor: 'rgba(139,92,246,0.12)' }]}>
+                <Feather name="tool" size={11} color="#8B5CF6" />
+                <Text style={[styles.detailBadgeText, { color: '#8B5CF6' }]}>{exercise.equipment}</Text>
+              </View>
+            </View>
+
+            {/* Primary muscles */}
+            {muscles.length > 0 && (
+              <View style={{ marginTop: SPACING.md }}>
+                <Text style={[styles.detailSectionTitle, { color: colors.textSec }]}>Primary Muscles</Text>
+                <View style={styles.muscleChips}>
+                  {muscles.map(m => (
+                    <View key={m.id} style={[styles.muscleChip, { backgroundColor: 'rgba(239,68,68,0.10)', borderColor: 'rgba(239,68,68,0.20)' }]}>
+                      <View style={[styles.muscleDot, { backgroundColor: '#EF4444' }]} />
+                      <Text style={[styles.muscleChipText, { color: '#F87171' }]}>{m.name}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Secondary muscles */}
+            {secondaryMuscles.length > 0 && (
+              <View style={{ marginTop: SPACING.sm }}>
+                <Text style={[styles.detailSectionTitle, { color: colors.textSec }]}>Secondary Muscles</Text>
+                <View style={styles.muscleChips}>
+                  {secondaryMuscles.map(m => (
+                    <View key={m.id} style={[styles.muscleChip, { backgroundColor: 'rgba(251,191,36,0.10)', borderColor: 'rgba(251,191,36,0.20)' }]}>
+                      <View style={[styles.muscleDot, { backgroundColor: '#FBBF24' }]} />
+                      <Text style={[styles.muscleChipText, { color: '#FBBF24' }]}>{m.name}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Instructions */}
+            {exercise.instructions ? (
+              <View style={{ marginTop: SPACING.md }}>
+                <Text style={[styles.detailSectionTitle, { color: colors.textSec }]}>Instructions</Text>
+                <Text style={[styles.detailInstructions, { color: colors.text }]}>{exercise.instructions}</Text>
+              </View>
+            ) : null}
+          </ScrollView>
+
+          {/* Add to workout button */}
+          <View style={[styles.detailFooter, { borderTopColor: colors.border }]}>
+            <TouchableOpacity
+              style={styles.finishBtn}
+              onPress={() => { onAdd(exercise); onClose() }}
+              activeOpacity={0.8}
+            >
+              <Feather name="plus" size={18} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={styles.finishBtnText}>Add to Workout</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  )
+}
+
 // ── Exercise Picker Modal ────────────────────────────────────────
-function ExercisePicker({ visible, onClose, onSelect, exercises }) {
+function ExercisePicker({ visible, onClose, onSelect, fallbackExercises, gymId, memberId }) {
   const { colors, isDark } = useTheme()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
+  const [apiExercises, setApiExercises] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [detailExercise, setDetailExercise] = useState(null)
+  const searchTimeout = useRef(null)
 
-  const filtered = exercises.filter(ex => {
+  // Fetch exercises from API (wger-enriched)
+  const fetchExercises = useCallback((cat, q) => {
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (cat && cat !== 'all') params.append('category', cat)
+    if (q) params.append('search', q)
+    params.append('limit', '100')
+
+    const endpoint = gymId && memberId
+      ? `/gyms/${gymId}/members/${memberId}/workout-sessions/exercises?${params}`
+      : `/exercises/browse?${params}`
+
+    api.get(endpoint)
+      .then(res => {
+        const data = res.data?.exercises || res.data || []
+        setApiExercises(data)
+      })
+      .catch(() => setApiExercises(null))
+      .finally(() => setLoading(false))
+  }, [gymId, memberId])
+
+  useEffect(() => {
+    if (visible) fetchExercises(category, search)
+  }, [visible])
+
+  // Debounced search
+  const handleSearch = (text) => {
+    setSearch(text)
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    searchTimeout.current = setTimeout(() => fetchExercises(category, text), 300)
+  }
+
+  const handleCategory = (cat) => {
+    setCategory(cat)
+    fetchExercises(cat, search)
+  }
+
+  // Use API exercises if available, fall back to defaults
+  const exercises = apiExercises || fallbackExercises
+  const filtered = apiExercises ? exercises : exercises.filter(ex => {
     const matchSearch = !search || ex.name.toLowerCase().includes(search.toLowerCase())
     const matchCat = category === 'all' || ex.category === category
     return matchSearch && matchCat
@@ -100,9 +246,16 @@ function ExercisePicker({ visible, onClose, onSelect, exercises }) {
         <View style={[styles.pickerContainer, { backgroundColor: colors.bg }]}>
           <View style={styles.pickerHeader}>
             <Text style={[styles.pickerTitle, { color: colors.text }]}>Add Exercise</Text>
-            <TouchableOpacity onPress={onClose} style={[styles.pickerClose, { backgroundColor: colors.bgTer }]}>
-              <Feather name="x" size={18} color={colors.textSec} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {apiExercises && (
+                <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: colors.textTer }}>
+                  {filtered.length} exercises
+                </Text>
+              )}
+              <TouchableOpacity onPress={onClose} style={[styles.pickerClose, { backgroundColor: colors.bgTer }]}>
+                <Feather name="x" size={18} color={colors.textSec} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Search */}
@@ -110,11 +263,17 @@ function ExercisePicker({ visible, onClose, onSelect, exercises }) {
             <Feather name="search" size={16} color={colors.textTer} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Search exercises..."
+              placeholder="Search exercises, muscles, equipment..."
               placeholderTextColor={colors.textTer}
               value={search}
-              onChangeText={setSearch}
+              onChangeText={handleSearch}
+              autoCorrect={false}
             />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => handleSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Feather name="x-circle" size={16} color={colors.textTer} />
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Category filter */}
@@ -123,7 +282,7 @@ function ExercisePicker({ visible, onClose, onSelect, exercises }) {
               <TouchableOpacity
                 key={cat.key}
                 style={[styles.catChip, category === cat.key && styles.catChipActive]}
-                onPress={() => setCategory(cat.key)}
+                onPress={() => handleCategory(cat.key)}
               >
                 <Feather name={cat.icon} size={12} color={category === cat.key ? '#FFF' : colors.textSec} />
                 <Text style={[styles.catChipText, category === cat.key && { color: '#FFF' }]}>{cat.label}</Text>
@@ -132,32 +291,65 @@ function ExercisePicker({ visible, onClose, onSelect, exercises }) {
           </ScrollView>
 
           {/* Exercise list */}
-          <FlatList
-            data={filtered}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.exerciseRow, { borderColor: colors.border }]}
-                onPress={() => { onSelect(item); onClose() }}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.exerciseIcon, { backgroundColor: colors.accentSoft }]}>
-                  <Feather name="plus" size={14} color={COLORS.accent} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.exerciseName, { color: colors.text }]}>{item.name}</Text>
-                  <Text style={[styles.exerciseMeta, { color: colors.textTer }]}>
-                    {item.muscle_group} · {item.equipment}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <Text style={[styles.emptyText, { color: colors.textTer }]}>No exercises found</Text>
-            }
-          />
+          {loading ? (
+            <ActivityIndicator size="small" color={COLORS.accent} style={{ marginTop: 40 }} />
+          ) : (
+            <FlatList
+              data={filtered}
+              keyExtractor={item => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.exerciseRow, { borderColor: colors.border }]}
+                  onPress={() => { onSelect(item); onClose() }}
+                  onLongPress={() => setDetailExercise(item)}
+                  activeOpacity={0.7}
+                >
+                  {/* Exercise thumbnail or icon */}
+                  {item.image_url ? (
+                    <Image
+                      source={{ uri: item.image_url }}
+                      style={styles.exerciseThumbnail}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={[styles.exerciseIcon, { backgroundColor: colors.accentSoft }]}>
+                      <Feather name="plus" size={14} color={COLORS.accent} />
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.exerciseName, { color: colors.text }]}>{item.name}</Text>
+                    <Text style={[styles.exerciseMeta, { color: colors.textTer }]}>
+                      {item.muscle_group} · {item.equipment}
+                    </Text>
+                  </View>
+                  {/* Info button for exercises with rich data */}
+                  {(item.image_url || item.muscles_primary) && (
+                    <TouchableOpacity
+                      onPress={() => setDetailExercise(item)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      style={{ padding: 4 }}
+                    >
+                      <Feather name="info" size={16} color={colors.textTer} />
+                    </TouchableOpacity>
+                  )}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text style={[styles.emptyText, { color: colors.textTer }]}>No exercises found</Text>
+              }
+            />
+          )}
         </View>
       </View>
+
+      {/* Exercise detail modal */}
+      <ExerciseDetailModal
+        visible={!!detailExercise}
+        exercise={detailExercise}
+        onClose={() => setDetailExercise(null)}
+        onAdd={onSelect}
+        colors={colors}
+      />
     </Modal>
   )
 }
@@ -751,7 +943,9 @@ export default function WorkoutTrackerScreen({ navigation }) {
         visible={showPicker}
         onClose={() => setShowPicker(false)}
         onSelect={addExercise}
-        exercises={DEFAULT_EXERCISES}
+        fallbackExercises={DEFAULT_EXERCISES}
+        gymId={gymId}
+        memberId={member?.id}
       />
 
       {/* Workout summary modal */}
@@ -909,8 +1103,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: SPACING.lg, paddingVertical: 12, borderBottomWidth: 1,
   },
-  exerciseIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  exerciseIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  exerciseThumbnail: {
+    width: 44, height: 44, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)',
+  },
   exerciseName: { fontSize: 14, fontWeight: '600', fontFamily: FONT.semibold },
   exerciseMeta: { fontSize: 11, fontFamily: FONT.regular, marginTop: 1 },
   emptyText: { fontSize: 14, fontFamily: FONT.regular, textAlign: 'center', paddingVertical: SPACING.xl },
+
+  // Exercise detail modal
+  detailContainer: {
+    flex: 1, marginTop: Platform.OS === 'ios' ? 60 : 40,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+  },
+  detailImages: {
+    flexDirection: 'row', gap: 12, marginTop: SPACING.sm,
+    justifyContent: 'center',
+  },
+  detailImage: {
+    width: 140, height: 140, borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  detailBadges: { flexDirection: 'row', gap: 8, marginTop: SPACING.md },
+  detailBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.full,
+  },
+  detailBadgeText: { fontSize: 12, fontWeight: '600', fontFamily: FONT.semibold, textTransform: 'capitalize' },
+  detailSectionTitle: { fontSize: 11, fontWeight: '700', fontFamily: FONT.bold, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 },
+  muscleChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  muscleChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.full,
+    borderWidth: 1,
+  },
+  muscleDot: { width: 6, height: 6, borderRadius: 3 },
+  muscleChipText: { fontSize: 12, fontWeight: '600', fontFamily: FONT.semibold },
+  detailInstructions: { fontSize: 14, fontFamily: FONT.regular, lineHeight: 22 },
+  detailFooter: {
+    paddingHorizontal: SPACING.lg, paddingVertical: 12,
+    borderTopWidth: 1,
+  },
 })
