@@ -26,15 +26,15 @@ const SLIDES = [
     // Visual scene config
     bgBase: '#08060F',
     orbs: [
-      { x: W * 0.15, y: H * 0.12, size: 260, color: 'rgba(0,82,255,0.25)', delay: 0 },
+      { x: W * 0.15, y: H * 0.12, size: 260, color: 'rgba(16,185,129,0.25)', delay: 0 },
       { x: W * 0.6, y: H * 0.08, size: 200, color: 'rgba(139,92,246,0.2)', delay: 800 },
       { x: W * 0.35, y: H * 0.32, size: 180, color: 'rgba(249,115,22,0.18)', delay: 400 },
-      { x: W * 0.7, y: H * 0.28, size: 140, color: 'rgba(0,82,255,0.12)', delay: 1200 },
+      { x: W * 0.7, y: H * 0.28, size: 140, color: 'rgba(16,185,129,0.12)', delay: 1200 },
     ],
     icon: 'activity',
     iconSize: 160,
     shapes: [
-      { type: 'ring', x: W * 0.5, y: H * 0.22, size: 200, color: 'rgba(0,82,255,0.08)' },
+      { type: 'ring', x: W * 0.5, y: H * 0.22, size: 200, color: 'rgba(16,185,129,0.08)' },
       { type: 'ring', x: W * 0.2, y: H * 0.35, size: 120, color: 'rgba(139,92,246,0.06)' },
       { type: 'diamond', x: W * 0.78, y: H * 0.15, size: 24, color: 'rgba(255,255,255,0.08)' },
       { type: 'diamond', x: W * 0.12, y: H * 0.28, size: 16, color: 'rgba(255,255,255,0.05)' },
@@ -48,7 +48,7 @@ const SLIDES = [
     bgBase: '#060D1A',
     orbs: [
       { x: W * 0.6, y: H * 0.1, size: 280, color: 'rgba(34,197,94,0.2)', delay: 200 },
-      { x: W * 0.1, y: H * 0.2, size: 220, color: 'rgba(0,82,255,0.22)', delay: 600 },
+      { x: W * 0.1, y: H * 0.2, size: 220, color: 'rgba(16,185,129,0.22)', delay: 600 },
       { x: W * 0.45, y: H * 0.35, size: 160, color: 'rgba(20,184,166,0.18)', delay: 0 },
       { x: W * 0.8, y: H * 0.3, size: 120, color: 'rgba(34,197,94,0.1)', delay: 1000 },
     ],
@@ -56,7 +56,7 @@ const SLIDES = [
     iconSize: 160,
     shapes: [
       { type: 'ring', x: W * 0.4, y: H * 0.18, size: 240, color: 'rgba(34,197,94,0.06)' },
-      { type: 'ring', x: W * 0.75, y: H * 0.32, size: 100, color: 'rgba(0,82,255,0.05)' },
+      { type: 'ring', x: W * 0.75, y: H * 0.32, size: 100, color: 'rgba(16,185,129,0.05)' },
       { type: 'diamond', x: W * 0.88, y: H * 0.12, size: 20, color: 'rgba(255,255,255,0.06)' },
       { type: 'diamond', x: W * 0.25, y: H * 0.38, size: 14, color: 'rgba(255,255,255,0.04)' },
     ],
@@ -70,7 +70,7 @@ const SLIDES = [
     orbs: [
       { x: W * 0.3, y: H * 0.08, size: 300, color: 'rgba(139,92,246,0.22)', delay: 0 },
       { x: W * 0.7, y: H * 0.2, size: 200, color: 'rgba(236,72,153,0.18)', delay: 400 },
-      { x: W * 0.15, y: H * 0.3, size: 180, color: 'rgba(0,82,255,0.15)', delay: 800 },
+      { x: W * 0.15, y: H * 0.3, size: 180, color: 'rgba(16,185,129,0.15)', delay: 800 },
       { x: W * 0.55, y: H * 0.38, size: 140, color: 'rgba(139,92,246,0.1)', delay: 1200 },
     ],
     icon: 'users',

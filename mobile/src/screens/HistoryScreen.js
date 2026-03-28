@@ -13,7 +13,7 @@ const FILTERS = ['All', 'Check-ins', 'Bookings']
 
 const METHOD_COLORS = {
   NFC: '#3B82F6',
-  QR: '#0052FF',
+  QR: '#10B981',
   Manual: '#34A853',
   OTP: '#FBBC05',
 }
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   timelineLine: {
     width: 2,
     flex: 1,
-    backgroundColor: 'rgba(0,82,255,0.2)',
+    backgroundColor: 'rgba(16,185,129,0.2)',
     marginTop: 4,
   },
 

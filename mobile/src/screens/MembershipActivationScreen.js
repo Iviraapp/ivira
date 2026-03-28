@@ -353,14 +353,14 @@ export default function MembershipActivationScreen({ navigation }) {
           <GlowLine />
 
           <View style={styles.pathLabelRow}>
-            <View style={[styles.pathLabelBadge, { backgroundColor: 'rgba(0,82,255,0.12)' }]}>
+            <View style={[styles.pathLabelBadge, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
               <Text style={[styles.pathLabelText, { color: COLORS.accent }]}>A</Text>
             </View>
             <Text style={[styles.pathLabelTitle, { color: colors.textSec }]}>GYM OWNER PATH</Text>
           </View>
 
           <View style={styles.pathHeader}>
-            <View style={[styles.pathIconWrap, { backgroundColor: 'rgba(0,82,255,0.1)' }]}>
+            <View style={[styles.pathIconWrap, { backgroundColor: 'rgba(16,185,129,0.1)' }]}>
               <Feather name="key" size={20} color={COLORS.accent} />
             </View>
             <View style={{ flex: 1 }}>
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   discoveryInner: {
     backgroundColor: '#0A1628',
     borderWidth: 1,
-    borderColor: 'rgba(0,82,255,0.2)',
+    borderColor: 'rgba(16,185,129,0.2)',
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     shadowColor: COLORS.accent,
@@ -924,7 +924,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,82,255,0.15)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -966,8 +966,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
   chipActive: {
-    backgroundColor: 'rgba(0,82,255,0.2)',
-    borderColor: 'rgba(0,82,255,0.4)',
+    backgroundColor: 'rgba(16,185,129,0.2)',
+    borderColor: 'rgba(16,185,129,0.4)',
   },
   chipText: {
     fontSize: 12,

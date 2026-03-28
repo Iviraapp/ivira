@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0,82,255,0.1)',
+    backgroundColor: 'rgba(16,185,129,0.1)',
     borderRadius: RADIUS.md,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   },
   selectedOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,82,255,0.25)',
+    backgroundColor: 'rgba(16,185,129,0.25)',
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
     padding: 6,
@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   overlayToggleActive: {
-    backgroundColor: 'rgba(0,82,255,0.15)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
   },
 
   // Side by side
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   compareBadgeAfter: {
-    backgroundColor: 'rgba(0,82,255,0.7)',
+    backgroundColor: 'rgba(16,185,129,0.7)',
   },
   compareBadgeText: {
     fontSize: 10,

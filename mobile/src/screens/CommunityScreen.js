@@ -206,7 +206,7 @@ export default function CommunityScreen({ embedded = false }) {
           contentContainerStyle={[styles.listContent, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} colors={[COLORS.accent]} />}
         >
-          <View style={[styles.emptyIconCircle, { backgroundColor: isDark ? 'rgba(0,82,255,0.1)' : COLORS.accent + '10' }]}>
+          <View style={[styles.emptyIconCircle, { backgroundColor: isDark ? 'rgba(16,185,129,0.1)' : COLORS.accent + '10' }]}>
             <Feather name="users" size={40} color={COLORS.accent} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.text, marginTop: 16, fontSize: 18, fontWeight: '700' }]}>No leaderboard yet</Text>
@@ -406,8 +406,8 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
   },
   leaderRowHighlight: {
-    borderColor: 'rgba(0,82,255,0.4)',
-    shadowColor: '#0052FF',
+    borderColor: 'rgba(16,185,129,0.4)',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.25,
     shadowRadius: 12,

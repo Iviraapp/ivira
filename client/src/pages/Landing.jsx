@@ -13,11 +13,11 @@ const GRAPHITE     = '#161616'
 const DEEP_BLUE    = '#0A0A0A'
 const IVIRA_BLUE   = '#10B981'
 const COBALT       = '#2250B0'
-const SKY_ACCENT   = '#3B82F6'
+const SKY_ACCENT   = '#10B981'
 const BLUE_GLOW    = 'rgba(16,185,129,0.15)'
-const ACCENT       = '#3B82F6'
-const ACCENT_DARK  = '#2563EB'
-const ACCENT_GLOW  = 'rgba(59,130,246,0.08)'
+const ACCENT       = '#10B981'
+const ACCENT_DARK  = '#059669'
+const ACCENT_GLOW  = 'rgba(16,185,129,0.08)'
 const PLATINUM     = '#E5E5E5'
 const SILVER       = '#999999'
 const GUNMETAL     = '#444444'
@@ -703,7 +703,7 @@ export default function Landing() {
 
   // ── Vibrant accent colors for card borders ──
   const CARD_ACCENTS = [
-    '#3B82F6', // blue
+    '#10B981', // emerald
     '#EF4444', // red
     '#22C55E', // green
     '#F59E0B', // amber
@@ -1629,7 +1629,7 @@ export default function Landing() {
               gap: 24,
             }}>
               {conciergeCards.map((card, i) => {
-                const accent = ['#EF4444', '#3B82F6', '#22C55E'][i]
+                const accent = ['#EF4444', '#10B981', '#22C55E'][i]
                 return (
                 <motion.div key={card.title} custom={i + 2} variants={scaleIn}
                   whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.3 } }}>
@@ -1702,7 +1702,7 @@ export default function Landing() {
             }}>
               {[
                 { icon: 'shield', title: '30-Second QR Rotation', desc: 'Your QR code refreshes every 30 seconds, making screenshots useless. GPS verification ensures you\'re physically at the gym. The most secure check-in system available.', accent: '#8B5CF6' },
-                { icon: 'qr', title: 'Tap to Enter (NFC)', desc: 'On Android, simply tap your phone at the gym entrance — no app to open, no QR to scan. NFC-powered instant check-in. Members love the speed. Gym owners love the accuracy.', accent: '#3B82F6' },
+                { icon: 'qr', title: 'Tap to Enter (NFC)', desc: 'On Android, simply tap your phone at the gym entrance — no app to open, no QR to scan. NFC-powered instant check-in. Members love the speed. Gym owners love the accuracy.', accent: '#10B981' },
                 { icon: 'payment', title: 'Invoices, Payments & Store', desc: 'View complete payment history with downloadable GST invoices. Browse and buy from your gym\'s curated store — supplements, gear, accessories — all with integrated checkout.', accent: '#22C55E' },
               ].map((card, i) => (
                 <motion.div key={card.title} custom={i} variants={scaleIn}
@@ -1908,7 +1908,7 @@ export default function Landing() {
               gap: 24, alignItems: 'stretch',
             }}>
               {plans.map((plan, i) => {
-                const pricingColors = ['#3B82F6', '#22C55E', '#8B5CF6']
+                const pricingColors = ['#10B981', '#22C55E', '#8B5CF6']
                 const planAccent = pricingColors[i]
                 return (
                 <motion.div key={plan.name} custom={i} variants={scaleIn}

@@ -240,7 +240,7 @@ function BouncerScreen({ checkin, onDismiss, autoDismissSeconds }) {
           {/* Quick action buttons */}
           <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
             <ActionButton label="Renew" color="#22C55E" />
-            <ActionButton label="Day Pass" color="#3B82F6" />
+            <ActionButton label="Day Pass" color="#10B981" />
             <ActionButton label="Upgrade Plan" color="#8B5CF6" />
             <ActionButton label="Contact" color="#F59E0B" />
           </div>

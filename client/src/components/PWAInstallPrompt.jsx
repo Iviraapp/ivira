@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext'
 const FONT_BRAND = "'Satoshi', 'General Sans', 'Inter', sans-serif"
 const FONT_BODY  = "'General Sans', 'Inter', -apple-system, sans-serif"
 const COBALT     = '#10B981'
-const ACCENT     = '#3B82F6'
+const ACCENT     = '#10B981'
 
 function isDesktop() {
   if (typeof window === 'undefined') return true

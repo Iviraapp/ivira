@@ -96,7 +96,7 @@ export default function NotificationSettingsScreen({ navigation }) {
       <Animated.View style={{ opacity: fadeAnim }}>
         {/* Description */}
         <View style={styles.descSection}>
-          <View style={[styles.descIconWrap, { backgroundColor: 'rgba(0,82,255,0.1)' }]}>
+          <View style={[styles.descIconWrap, { backgroundColor: 'rgba(16,185,129,0.1)' }]}>
             <Feather name="bell" size={22} color={COLORS.accent} />
           </View>
           <Text style={[styles.descText, { color: colors.textSec }]}>
@@ -106,8 +106,8 @@ export default function NotificationSettingsScreen({ navigation }) {
 
         {/* Master toggle */}
         <View style={[styles.masterToggle, {
-          backgroundColor: isDark ? 'rgba(0,82,255,0.08)' : 'rgba(0,82,255,0.05)',
-          borderColor: isDark ? 'rgba(0,82,255,0.2)' : 'rgba(0,82,255,0.1)',
+          backgroundColor: isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)',
+          borderColor: isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.1)',
         }]}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.masterTitle, { color: colors.text }]}>Smart Notifications</Text>

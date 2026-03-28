@@ -557,7 +557,7 @@ export default function ActivityDashboardScreen({ navigation }) {
                             ? colors.bgTer
                             : isToday
                               ? COLORS.accent
-                              : 'rgba(0,82,255,0.3)',
+                              : 'rgba(16,185,129,0.3)',
                           borderRadius: RADIUS.sm,
                         },
                       ]}

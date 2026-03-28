@@ -637,7 +637,7 @@ function RecipeDetailModal({ recipe, visible, onClose, isFavorite, onToggleFavor
           <View style={styles.sectionWrap}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Ingredients</Text>
-              <View style={[styles.countBadge, { backgroundColor: isDark ? COLORS.accentSoft : 'rgba(0,82,255,0.08)' }]}>
+              <View style={[styles.countBadge, { backgroundColor: isDark ? COLORS.accentSoft : 'rgba(16,185,129,0.08)' }]}>
                 <Text style={[styles.countText, { color: COLORS.accent }]}>{recipe.ingredients.length}</Text>
               </View>
             </View>
@@ -862,7 +862,7 @@ export default function RecipeScreen() {
             {filteredRecipes.length} recipe{filteredRecipes.length !== 1 ? 's' : ''} for your fitness goals
           </Text>
         </View>
-        <View style={[styles.headerBadge, { backgroundColor: isDark ? COLORS.accentSoft : 'rgba(0,82,255,0.08)' }]}>
+        <View style={[styles.headerBadge, { backgroundColor: isDark ? COLORS.accentSoft : 'rgba(16,185,129,0.08)' }]}>
           <Feather name="book-open" size={16} color={COLORS.accent} />
         </View>
       </View>

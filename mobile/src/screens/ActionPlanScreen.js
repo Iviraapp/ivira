@@ -113,7 +113,7 @@ export default function ActionPlanScreen({ navigation, route }) {
         {/* Calorie Target Card */}
         <Animated.View style={[
           styles.calorieCard,
-          { backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,82,255,0.05)', borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,82,255,0.12)' },
+          { backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(16,185,129,0.05)', borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(16,185,129,0.12)' },
           { opacity: fadeIn, transform: [{ scale: calScale }] },
         ]}>
           <Text style={[styles.calorieNumber, { color: colors.text }]}>

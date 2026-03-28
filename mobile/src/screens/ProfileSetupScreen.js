@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.lg,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,255,0.15)',
+    borderColor: 'rgba(16,185,129,0.15)',
   },
   title: {
     fontSize: 26,

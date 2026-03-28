@@ -1080,7 +1080,7 @@ export default function ProfileScreen({ navigation }) {
           onPress={() => setShowEditProfile(false)}
         >
           <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-            <View style={[styles.connectModalContent, card, { borderColor: 'rgba(0,82,255,0.2)' }]}>
+            <View style={[styles.connectModalContent, card, { borderColor: 'rgba(16,185,129,0.2)' }]}>
               <View style={[styles.modalHandle, { backgroundColor: colors.borderStrong }]} />
               <Text style={[styles.modalTitle, { color: colors.text }]}>Edit Profile</Text>
 
@@ -1242,7 +1242,7 @@ export default function ProfileScreen({ navigation }) {
           onPress={() => setShowConnectGym(false)}
         >
           <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-            <View style={[styles.connectModalContent, card, { borderColor: 'rgba(0,82,255,0.2)' }]}>
+            <View style={[styles.connectModalContent, card, { borderColor: 'rgba(16,185,129,0.2)' }]}>
               <View style={[styles.modalHandle, { backgroundColor: colors.borderStrong }]} />
               <View style={[styles.connectModalIconWrap, { backgroundColor: colors.accentSoft }]}>
                 <Feather name="link" size={28} color={COLORS.accent} />
@@ -1960,7 +1960,7 @@ const styles = StyleSheet.create({
   connectCard: {
     backgroundColor: COLORS.accentSoft,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,255,0.2)',
+    borderColor: 'rgba(16,185,129,0.2)',
     borderRadius: RADIUS.lg,
     padding: SPACING.lg,
     flexDirection: 'row',
@@ -1972,7 +1972,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0,82,255,0.15)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
 
-  // Buttons — #0052FF for Buy Now
+  // Buttons — #10B981 for Buy Now
   buyBtn: {
     backgroundColor: COLORS.accent,
     borderRadius: RADIUS.lg,

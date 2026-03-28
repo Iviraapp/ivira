@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 const ff = "'General Sans', 'Inter', -apple-system, sans-serif"
 
 const ACCENT = '#10B981'
-const ACCENT_LIGHT = '#3B82F6'
+const ACCENT_LIGHT = '#34D399'
 
 // Role-specific visual configs — no static images, pure CSS
 // Instantly.ai-inspired mesh gradient for auth hero panels
@@ -30,7 +30,7 @@ const HERO_THEMES = {
       dark: 'linear-gradient(135deg, #050508 0%, #0A0A1A 30%, #0F1B3D 60%, #162E6B 100%)',
       light: MESH_AUTH_LIGHT,
     },
-    accent: '#3B82F6',
+    accent: '#10B981',
     pattern: 'member',
   },
   trainer: {
@@ -100,12 +100,12 @@ function HeroPattern({ role, isDark }) {
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity }} viewBox="0 0 400 400">
         {[0, 1, 2, 3, 4].map(i => (
           <g key={i}>
-            <rect x={60 + i * 70} y={50 + i * 50} width="45" height="45" rx="8" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="1" />
-            <rect x={30 + i * 65} y={180 + i * 30} width="30" height="30" rx="6" fill={isDark ? '#3B82F6' : '#10B981'} opacity="0.3" />
+            <rect x={60 + i * 70} y={50 + i * 50} width="45" height="45" rx="8" fill="none" stroke={isDark ? '#10B981' : '#10B981'} strokeWidth="1" />
+            <rect x={30 + i * 65} y={180 + i * 30} width="30" height="30" rx="6" fill={isDark ? '#10B981' : '#10B981'} opacity="0.3" />
           </g>
         ))}
-        <circle cx="300" cy="80" r="40" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.8" />
-        <circle cx="100" cy="300" r="60" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.5" />
+        <circle cx="300" cy="80" r="40" fill="none" stroke={isDark ? '#10B981' : '#10B981'} strokeWidth="0.8" />
+        <circle cx="100" cy="300" r="60" fill="none" stroke={isDark ? '#10B981' : '#10B981'} strokeWidth="0.5" />
       </svg>
     )
   }
@@ -114,11 +114,11 @@ function HeroPattern({ role, isDark }) {
     // Organic shapes — fitness/energy
     return (
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity }} viewBox="0 0 400 400">
-        <circle cx="320" cy="80" r="80" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="1" />
-        <circle cx="320" cy="80" r="50" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.5" />
-        <circle cx="80" cy="320" r="90" fill={isDark ? '#3B82F6' : '#10B981'} opacity="0.1" />
-        <path d="M50 200 Q 150 100, 250 200 T 400 200" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.8" />
-        <path d="M0 250 Q 100 180, 200 250 T 400 250" fill="none" stroke={isDark ? '#3B82F6' : '#10B981'} strokeWidth="0.5" />
+        <circle cx="320" cy="80" r="80" fill="none" stroke={isDark ? '#10B981' : '#10B981'} strokeWidth="1" />
+        <circle cx="320" cy="80" r="50" fill="none" stroke={isDark ? '#10B981' : '#10B981'} strokeWidth="0.5" />
+        <circle cx="80" cy="320" r="90" fill={isDark ? '#10B981' : '#10B981'} opacity="0.1" />
+        <path d="M50 200 Q 150 100, 250 200 T 400 200" fill="none" stroke={isDark ? '#10B981' : '#10B981'} strokeWidth="0.8" />
+        <path d="M0 250 Q 100 180, 200 250 T 400 250" fill="none" stroke={isDark ? '#10B981' : '#10B981'} strokeWidth="0.5" />
       </svg>
     )
   }
@@ -272,7 +272,7 @@ export default function AuthLayout({
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: isDark
-            ? 'radial-gradient(ellipse 80% 50% at 30% 40%, rgba(59,130,246,0.06), transparent 60%)'
+            ? 'radial-gradient(ellipse 80% 50% at 30% 40%, rgba(16,185,129,0.06), transparent 60%)'
             : 'radial-gradient(ellipse 80% 50% at 30% 40%, rgba(16,185,129,0.04), transparent 60%)',
         }} />
 

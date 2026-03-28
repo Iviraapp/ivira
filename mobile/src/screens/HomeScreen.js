@@ -91,7 +91,7 @@ const STEP_GOAL = 10000
 // Daily movement suggestions — rotated based on day of week
 const ALL_MOVEMENT_TIPS = [
   { icon: 'sun', color: '#F97316', text: 'Take a 10-min morning walk to kickstart your metabolism' },
-  { icon: 'clock', color: '#3B82F6', text: 'Stand up and stretch every 45 minutes at your desk' },
+  { icon: 'clock', color: '#10B981', text: 'Stand up and stretch every 45 minutes at your desk' },
   { icon: 'navigation', color: '#22C55E', text: 'Take the stairs instead of the elevator today' },
   { icon: 'moon', color: '#8B5CF6', text: 'A 15-min post-dinner walk aids digestion and sleep' },
   { icon: 'zap', color: '#EAB308', text: 'Try 5 minutes of jumping jacks between meetings' },
@@ -2376,7 +2376,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,82,255,0.08)',
+    backgroundColor: 'rgba(16,185,129,0.08)',
     marginBottom: 8,
   },
   aiBadgeText: {

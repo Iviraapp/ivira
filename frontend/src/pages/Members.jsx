@@ -243,7 +243,7 @@ export default function Members() {
 
           {/* Quick actions */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <button style={{ flex: 1, padding: '10px 16px', borderRadius: 8, background: '#3B82F6', color: 'white', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Renew Plan</button>
+            <button style={{ flex: 1, padding: '10px 16px', borderRadius: 8, background: '#10B981', color: 'white', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Renew Plan</button>
             <button style={{ flex: 1, padding: '10px 16px', borderRadius: 8, background: '#1F2937', color: '#F9FAFB', border: '1px solid #374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Send Message</button>
           </div>
 

@@ -90,7 +90,7 @@ function App() {
   if (!fontsLoaded) {
     return (
       <View style={styles.root}>
-        <ActivityIndicator size="large" color="#0055FF" />
+        <ActivityIndicator size="large" color="#10B981" />
       </View>
     )
   }

@@ -7,7 +7,7 @@ import {
   ToggleLeft, ToggleRight, Trash2, Edit3, Shield,
 } from 'lucide-react'
 
-const CARD = { background: '#111827', border: '1px solid #1F2937', borderRadius: 12, padding: 24, marginBottom: 24, borderTop: '3px solid #3B82F6' }
+const CARD = { background: '#111827', border: '1px solid #1F2937', borderRadius: 12, padding: 24, marginBottom: 24, borderTop: '3px solid #10B981' }
 const LABEL = { color: '#9CA3AF', fontSize: 13, fontWeight: 500, marginBottom: 6, display: 'block' }
 const INPUT = {
   width: '100%', padding: '10px 12px', background: '#0D1117', border: '1px solid #1F2937',
@@ -15,7 +15,7 @@ const INPUT = {
 }
 const BTN_PRIMARY = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px',
-  background: '#3B82F6', color: '#fff', border: 'none', borderRadius: 8,
+  background: '#10B981', color: '#fff', border: 'none', borderRadius: 8,
   fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const BTN_SECONDARY = {
@@ -53,9 +53,9 @@ export default function Settings() {
             onClick={() => setActiveTab(tab.key)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-              background: activeTab === tab.key ? '#3B82F620' : 'transparent',
-              border: activeTab === tab.key ? '1px solid #3B82F640' : '1px solid transparent',
-              borderRadius: 8, color: activeTab === tab.key ? '#3B82F6' : '#6B7280',
+              background: activeTab === tab.key ? '#10B98120' : 'transparent',
+              border: activeTab === tab.key ? '1px solid #10B98140' : '1px solid transparent',
+              borderRadius: 8, color: activeTab === tab.key ? '#10B981' : '#6B7280',
               fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
               transition: 'all 0.15s',
             }}
@@ -116,7 +116,7 @@ function GymProfileSection({ gymId, gym }) {
 
   return (
     <div style={CARD}>
-      <h2 style={SECTION_TITLE}><Building2 size={20} color="#3B82F6" /> Gym Profile</h2>
+      <h2 style={SECTION_TITLE}><Building2 size={20} color="#10B981" /> Gym Profile</h2>
       <p style={SECTION_DESC}>Basic information about your gym</p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
@@ -221,7 +221,7 @@ function MembershipPlansSection({ gymId }) {
   return (
     <div style={CARD}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <h2 style={SECTION_TITLE}><CreditCard size={20} color="#3B82F6" /> Membership Plans</h2>
+        <h2 style={SECTION_TITLE}><CreditCard size={20} color="#10B981" /> Membership Plans</h2>
         <button style={BTN_PRIMARY} onClick={() => setShowModal(true)}>
           <Plus size={16} /> Add Plan
         </button>
@@ -237,7 +237,7 @@ function MembershipPlansSection({ gymId }) {
           {plans.map((plan) => (
             <div key={plan.id} style={{
               background: '#0D1117', border: '1px solid #1F2937', borderRadius: 10, padding: 16,
-              borderTop: '3px solid #3B82F6',
+              borderTop: '3px solid #10B981',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <div style={{ color: '#F9FAFB', fontSize: 15, fontWeight: 600 }}>{plan.name}</div>
@@ -250,7 +250,7 @@ function MembershipPlansSection({ gymId }) {
                   {plan.status || 'active'}
                 </span>
               </div>
-              <div style={{ color: '#3B82F6', fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
+              <div style={{ color: '#10B981', fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
                 {'\u20B9'}{plan.price}
               </div>
               <div style={{ color: '#6B7280', fontSize: 12 }}>
@@ -358,7 +358,7 @@ function NotificationSettingsSection({ gymId }) {
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
         >
           {enabled
-            ? <ToggleRight size={28} color="#3B82F6" />
+            ? <ToggleRight size={28} color="#10B981" />
             : <ToggleLeft size={28} color="#4B5563" />
           }
         </button>
@@ -370,7 +370,7 @@ function NotificationSettingsSection({ gymId }) {
 
   return (
     <div style={CARD}>
-      <h2 style={SECTION_TITLE}><Bell size={20} color="#3B82F6" /> Notification Settings</h2>
+      <h2 style={SECTION_TITLE}><Bell size={20} color="#10B981" /> Notification Settings</h2>
       <p style={SECTION_DESC}>Configure how and when notifications are sent</p>
 
       <div style={{ marginBottom: 24 }}>
@@ -437,7 +437,7 @@ function StaffSection({ gymId }) {
   return (
     <div style={CARD}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <h2 style={SECTION_TITLE}><Users2 size={20} color="#3B82F6" /> Staff Management</h2>
+        <h2 style={SECTION_TITLE}><Users2 size={20} color="#10B981" /> Staff Management</h2>
         <button style={BTN_PRIMARY} onClick={() => setShowModal(true)}>
           <Plus size={16} /> Add Staff
         </button>
@@ -578,7 +578,7 @@ function NfcTagsSection({ gymId }) {
   return (
     <div style={CARD}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <h2 style={SECTION_TITLE}><Wifi size={20} color="#3B82F6" /> NFC Tags</h2>
+        <h2 style={SECTION_TITLE}><Wifi size={20} color="#10B981" /> NFC Tags</h2>
         <button style={BTN_PRIMARY}>
           <Plus size={16} /> Register Tag
         </button>
@@ -598,10 +598,10 @@ function NfcTagsSection({ gymId }) {
           {tags.map((tag) => (
             <div key={tag.id} style={{
               background: '#0D1117', border: '1px solid #1F2937', borderRadius: 10, padding: 16,
-              borderTop: '3px solid #3B82F6',
+              borderTop: '3px solid #10B981',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Shield size={16} color="#3B82F6" />
+                <Shield size={16} color="#10B981" />
                 <div style={{ color: '#F9FAFB', fontSize: 13, fontWeight: 600, fontFamily: 'monospace' }}>
                   {tag.tag_id || tag.uid}
                 </div>

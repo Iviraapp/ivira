@@ -47,11 +47,11 @@ const HEATMAP_DAYS = 7
 
 function getHeatColor(intensity) {
   // intensity 0..1 -> transparent to accent
-  if (intensity <= 0) return 'rgba(0,82,255,0.06)'
-  if (intensity < 0.25) return 'rgba(0,82,255,0.15)'
-  if (intensity < 0.5) return 'rgba(0,82,255,0.30)'
-  if (intensity < 0.75) return 'rgba(0,82,255,0.55)'
-  return 'rgba(0,82,255,0.85)'
+  if (intensity <= 0) return 'rgba(16,185,129,0.06)'
+  if (intensity < 0.25) return 'rgba(16,185,129,0.15)'
+  if (intensity < 0.5) return 'rgba(16,185,129,0.30)'
+  if (intensity < 0.75) return 'rgba(16,185,129,0.55)'
+  return 'rgba(16,185,129,0.85)'
 }
 
 export default function RevenueDashboardScreen({ navigation }) {

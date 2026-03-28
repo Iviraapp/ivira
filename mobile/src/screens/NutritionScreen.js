@@ -259,7 +259,7 @@ export default function NutritionScreen({ navigation }) {
   const remaining = Math.max(goals.calorie_goal - totals.calories, 0)
 
   const macros = [
-    { label: 'Protein', value: totals.protein, goal: goals.protein_goal, color: '#0052FF', unit: 'g' },
+    { label: 'Protein', value: totals.protein, goal: goals.protein_goal, color: '#10B981', unit: 'g' },
     { label: 'Carbs', value: totals.carbs, goal: goals.carb_goal, color: '#4285F4', unit: 'g' },
     { label: 'Fats', value: totals.fats, goal: goals.fat_goal, color: '#FBBC05', unit: 'g' },
   ]
@@ -544,7 +544,7 @@ export default function NutritionScreen({ navigation }) {
                 </Text>
                 <View style={styles.macroSummaryBars}>
                   {[
-                    { label: 'Protein', value: estimatedTotal.protein, color: '#0052FF', max: Math.max(estimatedTotal.protein, estimatedTotal.carbs, estimatedTotal.fats) },
+                    { label: 'Protein', value: estimatedTotal.protein, color: '#10B981', max: Math.max(estimatedTotal.protein, estimatedTotal.carbs, estimatedTotal.fats) },
                     { label: 'Carbs', value: estimatedTotal.carbs, color: '#4285F4', max: Math.max(estimatedTotal.protein, estimatedTotal.carbs, estimatedTotal.fats) },
                     { label: 'Fat', value: estimatedTotal.fats, color: '#FBBC05', max: Math.max(estimatedTotal.protein, estimatedTotal.carbs, estimatedTotal.fats) },
                   ].map(m => (

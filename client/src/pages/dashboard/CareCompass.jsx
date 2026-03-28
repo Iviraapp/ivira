@@ -31,7 +31,7 @@ const MOCK_PATIENTS = [
 ]
 
 const STATS = [
-  { label: 'ACTIVE PATIENTS', value: 8, icon: Users, colorKey: '#3B82F6' },
+  { label: 'ACTIVE PATIENTS', value: 8, icon: Users, colorKey: '#10B981' },
   { label: 'CRITICAL ALERTS', value: 2, icon: AlertTriangle, colorKey: '#EF4444', alert: true },
   { label: 'AVG ADHERENCE', value: '78%', icon: Activity, colorKey: '#22C55E' },
   { label: 'PENDING REVIEWS', value: 3, icon: TrendingUp, colorKey: '#F59E0B' },

@@ -401,9 +401,9 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Background orbs */}
-      <FloatingOrb delay={0} size={180} x={-40} y={SCREEN_H * 0.12} color="rgba(0,82,255,0.08)" fadeAnim={orbFade} />
-      <FloatingOrb delay={800} size={120} x={SCREEN_W * 0.65} y={SCREEN_H * 0.06} color="rgba(0,82,255,0.06)" fadeAnim={orbFade} />
-      <FloatingOrb delay={400} size={90} x={SCREEN_W * 0.3} y={SCREEN_H * 0.75} color="rgba(0,82,255,0.05)" fadeAnim={orbFade} />
+      <FloatingOrb delay={0} size={180} x={-40} y={SCREEN_H * 0.12} color="rgba(16,185,129,0.08)" fadeAnim={orbFade} />
+      <FloatingOrb delay={800} size={120} x={SCREEN_W * 0.65} y={SCREEN_H * 0.06} color="rgba(16,185,129,0.06)" fadeAnim={orbFade} />
+      <FloatingOrb delay={400} size={90} x={SCREEN_W * 0.3} y={SCREEN_H * 0.75} color="rgba(16,185,129,0.05)" fadeAnim={orbFade} />
 
       <Animated.View
         style={[
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(0,82,255,0.12)',
+    backgroundColor: 'rgba(16,185,129,0.12)',
   },
   logoInner: {
     width: 80,
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm + 2,
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,255,0.15)',
+    borderColor: 'rgba(16,185,129,0.15)',
   },
   featurePillText: {
     fontSize: 12,
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(0,82,255,0.2)',
+    borderColor: 'rgba(16,185,129,0.2)',
   },
   biometricLabel: {
     color: COLORS.textSec,
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.lg,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,255,0.15)',
+    borderColor: 'rgba(16,185,129,0.15)',
   },
   formTitle: {
     fontSize: 26,

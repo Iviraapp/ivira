@@ -184,7 +184,7 @@ async function _checkoutWithRazorpay({
   //       contact: customerPhone,
   //       name: customerName,
   //     },
-  //     theme: { color: '#0052FF' },
+  //     theme: { color: '#10B981' },
   //   }
   //
   //   const result = await RazorpayCheckout.open(options)

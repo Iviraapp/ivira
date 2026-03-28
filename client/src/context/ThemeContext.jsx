@@ -35,7 +35,7 @@ const THEMES = {
     border: '#262626', borderFocus: 'rgba(255,255,255,0.3)',
     borderStrong: '#333333',
     // Brand gradient (logo only)
-    grad: 'linear-gradient(135deg, #10B981, #3B82F6)',
+    grad: 'linear-gradient(135deg, #10B981, #34D399)',
     // Preview
     previewBg: '#ffffff', previewText: '#333',
     // Navigation
@@ -62,7 +62,7 @@ const THEMES = {
     border: 'rgba(16,185,129,0.12)', borderFocus: 'rgba(16,185,129,0.3)',
     borderStrong: 'rgba(16,185,129,0.18)',
     // Brand gradient
-    grad: 'linear-gradient(135deg, #10B981, #3B82F6)',
+    grad: 'linear-gradient(135deg, #10B981, #34D399)',
     // Preview
     previewBg: '#ffffff', previewText: '#333',
     // Navigation

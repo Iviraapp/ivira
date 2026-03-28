@@ -5,8 +5,8 @@ import { useTheme } from '../context/ThemeContext'
 
 // ── Brand Tokens ────────────────────────────────────────────
 const IVIRA_BLUE   = '#10B981'
-const ACCENT       = '#3B82F6'
-const ACCENT_DARK  = '#2563EB'
+const ACCENT       = '#10B981'
+const ACCENT_DARK  = '#059669'
 
 const FONT_DISPLAY = "'Satoshi', 'General Sans', 'Inter', sans-serif"
 const FONT_BODY    = "'General Sans', 'Inter', -apple-system, sans-serif"
@@ -119,8 +119,8 @@ export default function AppLanding() {
     cardShadow:isDark ? 'none' : '0 2px 12px rgba(0,0,0,0.06)',
     navBg:     isDark ? 'rgba(10,10,10,0.88)' : 'rgba(255,255,255,0.92)',
     navBorder: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
-    accentGlow:isDark ? 'rgba(59,130,246,0.10)' : 'rgba(16,185,129,0.06)',
-    hoverBorder: isDark ? 'rgba(59,130,246,0.2)' : 'rgba(16,185,129,0.15)',
+    accentGlow:isDark ? 'rgba(16,185,129,0.10)' : 'rgba(16,185,129,0.06)',
+    hoverBorder: isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.15)',
     btnOutline:isDark ? '#444444' : 'rgba(0,0,0,0.15)',
     webBtnBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
   }
@@ -206,7 +206,7 @@ export default function AppLanding() {
           <span style={{
             display: 'inline-block', fontSize: 12, fontWeight: 600, color: ACCENT,
             background: t.accentGlow, padding: '6px 14px', borderRadius: 100,
-            border: `1px solid ${isDark ? 'rgba(59,130,246,0.15)' : 'rgba(16,185,129,0.12)'}`, fontFamily: FONT_BODY,
+            border: `1px solid ${isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.12)'}`, fontFamily: FONT_BODY,
           }}>
             {platform === 'android' ? 'Download now for Android' : 'Available on Android — iOS coming soon'}
           </span>
@@ -347,7 +347,7 @@ export default function AppLanding() {
                   boxShadow: t.cardShadow,
                 }}
               >
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: ['#3B82F6', '#EF4444', '#22C55E', '#F59E0B'][i] }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: ['#10B981', '#EF4444', '#22C55E', '#F59E0B'][i] }} />
                 <div style={{ fontSize: 28, marginBottom: 12 }}>{b.icon}</div>
                 <div style={{
                   fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 15,
@@ -542,8 +542,8 @@ export default function AppLanding() {
           >
             <div style={{
               padding: '14px 20px', borderRadius: 10, display: 'inline-flex', alignItems: 'center', gap: 10,
-              background: isDark ? 'rgba(59,130,246,0.06)' : 'rgba(16,185,129,0.04)',
-              border: `1px solid ${isDark ? 'rgba(59,130,246,0.12)' : 'rgba(16,185,129,0.08)'}`,
+              background: isDark ? 'rgba(16,185,129,0.06)' : 'rgba(16,185,129,0.04)',
+              border: `1px solid ${isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)'}`,
               marginBottom: 20,
             }}>
               <span style={{ fontSize: 16 }}>💬</span>
