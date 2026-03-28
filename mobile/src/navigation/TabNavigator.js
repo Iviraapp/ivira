@@ -113,19 +113,12 @@ function HealthStackNavigator() {
       <HealthStackNav.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
       <HealthStackNav.Screen name="ActionPlan" component={ActionPlanScreen} />
       <HealthStackNav.Screen name="NutritionLog" component={NutritionLogScreen} />
-      <HealthStackNav.Screen name="FastingLog" component={FastingLogScreen} />
-      <HealthStackNav.Screen name="Progress" component={ProgressScreen} />
       <HealthStackNav.Screen name="NutritionDetail" component={NutritionDetailScreen} />
       <HealthStackNav.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
-      <HealthStackNav.Screen name="ProgressPhotos" component={ProgressPhotosScreen} />
-      <HealthStackNav.Screen name="FitnessScore" component={FitnessScoreScreen} />
-      <HealthStackNav.Screen name="ActivityDashboard" component={ActivityDashboardScreen} />
       <HealthStackNav.Screen name="FoodScanner" component={FoodScannerScreen} />
-      <HealthStackNav.Screen name="Recipes" component={RecipeScreen} />
-      <HealthStackNav.Screen name="Challenges" component={ChallengesScreen} />
-      <HealthStackNav.Screen name="Achievements" component={AchievementsScreen} />
       <HealthStackNav.Screen name="SleepTracker" component={SleepTrackerScreen} />
-      <HealthStackNav.Screen name="Yoga" component={YogaScreen} />
+      <HealthStackNav.Screen name="ActivityDashboard" component={ActivityDashboardScreen} />
+      <HealthStackNav.Screen name="FitnessScore" component={FitnessScoreScreen} />
     </HealthStackNav.Navigator>
   )
 }
@@ -150,24 +143,20 @@ function ProfileStackNavigator() {
     <ProfileStackNav.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStackNav.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStackNav.Screen name="Invoices" component={InvoicesScreen} />
-      <ProfileStackNav.Screen name="Progress" component={ProgressScreen} />
-      <ProfileStackNav.Screen name="NutritionDetail" component={NutritionDetailScreen} />
-      <ProfileStackNav.Screen name="NutritionLog" component={NutritionLogScreen} />
-      <ProfileStackNav.Screen name="FastingLog" component={FastingLogScreen} />
-      <ProfileStackNav.Screen name="ActionPlan" component={ActionPlanScreen} />
       <ProfileStackNav.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
       <ProfileStackNav.Screen name="MembershipRenewal" component={MembershipRenewalScreen} />
-      <ProfileStackNav.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
-      <ProfileStackNav.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
-      <ProfileStackNav.Screen name="Referral" component={ReferralScreen} />
+      <ProfileStackNav.Screen name="Progress" component={ProgressScreen} />
       <ProfileStackNav.Screen name="ProgressPhotos" component={ProgressPhotosScreen} />
-      <ProfileStackNav.Screen name="FitnessScore" component={FitnessScoreScreen} />
-      <ProfileStackNav.Screen name="ActivityDashboard" component={ActivityDashboardScreen} />
+      <ProfileStackNav.Screen name="Referral" component={ReferralScreen} />
+      <ProfileStackNav.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
+      <ProfileStackNav.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
       <ProfileStackNav.Screen name="FoodScanner" component={FoodScannerScreen} />
-      <ProfileStackNav.Screen name="Recipes" component={RecipeScreen} />
       <ProfileStackNav.Screen name="Challenges" component={ChallengesScreen} />
       <ProfileStackNav.Screen name="Achievements" component={AchievementsScreen} />
       <ProfileStackNav.Screen name="SleepTracker" component={SleepTrackerScreen} />
+      <ProfileStackNav.Screen name="FastingLog" component={FastingLogScreen} />
+      <ProfileStackNav.Screen name="NutritionLog" component={NutritionLogScreen} />
+      <ProfileStackNav.Screen name="NutritionDetail" component={NutritionDetailScreen} />
     </ProfileStackNav.Navigator>
   )
 }

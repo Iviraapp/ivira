@@ -634,24 +634,32 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Quick Menu — All premium features free */}
+        {/* Quick Menu — grouped by category */}
         <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textTer }]}>FITNESS</Text>
           <View style={[styles.sectionCard, card]}>
-            <ActionRow icon="credit-card" label="Membership & Renewal" onPress={() => navigation.navigate('MembershipRenewal')} colors={colors} />
             <ActionRow icon="activity" label="Workout Tracker" onPress={() => navigation.navigate('WorkoutTracker')} colors={colors} />
-            <ActionRow icon="gift" label="Refer & Earn" onPress={() => navigation.navigate('Referral')} colors={colors} />
-            <ActionRow icon="bar-chart-2" label="Progress" onPress={() => navigation.navigate('Progress')} colors={colors} />
-            <ActionRow icon="image" label="Progress Photos" onPress={() => navigation.navigate('ProgressPhotos')} colors={colors} />
-            <ActionRow icon="camera" label="AI Food Scanner" onPress={() => navigation.navigate('FoodScanner')} colors={colors} />
-            <ActionRow icon="book-open" label="Recipes" onPress={() => navigation.navigate('Recipes')} colors={colors} />
-            <ActionRow icon="zap" label="Daily Challenges" onPress={() => navigation.navigate('Challenges')} colors={colors} />
+            <ActionRow icon="bar-chart-2" label="Progress & Photos" onPress={() => navigation.navigate('Progress')} colors={colors} />
+            <ActionRow icon="zap" label="Challenges" onPress={() => navigation.navigate('Challenges')} colors={colors} />
             <ActionRow icon="star" label="Achievements" onPress={() => navigation.navigate('Achievements')} colors={colors} />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textTer }]}>NUTRITION & HEALTH</Text>
+          <View style={[styles.sectionCard, card]}>
+            <ActionRow icon="camera" label="AI Food Scanner" onPress={() => navigation.navigate('FoodScanner')} colors={colors} />
+            <ActionRow icon="pie-chart" label="Nutrition Log" onPress={() => navigation.navigate('NutritionLog')} colors={colors} />
             <ActionRow icon="moon" label="Sleep Tracker" onPress={() => navigation.navigate('SleepTracker')} colors={colors} />
             <ActionRow icon="clock" label="Intermittent Fasting" onPress={() => navigation.navigate('FastingLog')} colors={colors} />
-            <ActionRow icon="pie-chart" label="Nutrition" onPress={() => navigation.navigate('NutritionDetail')} colors={colors} />
-            <ActionRow icon="book-open" label="Food Diary" onPress={() => navigation.navigate('NutritionLog')} colors={colors} />
-            <ActionRow icon="target" label="Goals" onPress={() => navigation.navigate('ActionPlan')} colors={colors} />
-            <ActionRow icon="file-text" label="Weekly Report" onPress={() => navigation.navigate('NutritionLog')} colors={colors} />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textTer }]}>ACCOUNT</Text>
+          <View style={[styles.sectionCard, card]}>
+            <ActionRow icon="credit-card" label="Membership & Renewal" onPress={() => navigation.navigate('MembershipRenewal')} colors={colors} />
+            <ActionRow icon="gift" label="Refer & Earn" onPress={() => navigation.navigate('Referral')} colors={colors} />
             <ActionRow icon="download" label="Export Data" onPress={() => navigation.navigate('NutritionDetail', { tab: 2 })} colors={colors} />
           </View>
         </View>

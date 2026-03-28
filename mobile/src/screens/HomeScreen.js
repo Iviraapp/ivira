@@ -69,7 +69,7 @@ import { useHealth } from '../context/HealthContext'
 import { requestAllPermissions } from '../lib/permissions'
 import DailyQuote from '../components/DailyQuote'
 import LiveGymIndicator from '../components/LiveGymIndicator'
-import WalletWidget from '../components/WalletWidget'
+// WalletWidget moved to Profile screen
 import ProfileCompletionBar from '../components/ProfileCompletionBar'
 import RecoveryScore from '../components/RecoveryScore'
 import ContinueWorkoutCard from '../components/ContinueWorkoutCard'
@@ -80,9 +80,8 @@ import MorningBriefing from '../components/MorningBriefing'
 import PostWorkoutRecovery from '../components/PostWorkoutRecovery'
 import HydrationTracker from '../components/HydrationTracker'
 import WorkoutHeatMap from '../components/WorkoutHeatMap'
-import BodyCompositionTimeline from '../components/BodyCompositionTimeline'
-import AccountabilityBuddy from '../components/AccountabilityBuddy'
-import NutritionInsights from '../components/NutritionInsights'
+// BodyCompositionTimeline, AccountabilityBuddy, NutritionInsights moved to Health tab
+import FeaturedExercises from '../components/FeaturedExercises'
 
 import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion } from '../lib/aiCoach'
 import { recordWorkout } from '../lib/SmartNotificationEngine'
@@ -105,22 +104,7 @@ const STEP_CIRCUMFERENCE = 2 * Math.PI * STEP_RADIUS
 const STEP_GOAL = 10000
 // DEMO_STEPS and DEMO_CLASSES removed — real API data used instead
 
-// Daily movement suggestions — rotated based on day of week
-const ALL_MOVEMENT_TIPS = [
-  { icon: 'sun', color: '#F97316', text: 'Take a 10-min morning walk to kickstart your metabolism' },
-  { icon: 'clock', color: '#10B981', text: 'Stand up and stretch every 45 minutes at your desk' },
-  { icon: 'navigation', color: '#22C55E', text: 'Take the stairs instead of the elevator today' },
-  { icon: 'moon', color: '#8B5CF6', text: 'A 15-min post-dinner walk aids digestion and sleep' },
-  { icon: 'zap', color: '#EAB308', text: 'Try 5 minutes of jumping jacks between meetings' },
-  { icon: 'heart', color: '#EF4444', text: 'Park farther away and walk the extra distance' },
-  { icon: 'droplet', color: '#06B6D4', text: 'Walk to refill your water bottle every hour' },
-]
-const dayIdx = new Date().getDay()
-const MOVEMENT_TIPS = [
-  ALL_MOVEMENT_TIPS[dayIdx % ALL_MOVEMENT_TIPS.length],
-  ALL_MOVEMENT_TIPS[(dayIdx + 1) % ALL_MOVEMENT_TIPS.length],
-  ALL_MOVEMENT_TIPS[(dayIdx + 2) % ALL_MOVEMENT_TIPS.length],
-]
+// Movement tips removed — consolidated into MorningBriefing and DashboardSummary
 
 export default function HomeScreen({ navigation, route }) {
   const { member, gymId, gymInfo, gym, refreshProfile } = useAuth()
@@ -669,19 +653,23 @@ export default function HomeScreen({ navigation, route }) {
     }
   }, [bookedClasses, gymId])
 
-  // --- Quick actions ---
-  const quickActions = [
-    { label: 'Book a Class', icon: 'calendar', bg: COLORS.accent, onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'community' } }) },
-    { label: 'Find a Trainer', icon: 'search', bg: COLORS.green, onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'marketplace' } }) },
-    { label: 'My Workouts', icon: 'activity', bg: COLORS.amber, onPress: () => navigation?.navigate?.('WorkoutTracker') },
+  // --- Primary actions (always visible grid) ---
+  const primaryActions = [
+    { label: 'Workouts', icon: 'activity', bg: '#F97316', onPress: () => navigation?.navigate?.('WorkoutTracker') },
     { label: 'Scan Food', icon: 'camera', bg: '#EA4335', onPress: () => navigation?.navigate?.('FoodScanner') },
+    { label: 'Classes', icon: 'calendar', bg: COLORS.accent, onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'community' } }) },
+    { label: 'Sleep', icon: 'moon', bg: '#6366F1', onPress: () => navigation?.navigate?.('SleepTracker') },
+  ]
+
+  // --- Secondary actions (horizontal scroll — less frequent) ---
+  const moreActions = [
+    { label: 'Trainers', icon: 'search', bg: COLORS.green, onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'marketplace' } }) },
     { label: 'Challenges', icon: 'target', bg: '#8B5CF6', onPress: () => navigation?.navigate?.('Challenges') },
     { label: 'Recipes', icon: 'book-open', bg: '#34A853', onPress: () => navigation?.navigate?.('Recipes') },
-    { label: 'Fitness Score', icon: 'award', bg: '#4285F4', onPress: () => navigation?.navigate?.('FitnessScore') },
-    { label: 'Sleep', icon: 'moon', bg: '#6366F1', onPress: () => navigation?.navigate?.('SleepTracker') },
+    { label: 'Score', icon: 'award', bg: '#4285F4', onPress: () => navigation?.navigate?.('FitnessScore') },
     { label: 'Achievements', icon: 'star', bg: '#F59E0B', onPress: () => navigation?.navigate?.('Achievements') },
     { label: 'Yoga', icon: 'sunrise', bg: '#14B8A6', onPress: () => navigation?.navigate?.('Yoga') },
-    { label: 'Leaderboard', icon: 'award', bg: '#FFD700', onPress: () => navigation?.navigate?.('CityLeaderboard') },
+    { label: 'Leaderboard', icon: 'bar-chart-2', bg: '#FFD700', onPress: () => navigation?.navigate?.('CityLeaderboard') },
     { label: 'Find Gyms', icon: 'map-pin', bg: '#06B6D4', onPress: () => navigation?.navigate?.('GymDiscovery') },
     ...(gymId ? [{ label: 'Revenue', icon: 'dollar-sign', bg: COLORS.green, onPress: () => navigation?.navigate?.('RevenueDashboard') }] : []),
   ]
@@ -925,31 +913,50 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         </MotiView>
 
-        {/* 2x2 Quick Action Grid */}
+        {/* Primary Actions — fixed 4-icon row */}
         <MotiView
           from={{ opacity: 0, translateY: 50 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 400 }}
         >
-        <View style={styles.quickGrid}>
-          {quickActions.map((action) => (
+        <View style={styles.primaryGrid}>
+          {primaryActions.map((action) => (
             <TouchableOpacity
               key={action.label}
-              style={[styles.quickTile, { backgroundColor: action.bg + '12', borderColor: action.bg + '25' }]}
+              style={styles.primaryTile}
               onPress={action.onPress}
               activeOpacity={0.7}
             >
-              <View style={[styles.quickIconWrap, { backgroundColor: action.bg + '20' }]}>
+              <View style={[styles.primaryIconCircle, { backgroundColor: action.bg + '18' }]}>
                 <Feather name={action.icon} size={20} color={action.bg} />
               </View>
-              <Text style={[styles.quickLabel, { color: colors.text }]}>{action.label}</Text>
+              <Text style={[styles.primaryLabel, { color: colors.text }]}>{action.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
-        </MotiView>
 
-        {/* Ad between sections */}
-        <AdBanner style={{ marginHorizontal: 4 }} />
+        {/* Secondary Actions — horizontal scrollable strip */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.quickActionsStrip}
+          style={styles.quickActionsScroll}
+        >
+          {moreActions.map((action) => (
+            <TouchableOpacity
+              key={action.label}
+              style={styles.quickActionTile}
+              onPress={action.onPress}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: action.bg + '18' }]}>
+                <Feather name={action.icon} size={18} color={action.bg} />
+              </View>
+              <Text style={[styles.quickActionLabel, { color: colors.text }]} numberOfLines={1}>{action.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        </MotiView>
 
         {/* Daily Motivation */}
         <DailyQuote style={{ marginHorizontal: 4, marginBottom: SPACING.md }} />
@@ -992,22 +999,13 @@ export default function HomeScreen({ navigation, route }) {
           onStartWorkout={() => navigation?.navigate?.('WorkoutTracker')}
         />
 
-        {/* Live Gym Activity */}
-        <LiveGymIndicator style={{ marginHorizontal: 0 }} />
+        {/* Featured Exercises — visual workout showcase with images & videos */}
+        <FeaturedExercises
+          style={{ marginHorizontal: 0 }}
+          navigation={navigation}
+        />
 
-        {/* Wallet Balance */}
-        <WalletWidget style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('Profile')} />
-
-        {/* Profile Completion Nudge */}
-        <ProfileCompletionBar style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('Profile', { openEdit: true })} />
-
-        {/* Churn Risk Nudge */}
-        <ChurnRiskAlert style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('WorkoutTracker')} />
-
-        {/* Weekly Wellness Report */}
-        <WeeklyWellnessReport style={{ marginHorizontal: 0 }} />
-
-        {/* Hydration Tracker */}
+        {/* Hydration — interactive, quick engagement */}
         <HydrationTracker
           style={{ marginHorizontal: 0 }}
           glasses={waterGlasses || 0}
@@ -1015,17 +1013,23 @@ export default function HomeScreen({ navigation, route }) {
           onAddGlass={() => setWaterGlasses(prev => (prev || 0) + 1)}
         />
 
+        {/* Profile Completion Nudge */}
+        <ProfileCompletionBar style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('Profile', { openEdit: true })} />
+
+        {/* Live Gym Activity */}
+        <LiveGymIndicator style={{ marginHorizontal: 0 }} />
+
+        {/* Ad — single placement */}
+        <AdBanner style={{ marginHorizontal: 4 }} />
+
+        {/* Churn Risk Nudge */}
+        <ChurnRiskAlert style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('WorkoutTracker')} />
+
         {/* Workout Consistency Heat Map */}
         <WorkoutHeatMap style={{ marginHorizontal: 0 }} />
 
-        {/* Nutrition Insights */}
-        <NutritionInsights style={{ marginHorizontal: 0 }} />
-
-        {/* Body Composition Timeline */}
-        <BodyCompositionTimeline style={{ marginHorizontal: 0 }} />
-
-        {/* Accountability Buddy */}
-        <AccountabilityBuddy style={{ marginHorizontal: 0 }} />
+        {/* Weekly Wellness Report */}
+        <WeeklyWellnessReport style={{ marginHorizontal: 0 }} />
 
         {/* Today's Classes Strip */}
         <View style={styles.classesSection}>
@@ -1226,9 +1230,6 @@ export default function HomeScreen({ navigation, route }) {
             </TouchableOpacity>
           )}
         </View>
-
-        {/* Ad before badges */}
-        <AdBanner style={{ marginHorizontal: 4 }} />
 
         {/* Badges */}
         {badges.length > 0 && (
@@ -2155,37 +2156,61 @@ const styles = StyleSheet.create({
     ...ELITE_GLOW,
   },
 
-  // Quick Action Grid
-  quickGrid: {
+  // Primary Actions — fixed 4-across row
+  primaryGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-    marginBottom: SPACING.xl,
+    justifyContent: 'space-between',
+    marginBottom: SPACING.sm + 4,
   },
-  quickTile: {
-    width: (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.sm) / 2,
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: SPACING.md,
-    minHeight: 48,
+  primaryTile: {
+    alignItems: 'center',
+    width: (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.sm * 3) / 4,
   },
-  quickIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  primaryIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.sm,
+    marginBottom: 6,
   },
-  quickLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+  primaryLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: FONT.semibold,
+    textAlign: 'center',
+  },
+  // Secondary Actions — horizontal scroll strip
+  quickActionsScroll: {
+    marginBottom: SPACING.md,
+  },
+  quickActionsStrip: {
+    gap: SPACING.sm + 2,
+    paddingRight: SPACING.md,
+  },
+  quickActionTile: {
+    alignItems: 'center',
+    width: 64,
+  },
+  quickActionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 5,
+  },
+  quickActionLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    fontFamily: FONT.semibold,
+    textAlign: 'center',
     color: COLORS.text,
   },
 
   // Daily Goals
   dailyGoalsCard: {
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.md,
   },
   sectionTitle: {
     fontSize: 16,

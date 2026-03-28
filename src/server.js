@@ -15,22 +15,29 @@ const start = async () => {
     await app.listen({ port: config.port, host: config.host });
     console.log(`IVIRA API running on http://${config.host}:${config.port}`);
 
-    // Auto-sync wger exercise database if empty (runs once after first deploy)
+    // Auto-sync wger exercise database if no exercises have images
     try {
       const knex = (await import('./config/database.js')).default;
-      const [{ count }] = await knex('exercises').whereNotNull('wger_id').count('id as count');
-      if (parseInt(count) === 0) {
-        console.log('[wger-sync] No wger exercises found — starting initial sync...');
-        const { syncExercises, syncFreeExerciseDB } = await import('./services/wger-sync.service.js');
-        syncExercises(knex).then(r => {
-          console.log(`[wger-sync] Initial sync complete: ${r.inserted} inserted`);
-          // After wger sync completes, also sync Free Exercise DB
-          return syncFreeExerciseDB(knex);
-        }).then(r => {
-          if (r) console.log(`[free-exercise-db] Initial sync complete: ${r.inserted} inserted`);
-        }).catch(err => {
-          console.warn('[wger-sync] Initial sync failed:', err?.message);
-        });
+      // Check if image_url column exists (migration 041)
+      const hasImageCol = await knex.schema.hasColumn('exercises', 'image_url');
+      if (hasImageCol) {
+        const [{ count }] = await knex('exercises').whereNotNull('image_url').where('image_url', '!=', '').count('id as count');
+        if (parseInt(count) < 10) {
+          console.log(`[wger-sync] Only ${count} exercises have images — starting sync...`);
+          const { syncExercises, syncFreeExerciseDB } = await import('./services/wger-sync.service.js');
+          syncExercises(knex).then(r => {
+            console.log(`[wger-sync] Sync complete: ${r.inserted} inserted, ${r.updated} updated`);
+            return syncFreeExerciseDB(knex);
+          }).then(r => {
+            if (r) console.log(`[free-exercise-db] Sync complete: ${r.inserted} inserted`);
+          }).catch(err => {
+            console.warn('[wger-sync] Sync failed:', err?.message);
+          });
+        } else {
+          console.log(`[wger-sync] ${count} exercises with images — sync not needed`);
+        }
+      } else {
+        console.log('[wger-sync] image_url column not found — run migration 041 first');
       }
     } catch (err) {
       console.warn('[wger-sync] Auto-sync check failed:', err?.message);
