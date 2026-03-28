@@ -38,6 +38,10 @@ import ChallengesScreen from '../screens/ChallengesScreen'
 import AchievementsScreen from '../screens/AchievementsScreen'
 import SleepTrackerScreen from '../screens/SleepTrackerScreen'
 import YogaScreen from '../screens/YogaScreen'
+import CityLeaderboardScreen from '../screens/CityLeaderboardScreen'
+import SubscriptionScreen from '../screens/SubscriptionScreen'
+import GymDiscoveryScreen from '../screens/GymDiscoveryScreen'
+import TrainerDashboardScreen from '../screens/TrainerDashboardScreen'
 
 // Try to load BlurView — verify native module is available (not just JS)
 let BlurView = null
@@ -83,6 +87,10 @@ function HomeStackNavigator() {
       <HomeStackNav.Screen name="Achievements" component={AchievementsScreen} />
       <HomeStackNav.Screen name="SleepTracker" component={SleepTrackerScreen} />
       <HomeStackNav.Screen name="Yoga" component={YogaScreen} />
+      <HomeStackNav.Screen name="CityLeaderboard" component={CityLeaderboardScreen} />
+      <HomeStackNav.Screen name="Subscription" component={SubscriptionScreen} />
+      <HomeStackNav.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
+      <HomeStackNav.Screen name="TrainerDashboard" component={TrainerDashboardScreen} />
     </HomeStackNav.Navigator>
   )
 }
@@ -117,6 +125,7 @@ function CommunityStackNavigator() {
     <CommunityStackNav.Navigator screenOptions={{ headerShown: false }}>
       <CommunityStackNav.Screen name="CommunityMain" component={CommunityHubScreen} />
       <CommunityStackNav.Screen name="ServiceDetail" component={ServiceDetailScreen} />
+      <CommunityStackNav.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
     </CommunityStackNav.Navigator>
   )
 }

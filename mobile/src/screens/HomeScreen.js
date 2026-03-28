@@ -68,6 +68,13 @@ import { requestHealthPermissions, requestSleepPermissions, getTodaySteps, getLa
 import { useHealth } from '../context/HealthContext'
 import { requestAllPermissions } from '../lib/permissions'
 import DailyQuote from '../components/DailyQuote'
+import LiveGymIndicator from '../components/LiveGymIndicator'
+import WalletWidget from '../components/WalletWidget'
+import ProfileCompletionBar from '../components/ProfileCompletionBar'
+import RecoveryScore from '../components/RecoveryScore'
+import ContinueWorkoutCard from '../components/ContinueWorkoutCard'
+import WeeklyWellnessReport from '../components/WeeklyWellnessReport'
+import ChurnRiskAlert from '../components/ChurnRiskAlert'
 
 import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion } from '../lib/aiCoach'
 import { recordWorkout } from '../lib/SmartNotificationEngine'
@@ -586,6 +593,31 @@ export default function HomeScreen({ navigation, route }) {
     return () => clearInterval(timer)
   }, [member?.name, streak, checkinCount, daysRemaining])
 
+  // --- Milestone celebration ---
+  useEffect(() => {
+    const milestones = [7, 14, 30, 50, 100, 200, 365]
+    if (streak > 0 && milestones.includes(streak) && lastMilestoneRef.current !== streak) {
+      lastMilestoneRef.current = streak
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      const messages = {
+        7: 'One full week! You\'re building a habit.',
+        14: 'Two weeks strong! Consistency is key.',
+        30: 'A whole month! You\'re in the top 10%.',
+        50: '50 days! You\'re unstoppable.',
+        100: '100 days! Legendary dedication.',
+        200: '200 days! Elite athlete status.',
+        365: 'One full year! Absolute champion.',
+      }
+      setTimeout(() => {
+        Alert.alert(
+          `${streak}-Day Streak!`,
+          messages[streak] || `${streak} days of consistency!`,
+          [{ text: 'Keep Going!', style: 'default' }],
+        )
+      }, 1000)
+    }
+  }, [streak])
+
   // --- Nutrition calculations ---
   const caloriesConsumed = nutritionTotals?.calories || 0
   const calorieGoal = nutritionGoal?.calorie_goal || 2000
@@ -638,6 +670,8 @@ export default function HomeScreen({ navigation, route }) {
     { label: 'Sleep', icon: 'moon', bg: '#6366F1', onPress: () => navigation?.navigate?.('SleepTracker') },
     { label: 'Achievements', icon: 'star', bg: '#F59E0B', onPress: () => navigation?.navigate?.('Achievements') },
     { label: 'Yoga', icon: 'sunrise', bg: '#14B8A6', onPress: () => navigation?.navigate?.('Yoga') },
+    { label: 'Leaderboard', icon: 'award', bg: '#FFD700', onPress: () => navigation?.navigate?.('CityLeaderboard') },
+    { label: 'Find Gyms', icon: 'map-pin', bg: '#06B6D4', onPress: () => navigation?.navigate?.('GymDiscovery') },
     ...(gymId ? [{ label: 'Revenue', icon: 'dollar-sign', bg: COLORS.green, onPress: () => navigation?.navigate?.('RevenueDashboard') }] : []),
   ]
 
@@ -1421,6 +1455,30 @@ export default function HomeScreen({ navigation, route }) {
             })}
           </View>
         </View>
+
+        {/* Continue Workout — 1-tap resume */}
+        <ContinueWorkoutCard
+          style={{ marginHorizontal: 0 }}
+          onStartWorkout={() => navigation?.navigate?.('WorkoutTracker')}
+        />
+
+        {/* Recovery Score */}
+        <RecoveryScore style={{ marginHorizontal: 0 }} />
+
+        {/* Live Gym Activity */}
+        <LiveGymIndicator style={{ marginHorizontal: 0 }} />
+
+        {/* Wallet Balance */}
+        <WalletWidget style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('Profile')} />
+
+        {/* Profile Completion Nudge */}
+        <ProfileCompletionBar style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('Profile', { openEdit: true })} />
+
+        {/* Churn Risk Nudge */}
+        <ChurnRiskAlert style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('WorkoutTracker')} />
+
+        {/* Weekly Wellness Report */}
+        <WeeklyWellnessReport style={{ marginHorizontal: 0 }} />
 
         {/* Today's Classes Strip */}
         <View style={styles.classesSection}>
