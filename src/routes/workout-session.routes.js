@@ -170,7 +170,7 @@ export default async function workoutSessionRoutes(fastify) {
       });
     }
 
-    const [{ count }] = await query.clone().count();
+    const [{ count }] = await query.clone().clearOrder().count();
     const exercises = await query.limit(lim).offset(offset);
 
     return {
