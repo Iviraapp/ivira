@@ -53,7 +53,7 @@ try {
 } catch {}
 
 import { useFocusEffect } from '@react-navigation/native'
-import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD, ELITE_GLOW } from '../lib/theme'
+import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD, ELITE_GLOW, GLASS_CARD, ACTION_CARDS } from '../lib/theme'
 import { generateNonce, formatDate } from '../lib/utils'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -627,7 +627,7 @@ export default function HomeScreen({ navigation, route }) {
     { label: 'Find a Trainer', icon: 'search', bg: COLORS.green, onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'marketplace' } }) },
     { label: 'My Workouts', icon: 'activity', bg: COLORS.amber, onPress: () => navigation?.navigate?.('WorkoutTracker') },
     { label: 'Scan Food', icon: 'camera', bg: '#EA4335', onPress: () => navigation?.navigate?.('FoodScanner') },
-    { label: 'Challenges', icon: 'zap', bg: '#8B5CF6', onPress: () => navigation?.navigate?.('Challenges') },
+    { label: 'Challenges', icon: 'target', bg: '#8B5CF6', onPress: () => navigation?.navigate?.('Challenges') },
     { label: 'Recipes', icon: 'book-open', bg: '#34A853', onPress: () => navigation?.navigate?.('Recipes') },
     { label: 'Fitness Score', icon: 'award', bg: '#4285F4', onPress: () => navigation?.navigate?.('FitnessScore') },
     { label: 'Sleep', icon: 'moon', bg: '#6366F1', onPress: () => navigation?.navigate?.('SleepTracker') },
@@ -646,10 +646,10 @@ export default function HomeScreen({ navigation, route }) {
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Sticky Header — 3-column: Logo | Streak Pill | Profile */}
       <View style={[styles.stickyHeader, { backgroundColor: colors.bg, borderBottomColor: colors.border }]}>
-        {/* Left: IVIRA Logo */}
+        {/* Left: IVIRA Logo — VIRA Emphasis */}
         <View style={styles.headerLeft}>
-          <Text style={[styles.headerLogo, { color: colors.text }]}>IVI</Text>
-          <Text style={styles.headerLogoAccent}>RA</Text>
+          <Text style={[styles.headerLogo, { color: colors.accent, opacity: 0.45 }]}>I</Text>
+          <Text style={[styles.headerLogo, { color: colors.accent }]}>VIRA</Text>
         </View>
 
         {/* Center: Streak Pill */}
@@ -667,7 +667,7 @@ export default function HomeScreen({ navigation, route }) {
               setQrModalVisible(true)
             }}
           >
-            <Feather name="zap" size={13} color={colors.textTer} />
+            <Feather name="activity" size={13} color={colors.textTer} />
             <Text style={[styles.streakPillEmptyText, { color: colors.textTer }]}>Start your journey</Text>
           </TouchableOpacity>
         )}
@@ -706,7 +706,7 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.welcomeSection}>
             {/* AI Badge */}
             <Animated.View style={[styles.aiBadge, { opacity: aiBadgeGlow }]}>
-              <Feather name="zap" size={11} color={colors.accent} />
+              <Feather name="activity" size={11} color={colors.accent} />
               <Text style={[styles.aiBadgeText, { color: colors.accent }]}>AI Coach</Text>
             </Animated.View>
 
@@ -748,7 +748,7 @@ export default function HomeScreen({ navigation, route }) {
           }}
         >
           <View style={styles.fuelHeader}>
-            <Feather name="zap" size={16} color={colors.accent} />
+            <Feather name="activity" size={16} color={colors.accent} />
             <Text style={[styles.fuelTitle, { color: colors.text }]}>Today's Fuel</Text>
             <View style={{ flex: 1 }} />
             <TouchableOpacity
@@ -874,7 +874,7 @@ export default function HomeScreen({ navigation, route }) {
             <View style={styles.aiWorkoutHeader}>
               <View style={styles.aiWorkoutHeaderLeft}>
                 <View style={[styles.aiWorkoutIconWrap, { backgroundColor: (colors.accent || COLORS.accent) + '20' }]}>
-                  <Feather name="zap" size={16} color={colors.accent || COLORS.accent} />
+                  <Feather name="activity" size={16} color={colors.accent || COLORS.accent} />
                 </View>
                 <View>
                   <Text style={[styles.aiWorkoutTitle, { color: colors.text }]}>AI Workout</Text>
@@ -1241,7 +1241,7 @@ export default function HomeScreen({ navigation, route }) {
         >
           <View style={[styles.movementCard, card]}>
             <View style={styles.movementHeader}>
-              <Feather name="zap" size={18} color="#F59E0B" />
+              <Feather name="activity" size={18} color="#F59E0B" />
               <Text style={[styles.movementTitle, { color: colors.text }]}>Training Readiness</Text>
             </View>
             {(() => {
@@ -1347,12 +1347,12 @@ export default function HomeScreen({ navigation, route }) {
           {quickActions.map((action) => (
             <TouchableOpacity
               key={action.label}
-              style={[styles.quickTile, { backgroundColor: colors.bgSec, borderColor: colors.border }]}
+              style={[styles.quickTile, { backgroundColor: action.bg + '12', borderColor: action.bg + '25' }]}
               onPress={action.onPress}
               activeOpacity={0.7}
             >
-              <View style={[styles.quickIconWrap, { backgroundColor: action.bg + '1A' }]}>
-                <Feather name={action.icon} size={22} color={action.bg} />
+              <View style={[styles.quickIconWrap, { backgroundColor: action.bg + '20' }]}>
+                <Feather name={action.icon} size={20} color={action.bg} />
               </View>
               <Text style={[styles.quickLabel, { color: colors.text }]}>{action.label}</Text>
             </TouchableOpacity>
@@ -1366,7 +1366,7 @@ export default function HomeScreen({ navigation, route }) {
         {/* Daily Goals Row */}
         <View style={styles.dailyGoalsCard}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Daily Goals</Text>
-          <View style={[styles.dailyGoalsRow, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
+          <View style={[styles.dailyGoalsRow, GLASS_CARD]}>
             {dailyGoals.map((goal) => {
               const Wrapper = goal.onPress ? TouchableOpacity : View
               return (
@@ -2270,16 +2270,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerLogo: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.text,
-    letterSpacing: -0.5,
-  },
-  headerLogoAccent: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
     color: COLORS.accent,
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   streakPill: {
     flexDirection: 'row',
@@ -2538,14 +2532,15 @@ const styles = StyleSheet.create({
   },
   quickTile: {
     width: (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.sm) / 2,
-    ...ELITE_CARD,
+    borderRadius: 18,
+    borderWidth: 1,
     padding: SPACING.md,
     minHeight: 48,
   },
   quickIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: RADIUS.md,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.sm,
@@ -3042,10 +3037,7 @@ const styles = StyleSheet.create({
 
   // Movement / Step Counter
   movementCard: {
-    backgroundColor: 'rgba(26,26,26,0.8)',
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.12)',
+    ...GLASS_CARD,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
   },

@@ -1,15 +1,16 @@
-<!-- IVIRA App Icon — Rounded square with white V mark -->
-<!-- 512x512 standard app icon | Emerald #10B981 background -->
-<!-- Corner radius ~22% (112px on 512) -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- IVIRA App Icon — Vitality Pulse -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
   <!-- Rounded square background -->
-  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="#10B981"/>
-
-  <!-- White V letterform: bold geometric, centered -->
-  <polygon points="128,120 184,120 256,360 328,120 384,120 276,420 236,420" fill="#FFFFFF"/>
-
-  <!-- White pulse dot beneath V -->
-  <circle cx="256" cy="440" r="14" fill="#FFFFFF" opacity="0.6"/>
-
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Heartbeat pulse line forming V-shape -->
+  <path d="M96 272 L168 272 L208 176 L256 368 L304 144 L344 272 L416 272"
+        stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Subtle glow dot at pulse valley -->
+  <circle cx="256" cy="368" r="14" fill="white" opacity="0.5"/>
 </svg>

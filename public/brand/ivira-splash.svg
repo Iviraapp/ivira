@@ -1,17 +1,13 @@
-<!-- IVIRA Splash Screen — Mobile 1080x1920 -->
-<!-- Dark background #0A0E1A with centered VIRA Emphasis wordmark -->
-<!-- Emerald #10B981 with glow effect via SVG gaussian blur filter -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" fill="none">
+  <!-- IVIRA Splash Screen — Vitality Pulse + VIRA Emphasis Wordmark -->
   <defs>
-    <!-- Glow filter: subtle emerald bloom behind text -->
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="24" result="blur"/>
       <feColorMatrix in="blur" type="matrix"
         values="0 0 0 0 0.063
                 0 0 0 0 0.725
                 0 0 0 0 0.506
-                0 0 0 0.4 0"
+                0 0 0 0.5 0"
         result="coloredBlur"/>
       <feMerge>
         <feMergeNode in="coloredBlur"/>
@@ -21,35 +17,33 @@
   </defs>
 
   <!-- Dark background -->
-  <rect x="0" y="0" width="1080" height="1920" fill="#0A0E1A"/>
+  <rect width="1080" height="1920" fill="#0A0E1A"/>
 
-  <!-- Wordmark group: centered at vertical midpoint -->
-  <!-- Total wordmark width ~690, height ~138; centered at 540, 960 -->
-  <g transform="translate(195, 891)" filter="url(#glow)">
+  <!-- Pulse icon centered above wordmark -->
+  <g transform="translate(390, 780)" filter="url(#glow)">
+    <path d="M30 120 L90 120 L130 50 L150 180 L190 20 L230 120 L290 120"
+          stroke="#10B981" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="150" cy="180" r="7" fill="#10B981" opacity="0.5"/>
+  </g>
 
-    <!-- I (dimmed leading letter) -->
+  <!-- Wordmark below pulse icon -->
+  <g transform="translate(195, 1010)" filter="url(#glow)">
+    <!-- I (dimmed) -->
     <rect x="0" y="0" width="45" height="138" fill="#10B981" opacity="0.45"/>
-
-    <!-- V (bold, wider for emphasis) -->
+    <!-- V -->
     <polygon points="57,0 102,0 139.5,108 177,0 222,0 157.5,138 121.5,138" fill="#10B981"/>
-
     <!-- Pulse dot under V -->
     <circle cx="139.5" cy="155" r="6" fill="#10B981" opacity="0.5"/>
-
     <!-- I -->
     <rect x="240" y="0" width="45" height="138" fill="#10B981"/>
-
     <!-- R -->
     <path d="M309,0 L309,138 L354,138 L354,99 L381,99 L417,138 L471,138 L426,93
              C447,84 459,66 459,45 C459,18 438,0 405,0 Z
              M354,36 L354,66 L396,66 C411,66 417,60 417,51 C417,42 411,36 396,36 Z"
           fill="#10B981" fill-rule="evenodd"/>
-
     <!-- A -->
     <path d="M480,138 L543,0 L585,0 L648,138 L600,138 L588,111 L540,111 L528,138 Z
              M550.5,81 L577.5,81 L564,48 Z"
           fill="#10B981" fill-rule="evenodd"/>
-
   </g>
-
 </svg>

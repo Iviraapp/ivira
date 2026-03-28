@@ -2,27 +2,32 @@ import React, { useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Animated } from 'react-native'
 import { COLORS } from '../lib/theme'
 
+let Svg = null, Path = null, SvgCircle = null
+try {
+  const svg = require('react-native-svg')
+  Svg = svg.default || svg.Svg
+  Path = svg.Path
+  SvgCircle = svg.Circle
+} catch {}
+
 export default function SplashScreen({ onFinish }) {
   const pulseScale = useRef(new Animated.Value(0.8)).current
   const logoOpacity = useRef(new Animated.Value(0)).current
   const glowOpacity = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
-    // Fade in logo
     Animated.timing(logoOpacity, {
       toValue: 1,
       duration: 400,
       useNativeDriver: true,
     }).start()
 
-    // Fade in glow behind logo
     Animated.timing(glowOpacity, {
-      toValue: 0.2,
+      toValue: 0.25,
       duration: 600,
       useNativeDriver: true,
     }).start()
 
-    // Logo Pulse: 0.8 → 1.0 → 0.8 looping
     const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseScale, {
@@ -39,7 +44,6 @@ export default function SplashScreen({ onFinish }) {
     )
     pulse.start()
 
-    // Auto-finish after 2.5s
     const timer = setTimeout(() => {
       pulse.stop()
       if (onFinish) onFinish()
@@ -53,16 +57,37 @@ export default function SplashScreen({ onFinish }) {
 
   return (
     <View style={styles.container}>
-      {/* Astro-Purple radial glow */}
+      {/* Emerald radial glow */}
       <Animated.View style={[styles.glow, { opacity: glowOpacity }]} />
 
       <Animated.View
         style={{
           transform: [{ scale: pulseScale }],
           opacity: logoOpacity,
+          alignItems: 'center',
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+        {/* Vitality Pulse Icon */}
+        {Svg && Path ? (
+          <View style={styles.pulseWrap}>
+            <Svg width={80} height={48} viewBox="0 0 120 72">
+              <Path
+                d="M8 38 L28 38 L42 18 L60 56 L78 10 L92 38 L112 38"
+                stroke="#10B981"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+              {SvgCircle && (
+                <SvgCircle cx="60" cy="56" r="3" fill="#10B981" opacity={0.5} />
+              )}
+            </Svg>
+          </View>
+        ) : null}
+
+        {/* VIRA Emphasis Wordmark */}
+        <View style={styles.wordmarkRow}>
           <Text style={[styles.logo, { opacity: 0.45 }]}>I</Text>
           <Text style={styles.logo}>VIRA</Text>
         </View>
@@ -74,30 +99,28 @@ export default function SplashScreen({ onFinish }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F19',
+    backgroundColor: '#0A0E1A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   glow: {
     position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
     backgroundColor: COLORS.accentGlow,
   },
+  pulseWrap: {
+    marginBottom: 16,
+  },
+  wordmarkRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
   logo: {
-    fontSize: 42,
+    fontSize: 44,
     fontWeight: '900',
     color: '#10B981',
     letterSpacing: -1,
-    textAlign: 'center',
-  },
-  tagline: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.accent,
-    letterSpacing: 8,
-    textAlign: 'center',
-    marginTop: 4,
   },
 })

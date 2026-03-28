@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IVIRA Icon & Theme Concepts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #030508; color: #F9FAFB; }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+  h1 { font-size: 12px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: #10B981; text-align: center; margin-bottom: 8px; }
+  .sub { text-align: center; color: #6B7280; font-size: 13px; margin-bottom: 48px; }
+
+  /* Icon Grid */
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-bottom: 64px;
+  }
+  .icon-card {
+    border: 1px solid #1F2937;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .icon-card-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid #1F2937;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .icon-card-head h3 { font-size: 13px; font-weight: 700; }
+  .icon-card-head .tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: #10B981;
+    background: rgba(16,185,129,0.1); padding: 3px 8px; border-radius: 4px;
+  }
+  .icon-card-body {
+    padding: 40px;
+    display: flex; flex-direction: column; align-items: center; gap: 24px;
+    background: #0A0E1A;
+  }
+  .icon-card-body .desc {
+    font-size: 11px; color: #6B7280; text-align: center; line-height: 1.5;
+  }
+  .icon-sizes {
+    display: flex; gap: 16px; align-items: flex-end;
+  }
+
+  /* === ICON A: Vitality Pulse === */
+  .icon-a {
+    width: 120px; height: 120px;
+    border-radius: 28px;
+    background: linear-gradient(145deg, #10B981 0%, #059669 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(16,185,129,0.3);
+  }
+  .icon-a svg { width: 72px; height: 72px; }
+
+  .icon-a-sm { width: 48px; height: 48px; border-radius: 12px; }
+  .icon-a-sm svg { width: 28px; height: 28px; }
+  .icon-a-xs { width: 32px; height: 32px; border-radius: 8px; }
+  .icon-a-xs svg { width: 18px; height: 18px; }
+
+  /* === ICON B: Shield Vitality === */
+  .icon-b {
+    width: 120px; height: 120px;
+    border-radius: 28px;
+    background: linear-gradient(145deg, #0F1B15 0%, #0A0E1A 100%);
+    border: 2px solid rgba(16,185,129,0.3);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(16,185,129,0.15);
+  }
+  .icon-b svg { width: 72px; height: 72px; }
+  .icon-b-sm { width: 48px; height: 48px; border-radius: 12px; border-width: 1.5px; }
+  .icon-b-sm svg { width: 28px; height: 28px; }
+
+  /* === ICON C: Abstract Flame === */
+  .icon-c {
+    width: 120px; height: 120px;
+    border-radius: 28px;
+    background: linear-gradient(145deg, #10B981 0%, #059669 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 32px rgba(16,185,129,0.3);
+  }
+  .icon-c svg { width: 72px; height: 72px; }
+  .icon-c-sm { width: 48px; height: 48px; border-radius: 12px; }
+  .icon-c-sm svg { width: 28px; height: 28px; }
+
+  /* === THEME PREVIEW === */
+  .theme-section {
+    margin-top: 40px;
+  }
+  .theme-section h2 {
+    font-size: 12px; font-weight: 600; letter-spacing: 4px;
+    text-transform: uppercase; color: #10B981; margin-bottom: 32px;
+  }
+
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    border-radius: 44px;
+    border: 3px solid #1F2937;
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto;
+    background: #060A10;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 54px;
+    padding: 14px 24px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; font-weight: 600;
+  }
+
+  /* Home screen mockup */
+  .home-screen {
+    padding: 0 20px 20px;
+    height: calc(100% - 54px - 80px);
+    overflow-y: auto;
+  }
+
+  .greeting {
+    padding: 16px 0 20px;
+  }
+  .greeting .hi {
+    font-size: 15px; color: #6B7280; font-weight: 500;
+  }
+  .greeting .name {
+    font-size: 26px; font-weight: 800; color: #F9FAFB;
+    letter-spacing: -0.5px; margin-top: 2px;
+  }
+
+  /* Glass card */
+  .glass-card {
+    background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.03) 100%);
+    border: 1px solid rgba(16,185,129,0.15);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent);
+  }
+
+  /* Score ring */
+  .score-section {
+    display: flex; align-items: center; gap: 20px;
+  }
+  .score-ring {
+    width: 80px; height: 80px;
+    position: relative;
+  }
+  .score-ring svg { width: 80px; height: 80px; }
+  .score-value {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 22px; font-weight: 800; color: #10B981;
+  }
+  .score-meta { flex: 1; }
+  .score-label { font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .score-title { font-size: 18px; font-weight: 700; color: #F9FAFB; margin: 4px 0; }
+  .score-sub { font-size: 12px; color: #34D399; font-weight: 500; }
+
+  /* Quick stats */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-pill {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-pill .val {
+    font-size: 18px; font-weight: 800; color: #F9FAFB;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-pill .lbl {
+    font-size: 10px; color: #6B7280; margin-top: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+  }
+  .stat-pill.accent { border-color: rgba(16,185,129,0.2); }
+  .stat-pill.accent .val { color: #10B981; }
+
+  /* Activity chart placeholder */
+  .chart-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .chart-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .chart-title { font-size: 14px; font-weight: 700; color: #F9FAFB; }
+  .chart-badge {
+    font-size: 10px; font-weight: 700; color: #10B981;
+    background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: 6px;
+  }
+  .chart-bars {
+    display: flex; gap: 6px; align-items: flex-end; height: 100px;
+  }
+  .chart-bar {
+    flex: 1;
+    border-radius: 6px 6px 3px 3px;
+    min-height: 12px;
+    position: relative;
+  }
+  .chart-bar .day {
+    position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; color: #4B5563; font-weight: 600;
+  }
+
+  /* Action cards */
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .action-card {
+    border-radius: 16px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .action-card .icon-wrap {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+    font-size: 18px;
+  }
+  .action-card .act-title { font-size: 13px; font-weight: 700; color: #F9FAFB; }
+  .action-card .act-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  .action-card.emerald {
+    background: linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 100%);
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+  .action-card.emerald .icon-wrap { background: rgba(16,185,129,0.2); }
+
+  .action-card.purple {
+    background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(139,92,246,0.04) 100%);
+    border: 1px solid rgba(139,92,246,0.15);
+  }
+  .action-card.purple .icon-wrap { background: rgba(139,92,246,0.2); }
+
+  .action-card.amber {
+    background: linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.04) 100%);
+    border: 1px solid rgba(245,158,11,0.15);
+  }
+  .action-card.amber .icon-wrap { background: rgba(245,158,11,0.2); }
+
+  .action-card.cyan {
+    background: linear-gradient(135deg, rgba(6,182,212,0.12) 0%, rgba(6,182,212,0.04) 100%);
+    border: 1px solid rgba(6,182,212,0.15);
+  }
+  .action-card.cyan .icon-wrap { background: rgba(6,182,212,0.2); }
+
+  /* Tab bar */
+  .tab-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 80px;
+    background: rgba(6,10,16,0.92);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px 16px;
+  }
+  .tab-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; color: #4B5563;
+  }
+  .tab-item.active { color: #10B981; }
+  .tab-item .tab-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: #10B981;
+  }
+  .tab-icon {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  /* Center AI button */
+  .ai-tab {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #10B981, #059669);
+    display: flex; align-items: center; justify-content: center;
+    margin-top: -26px;
+    box-shadow: 0 4px 20px rgba(16,185,129,0.4);
+    font-size: 22px;
+    position: relative;
+  }
+  .ai-tab::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.4), transparent);
+    z-index: -1;
+  }
+
+  /* Comparison section */
+  .compare {
+    margin-top: 64px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .compare-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding: 6px 12px;
+    border-radius: 6px;
+  }
+  .compare-label.old { color: #EF4444; background: rgba(239,68,68,0.1); }
+  .compare-label.new { color: #10B981; background: rgba(16,185,129,0.1); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>IVIRA — Premium App Concepts</h1>
+<p class="sub">AI-grade icon marks + premium dark glass theme</p>
+
+<!-- ICON CONCEPTS -->
+<div class="icon-grid">
+
+  <!-- Icon A: Vitality Pulse -->
+  <div class="icon-card">
+    <div class="icon-card-head">
+      <h3>Vitality Pulse</h3>
+      <span class="tag">Recommended</span>
+    </div>
+    <div class="icon-card-body">
+      <div class="icon-a">
+        <svg viewBox="0 0 72 72" fill="none">
+          <!-- Abstract pulse/heartbeat forming a V-shape -->
+          <path d="M12 38 L22 38 L28 26 L36 52 L44 20 L50 38 L60 38"
+                stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Subtle glow dot at apex -->
+          <circle cx="36" cy="52" r="3" fill="white" opacity="0.6"/>
+        </svg>
+      </div>
+      <div class="icon-sizes">
+        <div class="icon-a icon-a-sm">
+          <svg viewBox="0 0 72 72" fill="none">
+            <path d="M12 38 L22 38 L28 26 L36 52 L44 20 L50 38 L60 38" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="36" cy="52" r="3" fill="white" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="icon-a icon-a-xs">
+          <svg viewBox="0 0 72 72" fill="none">
+            <path d="M12 38 L22 38 L28 26 L36 52 L44 20 L50 38 L60 38" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="desc">Heartbeat pulse line — the universal health symbol.<br>The peak-valley-peak forms a natural V. Reads at any size.</div>
+    </div>
+  </div>
+
+  <!-- Icon B: Radiant Core -->
+  <div class="icon-card">
+    <div class="icon-card-head">
+      <h3>Radiant Core</h3>
+      <span class="tag">Premium</span>
+    </div>
+    <div class="icon-card-body">
+      <div class="icon-b">
+        <svg viewBox="0 0 72 72" fill="none">
+          <!-- Three converging arcs suggesting energy/vitality -->
+          <path d="M20 52 Q36 16 52 52" stroke="#10B981" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M14 48 Q36 8 58 48" stroke="#10B981" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.5"/>
+          <path d="M26 52 Q36 28 46 52" stroke="#34D399" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <!-- Core dot -->
+          <circle cx="36" cy="22" r="4" fill="#10B981"/>
+          <circle cx="36" cy="22" r="8" fill="none" stroke="#10B981" stroke-width="1.5" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="icon-sizes">
+        <div class="icon-b icon-b-sm">
+          <svg viewBox="0 0 72 72" fill="none">
+            <path d="M20 52 Q36 16 52 52" stroke="#10B981" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M14 48 Q36 8 58 48" stroke="#10B981" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.5"/>
+            <path d="M26 52 Q36 28 46 52" stroke="#34D399" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <circle cx="36" cy="22" r="4" fill="#10B981"/>
+          </svg>
+        </div>
+      </div>
+      <div class="desc">Energy arcs radiating from a core point.<br>Dark glass background, emerald strokes. Premium feel.</div>
+    </div>
+  </div>
+
+  <!-- Icon C: Upward Flame -->
+  <div class="icon-card">
+    <div class="icon-card-head">
+      <h3>Rising Vitality</h3>
+      <span class="tag">Bold</span>
+    </div>
+    <div class="icon-card-body">
+      <div class="icon-c">
+        <svg viewBox="0 0 72 72" fill="none">
+          <!-- Abstract upward flame/leaf — represents growth, vitality -->
+          <path d="M36 10 C24 24 18 38 18 48 C18 58 26 64 36 64 C46 64 54 58 54 48 C54 38 48 24 36 10Z"
+                fill="white" opacity="0.95"/>
+          <!-- Inner cutout creating depth -->
+          <path d="M36 24 C30 34 26 42 26 48 C26 54 30 58 36 58 C42 58 46 54 46 48 C46 42 42 34 36 24Z"
+                fill="#059669"/>
+          <!-- Center line -->
+          <line x1="36" y1="32" x2="36" y2="54" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+        </svg>
+      </div>
+      <div class="icon-sizes">
+        <div class="icon-c icon-c-sm">
+          <svg viewBox="0 0 72 72" fill="none">
+            <path d="M36 10 C24 24 18 38 18 48 C18 58 26 64 36 64 C46 64 54 58 54 48 C54 38 48 24 36 10Z" fill="white" opacity="0.95"/>
+            <path d="M36 24 C30 34 26 42 26 48 C26 54 30 58 36 58 C42 58 46 54 46 48 C46 42 42 34 36 24Z" fill="#059669"/>
+            <line x1="36" y1="32" x2="36" y2="54" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+          </svg>
+        </div>
+      </div>
+      <div class="desc">Rising flame/leaf — vitality, growth, warrior spirit.<br>Bold white mark on emerald. Unmistakable at any size.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PREMIUM THEME PREVIEW -->
+<div class="theme-section">
+  <h2>Premium Glass Theme — Home Screen</h2>
+
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="display:flex;gap:6px;font-size:12px;">
+        <span>&#9679;&#9679;&#9679;&#9679;</span>
+        <span>&#9608;</span>
+      </span>
+    </div>
+
+    <div class="home-screen">
+      <!-- Greeting -->
+      <div class="greeting">
+        <div class="hi">Good evening</div>
+        <div class="name">Niel</div>
+      </div>
+
+      <!-- Fitness Score — glass card -->
+      <div class="glass-card">
+        <div class="score-section">
+          <div class="score-ring">
+            <svg viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+              <circle cx="40" cy="40" r="34" fill="none" stroke="url(#scoreGrad)" stroke-width="6"
+                      stroke-dasharray="172" stroke-dashoffset="30"
+                      stroke-linecap="round" transform="rotate(-90 40 40)"/>
+              <defs>
+                <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#34D399"/>
+                  <stop offset="100%" stop-color="#10B981"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="score-value">82</div>
+          </div>
+          <div class="score-meta">
+            <div class="score-label">Fitness Score</div>
+            <div class="score-title">Great Shape</div>
+            <div class="score-sub">+4 pts this week</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="quick-stats">
+        <div class="stat-pill accent">
+          <div class="val">7,842</div>
+          <div class="lbl">Steps</div>
+        </div>
+        <div class="stat-pill">
+          <div class="val">486</div>
+          <div class="lbl">Calories</div>
+        </div>
+        <div class="stat-pill">
+          <div class="val">7.2h</div>
+          <div class="lbl">Sleep</div>
+        </div>
+      </div>
+
+      <!-- Weekly Activity -->
+      <div class="chart-card">
+        <div class="chart-head">
+          <span class="chart-title">This Week</span>
+          <span class="chart-badge">5 of 7 days</span>
+        </div>
+        <div class="chart-bars" style="padding-bottom: 20px;">
+          <div class="chart-bar" style="height:60%;background:rgba(16,185,129,0.25);"><div class="day">M</div></div>
+          <div class="chart-bar" style="height:85%;background:rgba(16,185,129,0.35);"><div class="day">T</div></div>
+          <div class="chart-bar" style="height:40%;background:rgba(16,185,129,0.2);"><div class="day">W</div></div>
+          <div class="chart-bar" style="height:95%;background:rgba(16,185,129,0.4);"><div class="day">T</div></div>
+          <div class="chart-bar" style="height:70%;background:rgba(16,185,129,0.3);"><div class="day">F</div></div>
+          <div class="chart-bar" style="height:100%;background:linear-gradient(180deg,#10B981,#059669);border:1px solid rgba(16,185,129,0.3);"><div class="day" style="color:#10B981;">S</div></div>
+          <div class="chart-bar" style="height:20%;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.08);"><div class="day">S</div></div>
+        </div>
+      </div>
+
+      <!-- Action Cards -->
+      <div class="action-row">
+        <div class="action-card emerald">
+          <div class="icon-wrap">&#9935;</div>
+          <div class="act-title">Workout</div>
+          <div class="act-sub">Start session</div>
+        </div>
+        <div class="action-card purple">
+          <div class="icon-wrap">&#127769;</div>
+          <div class="act-title">Sleep</div>
+          <div class="act-sub">Track tonight</div>
+        </div>
+      </div>
+      <div class="action-row">
+        <div class="action-card amber">
+          <div class="icon-wrap">&#127860;</div>
+          <div class="act-title">Nutrition</div>
+          <div class="act-sub">Log meal</div>
+        </div>
+        <div class="action-card cyan">
+          <div class="icon-wrap">&#128167;</div>
+          <div class="act-title">Hydration</div>
+          <div class="act-sub">2.1L / 3L</div>
+        </div>
+      </div>
+
+      <div style="height:40px"></div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active">
+        <div class="tab-icon">&#127968;</div>
+        <span>Home</span>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">&#128200;</div>
+        <span>Progress</span>
+      </div>
+      <div class="tab-item" style="padding:0;">
+        <div class="ai-tab">&#10024;</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">&#127941;</div>
+        <span>Social</span>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">&#128100;</div>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div>
+</body>
+</html>

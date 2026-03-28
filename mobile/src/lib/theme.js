@@ -85,12 +85,48 @@ export const METABOLIC = {
   stepsGlow: 'rgba(249,115,22,0.25)',
 }
 
-// Elite card presets (Glassmorphism)
+// Elite card presets (Premium Glass)
 export const ELITE_CARD = {
-  backgroundColor: 'rgba(17, 24, 39, 0.85)',
-  borderRadius: 24,
+  backgroundColor: 'rgba(17, 24, 39, 0.65)',
+  borderRadius: 20,
   borderWidth: 1,
-  borderColor: 'rgba(148,163,184,0.10)',
+  borderColor: 'rgba(16,185,129,0.08)',
+}
+
+// Glass card with emerald accent glow
+export const GLASS_CARD = {
+  backgroundColor: 'rgba(16,185,129,0.06)',
+  borderRadius: 20,
+  borderWidth: 1,
+  borderColor: 'rgba(16,185,129,0.15)',
+}
+
+// Feature action card presets
+export const ACTION_CARDS = {
+  emerald: {
+    backgroundColor: 'rgba(16,185,129,0.10)',
+    borderColor: 'rgba(16,185,129,0.20)',
+  },
+  purple: {
+    backgroundColor: 'rgba(139,92,246,0.10)',
+    borderColor: 'rgba(139,92,246,0.15)',
+  },
+  amber: {
+    backgroundColor: 'rgba(245,158,11,0.10)',
+    borderColor: 'rgba(245,158,11,0.15)',
+  },
+  cyan: {
+    backgroundColor: 'rgba(6,182,212,0.10)',
+    borderColor: 'rgba(6,182,212,0.15)',
+  },
+  orange: {
+    backgroundColor: 'rgba(249,115,22,0.10)',
+    borderColor: 'rgba(249,115,22,0.15)',
+  },
+  red: {
+    backgroundColor: 'rgba(239,68,68,0.10)',
+    borderColor: 'rgba(239,68,68,0.12)',
+  },
 }
 
 export const ELITE_CARD_LIGHT = {

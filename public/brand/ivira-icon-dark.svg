@@ -1,12 +1,7 @@
-<!-- IVIRA Icon Mark — Dark Background Variant -->
-<!-- Bold geometric "V" with pulse dot | Emerald #10B981 -->
-<!-- Centered in 120x120 square viewBox -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-
-  <!-- V letterform: bold geometric, centered -->
-  <polygon points="14,16 42,16 60,76 78,16 106,16 68,100 52,100" fill="#10B981"/>
-
-  <!-- Pulse dot beneath V -->
-  <circle cx="60" cy="112" r="4" fill="#10B981" opacity="0.5"/>
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- IVIRA Icon Mark — Vitality Pulse (dark bg variant) -->
+  <!-- Heartbeat pulse forming V-shape | Emerald #10B981 -->
+  <path d="M16 64 L32 64 L44 40 L60 88 L76 32 L88 64 L104 64"
+        stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="60" cy="88" r="3.5" fill="#10B981" opacity="0.5"/>
 </svg>
