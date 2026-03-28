@@ -37,6 +37,7 @@ import RecipeScreen from '../screens/RecipeScreen'
 import ChallengesScreen from '../screens/ChallengesScreen'
 import AchievementsScreen from '../screens/AchievementsScreen'
 import SleepTrackerScreen from '../screens/SleepTrackerScreen'
+import YogaScreen from '../screens/YogaScreen'
 
 // Try to load BlurView — verify native module is available (not just JS)
 let BlurView = null
@@ -81,6 +82,7 @@ function HomeStackNavigator() {
       <HomeStackNav.Screen name="Challenges" component={ChallengesScreen} />
       <HomeStackNav.Screen name="Achievements" component={AchievementsScreen} />
       <HomeStackNav.Screen name="SleepTracker" component={SleepTrackerScreen} />
+      <HomeStackNav.Screen name="Yoga" component={YogaScreen} />
     </HomeStackNav.Navigator>
   )
 }
@@ -105,6 +107,7 @@ function HealthStackNavigator() {
       <HealthStackNav.Screen name="Challenges" component={ChallengesScreen} />
       <HealthStackNav.Screen name="Achievements" component={AchievementsScreen} />
       <HealthStackNav.Screen name="SleepTracker" component={SleepTrackerScreen} />
+      <HealthStackNav.Screen name="Yoga" component={YogaScreen} />
     </HealthStackNav.Navigator>
   )
 }

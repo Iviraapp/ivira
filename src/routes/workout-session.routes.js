@@ -1,5 +1,5 @@
 import * as workoutSessionService from '../services/workout-session.service.js';
-import { syncExercises, getMuscleList } from '../services/wger-sync.service.js';
+import { syncExercises, syncFreeExerciseDB, getMuscleList } from '../services/wger-sync.service.js';
 import db from '../config/database.js';
 
 const startSessionSchema = {

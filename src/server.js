@@ -21,9 +21,13 @@ const start = async () => {
       const [{ count }] = await knex('exercises').whereNotNull('wger_id').count('id as count');
       if (parseInt(count) === 0) {
         console.log('[wger-sync] No wger exercises found — starting initial sync...');
-        const { syncExercises } = await import('./services/wger-sync.service.js');
+        const { syncExercises, syncFreeExerciseDB } = await import('./services/wger-sync.service.js');
         syncExercises(knex).then(r => {
           console.log(`[wger-sync] Initial sync complete: ${r.inserted} inserted`);
+          // After wger sync completes, also sync Free Exercise DB
+          return syncFreeExerciseDB(knex);
+        }).then(r => {
+          if (r) console.log(`[free-exercise-db] Initial sync complete: ${r.inserted} inserted`);
         }).catch(err => {
           console.warn('[wger-sync] Initial sync failed:', err?.message);
         });

@@ -11,7 +11,7 @@ import * as featureConfigService from '../services/feature-config.service.js';
 import * as adCampaignService from '../services/ad-campaign.service.js';
 import * as magicLinkService from '../services/magic-link.service.js';
 import * as payoutService from '../services/payout.service.js';
-import { syncExercises } from '../services/wger-sync.service.js';
+import { syncExercises, syncFreeExerciseDB } from '../services/wger-sync.service.js';
 
 const loginSchema = {
   body: {
@@ -608,6 +608,14 @@ export default async function superadminRoutes(fastify) {
     preHandler: [verifySuperAdmin],
   }, async (request, reply) => {
     const result = await syncExercises(db);
+    return result;
+  });
+
+  // POST /super/exercises/sync-free-db — Sync Free Exercise DB
+  fastify.post('/super/exercises/sync-free-db', {
+    preHandler: [verifySuperAdmin],
+  }, async (request, reply) => {
+    const result = await syncFreeExerciseDB(db);
     return result;
   });
 

@@ -251,6 +251,153 @@ export async function getExerciseCategories(db) {
   return exercises;
 }
 
+// ────────────────────────────────────────────────────────────
+// Free Exercise DB Sync (https://github.com/yuhonas/free-exercise-db)
+// ────────────────────────────────────────────────────────────
+
+const FREE_EXERCISE_DB_URL =
+  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
+
+// Free Exercise DB category → our category mapping
+const FREE_DB_CATEGORY_MAP = {
+  chest: 'chest',
+  back: 'back',
+  lats: 'back',
+  'lower back': 'back',
+  'middle back': 'back',
+  traps: 'back',
+  shoulders: 'shoulders',
+  biceps: 'arms',
+  triceps: 'arms',
+  forearms: 'arms',
+  quadriceps: 'legs',
+  hamstrings: 'legs',
+  glutes: 'legs',
+  calves: 'legs',
+  adductors: 'legs',
+  abductors: 'legs',
+  abdominals: 'core',
+  cardio: 'cardio',
+};
+
+// Free Exercise DB equipment → our equipment mapping
+const FREE_DB_EQUIPMENT_MAP = {
+  barbell: 'barbell',
+  dumbbell: 'dumbbell',
+  machine: 'machine',
+  cable: 'cable',
+  'body only': 'bodyweight',
+  'body weight': 'bodyweight',
+  bands: 'band',
+  kettlebells: 'kettlebell',
+  'e-z curl bar': 'barbell',
+  'exercise ball': 'bodyweight',
+  'foam roll': 'bodyweight',
+  'medicine ball': 'bodyweight',
+  other: 'bodyweight',
+  none: 'bodyweight',
+};
+
+/**
+ * Sync exercises from the Free Exercise DB (yuhonas/free-exercise-db) into our database.
+ * Only inserts exercises whose name doesn't already exist (case-insensitive).
+ * Sets wger_id = null and marks source as 'free_exercise_db' in description_html.
+ *
+ * @param {import('knex').Knex} db - Knex database instance
+ * @returns {{ inserted: number, skipped: number }}
+ */
+export async function syncFreeExerciseDB(db) {
+  console.log('[free-exercise-db] Starting sync...');
+
+  const res = await fetch(FREE_EXERCISE_DB_URL, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(60000),
+  });
+  if (!res.ok) throw new Error(`Free Exercise DB fetch failed: ${res.status}`);
+  const exercises = await res.json();
+
+  console.log(`[free-exercise-db] Fetched ${exercises.length} exercises`);
+
+  // Build a set of existing exercise names (lowercase) for dedup
+  const existingRows = await db('exercises').select('name');
+  const existingNames = new Set(existingRows.map(r => r.name.toLowerCase().trim()));
+
+  let inserted = 0;
+  let skipped = 0;
+
+  for (const ex of exercises) {
+    const name = (ex.name || '').trim();
+    if (!name) { skipped++; continue; }
+
+    // Skip duplicates (case-insensitive match with existing exercises incl. wger)
+    if (existingNames.has(name.toLowerCase())) { skipped++; continue; }
+
+    // Map category
+    const rawCategory = (ex.category || '').toLowerCase().trim();
+    const category = FREE_DB_CATEGORY_MAP[rawCategory] || 'full_body';
+
+    // Map equipment (can be a string or null)
+    const rawEquipment = (ex.equipment || '').toLowerCase().trim();
+    const equipment = FREE_DB_EQUIPMENT_MAP[rawEquipment] || 'bodyweight';
+
+    // Primary and secondary muscles
+    const primaryMuscles = (ex.primaryMuscles || []).map(m => ({
+      name: m,
+    }));
+    const secondaryMuscles = (ex.secondaryMuscles || []).map(m => ({
+      name: m,
+    }));
+
+    // Muscle group from first primary muscle
+    const muscleGroup = primaryMuscles.length > 0
+      ? primaryMuscles[0].name.toLowerCase()
+      : category;
+
+    // Instructions (array of strings → joined text)
+    const instructions = Array.isArray(ex.instructions)
+      ? ex.instructions.join(' ')
+      : (ex.instructions || null);
+
+    // Difficulty badge in description_html + source tag
+    const level = (ex.level || '').trim();
+    const levelBadge = level
+      ? `<span class="badge badge-difficulty">${level}</span> `
+      : '';
+    const descriptionHtml = `${levelBadge}<span class="source" data-source="free_exercise_db">Source: Free Exercise DB</span>`;
+
+    // Build image URLs from the images array
+    // Format: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/{exerciseId}/images/{imageFile}
+    const imageUrls = (ex.images || []).map(img =>
+      `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${encodeURIComponent(ex.id || ex.name)}/${img}`
+    );
+
+    const exerciseData = {
+      name,
+      category,
+      equipment,
+      muscle_group: muscleGroup,
+      instructions: instructions || null,
+      is_default: true,
+      gym_id: null,
+      wger_id: null, // Not from wger — source tracked via description_html
+      image_url: imageUrls[0] || null,
+      image_url_secondary: imageUrls[1] || null,
+      video_url: null,
+      muscles_primary: JSON.stringify(primaryMuscles),
+      muscles_secondary: JSON.stringify(secondaryMuscles),
+      description_html: descriptionHtml,
+      aliases: JSON.stringify([]),
+    };
+
+    await db('exercises').insert(exerciseData);
+    existingNames.add(name.toLowerCase()); // prevent intra-batch duplicates
+    inserted++;
+  }
+
+  console.log(`[free-exercise-db] Done: ${inserted} inserted, ${skipped} skipped`);
+  return { inserted, skipped };
+}
+
 /**
  * Get all unique muscles from synced exercises.
  */

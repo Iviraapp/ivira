@@ -67,6 +67,7 @@ import { canAddToWallet, addMembershipToWallet } from '../lib/wallet'
 import { requestHealthPermissions, requestSleepPermissions, getTodaySteps, getLastNightSleep, syncStepsToBackend, syncSleepToBackend, isHealthConnectAvailable } from '../lib/healthKit'
 import { useHealth } from '../context/HealthContext'
 import { requestAllPermissions } from '../lib/permissions'
+import DailyQuote from '../components/DailyQuote'
 
 import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion } from '../lib/aiCoach'
 import { recordWorkout } from '../lib/SmartNotificationEngine'
@@ -636,6 +637,7 @@ export default function HomeScreen({ navigation, route }) {
     { label: 'Fitness Score', icon: 'award', bg: '#4285F4', onPress: () => navigation?.navigate?.('FitnessScore') },
     { label: 'Sleep', icon: 'moon', bg: '#6366F1', onPress: () => navigation?.navigate?.('SleepTracker') },
     { label: 'Achievements', icon: 'star', bg: '#F59E0B', onPress: () => navigation?.navigate?.('Achievements') },
+    { label: 'Yoga', icon: 'sunrise', bg: '#14B8A6', onPress: () => navigation?.navigate?.('Yoga') },
     ...(gymId ? [{ label: 'Revenue', icon: 'dollar-sign', bg: COLORS.green, onPress: () => navigation?.navigate?.('RevenueDashboard') }] : []),
   ]
 
@@ -1384,6 +1386,9 @@ export default function HomeScreen({ navigation, route }) {
 
         {/* Ad between sections */}
         <AdBanner style={{ marginHorizontal: 4 }} />
+
+        {/* Daily Motivation */}
+        <DailyQuote style={{ marginHorizontal: 4, marginBottom: SPACING.md }} />
 
         {/* Daily Goals Row */}
         <View style={styles.dailyGoalsCard}>

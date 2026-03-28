@@ -32,6 +32,7 @@ import { COLORS, SPACING, RADIUS, FONT, METABOLIC, ELITE_CARD } from '../lib/the
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import BodyStatsCard from '../components/BodyStatsCard'
 // Default nutrition values when API data is unavailable
 const DEFAULT_DAILY_NUTRITION = { items: [], totals: { calories: 0, protein: 0, carbs: 0, fats: 0 } }
 const DEFAULT_NUTRITION_GOAL = { calorie_goal: 2000, protein_goal: 120, carb_goal: 250, fat_goal: 65 }
@@ -745,6 +746,17 @@ export default function HealthScreen({ navigation }) {
             </View>
           </View>
         )}
+
+        {/* Body Stats */}
+        <BodyStatsCard
+          weightKg={parseFloat(member?.weight) || 0}
+          heightCm={parseFloat(member?.height) || 0}
+          age={member?.date_of_birth ? Math.floor((Date.now() - new Date(member.date_of_birth).getTime()) / 31557600000) : 25}
+          gender={member?.gender === 'female' ? 'female' : 'male'}
+          activityLevel={member?.activity_level || 'moderate'}
+          goal={member?.fitness_goal === 'weight_loss' ? 'cut' : member?.fitness_goal === 'muscle_gain' ? 'bulk' : 'maintain'}
+          onEditPress={() => navigation?.navigate?.('Profile')}
+        />
 
         {/* Heart Rate Section */}
         <View style={[styles.heartSection, card, { borderTopColor: '#EA4335', borderTopWidth: 3 }]}>
