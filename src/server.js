@@ -21,8 +21,8 @@ const start = async () => {
       // Check if image_url column exists (migration 041)
       const hasImageCol = await knex.schema.hasColumn('exercises', 'image_url');
       if (hasImageCol) {
-        const [{ count }] = await knex('exercises').whereNotNull('image_url').where('image_url', '!=', '').count('id as count');
-        if (parseInt(count) < 10) {
+        const [{ count }] = await knex('exercises').whereNotNull('image_url').whereNotNull('wger_id').where('image_url', '!=', '').count('id as count');
+        if (parseInt(count) < 100) {
           console.log(`[wger-sync] Only ${count} exercises have images — starting sync...`);
           const { syncExercises, syncFreeExerciseDB } = await import('./services/wger-sync.service.js');
           syncExercises(knex).then(r => {
