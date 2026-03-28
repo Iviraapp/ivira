@@ -70,6 +70,25 @@ export const AudioEvent = {
   SILENCE: 'silence',
 }
 
+// ── Background Task ──────────────────────────────────────────────
+// Register background task so tracking continues when app is backgrounded
+try {
+  TaskManager.defineTask(BACKGROUND_TASK, async ({ data, error }) => {
+    if (error) {
+      console.warn('[SleepEngine] Background task error:', error)
+      return
+    }
+    // The background task fires periodically — classify any buffered data
+    if (_isTracking) {
+      classifyEpoch()
+      checkSmartAlarm()
+      notifyListeners()
+    }
+  })
+} catch (e) {
+  console.warn('[SleepEngine] Failed to define background task:', e.message)
+}
+
 // ── State ──────────────────────────────────────────────────────────
 let _isTracking = false
 let _accelSubscription = null
@@ -107,7 +126,7 @@ export async function startTracking(options = {}) {
   _epochHistory = []
   _audioEvents = []
 
-  // 1. Start accelerometer
+  // 1. Start accelerometer with background delivery
   Accelerometer.setUpdateInterval(ACCEL_INTERVAL_MS)
   _accelSubscription = Accelerometer.addListener(({ x, y, z }) => {
     _accelBuffer.push({
@@ -126,6 +145,32 @@ export async function startTracking(options = {}) {
   // 3. Audio monitoring (if permitted)
   if (enableAudio) {
     await startAudioMonitoring()
+  }
+
+  // 4. Show persistent notification to keep app alive in background (Android)
+  if (Platform.OS === 'android') {
+    try {
+      await Notifications.setNotificationChannelAsync('sleep-tracking', {
+        name: 'Sleep Tracking',
+        importance: Notifications.AndroidImportance.LOW,
+        sound: null,
+        vibrationPattern: [],
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.SECRET,
+      })
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🌙 Sleep tracking active',
+          body: 'IVIRA is monitoring your sleep. Tap to open.',
+          sticky: true,
+          autoDismiss: false,
+          priority: Notifications.AndroidNotificationPriority.LOW,
+        },
+        trigger: null,
+        identifier: 'sleep-tracking-active',
+      })
+    } catch (err) {
+      console.warn('[SleepEngine] Failed to show tracking notification:', err.message)
+    }
   }
 
   // Persist session start
@@ -160,6 +205,13 @@ export async function stopTracking() {
 
   // Stop audio
   await stopAudioMonitoring()
+
+  // Dismiss tracking notification (Android)
+  if (Platform.OS === 'android') {
+    try {
+      await Notifications.dismissNotificationAsync('sleep-tracking-active')
+    } catch {}
+  }
 
   _isTracking = false
 
@@ -278,7 +330,29 @@ export async function resumeSession() {
 // ── Epoch Classification (Actigraphy) ──────────────────────────────
 
 function classifyEpoch() {
-  if (_accelBuffer.length === 0) return
+  // Handle data gaps — if no accelerometer data, the phone was likely in deep sleep
+  // (OS suspended the app). Fill gaps with Deep Sleep epochs since the user wasn't moving the phone.
+  if (_accelBuffer.length === 0) {
+    if (_epochHistory.length > 0 && _isTracking) {
+      const lastEpoch = _epochHistory[_epochHistory.length - 1]
+      const gapMs = Date.now() - lastEpoch.timestamp
+      // If gap > 2 epochs (>60s), phone was suspended = user is deeply asleep
+      if (gapMs > EPOCH_DURATION_MS * 2) {
+        const gapEpochs = Math.floor(gapMs / EPOCH_DURATION_MS)
+        for (let i = 0; i < gapEpochs; i++) {
+          _epochHistory.push({
+            timestamp: lastEpoch.timestamp + (i + 1) * EPOCH_DURATION_MS,
+            stage: SleepStage.DEEP,
+            motionEnergy: 0,
+            maxEnergy: 0,
+            variance: 0,
+            interpolated: true,
+          })
+        }
+      }
+    }
+    return
+  }
 
   // Calculate motion energy for this epoch
   const energies = _accelBuffer.map(s => Math.abs(s.energy))

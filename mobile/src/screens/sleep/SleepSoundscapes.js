@@ -8,6 +8,16 @@ try {
   Audio = require('expo-av').Audio
 } catch {}
 
+// Free, loopable ambient audio from reliable CDNs
+const SOUND_URLS = {
+  rain: 'https://cdn.pixabay.com/audio/2022/05/16/audio_460b4bce33.mp3',
+  ocean: 'https://cdn.pixabay.com/audio/2022/08/31/audio_419263379c.mp3',
+  white_noise: 'https://cdn.pixabay.com/audio/2022/03/15/audio_4c0c74fcd0.mp3',
+  forest: 'https://cdn.pixabay.com/audio/2022/08/04/audio_2dae668d83.mp3',
+  wind: 'https://cdn.pixabay.com/audio/2022/10/30/audio_690d035dca.mp3',
+  fire: 'https://cdn.pixabay.com/audio/2022/11/17/audio_a1b6e16228.mp3',
+}
+
 const TIMER_OPTIONS = [
   { label: '15m', minutes: 15 },
   { label: '30m', minutes: 30 },
@@ -66,12 +76,9 @@ export default function SleepSoundscapes({ colors }) {
         staysActiveInBackground: true,
       })
 
-      // Use bundled placeholder — in production these would be real audio assets
-      // For now we generate a gentle tone using expo-av's capabilities
+      const uri = SOUND_URLS[id] || SOUND_URLS.white_noise
       const { sound } = await Audio.Sound.createAsync(
-        // Placeholder: in production, map id to actual audio files
-        // e.g., require(`../../../assets/sounds/${id}.mp3`)
-        { uri: `https://cdn.pixabay.com/audio/2022/03/15/audio_4c0c74fcd0.mp3` },
+        { uri },
         { isLooping: true, volume: 0.6 }
       )
       soundRef.current = sound
