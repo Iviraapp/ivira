@@ -26,8 +26,24 @@ export default async function leadsRoutes(fastify) {
       status: 'new',
     }).returning('*')
 
-    // TODO: Send notification email (WATI / SendGrid)
-    request.log.info({ leadId: lead.id, email, gym_name }, 'New lead captured — notification email pending')
+    // Notify admin of new lead
+    try {
+      const { sendEmail } = await import('../services/email.service.js')
+      await sendEmail({
+        to: process.env.ADMIN_EMAIL || 'admin@ivira.app',
+        subject: `New Lead: ${gym_name} — ${name}`,
+        html: `<h3>New Lead Captured</h3>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Gym:</strong> ${gym_name}</p>
+          <p><strong>Phone:</strong> ${phone}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Package Interest:</strong> ${package_interest || 'Not specified'}</p>
+          <p><strong>Source:</strong> Landing page</p>`,
+      })
+    } catch (err) {
+      request.log.warn({ err, leadId: lead.id }, 'Failed to send lead notification email')
+    }
+    request.log.info({ leadId: lead.id, email, gym_name }, 'New lead captured')
 
     return reply.code(201).send({
       success: true,

@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "knex migrate:latest && node src/server.js",
     "dev": "node --watch src/server.js",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",

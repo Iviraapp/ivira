@@ -9,6 +9,14 @@ export function AuthProvider({ children }) {
   const [gym, setGym] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const logout = () => {
+    localStorage.removeItem('ivira_owner_token')
+    localStorage.removeItem('ivira_gym_id')
+    setToken(null)
+    setGymId(null)
+    setGym(null)
+  }
+
   useEffect(() => {
     if (token && gymId) {
       api.get(`/gyms/${gymId}`)
@@ -34,14 +42,6 @@ export function AuthProvider({ children }) {
     setGymId(gid)
     setGym(g)
     return res.data
-  }
-
-  const logout = () => {
-    localStorage.removeItem('ivira_owner_token')
-    localStorage.removeItem('ivira_gym_id')
-    setToken(null)
-    setGymId(null)
-    setGym(null)
   }
 
   return (

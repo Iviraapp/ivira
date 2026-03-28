@@ -106,10 +106,13 @@ export default async function authRoutes(fastify) {
     const otp = String(Math.floor(100000 + Math.random() * 900000))
     await redis.set(`subdomain_otp:${contact}`, otp, { EX: 300 })
 
-    // Determine if email or phone
+    // Determine if email or phone and send OTP
     const isEmail = contact.includes('@')
-    // TODO: Send OTP via email or SMS
-    request.log.info({ contact, otp }, 'Subdomain recovery OTP generated')
+    if (isEmail) {
+      const { sendOTPEmail } = await import('../services/email.service.js')
+      await sendOTPEmail(contact, otp).catch(err => request.log.warn({ err }, 'Failed to send recovery OTP email'))
+    }
+    request.log.info({ contact, method: isEmail ? 'email' : 'sms' }, 'Subdomain recovery OTP generated')
 
     return reply.send({ success: true, message: 'OTP sent to your registered contact', method: isEmail ? 'email' : 'sms' })
   })

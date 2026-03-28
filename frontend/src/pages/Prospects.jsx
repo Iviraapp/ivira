@@ -55,7 +55,7 @@ function OfferModal({ prospect, onClose, onSend }) {
   )
   const [sent, setSent] = useState(false)
 
-  const generatedCode = `GYM-${prospect.first_name.slice(0, 2).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+  const [generatedCode] = useState(() => `GYM-${prospect.first_name.slice(0, 2).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`)
 
   const handleSend = () => {
     setSent(true)

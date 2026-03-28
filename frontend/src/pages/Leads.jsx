@@ -229,7 +229,7 @@ function SuggestModal({ lead, gyms, onClose, onSuggest }) {
     })
   }
 
-  const generatedLink = `https://ivira.app/s/${lead.id.replace('lead-', '')}${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+  const [generatedLink] = useState(() => `https://ivira.app/s/${lead.id.replace('lead-', '')}${Math.random().toString(36).slice(2, 6).toUpperCase()}`)
 
   return (
     <div style={{

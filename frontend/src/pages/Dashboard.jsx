@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
-import { Users, ScanLine, TrendingUp, Clock, UserCheck, IndianRupee } from 'lucide-react'
+import { Users, ScanLine, TrendingUp, UserCheck, IndianRupee } from 'lucide-react'
 import { format } from 'date-fns'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 import api from '../lib/api'
@@ -35,7 +35,6 @@ export default function Dashboard() {
   const [recentCheckins, setRecentCheckins] = useState([])
   const [loading, setLoading] = useState(true)
   const [revenueData, setRevenueData] = useState([])
-  const [attendanceData, setAttendanceData] = useState([])
   const [expiringMembers, setExpiringMembers] = useState([])
 
   useEffect(() => {
