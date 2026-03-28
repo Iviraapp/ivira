@@ -70,8 +70,8 @@ async function fetchMuscles() {
     map.set(m.id, {
       id: m.id,
       name: m.name_en || m.name,
-      image_url_front: m.image_url_main ? `https://wger.de${m.image_url_main}` : null,
-      image_url_back: m.image_url_secondary ? `https://wger.de${m.image_url_secondary}` : null,
+      image_url_front: m.image_url_main ? (m.image_url_main.startsWith('http') ? m.image_url_main : `https://wger.de${m.image_url_main}`) : null,
+      image_url_back: m.image_url_secondary ? (m.image_url_secondary.startsWith('http') ? m.image_url_secondary : `https://wger.de${m.image_url_secondary}`) : null,
     });
   }
   return map;
@@ -86,14 +86,16 @@ async function fetchImages() {
 
   const map = new Map(); // exerciseBase → { main, secondary }
   for (const img of images) {
-    const existing = map.get(img.exercise_base) || {};
+    const baseId = img.exercise_base || img.exercise;
+    const existing = map.get(baseId) || {};
     if (!existing.main) existing.main = img.image;
-    map.set(img.exercise_base, existing);
+    map.set(baseId, existing);
   }
   for (const img of secondaryImages) {
-    const existing = map.get(img.exercise_base) || {};
+    const baseId = img.exercise_base || img.exercise;
+    const existing = map.get(baseId) || {};
     if (!existing.secondary) existing.secondary = img.image;
-    map.set(img.exercise_base, existing);
+    map.set(baseId, existing);
   }
   return map;
 }
