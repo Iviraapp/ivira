@@ -75,6 +75,14 @@ import RecoveryScore from '../components/RecoveryScore'
 import ContinueWorkoutCard from '../components/ContinueWorkoutCard'
 import WeeklyWellnessReport from '../components/WeeklyWellnessReport'
 import ChurnRiskAlert from '../components/ChurnRiskAlert'
+import DashboardSummary from '../components/DashboardSummary'
+import MorningBriefing from '../components/MorningBriefing'
+import PostWorkoutRecovery from '../components/PostWorkoutRecovery'
+import HydrationTracker from '../components/HydrationTracker'
+import WorkoutHeatMap from '../components/WorkoutHeatMap'
+import BodyCompositionTimeline from '../components/BodyCompositionTimeline'
+import AccountabilityBuddy from '../components/AccountabilityBuddy'
+import NutritionInsights from '../components/NutritionInsights'
 
 import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion } from '../lib/aiCoach'
 import { recordWorkout } from '../lib/SmartNotificationEngine'
@@ -618,6 +626,9 @@ export default function HomeScreen({ navigation, route }) {
     }
   }, [streak])
 
+  // --- Hydration state ---
+  const [waterGlasses, setWaterGlasses] = useState(0)
+
   // --- Nutrition calculations ---
   const caloriesConsumed = nutritionTotals?.calories || 0
   const calorieGoal = nutritionGoal?.calorie_goal || 2000
@@ -791,129 +802,36 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         </MotiView>
 
-        {/* Today's Fuel — Nutrition Card */}
+        {/* Morning Briefing — shows before 11am */}
+        <MorningBriefing style={{ marginHorizontal: 0 }} navigation={navigation} />
+
+        {/* Post-Workout Recovery Timer */}
+        <PostWorkoutRecovery style={{ marginHorizontal: 0 }} />
+
+        {/* Dashboard Summary — consolidated daily snapshot */}
         <MotiView
           from={{ opacity: 0, translateY: 50 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 200 }}
         >
-        <TouchableOpacity
-          style={[styles.fuelCard, card]}
-          activeOpacity={0.85}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-            navigation?.navigate?.('NutritionLog')
-          }}
-        >
-          <View style={styles.fuelHeader}>
-            <Feather name="activity" size={16} color={colors.accent} />
-            <Text style={[styles.fuelTitle, { color: colors.text }]}>Today's Fuel</Text>
-            <View style={{ flex: 1 }} />
-            <TouchableOpacity
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              activeOpacity={0.7}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                navigation?.navigate?.('BarcodeScanner')
-              }}
-            >
-              <Feather name="camera" size={18} color={colors.accent} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.fuelBody}>
-            {/* Mini calorie ring */}
-            <View style={styles.fuelRingWrap}>
-              {Svg && Circle ? (
-              <Svg width={MINI_RING_SIZE} height={MINI_RING_SIZE} viewBox={`0 0 ${MINI_RING_SIZE} ${MINI_RING_SIZE}`}>
-                <Circle
-                  cx={MINI_RING_SIZE / 2}
-                  cy={MINI_RING_SIZE / 2}
-                  r={MINI_RADIUS}
-                  stroke={colors.borderStrong}
-                  strokeWidth={MINI_STROKE}
-                  fill="none"
-                />
-                <Circle
-                  cx={MINI_RING_SIZE / 2}
-                  cy={MINI_RING_SIZE / 2}
-                  r={MINI_RADIUS}
-                  stroke={calProgress >= 1 ? COLORS.red : COLORS.green}
-                  strokeWidth={MINI_STROKE}
-                  fill="none"
-                  strokeDasharray={MINI_CIRCUMFERENCE}
-                  strokeDashoffset={calStrokeDashoffset}
-                  strokeLinecap="round"
-                  rotation={-90}
-                  origin={`${MINI_RING_SIZE / 2}, ${MINI_RING_SIZE / 2}`}
-                />
-              </Svg>
-              ) : (
-                <View style={{ width: MINI_RING_SIZE, height: MINI_RING_SIZE, borderRadius: MINI_RING_SIZE / 2, borderWidth: MINI_STROKE, borderColor: colors.borderStrong }} />
-              )}
-              <View style={styles.fuelRingContent}>
-                <Text style={[styles.fuelRingValue, { color: colors.text }]}>{caloriesRemaining}</Text>
-                <Text style={[styles.fuelRingLabel, { color: colors.textTer }]}>kcal left</Text>
-              </View>
-            </View>
-
-            {/* Macro bars */}
-            <View style={styles.macroBars}>
-              {macros.map((m) => {
-                const pct = Math.min(m.value / m.goal, 1)
-                return (
-                  <View key={m.label} style={styles.macroRow}>
-                    <View style={styles.macroLabelRow}>
-                      <Text style={[styles.macroLabel, { color: colors.textSec }]}>{m.label}</Text>
-                      <Text style={[styles.macroValue, { color: colors.textTer }]}>{m.value}/{m.goal}g</Text>
-                    </View>
-                    <View style={[styles.macroTrack, { backgroundColor: colors.borderStrong }]}>
-                      <View style={[styles.macroFill, { width: `${pct * 100}%`, backgroundColor: m.color }]} />
-                    </View>
-                  </View>
-                )
-              })}
-            </View>
-          </View>
-
-          {/* Quick scan link */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.fuelScanLink}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-              navigation?.navigate?.('BarcodeScanner')
-            }}
-          >
-            <Feather name="plus" size={13} color={colors.accent} />
-            <Text style={[styles.fuelScanLinkText, { color: colors.accent }]}>Log Food</Text>
-          </TouchableOpacity>
-
-          {/* Fuel action buttons */}
-          <View style={styles.fuelActions}>
-            <TouchableOpacity
-              style={[styles.fuelActionBtn, { backgroundColor: COLORS.accent + '18' }]}
-              activeOpacity={0.7}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                navigation?.navigate?.('BarcodeScanner')
-              }}
-            >
-              <Feather name="camera" size={14} color={COLORS.accent} />
-              <Text style={[styles.fuelActionLabel, { color: COLORS.accent }]}>Scan</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.fuelActionBtn, { backgroundColor: COLORS.green + '18' }]}
-              activeOpacity={0.7}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                setQuickLogVisible(true)
-              }}
-            >
-              <Feather name="edit-3" size={14} color={COLORS.green} />
-              <Text style={[styles.fuelActionLabel, { color: COLORS.green }]}>Quick Log</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+        <DashboardSummary
+          sleepData={sleepData}
+          stepCount={stepCount}
+          stepGoal={STEP_GOAL}
+          caloriesConsumed={caloriesConsumed}
+          calorieGoal={calorieGoal}
+          workoutsDone={dailyGoalStatus.workedOut ? 1 : 0}
+          waterGlasses={waterGlasses}
+          waterGoal={8}
+          fastingHours={0}
+          streak={streak}
+          onPressSleep={() => navigation?.navigate?.('SleepTracker')}
+          onPressSteps={() => navigation?.navigate?.('ActivityDashboard')}
+          onPressNutrition={() => navigation?.navigate?.('NutritionLog')}
+          onPressWorkout={() => navigation?.navigate?.('WorkoutTracker')}
+          onPressWater={() => {}}
+          onPressFasting={() => {}}
+        />
         </MotiView>
 
         {/* Smart Workout — AI Suggestion Card */}
@@ -994,386 +912,7 @@ export default function HomeScreen({ navigation, route }) {
           </Animated.View>
         )}
 
-        {/* Today's Movement — Step Counter Card */}
-        <MotiView
-          from={{ opacity: 0, translateY: 50 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 250 }}
-        >
-          <View style={[
-            styles.movementCard,
-            card,
-            stepCount >= STEP_GOAL && styles.movementCardGoalMet,
-          ]}>
-            <View style={styles.movementHeader}>
-              <Feather name="trending-up" size={18} color="#F97316" />
-              <Text style={[styles.movementTitle, { color: colors.text }]}>Today's Movement</Text>
-              {/* Data source indicator */}
-              {stepSource && (
-                <View style={styles.stepSourceBadge}>
-                  <Feather
-                    name={stepSource === 'health' ? 'heart' : 'smartphone'}
-                    size={10}
-                    color={COLORS.green}
-                  />
-                  <Text style={[
-                    styles.stepSourceText,
-                    { color: COLORS.green },
-                  ]}>
-                    {stepSource === 'health'
-                      ? (Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect')
-                      : stepSource === 'pedometer'
-                        ? 'Phone Sensors'
-                        : stepSource === 'manual'
-                          ? 'Manual'
-                          : 'Phone Sensors'}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <View style={styles.movementBody}>
-              {/* Step ring */}
-              <View style={styles.stepRingWrap}>
-                {Svg && Circle ? (
-                  <Svg width={STEP_RING_SIZE} height={STEP_RING_SIZE}>
-                    {/* Background ring */}
-                    <Circle
-                      cx={STEP_RING_SIZE / 2}
-                      cy={STEP_RING_SIZE / 2}
-                      r={STEP_RADIUS}
-                      stroke="rgba(249,115,22,0.15)"
-                      strokeWidth={STEP_STROKE}
-                      fill="none"
-                    />
-                    {/* Progress ring */}
-                    <Circle
-                      cx={STEP_RING_SIZE / 2}
-                      cy={STEP_RING_SIZE / 2}
-                      r={STEP_RADIUS}
-                      stroke={stepCount >= STEP_GOAL ? '#22C55E' : '#F97316'}
-                      strokeWidth={STEP_STROKE}
-                      fill="none"
-                      strokeDasharray={`${STEP_CIRCUMFERENCE}`}
-                      strokeDashoffset={STEP_CIRCUMFERENCE * (1 - Math.min(stepCount / STEP_GOAL, 1))}
-                      strokeLinecap="round"
-                      rotation="-90"
-                      origin={`${STEP_RING_SIZE / 2}, ${STEP_RING_SIZE / 2}`}
-                    />
-                  </Svg>
-                ) : (
-                  <View style={styles.stepRingFallback} />
-                )}
-                <View style={styles.stepRingContent}>
-                  <Text style={[
-                    styles.stepCountText,
-                    stepCount >= STEP_GOAL && { color: '#22C55E' },
-                  ]}>
-                    {stepCount.toLocaleString()}
-                  </Text>
-                  <Text style={[styles.stepLabel, { color: colors.textTer }]}>steps</Text>
-                </View>
-              </View>
-              {/* Stats */}
-              <View style={styles.movementStats}>
-                {stepSource === 'unavailable' ? (
-                  /* Sensor warming up — show placeholder stats */
-                  <View>
-                    <Text style={styles.movementActiveTime}>00:00:00</Text>
-                    <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>ACTIVE TIME</Text>
-                    <Text style={[styles.movementDistance, { color: colors.text }]}>0.0 km</Text>
-                    <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>DISTANCE</Text>
-                  </View>
-                ) : (
-                  <>
-                    <Text style={styles.movementActiveTime}>{formatActiveTime(activeSeconds)}</Text>
-                    <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>ACTIVE TIME</Text>
-                    <Text style={[styles.movementDistance, { color: colors.text }]}>
-                      {(stepCount * 0.0008).toFixed(1)} km
-                    </Text>
-                    <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>DISTANCE</Text>
-                    <View style={styles.movementGoalRow}>
-                      <Feather
-                        name={stepCount >= STEP_GOAL ? 'check-circle' : 'target'}
-                        size={14}
-                        color={stepCount >= STEP_GOAL ? '#22C55E' : colors.textTer}
-                      />
-                      <Text style={[
-                        styles.movementGoalText,
-                        { color: colors.textTer },
-                        stepCount >= STEP_GOAL && { color: '#22C55E' },
-                      ]}>
-                        {stepCount >= STEP_GOAL ? 'Goal reached!' : `${(STEP_GOAL - stepCount).toLocaleString()} to go`}
-                      </Text>
-                    </View>
-                  </>
-                )}
-              </View>
-            </View>
-
-            {/* Movement Suggestions */}
-            <View style={styles.movementSuggestions}>
-              {MOVEMENT_TIPS.map((tip, i) => (
-                <View key={i} style={[styles.suggestionRow, { borderTopColor: colors.border }]}>
-                  <Feather name={tip.icon} size={14} color={tip.color} />
-                  <Text style={[styles.suggestionText, { color: colors.textSec }]}>{tip.text}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* View Full Progress */}
-            <TouchableOpacity
-              style={[styles.movementViewProgress, { borderTopColor: colors.border }]}
-              onPress={() => navigation.navigate('Progress')}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.movementViewProgressText, { color: COLORS.accent }]}>View Progress History</Text>
-              <Feather name="chevron-right" size={16} color={COLORS.accent} />
-            </TouchableOpacity>
-          </View>
-        </MotiView>
-
-        {/* Last Night's Sleep Card */}
-        <MotiView
-          from={{ opacity: 0, translateY: 50 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 275 }}
-        >
-          <View style={[styles.movementCard, card]}>
-            <View style={styles.movementHeader}>
-              <Feather name="moon" size={18} color="#8B5CF6" />
-              <Text style={[styles.movementTitle, { color: colors.text }]}>Last Night's Sleep</Text>
-              {sleepSource && sleepSource !== 'unavailable' && (
-                <View style={styles.stepSourceBadge}>
-                  <Feather
-                    name={sleepSource === 'demo' ? 'info' : 'heart'}
-                    size={10}
-                    color={sleepSource === 'demo' ? '#8B5CF6' : COLORS.green}
-                  />
-                  <Text style={[styles.stepSourceText, { color: sleepSource === 'demo' ? '#8B5CF6' : COLORS.green }]}>
-                    {sleepSource === 'apple_health' ? 'Apple Health'
-                      : sleepSource === 'health_connect' ? 'Health Connect'
-                      : sleepSource === 'demo' ? 'Sample Data'
-                      : 'Device'}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {sleepData ? (
-              <View style={styles.sleepBody}>
-                {/* Sleep duration ring */}
-                <View style={styles.stepRingWrap}>
-                  {Svg && Circle ? (
-                    <Svg width={STEP_RING_SIZE} height={STEP_RING_SIZE}>
-                      <Circle
-                        cx={STEP_RING_SIZE / 2}
-                        cy={STEP_RING_SIZE / 2}
-                        r={STEP_RADIUS}
-                        stroke="rgba(139,92,246,0.15)"
-                        strokeWidth={STEP_STROKE}
-                        fill="none"
-                      />
-                      <Circle
-                        cx={STEP_RING_SIZE / 2}
-                        cy={STEP_RING_SIZE / 2}
-                        r={STEP_RADIUS}
-                        stroke={sleepData.durationMinutes >= 420 ? '#22C55E' : sleepData.durationMinutes >= 360 ? '#8B5CF6' : '#F97316'}
-                        strokeWidth={STEP_STROKE}
-                        fill="none"
-                        strokeDasharray={`${STEP_CIRCUMFERENCE}`}
-                        strokeDashoffset={STEP_CIRCUMFERENCE * (1 - Math.min(sleepData.durationMinutes / 480, 1))}
-                        strokeLinecap="round"
-                        rotation="-90"
-                        origin={`${STEP_RING_SIZE / 2}, ${STEP_RING_SIZE / 2}`}
-                      />
-                    </Svg>
-                  ) : (
-                    <View style={styles.stepRingFallback} />
-                  )}
-                  <View style={styles.stepRingContent}>
-                    <Text style={[styles.stepCountText, { color: sleepData.durationMinutes >= 420 ? '#22C55E' : '#8B5CF6' }]}>
-                      {Math.floor(sleepData.durationMinutes / 60)}h {sleepData.durationMinutes % 60}m
-                    </Text>
-                    <Text style={[styles.stepLabel, { color: colors.textTer }]}>sleep</Text>
-                  </View>
-                </View>
-
-                {/* Sleep stats */}
-                <View style={styles.movementStats}>
-                  <Text style={[styles.sleepTimeText, { color: colors.text }]}>
-                    {new Date(sleepData.bedtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                  <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>BEDTIME</Text>
-                  <Text style={[styles.sleepTimeText, { color: colors.text, marginTop: 8 }]}>
-                    {new Date(sleepData.wakeTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                  <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>WAKE UP</Text>
-
-                  {/* Quality stars */}
-                  <View style={styles.sleepQualityRow}>
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <Feather
-                        key={star}
-                        name="star"
-                        size={14}
-                        color={star <= (sleepData.quality || 0) ? '#EAB308' : 'rgba(255,255,255,0.15)'}
-                      />
-                    ))}
-                  </View>
-                  <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>QUALITY</Text>
-
-                  <View style={styles.movementGoalRow}>
-                    <Feather
-                      name={sleepData.durationMinutes >= 420 ? 'check-circle' : 'alert-circle'}
-                      size={14}
-                      color={sleepData.durationMinutes >= 420 ? '#22C55E' : '#F97316'}
-                    />
-                    <Text style={[styles.movementGoalText, { color: sleepData.durationMinutes >= 420 ? '#22C55E' : '#F97316' }]}>
-                      {sleepData.durationMinutes >= 420 ? 'Well rested!' : `${Math.ceil((420 - sleepData.durationMinutes) / 60)}h more needed`}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ) : sleepSource === 'unavailable' ? (
-              <View style={styles.sleepBody}>
-                <View style={{ flex: 1, paddingVertical: 12 }}>
-                  <Text style={[styles.movementConnectTitle, { color: colors.text }]}>No sleep data yet</Text>
-                  <Text style={[styles.movementConnectSub, { color: colors.textSec }]}>
-                    Track your sleep or log it manually below
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.sleepLogBtn}
-                    onPress={() => setSleepLogModalVisible(true)}
-                    activeOpacity={0.7}
-                  >
-                    <Feather name="plus" size={14} color="#8B5CF6" />
-                    <Text style={styles.sleepLogBtnText}>Log Manually</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <View style={[styles.sleepBody, { justifyContent: 'center', alignItems: 'center', paddingVertical: 20 }]}>
-                <Text style={[styles.movementConnectSub, { color: colors.textTer }]}>Loading sleep data...</Text>
-              </View>
-            )}
-
-            {/* Manual Log + View History */}
-            {sleepData && (
-              <View style={[styles.sleepFooter, { borderTopColor: colors.border }]}>
-                <TouchableOpacity
-                  style={styles.sleepFooterBtn}
-                  onPress={() => setSleepLogModalVisible(true)}
-                  activeOpacity={0.7}
-                >
-                  <Feather name="edit-3" size={14} color="#8B5CF6" />
-                  <Text style={[styles.sleepFooterBtnText, { color: '#8B5CF6' }]}>Log Sleep</Text>
-                </TouchableOpacity>
-                <View style={[styles.sleepFooterDivider, { backgroundColor: colors.border }]} />
-                <TouchableOpacity
-                  style={styles.sleepFooterBtn}
-                  onPress={() => navigation.navigate('Progress')}
-                  activeOpacity={0.7}
-                >
-                  <Feather name="bar-chart-2" size={14} color={COLORS.accent} />
-                  <Text style={[styles.sleepFooterBtnText, { color: COLORS.accent }]}>View Trends</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </MotiView>
-
-        {/* Training Readiness Score */}
-        <MotiView
-          from={{ opacity: 0, translateY: 50 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 290 }}
-        >
-          <View style={[styles.movementCard, card]}>
-            <View style={styles.movementHeader}>
-              <Feather name="activity" size={18} color="#F59E0B" />
-              <Text style={[styles.movementTitle, { color: colors.text }]}>Training Readiness</Text>
-            </View>
-            {(() => {
-              // Calculate readiness score from available health signals
-              let score = 70 // baseline
-              let factors = []
-
-              // Sleep factor (0-30 points)
-              if (sleepData?.durationMinutes) {
-                const sleepScore = Math.min(30, Math.round((sleepData.durationMinutes / 480) * 30))
-                score = score - 30 + sleepScore
-                factors.push({
-                  label: 'Sleep',
-                  value: `${Math.floor(sleepData.durationMinutes / 60)}h ${sleepData.durationMinutes % 60}m`,
-                  good: sleepData.durationMinutes >= 420,
-                  icon: 'moon',
-                })
-              } else {
-                score -= 10
-                factors.push({ label: 'Sleep', value: 'No data', good: false, icon: 'moon' })
-              }
-
-              // Activity factor (0-20 points)
-              const stepPct = Math.min(1, stepCount / 10000)
-              score = score - 10 + Math.round(stepPct * 20)
-              factors.push({
-                label: 'Activity',
-                value: `${stepCount.toLocaleString()} steps`,
-                good: stepCount >= 5000,
-                icon: 'activity',
-              })
-
-              // Recovery (rest day bonus) — if low steps, body is recovering
-              if (stepCount < 2000 && sleepData?.durationMinutes >= 420) {
-                score = Math.min(100, score + 5)
-                factors.push({ label: 'Recovery', value: 'Rest day bonus', good: true, icon: 'heart' })
-              }
-
-              score = Math.max(0, Math.min(100, score))
-              const scoreColor = score >= 80 ? '#22C55E' : score >= 60 ? '#F59E0B' : '#EF4444'
-              const readinessLabel = score >= 80 ? 'Ready to Train' : score >= 60 ? 'Moderate' : 'Rest Recommended'
-
-              return (
-                <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.md }}>
-                  {/* Score display */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm }}>
-                    <Text style={{ fontSize: 36, fontWeight: '900', color: scoreColor, fontFamily: FONT.numExtraBold }}>
-                      {score}
-                    </Text>
-                    <View style={{ marginLeft: 12, flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: scoreColor, fontFamily: FONT.bold }}>
-                        {readinessLabel}
-                      </Text>
-                      <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.regular, marginTop: 2 }}>
-                        Based on sleep, activity & recovery
-                      </Text>
-                    </View>
-                    {/* Score bar */}
-                    <View style={{ width: 60, height: 6, borderRadius: 3, backgroundColor: colors.bgTer }}>
-                      <View style={{ width: `${score}%`, height: 6, borderRadius: 3, backgroundColor: scoreColor }} />
-                    </View>
-                  </View>
-
-                  {/* Factor pills */}
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                    {factors.map((f, i) => (
-                      <View key={i} style={{
-                        flexDirection: 'row', alignItems: 'center', gap: 4,
-                        paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20,
-                        backgroundColor: f.good ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                      }}>
-                        <Feather name={f.icon} size={11} color={f.good ? '#22C55E' : '#EF4444'} />
-                        <Text style={{ fontSize: 11, color: f.good ? '#22C55E' : '#EF4444', fontFamily: FONT.medium }}>
-                          {f.label}: {f.value}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )
-            })()}
-          </View>
-        </MotiView>
+        {/* Movement/Sleep/Readiness cards replaced by DashboardSummary above */}
 
         {/* Intermittent Fasting — with Astro-Purple glow */}
         <MotiView
@@ -1453,9 +992,6 @@ export default function HomeScreen({ navigation, route }) {
           onStartWorkout={() => navigation?.navigate?.('WorkoutTracker')}
         />
 
-        {/* Recovery Score */}
-        <RecoveryScore style={{ marginHorizontal: 0 }} />
-
         {/* Live Gym Activity */}
         <LiveGymIndicator style={{ marginHorizontal: 0 }} />
 
@@ -1470,6 +1006,26 @@ export default function HomeScreen({ navigation, route }) {
 
         {/* Weekly Wellness Report */}
         <WeeklyWellnessReport style={{ marginHorizontal: 0 }} />
+
+        {/* Hydration Tracker */}
+        <HydrationTracker
+          style={{ marginHorizontal: 0 }}
+          glasses={waterGlasses || 0}
+          goal={8}
+          onAddGlass={() => setWaterGlasses(prev => (prev || 0) + 1)}
+        />
+
+        {/* Workout Consistency Heat Map */}
+        <WorkoutHeatMap style={{ marginHorizontal: 0 }} />
+
+        {/* Nutrition Insights */}
+        <NutritionInsights style={{ marginHorizontal: 0 }} />
+
+        {/* Body Composition Timeline */}
+        <BodyCompositionTimeline style={{ marginHorizontal: 0 }} />
+
+        {/* Accountability Buddy */}
+        <AccountabilityBuddy style={{ marginHorizontal: 0 }} />
 
         {/* Today's Classes Strip */}
         <View style={styles.classesSection}>

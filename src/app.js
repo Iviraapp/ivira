@@ -64,6 +64,8 @@ import sleepRoutes from './routes/sleep.routes.js';
 import conciergeRoutes from './routes/concierge.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import financeRoutes from './routes/finance.routes.js';
+import podRoutes from './routes/pods.routes.js';
+import adminDashboardRoutes from './routes/admin-dashboard.routes.js';
 import multipart from '@fastify/multipart';
 import fastifyCookie from '@fastify/cookie';
 import { startCronJobs } from './cron/scheduler.js';
@@ -170,6 +172,8 @@ export async function buildApp(opts = {}) {
   await fastify.register(conciergeRoutes, { prefix: '/api/v1' });
   await fastify.register(analyticsRoutes, { prefix: '/api/v1' });
   await fastify.register(financeRoutes, { prefix: '/api/v1' });
+  await fastify.register(podRoutes, { prefix: '/api/v1' });
+  await fastify.register(adminDashboardRoutes);
   // APK download route — serve locally if available, otherwise redirect to GitHub Release
   fastify.get('/downloads/ivira-latest.apk', async (request, reply) => {
     const fs = await import('fs');

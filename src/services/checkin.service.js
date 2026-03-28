@@ -123,6 +123,9 @@ export async function qrCheckin(gymId, qrToken, { latitude, longitude, deviceId 
   // Fire-and-forget affiliate promo
   sendAffiliatePromo(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message))
 
+  // Fire-and-forget: auto-fulfill pod commitments
+  fulfillPodCommitmentsFromGymCheckin(memberId).catch(err => console.warn('[CheckinService] pod bridge failed:', err?.message));
+
   return enrichCheckinResponse(checkin, member, gymId);
 }
 
@@ -194,6 +197,9 @@ export async function verifyOTPCheckin(gymId, phone, code) {
   // Fire-and-forget: occupancy + real-time event
   recordCheckinEvent(gymId, member.id, member.name, 'otp').catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
+  // Fire-and-forget: auto-fulfill pod commitments
+  fulfillPodCommitmentsFromGymCheckin(member.id).catch(err => console.warn('[CheckinService] pod bridge failed:', err?.message));
+
   return checkin;
 }
 
@@ -259,6 +265,9 @@ export async function manualCheckin(gymId, memberId, { staffName } = {}) {
 
   // Fire-and-forget affiliate promo
   sendAffiliatePromo(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message))
+
+  // Fire-and-forget: auto-fulfill pod commitments
+  fulfillPodCommitmentsFromGymCheckin(memberId).catch(err => console.warn('[CheckinService] pod bridge failed:', err?.message));
 
   return enrichCheckinResponse(checkin, member, gymId);
 }
@@ -334,6 +343,9 @@ export async function nfcCheckin(gymId, memberId, tagUid) {
     sendAffiliatePromo(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
   }).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
+  // Fire-and-forget: auto-fulfill pod commitments
+  fulfillPodCommitmentsFromGymCheckin(memberId).catch(err => console.warn('[CheckinService] pod bridge failed:', err?.message));
+
   const enriched = await enrichCheckinResponse(checkin, member, gymId);
   return { ...enriched, response_time_ms: responseTimeMs };
 }
@@ -395,6 +407,9 @@ export async function gpsCheckin(gymId, memberId, { latitude, longitude }) {
   }).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
   sendAffiliatePromo(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
+  // Fire-and-forget: auto-fulfill pod commitments
+  fulfillPodCommitmentsFromGymCheckin(memberId).catch(err => console.warn('[CheckinService] pod bridge failed:', err?.message));
+
   const enriched = await enrichCheckinResponse(checkin, member, gymId);
   return { ...enriched, distance_meters: Math.round(distance) };
 }
@@ -431,6 +446,92 @@ async function sendAffiliatePromo(member, gym) {
     ])
   } catch (err) {
     // Silent fail - don't break check-in flow
+  }
+}
+
+// --- Pod commitment bridge ---
+// After a gym check-in, auto-fulfill any pending pod commitments for today
+const STREAK_MILESTONES = [7, 14, 30, 50, 100];
+
+export async function fulfillPodCommitmentsFromGymCheckin(memberId) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Find all pending pod commitments for this member today
+    const pendingCommitments = await db('pod_commitments')
+      .where({ member_id: memberId, date: today, status: 'pending' });
+
+    if (pendingCommitments.length === 0) return;
+
+    for (const commitment of pendingCommitments) {
+      await db.transaction(async (trx) => {
+        // 1. Update commitment status
+        await trx('pod_commitments')
+          .where('id', commitment.id)
+          .update({
+            status: 'checked_in',
+            checked_in_at: new Date(),
+            checkin_method: 'auto_gym',
+            updated_at: new Date(),
+          });
+
+        // 2. Update streak
+        const podMember = await trx('pod_members')
+          .where({ member_id: memberId, pod_id: commitment.pod_id })
+          .first();
+
+        if (!podMember) return;
+
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        let newStreak;
+        if (podMember.last_checkin_date === today) {
+          newStreak = podMember.current_streak; // already counted today
+        } else if (podMember.last_checkin_date === yesterdayStr) {
+          newStreak = podMember.current_streak + 1;
+        } else {
+          newStreak = 1;
+        }
+
+        const longestStreak = Math.max(newStreak, podMember.longest_streak || 0);
+
+        await trx('pod_members')
+          .where({ member_id: memberId, pod_id: commitment.pod_id })
+          .update({
+            current_streak: newStreak,
+            longest_streak: longestStreak,
+            last_checkin_date: today,
+            updated_at: new Date(),
+          });
+
+        // 3. Insert checkin feed entry
+        await trx('pod_feed').insert({
+          pod_id: commitment.pod_id,
+          member_id: memberId,
+          type: 'checkin',
+          data: JSON.stringify({
+            commitment_text: commitment.commitment_text,
+            method: 'auto_gym',
+            streak: newStreak,
+          }),
+        });
+
+        // 4. Check for streak milestones
+        if (STREAK_MILESTONES.includes(newStreak)) {
+          await trx('pod_feed').insert({
+            pod_id: commitment.pod_id,
+            member_id: memberId,
+            type: 'milestone',
+            data: JSON.stringify({ streak: newStreak }),
+          });
+        }
+      });
+    }
+  } catch (err) {
+    // Silent fail — pod bridge should never break the check-in flow
+    console.warn('[CheckinService] pod commitment bridge failed:', err?.message);
   }
 }
 

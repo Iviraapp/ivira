@@ -14,6 +14,7 @@ import {
 import { runBehavioralEngineForAllGyms } from '../services/behavioral-ai-cron.js';
 import { runRenewalReminders } from './renewal-reminders.js';
 import { runCheckinStreakNudge } from './checkin-streak.js';
+import { getPodJobs } from './pod-jobs.js';
 
 /**
  * Cron Scheduler
@@ -38,6 +39,7 @@ const jobs = [
   { name: 'milestone_alerts', fn: checkMilestones, intervalHours: 6 },
   { name: 'occupancy_reset', fn: resetOccupancy, intervalHours: 24 },
   { name: 'behavioral_ai_engine', fn: runBehavioralEngineForAllGyms, intervalHours: 4 },
+  ...getPodJobs().intervalJobs,
 ];
 
 /**
@@ -48,6 +50,7 @@ const jobs = [
 const dailyJobs = [
   { name: 'renewal_reminders', fn: runRenewalReminders, hour: 10, minute: 0 },   // 10:00 AM IST
   { name: 'checkin_streak_nudge', fn: runCheckinStreakNudge, hour: 20, minute: 0 }, // 8:00 PM IST
+  ...getPodJobs().dailyJobs,
 ];
 
 /**

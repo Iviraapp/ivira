@@ -17,6 +17,11 @@ import ProfileScreen from '../screens/ProfileScreen'
 import HistoryScreen from '../screens/HistoryScreen'
 import CommunityHubScreen from '../screens/CommunityHubScreen'
 import ServiceDetailScreen from '../screens/ServiceDetailScreen'
+import PodHomeScreen from '../screens/PodHomeScreen'
+import DailyCommitScreen from '../screens/DailyCommitScreen'
+import PodFeedScreen from '../screens/PodFeedScreen'
+import PodDiscoveryScreen from '../screens/PodDiscoveryScreen'
+import PodStatsScreen from '../screens/PodStatsScreen'
 import ActionPlanScreen from '../screens/ActionPlanScreen'
 import InvoicesScreen from '../screens/InvoicesScreen'
 import NutritionLogScreen from '../screens/NutritionLogScreen'
@@ -91,6 +96,11 @@ function HomeStackNavigator() {
       <HomeStackNav.Screen name="Subscription" component={SubscriptionScreen} />
       <HomeStackNav.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
       <HomeStackNav.Screen name="TrainerDashboard" component={TrainerDashboardScreen} />
+      <HomeStackNav.Screen name="PodHome" component={PodHomeScreen} />
+      <HomeStackNav.Screen name="DailyCommit" component={DailyCommitScreen} />
+      <HomeStackNav.Screen name="PodFeed" component={PodFeedScreen} />
+      <HomeStackNav.Screen name="PodDiscovery" component={PodDiscoveryScreen} />
+      <HomeStackNav.Screen name="PodStats" component={PodStatsScreen} />
     </HomeStackNav.Navigator>
   )
 }
@@ -120,10 +130,15 @@ function HealthStackNavigator() {
   )
 }
 
-function CommunityStackNavigator() {
+function PodsStackNavigator() {
   return (
     <CommunityStackNav.Navigator screenOptions={{ headerShown: false }}>
-      <CommunityStackNav.Screen name="CommunityMain" component={CommunityHubScreen} />
+      <CommunityStackNav.Screen name="PodsMain" component={PodHomeScreen} />
+      <CommunityStackNav.Screen name="DailyCommit" component={DailyCommitScreen} />
+      <CommunityStackNav.Screen name="PodFeed" component={PodFeedScreen} />
+      <CommunityStackNav.Screen name="PodDiscovery" component={PodDiscoveryScreen} />
+      <CommunityStackNav.Screen name="PodStats" component={PodStatsScreen} />
+      <CommunityStackNav.Screen name="CommunityHub" component={CommunityHubScreen} />
       <CommunityStackNav.Screen name="ServiceDetail" component={ServiceDetailScreen} />
       <CommunityStackNav.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
     </CommunityStackNav.Navigator>
@@ -258,7 +273,7 @@ function AICoachButton() {
 
 // ── Floating blurred tab bar — NO center Action tab ──────────────────
 function FloatingTabBar({ state, descriptors, navigation }) {
-  const icons = { Home: 'home', Health: 'heart', Community: 'users', Profile: 'user' }
+  const icons = { Home: 'home', Health: 'heart', Pods: 'shield', Profile: 'user' }
   const { isDark, colors } = useTheme()
 
   const handleTabPress = (route, isFocused, index) => {
@@ -339,10 +354,10 @@ function WebTabNavigator() {
   const { gymId, hasGym } = useAuth()
   const [activeTab, setActiveTab] = useState('Home')
   const [webStack, setWebStack] = useState(null)
-  const screens = { Home: HomeScreen, Health: HealthScreen, Community: CommunityHubScreen, Profile: ProfileScreen }
-  const stackScreens = { BarcodeScanner: BarcodeScannerScreen, Nutrition: NutritionScreen, History: HistoryScreen, ServiceDetail: ServiceDetailScreen, Invoices: InvoicesScreen, NutritionLog: NutritionLogScreen, FastingLog: FastingLogScreen, Progress: ProgressScreen, NutritionDetail: NutritionDetailScreen, ActionPlan: ActionPlanScreen, MembershipActivation: MembershipActivationScreen, NotificationSettings: NotificationSettingsScreen, ActivityDashboard: ActivityDashboardScreen, WorkoutTracker: WorkoutTrackerScreen, MembershipRenewal: MembershipRenewalScreen, RevenueDashboard: RevenueDashboardScreen, Referral: ReferralScreen, ProgressPhotos: ProgressPhotosScreen, FitnessScore: FitnessScoreScreen, FoodScanner: FoodScannerScreen, Recipes: RecipeScreen, Challenges: ChallengesScreen, Achievements: AchievementsScreen, SleepTracker: SleepTrackerScreen }
-  const icons = { Home: 'home', Health: 'heart', Community: 'users', Profile: 'user' }
-  const tabOrder = gymId ? ['Home', 'Health', 'Community', 'Profile'] : ['Home', 'Health', 'Profile']
+  const screens = { Home: HomeScreen, Health: HealthScreen, Pods: PodHomeScreen, Profile: ProfileScreen }
+  const stackScreens = { BarcodeScanner: BarcodeScannerScreen, Nutrition: NutritionScreen, History: HistoryScreen, ServiceDetail: ServiceDetailScreen, Invoices: InvoicesScreen, NutritionLog: NutritionLogScreen, FastingLog: FastingLogScreen, Progress: ProgressScreen, NutritionDetail: NutritionDetailScreen, ActionPlan: ActionPlanScreen, MembershipActivation: MembershipActivationScreen, NotificationSettings: NotificationSettingsScreen, ActivityDashboard: ActivityDashboardScreen, WorkoutTracker: WorkoutTrackerScreen, MembershipRenewal: MembershipRenewalScreen, RevenueDashboard: RevenueDashboardScreen, Referral: ReferralScreen, ProgressPhotos: ProgressPhotosScreen, FitnessScore: FitnessScoreScreen, FoodScanner: FoodScannerScreen, Recipes: RecipeScreen, Challenges: ChallengesScreen, Achievements: AchievementsScreen, SleepTracker: SleepTrackerScreen, DailyCommit: DailyCommitScreen, PodFeed: PodFeedScreen, PodDiscovery: PodDiscoveryScreen, PodStats: PodStatsScreen, CommunityHub: CommunityHubScreen }
+  const icons = { Home: 'home', Health: 'heart', Pods: 'shield', Profile: 'user' }
+  const tabOrder = gymId ? ['Home', 'Health', 'Pods', 'Profile'] : ['Home', 'Health', 'Profile']
 
   const ActiveScreen = webStack && stackScreens[webStack] ? stackScreens[webStack] : screens[activeTab]
   const navigation = {
@@ -448,7 +463,7 @@ function NativeTabNavigator() {
       >
         <Tab.Screen name="Home" component={HomeStackNavigator} />
         <Tab.Screen name="Health" component={HealthStackNavigator} />
-        <Tab.Screen name="Community" component={CommunityStackNavigator} />
+        <Tab.Screen name="Pods" component={PodsStackNavigator} />
         <Tab.Screen name="Profile" component={ProfileStackNavigator} />
       </Tab.Navigator>
 
