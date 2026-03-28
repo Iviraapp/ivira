@@ -47,7 +47,7 @@ export async function requestAllPermissions() {
   // 2. Camera — needed for QR check-in and barcode scanning
   try {
     let Camera = null
-    try { Camera = require('expo-camera').Camera } catch {}
+    try { Camera = require('expo-camera').Camera } catch (err) { console.warn('[Permissions]', err?.message) }
     if (Camera) {
       const { status } = await Camera.requestCameraPermissionsAsync()
       results.camera = status === 'granted'
@@ -59,7 +59,7 @@ export async function requestAllPermissions() {
   // 3. Location — needed for GPS-verified check-ins
   try {
     let Location = null
-    try { Location = require('expo-location') } catch {}
+    try { Location = require('expo-location') } catch (err) { console.warn('[Permissions]', err?.message) }
     if (Location) {
       const { status } = await Location.requestForegroundPermissionsAsync()
       results.location = status === 'granted'
@@ -71,7 +71,7 @@ export async function requestAllPermissions() {
   // 4. Notifications
   try {
     let Notifications = null
-    try { Notifications = require('expo-notifications') } catch {}
+    try { Notifications = require('expo-notifications') } catch (err) { console.warn('[Permissions]', err?.message) }
     if (Notifications) {
       const { status } = await Notifications.requestPermissionsAsync()
       results.notifications = status === 'granted'
@@ -104,7 +104,8 @@ export async function checkPermission(type) {
       const { status } = await Notifications.getPermissionsAsync()
       return status === 'granted'
     }
-  } catch {
+  } catch (err) {
+    console.warn('[Permissions]', err?.message)
     return false
   }
   return false

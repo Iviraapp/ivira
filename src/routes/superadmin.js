@@ -405,7 +405,7 @@ export default async function superadminRoutes(fastify) {
         .select('checkins.id', 'members.name', 'checkins.gym_id', 'checkins.checked_in_at', 'checkins.method')
         .orderBy('checkins.checked_in_at', 'desc')
         .limit(limit);
-    } catch {}
+    } catch (err) { console.warn('[SuperAdmin]', err?.message); }
 
     return { recentSignups, recentCheckins };
   });
@@ -440,17 +440,17 @@ export default async function superadminRoutes(fastify) {
     try {
       const [n] = await db('daily_nutrition_logs').where('log_date', today).count('id as count');
       nutritionToday = parseInt(n.count);
-    } catch {}
+    } catch (err) { console.warn('[SuperAdmin]', err?.message); }
 
     try {
       const [s] = await db('sleep_logs').where('date', today).count('id as count');
       sleepToday = parseInt(s.count);
-    } catch {}
+    } catch (err) { console.warn('[SuperAdmin]', err?.message); }
 
     try {
       const [w] = await db('workout_sessions').where('session_date', today).count('id as count');
       workoutsToday = parseInt(w.count);
-    } catch {}
+    } catch (err) { console.warn('[SuperAdmin]', err?.message); }
 
     return {
       today,
@@ -500,7 +500,7 @@ export default async function superadminRoutes(fastify) {
       target_type: 'super_admin',
       target_id: admin.id,
       details: JSON.stringify({ email: admin.email }),
-    }).catch(() => {});
+    }).catch(err => console.warn('[SuperAdmin]', err?.message));
 
     return { admin, tempPassword };
   });
@@ -522,7 +522,7 @@ export default async function superadminRoutes(fastify) {
       action: 'team_remove',
       target_type: 'super_admin',
       target_id: adminId,
-    }).catch(() => {});
+    }).catch(err => console.warn('[SuperAdmin]', err?.message));
 
     return { success: true };
   });
@@ -583,17 +583,17 @@ export default async function superadminRoutes(fastify) {
     try {
       const [c] = await db('checkins').where('member_id', memberId).where('checked_in_at', '>', weekAgo).count('id as count');
       recentCheckins = parseInt(c.count);
-    } catch {}
+    } catch (err) { console.warn('[SuperAdmin]', err?.message); }
 
     try {
       const [w] = await db('workout_sessions').where('member_id', memberId).where('session_date', '>', weekAgo).count('id as count');
       recentWorkouts = parseInt(w.count);
-    } catch {}
+    } catch (err) { console.warn('[SuperAdmin]', err?.message); }
 
     try {
       const [n] = await db('daily_nutrition_logs').where('member_id', memberId).where('log_date', '>', weekAgo).count('id as count');
       recentNutritionLogs = parseInt(n.count);
-    } catch {}
+    } catch (err) { console.warn('[SuperAdmin]', err?.message); }
 
     return {
       member,

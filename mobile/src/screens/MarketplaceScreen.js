@@ -240,7 +240,8 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
         category: 'Classes',
       }))
       setSessions(apiSessions)
-    } catch {
+    } catch (err) {
+      console.warn('[Marketplace] fetchSessions:', err?.message)
       setSessions([])
     }
   }, [gymId])

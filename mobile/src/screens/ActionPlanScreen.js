@@ -58,7 +58,7 @@ export default function ActionPlanScreen({ navigation, route }) {
     if (!profile) {
       const stored = await getItem('ivira_nutrition_profile').catch(() => null)
       if (stored) {
-        try { profile = JSON.parse(stored) } catch {}
+        try { profile = JSON.parse(stored) } catch (err) { console.warn('[ActionPlan]', err?.message) }
       }
     }
     if (!profile) {
@@ -82,7 +82,7 @@ export default function ActionPlanScreen({ navigation, route }) {
         bmr: plan.bmr,
         tdee: plan.tdee,
       }
-      await setItem('ivira_custom_nutrition_goal', JSON.stringify(goal)).catch(() => {})
+      await setItem('ivira_custom_nutrition_goal', JSON.stringify(goal)).catch(err => console.warn('[ActionPlan]', err?.message))
     }
     if (navigation.canGoBack()) {
       navigation.goBack()

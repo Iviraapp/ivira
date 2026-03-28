@@ -13,7 +13,7 @@ try {
   Defs = svg.Defs
   LinearGradient = svg.LinearGradient
   Stop = svg.Stop
-} catch {}
+} catch (err) { console.warn('[FastingTimer]', err?.message) }
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import Haptics from '../lib/haptics'
@@ -153,14 +153,14 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
               setStartTime(serverStart)
               setIsFasting(true)
               if (protoIdx >= 0) setSelectedProtocol(protoIdx)
-              await setItem(STORAGE_KEY_START, serverStart.toISOString()).catch(() => {})
-              await setItem(STORAGE_KEY_PROTOCOL, String(protoIdx >= 0 ? protoIdx : 0)).catch(() => {})
+              await setItem(STORAGE_KEY_START, serverStart.toISOString()).catch(err => console.warn('[FastingTimer]', err?.message))
+              await setItem(STORAGE_KEY_PROTOCOL, String(protoIdx >= 0 ? protoIdx : 0)).catch(err => console.warn('[FastingTimer]', err?.message))
               setLoading(false)
               return
             }
           }
         }
-      } catch {}
+      } catch (err) { console.warn('[FastingTimer]', err?.message) }
 
       try {
         const stored = await getItem(STORAGE_KEY_START)
@@ -176,7 +176,7 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
           const idx = parseInt(storedProto, 10)
           if (idx >= 0 && idx < PROTOCOLS.length) setSelectedProtocol(idx)
         }
-      } catch {}
+      } catch (err) { console.warn('[FastingTimer]', err?.message) }
       setLoading(false)
     }
     loadState()
@@ -192,9 +192,9 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
         if (storedEnabled === 'true' && storedTime) {
           setReminderEnabled(true)
           const [h, m] = storedTime.split(':').map(Number)
-          scheduleFastingReminder(h, m).catch(() => {})
+          scheduleFastingReminder(h, m).catch(err => console.warn('[FastingTimer]', err?.message))
         }
-      } catch {}
+      } catch (err) { console.warn('[FastingTimer]', err?.message) }
     }
     loadReminder()
   }, [])
@@ -211,9 +211,9 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
             ageYears: p.age || DEFAULT_BODY.ageYears,
             gender: p.gender || DEFAULT_BODY.gender,
           })
-        } catch {}
+        } catch (err) { console.warn('[FastingTimer]', err?.message) }
       }
-    }).catch(() => {})
+    }).catch(err => console.warn('[FastingTimer]', err?.message))
   }, [])
 
   // Compute estimated calories burned
@@ -242,7 +242,7 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
         if (phaseChanged || fiveMinPassed) {
           lastNotifMinute.current = currentMinute
           lastNotifPhase.current = currentPhase.label
-          showFastingNotification(now, currentPhase.label).catch(() => {})
+          showFastingNotification(now, currentPhase.label).catch(err => console.warn('[FastingTimer]', err?.message))
         }
       }
 
@@ -250,7 +250,7 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
       const initPhase = getPhase(initMs / 3600000)
       lastNotifMinute.current = Math.floor(initMs / 60000)
       lastNotifPhase.current = initPhase.label
-      showFastingNotification(initMs, initPhase.label).catch(() => {})
+      showFastingNotification(initMs, initPhase.label).catch(err => console.warn('[FastingTimer]', err?.message))
 
       tick()
       intervalRef.current = setInterval(tick, 1000)
@@ -271,18 +271,18 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
     try {
       await setItem(STORAGE_KEY_START, now.toISOString())
       await setItem(STORAGE_KEY_PROTOCOL, String(selectedProtocol))
-    } catch {}
+    } catch (err) { console.warn('[FastingTimer]', err?.message) }
 
     if (gymId && memberId) {
       api.post(`/gyms/${gymId}/members/${memberId}/health/fasting/start`, {
         protocol: protocol.label,
         start_time: now.toISOString(),
-      }).catch(() => {})
+      }).catch(err => console.warn('[FastingTimer]', err?.message))
     }
 
-    showFastingNotification(0, PHASES[0].label).catch(() => {})
-    startHydrationReminders(protocol.fastHours).catch(() => {})
-    recordFastingStart().catch(() => {})
+    showFastingNotification(0, PHASES[0].label).catch(err => console.warn('[FastingTimer]', err?.message))
+    startHydrationReminders(protocol.fastHours).catch(err => console.warn('[FastingTimer]', err?.message))
+    recordFastingStart().catch(err => console.warn('[FastingTimer]', err?.message))
   }, [selectedProtocol, protocol, gymId, memberId])
 
   const handleEndFast = useCallback(async () => {
@@ -303,7 +303,8 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
         'Fast Logged',
         `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`,
       )
-    } catch {
+    } catch (err) {
+      console.warn('[FastingTimer]', err?.message)
       Alert.alert('Error', 'Failed to log fast. Please try again.')
     }
 
@@ -311,8 +312,8 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
     setStartTime(null)
     setElapsedMs(0)
 
-    dismissFastingNotification().catch(() => {})
-    stopHydrationReminders().catch(() => {})
+    dismissFastingNotification().catch(err => console.warn('[FastingTimer]', err?.message))
+    stopHydrationReminders().catch(err => console.warn('[FastingTimer]', err?.message))
 
     // Schedule a daily reminder at the time the user originally started this fast
     if (startTime) {
@@ -324,14 +325,14 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
       try {
         await setItem(STORAGE_KEY_REMINDER_TIME, timeStr)
         await setItem(STORAGE_KEY_REMINDER_ENABLED, 'true')
-      } catch {}
-      scheduleFastingReminder(h, m).catch(() => {})
+      } catch (err) { console.warn('[FastingTimer]', err?.message) }
+      scheduleFastingReminder(h, m).catch(err => console.warn('[FastingTimer]', err?.message))
     }
 
     try {
       await deleteItem(STORAGE_KEY_START)
       await deleteItem(STORAGE_KEY_PROTOCOL)
-    } catch {}
+    } catch (err) { console.warn('[FastingTimer]', err?.message) }
   }, [elapsedMs, elapsedHours, protocol, startTime, gymId, memberId])
 
   // Protocol switch — allowed mid-fast (upgrade only, keeps elapsed time)
@@ -366,18 +367,18 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
                 setSelectedProtocol(idx)
 
                 // Persist new protocol
-                try { await setItem(STORAGE_KEY_PROTOCOL, String(idx)) } catch {}
+                try { await setItem(STORAGE_KEY_PROTOCOL, String(idx)) } catch (err) { console.warn('[FastingTimer]', err?.message) }
 
                 // Update backend
                 if (gymId && memberId) {
                   api.post(`/gyms/${gymId}/members/${memberId}/health/fasting/start`, {
                     protocol: newProtocol.label,
                     start_time: startTime.toISOString(),
-                  }).catch(() => {})
+                  }).catch(err => console.warn('[FastingTimer]', err?.message))
                 }
 
                 // Reschedule hydration reminders for the new duration
-                startHydrationReminders(newProtocol.fastHours).catch(() => {})
+                startHydrationReminders(newProtocol.fastHours).catch(err => console.warn('[FastingTimer]', err?.message))
               },
             },
           ],
@@ -393,12 +394,12 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
     setReminderEnabled(value)
     try {
       await setItem(STORAGE_KEY_REMINDER_ENABLED, value ? 'true' : 'false')
-    } catch {}
+    } catch (err) { console.warn('[FastingTimer]', err?.message) }
     if (value && reminderTime) {
       const [h, m] = reminderTime.split(':').map(Number)
-      scheduleFastingReminder(h, m).catch(() => {})
+      scheduleFastingReminder(h, m).catch(err => console.warn('[FastingTimer]', err?.message))
     } else {
-      cancelFastingReminder().catch(() => {})
+      cancelFastingReminder().catch(err => console.warn('[FastingTimer]', err?.message))
     }
   }, [reminderTime])
 
@@ -474,7 +475,8 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
       Alert.alert('Fast Logged', `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setIsManualModalVisible(false)
-    } catch {
+    } catch (err) {
+      console.warn('[FastingTimer]', err?.message)
       Alert.alert('Error', 'Failed to log fast. Please try again.')
     } finally {
       setSavingManual(false)

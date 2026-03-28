@@ -88,7 +88,7 @@ export async function trackClick(token) {
     .where({ click_token: token })
     .whereNull('clicked_at')
     .update({ clicked_at: new Date() })
-    .catch(() => {});
+    .catch(err => console.warn('[Affiliate]', err?.message));
 
   return url;
 }

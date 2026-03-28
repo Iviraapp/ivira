@@ -12,7 +12,8 @@ function isNativeModuleAvailable(moduleName) {
     // expo-task-manager requires native binary — unavailable in Expo Go
     const { NativeModules } = require('react-native')
     return !!NativeModules[moduleName]
-  } catch {
+  } catch (err) {
+    console.warn('[NotificationEngine]', err?.message)
     return false
   }
 }
@@ -24,15 +25,15 @@ async function loadModules() {
 
   try {
     Notifications = await import('expo-notifications')
-  } catch {
-    console.warn('[NotificationEngine] expo-notifications not available')
+  } catch (err) {
+    console.warn('[NotificationEngine] expo-notifications not available:', err?.message)
   }
 
   if (isNativeModuleAvailable('ExpoTaskManager')) {
     try {
       TaskManager = await import('expo-task-manager')
-    } catch {
-      console.warn('[NotificationEngine] expo-task-manager not available')
+    } catch (err) {
+      console.warn('[NotificationEngine] expo-task-manager not available:', err?.message)
     }
   } else {
     console.warn('[NotificationEngine] ExpoTaskManager native module not found — skipping (expected in Expo Go)')
@@ -125,10 +126,10 @@ export async function dismissFastingNotification() {
 
   try {
     await Notifications.dismissNotificationAsync(FASTING_NOTIFICATION_ID)
-  } catch {}
+  } catch (err) { console.warn('[NotificationEngine]', err?.message) }
   try {
     await Notifications.cancelScheduledNotificationAsync(FASTING_NOTIFICATION_ID)
-  } catch {}
+  } catch (err) { console.warn('[NotificationEngine]', err?.message) }
 }
 
 /**
@@ -180,7 +181,7 @@ export async function stopHydrationReminders() {
         await Notifications.cancelScheduledNotificationAsync(n.identifier)
       }
     }
-  } catch {}
+  } catch (err) { console.warn('[NotificationEngine]', err?.message) }
 }
 
 /**
@@ -247,11 +248,11 @@ export async function cancelFastingReminder() {
 
   try {
     await Notifications.cancelScheduledNotificationAsync(FASTING_DAILY_REMINDER_ID)
-  } catch {}
+  } catch (err) { console.warn('[NotificationEngine]', err?.message) }
 }
 
 // Initialize channels on module load (fire-and-forget)
 if (Platform.OS !== 'web') {
-  setupChannels().catch(() => {})
-  registerNotificationCategories().catch(() => {})
+  setupChannels().catch(err => console.warn('[NotificationEngine]', err?.message))
+  registerNotificationCategories().catch(err => console.warn('[NotificationEngine]', err?.message))
 }

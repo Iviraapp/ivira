@@ -161,11 +161,11 @@ export default async function healthOsRoutes(fastify) {
   // Get fasting history
   fastify.get('/gyms/:gymId/members/:memberId/health/fasting/history', authHooks, async (request) => {
     const { gymId, memberId } = request.params;
-    const { limit = 30 } = request.query;
+    const limit = Math.min(Math.max(parseInt(request.query.limit) || 30, 1), 100);
     const logs = await fastify.db('fasting_logs')
       .where({ gym_id: gymId, member_id: memberId })
       .orderBy('start_time', 'desc')
-      .limit(parseInt(limit, 10));
+      .limit(limit);
     return { logs };
   });
 

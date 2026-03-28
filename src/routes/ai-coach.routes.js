@@ -145,6 +145,7 @@ export default async function aiCoachRoutes(fastify) {
       if (useDeepSeek) {
         const response = await fetch('https://api.deepseek.com/chat/completions', {
           method: 'POST',
+          signal: AbortSignal.timeout(30000),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${config.deepseek.apiKey}`,
@@ -173,6 +174,7 @@ export default async function aiCoachRoutes(fastify) {
       } else {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
+          signal: AbortSignal.timeout(30000),
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': config.anthropic.apiKey,
@@ -249,6 +251,7 @@ Return the plan as JSON following the exact format specified.`;
       if (useDeepSeek) {
         const response = await fetch('https://api.deepseek.com/chat/completions', {
           method: 'POST',
+          signal: AbortSignal.timeout(30000),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${config.deepseek.apiKey}`,
@@ -277,6 +280,7 @@ Return the plan as JSON following the exact format specified.`;
       } else {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
+          signal: AbortSignal.timeout(30000),
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': config.anthropic.apiKey,

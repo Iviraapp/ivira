@@ -12,6 +12,7 @@ import {
   Dimensions,
   Modal,
   Easing,
+  RefreshControl,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
@@ -105,6 +106,7 @@ export default function NutritionScreen({ navigation }) {
   const [weekly, setWeekly] = useState(null)
   const [goal, setGoal] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [logText, setLogText] = useState('')
   const [logMealType, setLogMealType] = useState('lunch')
   const [estimating, setEstimating] = useState(false)
@@ -200,7 +202,7 @@ export default function NutritionScreen({ navigation }) {
         source: 'ai',
       })
       // Record pattern for smart notifications
-      recordMeal(logMealType).catch(() => {})
+      recordMeal(logMealType).catch(err => console.warn('[Nutrition]', err?.message))
       // Update local state
       const newMeal = {
         id: Date.now().toString(),
@@ -269,7 +271,24 @@ export default function NutritionScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true)
+              try {
+                await loadData()
+              } catch (err) { console.warn('[Nutrition] refresh:', err?.message) }
+              setRefreshing(false)
+            }}
+            tintColor="#10B981"
+            colors={['#10B981']}
+          />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.backBtn}>

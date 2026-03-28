@@ -15,12 +15,12 @@ try {
   // iOS only — react-native-health is not installed for Android builds
   const iosModule = 'react-native-' + 'health'
   AppleHealthKit = require(iosModule).default
-} catch {}
+} catch (err) { console.warn('[HealthKit] AppleHealthKit load:', err?.message) }
 
 let HealthConnect = null
 try {
   HealthConnect = require('react-native-health-connect')
-} catch {}
+} catch (err) { console.warn('[HealthKit] HealthConnect load:', err?.message) }
 
 // ──────────────────────────────────────────────────────────────
 // Singleton Health Connect initializer.
@@ -122,7 +122,8 @@ export async function isHealthConnectAvailable() {
     const status = await HealthConnect.getSdkStatus()
     // SDK_AVAILABLE = 3, SDK_UNAVAILABLE = 1, SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED = 2
     return status === 3
-  } catch {
+  } catch (err) {
+    console.warn('[HealthKit] isHealthConnectAvailable:', err?.message)
     return false
   }
 }

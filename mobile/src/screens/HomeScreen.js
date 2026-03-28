@@ -12,6 +12,7 @@ import {
   TextInput,
   Platform,
   Image,
+  RefreshControl,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
@@ -145,6 +146,9 @@ export default function HomeScreen({ navigation, route }) {
   // Wallet state
   const [walletAvailable, setWalletAvailable] = useState(false)
   const [addingToWallet, setAddingToWallet] = useState(false)
+
+  // Pull-to-refresh state
+  const [refreshing, setRefreshing] = useState(false)
 
   // AI Workout suggestion state
   const [aiWorkout, setAiWorkout] = useState(null)
@@ -696,6 +700,24 @@ export default function HomeScreen({ navigation, route }) {
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true)
+              try {
+                await Promise.all([
+                  fetchNutrition(),
+                  fetchAiWorkout(),
+                  fetchSleep?.(),
+                ])
+              } catch {}
+              setRefreshing(false)
+            }}
+            tintColor="#10B981"
+            colors={['#10B981']}
+          />
+        }
       >
         {/* AI Coach Greeting */}
         <MotiView

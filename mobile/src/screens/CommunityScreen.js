@@ -103,7 +103,8 @@ export default function CommunityScreen({ embedded = false }) {
       const res = await api.get(`/gyms/${gymId}/leaderboard?scope=${scope}`)
       const entries = (res.data?.data || res.data || []).map(formatLeaderboardEntry)
       setData(entries)
-    } catch {
+    } catch (err) {
+      console.warn('[Community] fetchLeaderboard:', err?.message)
       setData([])
     } finally {
       setLoading(false)

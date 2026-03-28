@@ -311,18 +311,18 @@ export default function AchievementsScreen({ navigation }) {
           setProgressMap(pMap)
 
           // Cache to AsyncStorage as fallback
-          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(map)).catch(() => {})
+          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(map)).catch(err => console.warn('[Achievements]', err?.message))
           return
-        } catch {
-          // Backend failed — fall through to AsyncStorage fallback
+        } catch (err) {
+          console.warn('[Achievements] API fetch failed:', err?.message)
         }
       }
 
       // Fallback: load from AsyncStorage
       const raw = await AsyncStorage.getItem(STORAGE_KEY)
       if (raw) setUnlockedMap(JSON.parse(raw))
-    } catch {
-      // silent
+    } catch (err) {
+      console.warn('[Achievements] loadBadges:', err?.message)
     }
   }, [gymId, member?.id])
 

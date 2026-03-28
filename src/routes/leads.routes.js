@@ -10,11 +10,16 @@ async function verifyAdmin(request, reply) {
 export default async function leadsRoutes(fastify) {
   // POST /leads — public, no auth
   fastify.post('/leads', async (request, reply) => {
-    const { name, gym_name, phone, email, package_interest } = request.body || {}
+    const { name: rawName, gym_name: rawGymName, phone: rawPhone, email: rawEmail, package_interest } = request.body || {}
 
-    if (!name || !gym_name || !phone || !email) {
+    if (!rawName || !rawGymName || !rawPhone || !rawEmail) {
       return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'name, gym_name, phone, and email are required' })
     }
+
+    const name = String(rawName).trim().slice(0, 100)
+    const gym_name = String(rawGymName).trim().slice(0, 100)
+    const phone = String(rawPhone).slice(0, 20)
+    const email = String(rawEmail).trim().toLowerCase().slice(0, 255)
 
     const [lead] = await db('leads').insert({
       name,
@@ -99,7 +104,9 @@ export default async function leadsRoutes(fastify) {
   fastify.get('/leads', {
     preHandler: [verifyAdmin],
   }, async (request, reply) => {
-    const { page = 1, limit = 50, status, assigned_to, sort = 'created_at:desc' } = request.query || {}
+    const { status, assigned_to, sort = 'created_at:desc' } = request.query || {}
+    const page = Math.max(parseInt(request.query.page) || 1, 1)
+    const limit = Math.min(Math.max(parseInt(request.query.limit) || 50, 1), 100)
     const offset = (page - 1) * limit
 
     let query = db('leads')

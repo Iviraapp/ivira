@@ -210,7 +210,7 @@ export async function stopTracking() {
   if (Platform.OS === 'android') {
     try {
       await Notifications.dismissNotificationAsync('sleep-tracking-active')
-    } catch {}
+    } catch (err) { console.warn('[SleepEngine]', err?.message) }
   }
 
   _isTracking = false
@@ -299,7 +299,8 @@ export async function getSleepHistory() {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY_HISTORY)
     return raw ? JSON.parse(raw) : []
-  } catch {
+  } catch (err) {
+    console.warn('[SleepEngine]', err?.message)
     return []
   }
 }
@@ -322,7 +323,8 @@ export async function resumeSession() {
       alarmTime: session.alarmTime,
       enableAudio: session.enableAudio,
     })
-  } catch {
+  } catch (err) {
+    console.warn('[SleepEngine]', err?.message)
     return false
   }
 }
@@ -492,7 +494,7 @@ async function sampleAudio() {
       try {
         const FileSystem = require('expo-file-system')
         await FileSystem.deleteAsync(uri, { idempotent: true })
-      } catch {}
+      } catch (err) { console.warn('[SleepEngine]', err?.message) }
     }
 
     // Analyze metering pattern
@@ -540,7 +542,7 @@ async function stopAudioMonitoring() {
   if (_audioRecording) {
     try {
       await _audioRecording.stopAndUnloadAsync()
-    } catch {}
+    } catch (err) { console.warn('[SleepEngine]', err?.message) }
     _audioRecording = null
   }
 }
@@ -746,7 +748,7 @@ function calculateAdvancedSleepScore(data) {
 function notifyListeners() {
   const data = getLiveData()
   _listeners.forEach(cb => {
-    try { cb(data) } catch {}
+    try { cb(data) } catch (err) { console.warn('[SleepEngine]', err?.message) }
   })
 }
 

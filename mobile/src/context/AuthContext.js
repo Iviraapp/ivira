@@ -29,7 +29,8 @@ export function AuthProvider({ children }) {
       const compatible = await LocalAuth.hasHardwareAsync()
       const enrolled = await LocalAuth.isEnrolledAsync()
       setBiometricAvailable(compatible && enrolled)
-    } catch {
+    } catch (err) {
+      console.warn('[Auth] checkBiometrics:', err?.message)
       setBiometricAvailable(false)
     }
   }
@@ -105,7 +106,8 @@ export function AuthProvider({ children }) {
         disableDeviceFallback: false,
       })
       return result.success
-    } catch {
+    } catch (err) {
+      console.warn('[Auth] biometric auth:', err?.message)
       return false
     }
   }
@@ -161,7 +163,7 @@ export function AuthProvider({ children }) {
   // Start geofencing whenever gym info becomes available
   useEffect(() => {
     if (gymInfo?.latitude && gymInfo?.longitude) {
-      startGymGeofencing(gymInfo).catch(() => {})
+      startGymGeofencing(gymInfo).catch(err => console.warn('[Auth]', err?.message))
     }
   }, [gymInfo?.id])
 
@@ -230,7 +232,8 @@ export function AuthProvider({ children }) {
     try {
       const gymRes = await api.get(`/gyms/${resolvedGymId}`)
       setGymInfo(gymRes.data?.gym || gymRes.data)
-    } catch {
+    } catch (err) {
+      console.warn('[Auth] connectGym fetch gym:', err?.message)
       setGymInfo({ id: resolvedGymId, gym_name: gymName })
     }
   }, [])

@@ -59,16 +59,16 @@ export default function ReferralScreen({ navigation }) {
   const fetchData = useCallback(async () => {
     try {
       const [codeRes, statsRes, lbRes] = await Promise.all([
-        api.get(`/gyms/${gymId}/referrals/my-code`).catch(() => null),
-        api.get(`/gyms/${gymId}/referrals/my-stats`).catch(() => null),
-        api.get(`/gyms/${gymId}/referrals/leaderboard`).catch(() => null),
+        api.get(`/gyms/${gymId}/referrals/my-code`).catch(err => { console.warn('[Referral]', err?.message); return null }),
+        api.get(`/gyms/${gymId}/referrals/my-stats`).catch(err => { console.warn('[Referral]', err?.message); return null }),
+        api.get(`/gyms/${gymId}/referrals/leaderboard`).catch(err => { console.warn('[Referral]', err?.message); return null }),
       ])
 
       if (codeRes?.data) setCode(codeRes.data)
       if (statsRes?.data) setStats(statsRes.data)
       if (lbRes?.data) setLeaderboard(Array.isArray(lbRes.data) ? lbRes.data : lbRes.data?.leaderboard || [])
     } catch (err) {
-      console.error('Failed to fetch referral data:', err)
+      console.warn('[Referral]', err?.message)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -101,7 +101,7 @@ export default function ReferralScreen({ navigation }) {
       await Share.share({
         message: `Join my gym on IVIRA! Use my referral code: ${code.code} to get free days. Download IVIRA now!`,
       })
-    } catch {}
+    } catch (err) { console.warn('[Referral]', err?.message) }
   }
 
   const onRefresh = () => {

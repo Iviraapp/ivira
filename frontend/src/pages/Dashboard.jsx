@@ -40,8 +40,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (!gymId) return
     Promise.all([
-      api.get(`/gyms/${gymId}/stats`).catch(() => ({ data: null })),
-      api.get(`/gyms/${gymId}/checkins?limit=10`).catch(() => ({ data: { checkins: [] } })),
+      api.get(`/gyms/${gymId}/stats`).catch(err => { console.warn('[Dashboard] stats:', err?.message); return { data: null } }),
+      api.get(`/gyms/${gymId}/checkins?limit=10`).catch(err => { console.warn('[Dashboard] checkins:', err?.message); return { data: { checkins: [] } } }),
     ]).then(([statsRes, checkinsRes]) => {
       setStats(statsRes.data)
       setRecentCheckins(checkinsRes.data?.checkins || [])
@@ -66,7 +66,7 @@ export default function Dashboard() {
     // Expiring memberships
     api.get(`/gyms/${gymId}/members?status=active&expiring_within=7`).then(res => {
       setExpiringMembers(res.data?.members || [])
-    }).catch(() => {})
+    }).catch(err => console.warn('[Dashboard] expiring:', err?.message))
   }, [gymId])
 
   if (loading) {

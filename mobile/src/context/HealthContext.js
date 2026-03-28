@@ -19,7 +19,7 @@ import {
 import Haptics from '../lib/haptics'
 
 let Pedometer = null
-try { Pedometer = require('expo-sensors').Pedometer } catch {}
+try { Pedometer = require('expo-sensors').Pedometer } catch (err) { console.warn('[HealthCtx] Pedometer load:', err?.message) }
 
 const HealthContext = createContext(null)
 
@@ -72,7 +72,7 @@ export function HealthProvider({ children, gymId, memberId }) {
             setStepSource('manual')
           }
         }
-      } catch {}
+      } catch (err) { console.warn('[HealthCtx] loadPrefs:', err?.message) }
     }
     loadPrefs()
   }, [])
@@ -93,7 +93,7 @@ export function HealthProvider({ children, gymId, memberId }) {
           await requestExtendedPermissions()
           await requestSleepPermissions()
         }
-      } catch {}
+      } catch (err) { console.warn('[HealthCtx] permissions:', err?.message) }
 
       // Initial data fetch
       await fetchSteps()
@@ -147,11 +147,11 @@ export function HealthProvider({ children, gymId, memberId }) {
 
         // Sync to backend
         if (gymId && memberId) {
-          syncStepsToBackend(gymId, memberId, result.steps).catch(() => {})
+          syncStepsToBackend(gymId, memberId, result.steps).catch(err => console.warn('[HealthCtx]', err?.message))
         }
         return
       }
-    } catch {}
+    } catch (err) { console.warn('[HealthCtx] fetchSteps health:', err?.message) }
 
     // Fallback: Pedometer
     if (Pedometer) {
@@ -166,11 +166,11 @@ export function HealthProvider({ children, gymId, memberId }) {
           setActiveMinutes(Math.floor((pedometerSteps || 0) / 100))
 
           if (gymId && memberId && pedometerSteps > 0) {
-            syncStepsToBackend(gymId, memberId, pedometerSteps).catch(() => {})
+            syncStepsToBackend(gymId, memberId, pedometerSteps).catch(err => console.warn('[HealthCtx]', err?.message))
           }
           return
         }
-      } catch {}
+      } catch (err) { console.warn('[HealthCtx] fetchSteps pedometer:', err?.message) }
     }
 
     setStepSource('unavailable')
@@ -185,7 +185,7 @@ export function HealthProvider({ children, gymId, memberId }) {
         setSleepData(nativeSleep)
         setSleepSource(nativeSleep.source)
         if (gymId && memberId) {
-          syncSleepToBackend(gymId, memberId, nativeSleep).catch(() => {})
+          syncSleepToBackend(gymId, memberId, nativeSleep).catch(err => console.warn('[HealthCtx]', err?.message))
         }
         return
       }
@@ -210,7 +210,7 @@ export function HealthProvider({ children, gymId, memberId }) {
             setSleepSource('sleep_engine')
             return
           }
-        } catch {}
+        } catch (err) { console.warn('[HealthCtx] parse sleep log:', err?.message) }
       }
 
       // Fallback: check backend for last sleep log
@@ -233,12 +233,13 @@ export function HealthProvider({ children, gymId, memberId }) {
             setSleepSource('backend')
             return
           }
-        } catch {}
+        } catch (err) { console.warn('[HealthCtx] backend sleep:', err?.message) }
       }
 
       setSleepData(null)
       setSleepSource('unavailable')
-    } catch {
+    } catch (err) {
+      console.warn('[HealthCtx] fetchSleep:', err?.message)
       setSleepData(null)
       setSleepSource('unavailable')
     }
@@ -257,7 +258,7 @@ export function HealthProvider({ children, gymId, memberId }) {
       if (rhr) setRestingHR(rhr)
       if (hrvData) setHrv(hrvData)
       setWearableConnected(wearable)
-    } catch {}
+    } catch (err) { console.warn('[HealthCtx] fetchHeartData:', err?.message) }
   }, [])
 
   // Manual step update
@@ -268,7 +269,7 @@ export function HealthProvider({ children, gymId, memberId }) {
     setActiveMinutes(Math.floor(count / 100))
     await setItem(`ivira_manual_steps_${today}`, String(count))
     if (gymId && memberId) {
-      syncStepsToBackend(gymId, memberId, count).catch(() => {})
+      syncStepsToBackend(gymId, memberId, count).catch(err => console.warn('[HealthCtx]', err?.message))
     }
   }, [gymId, memberId])
 

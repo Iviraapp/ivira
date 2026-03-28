@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
+import { COLORS, SPACING, RADIUS, FONT, FEATURE } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import {
   loadPrefs,
@@ -132,7 +132,7 @@ export default function NotificationSettingsScreen({ navigation }) {
         }]}>
           <SettingRow
             icon="activity"
-            iconColor="#F97316"
+            iconColor={FEATURE.activity}
             title="Workout Reminders"
             subtitle="30 min before your usual gym time"
             value={prefs.workout_reminders}
@@ -142,7 +142,7 @@ export default function NotificationSettingsScreen({ navigation }) {
           />
           <SettingRow
             icon="droplet"
-            iconColor="#4285F4"
+            iconColor={FEATURE.hydration}
             title="Water Reminders"
             subtitle="Every 2h during waking hours"
             value={prefs.water_reminders}
@@ -152,7 +152,7 @@ export default function NotificationSettingsScreen({ navigation }) {
           />
           <SettingRow
             icon="coffee"
-            iconColor="#22C55E"
+            iconColor={FEATURE.nutrition}
             title="Meal Log Reminders"
             subtitle="After your usual meal times"
             value={prefs.meal_reminders}
@@ -162,7 +162,7 @@ export default function NotificationSettingsScreen({ navigation }) {
           />
           <SettingRow
             icon="zap"
-            iconColor="#8B5CF6"
+            iconColor={FEATURE.fasting}
             title="Streak Motivation"
             subtitle="Daily encouragement based on your streak"
             value={prefs.streak_motivation}
@@ -212,10 +212,10 @@ export default function NotificationSettingsScreen({ navigation }) {
                     <Text style={[styles.patternValue, { color: colors.text }]}>{p.value}</Text>
                     {p.confidence != null && (
                       <View style={[styles.confidenceBadge, {
-                        backgroundColor: p.confidence > 0.6 ? '#22C55E18' : '#F9731618',
+                        backgroundColor: p.confidence > 0.6 ? `${COLORS.green}18` : `${FEATURE.activity}18`,
                       }]}>
                         <Text style={[styles.confidenceText, {
-                          color: p.confidence > 0.6 ? '#22C55E' : '#F97316',
+                          color: p.confidence > 0.6 ? COLORS.green : FEATURE.activity,
                         }]}>
                           {Math.round(p.confidence * 100)}%
                         </Text>

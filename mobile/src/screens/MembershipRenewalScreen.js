@@ -160,9 +160,9 @@ export default function MembershipRenewalScreen({ navigation }) {
   const fetchData = useCallback(async () => {
     try {
       const [memberRes, paymentRes, planRes] = await Promise.all([
-        api.get(`/gyms/${gymId}/members/${memberId}`).catch(() => null),
-        api.get(`/gyms/${gymId}/payments?limit=20`).catch(() => null),
-        api.get(`/gyms/${gymId}/plans`).catch(() => null),
+        api.get(`/gyms/${gymId}/members/${memberId}`).catch(err => { console.warn('[Membership]', err?.message); return null }),
+        api.get(`/gyms/${gymId}/payments?limit=20`).catch(err => { console.warn('[Membership]', err?.message); return null }),
+        api.get(`/gyms/${gymId}/plans`).catch(err => { console.warn('[Membership]', err?.message); return null }),
       ])
 
       if (memberRes?.data?.membership) {
@@ -185,7 +185,7 @@ export default function MembershipRenewalScreen({ navigation }) {
         setPlans(planRes.data)
       }
     } catch (err) {
-      console.error('Failed to fetch membership data:', err)
+      console.warn('[Membership]', err?.message)
     } finally {
       setLoading(false)
       setRefreshing(false)

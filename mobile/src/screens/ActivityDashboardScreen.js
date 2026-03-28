@@ -24,7 +24,7 @@ let Pedometer = null
 try {
   const sensors = require('expo-sensors')
   Pedometer = sensors.Pedometer
-} catch {}
+} catch (err) { console.warn('[ActivityDash] Pedometer load:', err?.message) }
 
 let Svg = null
 let Circle = null
@@ -32,7 +32,7 @@ try {
   const svg = require('react-native-svg')
   Svg = svg.default || svg.Svg
   Circle = svg.Circle
-} catch {}
+} catch (err) { console.warn('[ActivityDash] SVG load:', err?.message) }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const RING_SIZE = 180
@@ -75,7 +75,7 @@ export default function ActivityDashboardScreen({ navigation }) {
         const parsed = parseInt(val, 10)
         if (!isNaN(parsed) && parsed > 0) setStepGoal(parsed)
       }
-    }).catch(() => {})
+    }).catch(err => console.warn('[ActivityDash]', err?.message))
   }, [])
 
   // Check pedometer availability and load data
@@ -88,7 +88,7 @@ export default function ActivityDashboardScreen({ navigation }) {
       if (Pedometer) {
         try {
           available = await Pedometer.isAvailableAsync()
-        } catch {}
+        } catch (err) { console.warn('[ActivityDash] pedometer check:', err?.message) }
       }
       if (!cancelled) setPedometerAvailable(available)
 
@@ -172,7 +172,7 @@ export default function ActivityDashboardScreen({ navigation }) {
         setSteps(result.steps)
         displayedSteps.current = 0 // Reset so count-up animates from 0
       }
-    } catch {}
+    } catch (err) { console.warn('[ActivityDash] loadTodaySteps:', err?.message) }
   }
 
   async function loadWeeklySteps() {
@@ -199,11 +199,11 @@ export default function ActivityDashboardScreen({ navigation }) {
           if (result?.steps != null) {
             weekly[i] = result.steps
           }
-        } catch {}
+        } catch (err) { console.warn('[ActivityDash] weekly step read:', err?.message) }
       }
 
       setWeeklySteps(weekly)
-    } catch {}
+    } catch (err) { console.warn('[ActivityDash] loadWeeklySteps:', err?.message) }
   }
 
   function subscribeToSteps() {
@@ -218,7 +218,7 @@ export default function ActivityDashboardScreen({ navigation }) {
           })
         }
       })
-    } catch {}
+    } catch (err) { console.warn('[ActivityDash] subscribeToSteps:', err?.message) }
   }
 
   async function loadActivityData() {
@@ -245,7 +245,7 @@ export default function ActivityDashboardScreen({ navigation }) {
           setCheckinsThisWeek(res.data.length)
           calculateStreak(res.data)
         }
-      } catch {}
+      } catch (err) { console.warn('[ActivityDash] loadCheckins:', err?.message) }
 
       // Try to load workout sessions
       try {
@@ -255,8 +255,8 @@ export default function ActivityDashboardScreen({ navigation }) {
         } else if (Array.isArray(res?.data)) {
           setWorkoutsThisWeek(res.data.length)
         }
-      } catch {}
-    } catch {}
+      } catch (err) { console.warn('[ActivityDash] loadWorkouts:', err?.message) }
+    } catch (err) { console.warn('[ActivityDash] loadActivityData:', err?.message) }
   }
 
   function calculateStreak(checkins) {
@@ -320,7 +320,7 @@ export default function ActivityDashboardScreen({ navigation }) {
             const parsed = parseInt(value, 10)
             if (!isNaN(parsed) && parsed > 0) {
               setStepGoal(parsed)
-              setItem('ivira_step_goal', String(parsed)).catch(() => {})
+              setItem('ivira_step_goal', String(parsed)).catch(err => console.warn('[ActivityDash]', err?.message))
             }
           },
         },
@@ -335,7 +335,7 @@ export default function ActivityDashboardScreen({ navigation }) {
     const parsed = parseInt(goalInput, 10)
     if (!isNaN(parsed) && parsed > 0) {
       setStepGoal(parsed)
-      setItem('ivira_step_goal', String(parsed)).catch(() => {})
+      setItem('ivira_step_goal', String(parsed)).catch(err => console.warn('[ActivityDash]', err?.message))
     }
     setGoalInputVisible(false)
     setGoalInput('')

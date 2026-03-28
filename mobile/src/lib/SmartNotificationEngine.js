@@ -23,8 +23,8 @@ async function loadNotifications() {
   _loaded = true
   try {
     Notifications = await import('expo-notifications')
-  } catch {
-    console.warn('[SmartNotifs] expo-notifications not available')
+  } catch (err) {
+    console.warn('[SmartNotifs] expo-notifications not available:', err?.message)
   }
 }
 
@@ -61,7 +61,7 @@ async function loadPatterns() {
   try {
     const raw = await getItem(PATTERNS_KEY)
     if (raw) return JSON.parse(raw)
-  } catch {}
+  } catch (err) { console.warn('[SmartNotifs]', err?.message) }
   return emptyPatterns()
 }
 
@@ -74,7 +74,7 @@ export async function loadPrefs() {
   try {
     const raw = await getItem(PREFS_KEY)
     if (raw) return { ...DEFAULT_PREFS, ...JSON.parse(raw) }
-  } catch {}
+  } catch (err) { console.warn('[SmartNotifs]', err?.message) }
   return { ...DEFAULT_PREFS }
 }
 
@@ -548,7 +548,7 @@ export async function cancelSmartNotifications() {
         await Notifications.cancelScheduledNotificationAsync(n.identifier)
       }
     }
-  } catch {}
+  } catch (err) { console.warn('[SmartNotifs]', err?.message) }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────

@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
-import { COLORS, FONT, SPACING, RADIUS } from '../lib/theme'
+import { COLORS, FONT, SPACING, RADIUS, FEATURE } from '../lib/theme'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const STORAGE_KEY = 'ivira_challenges_progress'
@@ -43,7 +43,7 @@ const DAILY_CHALLENGES = [
     title: 'Fasting Champion',
     description: 'Complete a 16h fast',
     icon: 'clock',
-    color: '#8B5CF6',
+    color: FEATURE.fasting,
     maxProgress: 16,
     unit: 'hours',
     xp: 100,
@@ -54,7 +54,7 @@ const DAILY_CHALLENGES = [
     title: 'Step Master',
     description: 'Walk 10,000 steps',
     icon: 'navigation',
-    color: '#F97316',
+    color: FEATURE.steps,
     maxProgress: 10000,
     unit: 'steps',
     xp: 75,
@@ -90,7 +90,7 @@ const WEEKLY_CHALLENGES = [
     title: 'Fast Track',
     description: 'Fast 5 days this week',
     icon: 'zap',
-    color: '#8B5CF6',
+    color: FEATURE.fasting,
     maxProgress: 5,
     unit: 'days',
     xp: 250,
@@ -620,7 +620,7 @@ export default function ChallengesScreen({ navigation }) {
 
               {/* Streak */}
               <View style={styles.heroStatRow}>
-                <Feather name="zap" size={16} color="#F97316" />
+                <Feather name="zap" size={16} color={FEATURE.activity} />
                 <Text style={[styles.heroStatValue, { color: colors.text }]}>{streak}</Text>
                 <Text style={[styles.heroStatLabel, { color: colors.textSec }]}>Day Streak</Text>
               </View>
@@ -660,11 +660,11 @@ export default function ChallengesScreen({ navigation }) {
             <View
               style={[
                 styles.streakBannerInner,
-                { backgroundColor: '#F97316' + '15', borderColor: '#F97316' + '30' },
+                { backgroundColor: FEATURE.activity + '15', borderColor: FEATURE.activity + '30' },
               ]}
             >
-              <Feather name="zap" size={18} color="#F97316" />
-              <Text style={[styles.streakBannerText, { color: '#F97316' }]}>
+              <Feather name="zap" size={18} color={FEATURE.activity} />
+              <Text style={[styles.streakBannerText, { color: FEATURE.activity }]}>
                 {streak} day streak! Keep it going!
               </Text>
             </View>
@@ -689,10 +689,10 @@ export default function ChallengesScreen({ navigation }) {
         {/* Weekly Challenges */}
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
-            <Feather name="calendar" size={18} color="#8B5CF6" />
+            <Feather name="calendar" size={18} color={FEATURE.fasting} />
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Weekly Challenges</Text>
-            <View style={[styles.countBadge, { backgroundColor: '#8B5CF6' + '18' }]}>
-              <Text style={[styles.countBadgeText, { color: '#8B5CF6' }]}>
+            <View style={[styles.countBadge, { backgroundColor: FEATURE.fasting + '18' }]}>
+              <Text style={[styles.countBadgeText, { color: FEATURE.fasting }]}>
                 {WEEKLY_CHALLENGES.filter((c) => (progress[c.id] || 0) >= c.maxProgress).length}/
                 {WEEKLY_CHALLENGES.length}
               </Text>

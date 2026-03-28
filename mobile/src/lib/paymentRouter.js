@@ -16,22 +16,27 @@
  * ---------------------------------------------------------------
  */
 
-// TODO: Uncomment once expo-localization is installed
-// import * as Localization from 'expo-localization'
+import { Platform, NativeModules } from 'react-native'
 
-// TODO: Uncomment once react-native-razorpay is installed
-// import RazorpayCheckout from 'react-native-razorpay'
+let RazorpayCheckout = null
+try {
+  RazorpayCheckout = require('react-native-razorpay').default
+} catch (e) {
+  // react-native-razorpay not installed — will be handled at checkout time
+}
 
-// TODO: Uncomment once @stripe/stripe-react-native is installed
-// import { useStripe } from '@stripe/stripe-react-native'
-
-import { Platform } from 'react-native'
+let Localization = null
+try {
+  Localization = require('expo-localization')
+} catch (e) {
+  // expo-localization not installed — will fall back to Platform-based detection
+}
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const RAZORPAY_KEY = '__RAZORPAY_KEY_ID__' // TODO: Replace with env/config value
+const RAZORPAY_KEY = 'rzp_test_SQEnFlLv3DjRSH'
 
 const INDIA_LOCALES = ['en-IN', 'hi', 'hi-IN', 'ta', 'ta-IN', 'te', 'te-IN', 'kn', 'kn-IN', 'ml', 'ml-IN', 'mr', 'mr-IN', 'gu', 'gu-IN', 'bn', 'bn-IN', 'pa', 'pa-IN']
 
@@ -56,20 +61,32 @@ export function getPaymentProvider(overrides = {}) {
   let locale = overrides.locale || ''
   let currency = overrides.currency || ''
 
-  // TODO: Uncomment once expo-localization is installed:
-  // if (!locale) {
-  //   // Localization.locale gives e.g. "en-IN", "hi-IN", "en-US"
-  //   locale = Localization.locale || ''
-  // }
-  // if (!currency) {
-  //   // Localization.currency gives e.g. "INR", "USD"
-  //   currency = Localization.currency || ''
-  // }
+  // Try expo-localization first
+  if (Localization) {
+    if (!locale) {
+      locale = Localization.locale || ''
+    }
+    if (!currency) {
+      currency = Localization.currency || ''
+    }
+  }
 
-  // Fallback: without expo-localization, default to razorpay for Indian market
+  // Platform-based fallback when expo-localization is unavailable
   if (!locale && !currency) {
-    // When locale detection is unavailable, default to razorpay since
-    // IVIRA primarily targets Indian gyms.
+    try {
+      if (Platform.OS === 'ios') {
+        const settings = NativeModules.SettingsManager?.settings
+        locale = settings?.AppleLocale || settings?.AppleLanguages?.[0] || ''
+      } else if (Platform.OS === 'android') {
+        locale = NativeModules.I18nManager?.localeIdentifier || ''
+      }
+    } catch (e) {
+      // Locale detection failed — fall through to default
+    }
+  }
+
+  // If we still have nothing, default to razorpay for Indian market
+  if (!locale && !currency) {
     return 'razorpay'
   }
 
@@ -168,56 +185,55 @@ async function _checkoutWithRazorpay({
   description,
   razorpayOrderId,
 }) {
-  // TODO: Uncomment once react-native-razorpay is installed
-  //
-  // try {
-  //   const options = {
-  //     description,
-  //     image: 'https://ivira.app/icon.png', // TODO: Replace with actual logo URL
-  //     currency: currency || 'INR',
-  //     key: RAZORPAY_KEY,
-  //     amount: amount, // Amount in paise
-  //     name: 'IVIRA',
-  //     order_id: razorpayOrderId, // Razorpay order_id from backend
-  //     prefill: {
-  //       email: customerEmail,
-  //       contact: customerPhone,
-  //       name: customerName,
-  //     },
-  //     theme: { color: '#10B981' },
-  //   }
-  //
-  //   const result = await RazorpayCheckout.open(options)
-  //
-  //   // result contains: razorpay_payment_id, razorpay_order_id, razorpay_signature
-  //   return {
-  //     success: true,
-  //     transactionId: result.razorpay_payment_id,
-  //     provider: 'razorpay',
-  //     raw: result,
-  //   }
-  // } catch (error) {
-  //   // User cancelled or payment failed
-  //   const errorDescription = error?.description || error?.message || 'Payment cancelled'
-  //   return {
-  //     success: false,
-  //     transactionId: '',
-  //     provider: 'razorpay',
-  //     error: errorDescription,
-  //     code: error?.code,
-  //   }
-  // }
+  if (!RazorpayCheckout) {
+    console.warn(
+      '[paymentRouter] react-native-razorpay is not installed. ' +
+      'Run: npx expo install react-native-razorpay'
+    )
+    return {
+      success: false,
+      transactionId: '',
+      provider: 'razorpay',
+      error: 'Razorpay SDK not installed. Run: npx expo install react-native-razorpay',
+    }
+  }
 
-  // Placeholder until react-native-razorpay is installed
-  console.warn(
-    '[paymentRouter] react-native-razorpay is not installed. ' +
-    'Run: npx expo install react-native-razorpay'
-  )
-  return {
-    success: false,
-    transactionId: '',
-    provider: 'razorpay',
-    error: 'Razorpay SDK not installed. See paymentRouter.js for setup instructions.',
+  try {
+    const options = {
+      description,
+      image: 'https://ivira.app/icon.png',
+      currency: currency || 'INR',
+      key: RAZORPAY_KEY,
+      amount: amount, // Amount in paise
+      name: 'IVIRA',
+      order_id: razorpayOrderId,
+      prefill: {
+        email: customerEmail,
+        contact: customerPhone,
+        name: customerName,
+      },
+      theme: { color: '#10B981' },
+    }
+
+    const result = await RazorpayCheckout.open(options)
+
+    // result contains: razorpay_payment_id, razorpay_order_id, razorpay_signature
+    return {
+      success: true,
+      transactionId: result.razorpay_payment_id,
+      provider: 'razorpay',
+      raw: result,
+    }
+  } catch (error) {
+    // User cancelled or payment failed
+    const errorDescription = error?.description || error?.message || 'Payment cancelled'
+    return {
+      success: false,
+      transactionId: '',
+      provider: 'razorpay',
+      error: errorDescription,
+      code: error?.code,
+    }
   }
 }
 
@@ -233,79 +249,16 @@ async function _checkoutWithStripe({
   customerEmail,
   stripeClientSecret,
 }) {
-  // TODO: Uncomment once @stripe/stripe-react-native is installed
-  //
-  // The Stripe React Native SDK requires a <StripeProvider> wrapper at the
-  // app root with your publishable key. See:
-  // https://stripe.dev/stripe-react-native/api-reference/modules/StripeProvider
-  //
-  // To use the Payment Sheet (recommended):
-  //
-  // try {
-  //   // This function should be called from a component that has access
-  //   // to the useStripe() hook. For a non-hook approach, use the
-  //   // confirmPayment function from @stripe/stripe-react-native.
-  //
-  //   const { initPaymentSheet, presentPaymentSheet } = useStripe()
-  //
-  //   const { error: initError } = await initPaymentSheet({
-  //     paymentIntentClientSecret: stripeClientSecret,
-  //     merchantDisplayName: 'IVIRA',
-  //     defaultBillingDetails: {
-  //       name: customerName,
-  //       email: customerEmail,
-  //     },
-  //     style: 'automatic', // Adapts to light/dark mode
-  //   })
-  //
-  //   if (initError) {
-  //     return {
-  //       success: false,
-  //       transactionId: '',
-  //       provider: 'stripe',
-  //       error: initError.message,
-  //     }
-  //   }
-  //
-  //   const { error: presentError } = await presentPaymentSheet()
-  //
-  //   if (presentError) {
-  //     return {
-  //       success: false,
-  //       transactionId: '',
-  //       provider: 'stripe',
-  //       error: presentError.message,
-  //     }
-  //   }
-  //
-  //   // Payment succeeded — the transactionId is the PaymentIntent ID
-  //   // (extract from client secret: "pi_xxx_secret_yyy" -> "pi_xxx")
-  //   const paymentIntentId = stripeClientSecret?.split('_secret_')[0] || orderId
-  //
-  //   return {
-  //     success: true,
-  //     transactionId: paymentIntentId,
-  //     provider: 'stripe',
-  //   }
-  // } catch (error) {
-  //   return {
-  //     success: false,
-  //     transactionId: '',
-  //     provider: 'stripe',
-  //     error: error?.message || 'Stripe payment failed',
-  //   }
-  // }
-
-  // Placeholder until @stripe/stripe-react-native is installed
-  console.warn(
-    '[paymentRouter] @stripe/stripe-react-native is not installed. ' +
-    'Run: npx expo install @stripe/stripe-react-native'
-  )
+  // Stripe is not yet configured — Razorpay is the primary payment provider.
+  // When Stripe support is needed:
+  //   1. npx expo install @stripe/stripe-react-native
+  //   2. Wrap app root in <StripeProvider publishableKey="...">
+  //   3. Implement Payment Sheet flow here
   return {
     success: false,
     transactionId: '',
     provider: 'stripe',
-    error: 'Stripe SDK not installed. See paymentRouter.js for setup instructions.',
+    error: 'Stripe payments are not yet configured. Please use UPI or card via Razorpay.',
   }
 }
 

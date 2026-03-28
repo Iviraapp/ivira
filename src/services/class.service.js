@@ -244,8 +244,8 @@ export async function bookSession(gymId, sessionId, memberId) {
     // Sync booking revenue to ledger (fire-and-forget)
     if (gymClass?.price_paise > 0) {
       import('./revenue.service.js').then(({ syncBookingToLedger }) =>
-        syncBookingToLedger(gymId, booking.id, gymClass.price_paise).catch(() => {})
-      ).catch(() => {})
+        syncBookingToLedger(gymId, booking.id, gymClass.price_paise).catch(err => console.warn('[ClassService]', err?.message))
+      ).catch(err => console.warn('[ClassService]', err?.message))
     }
 
     return { ...booking, member_name: member.name, class_name: gymClass?.name, spots_left: spotsLeft };

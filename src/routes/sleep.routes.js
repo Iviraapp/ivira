@@ -96,17 +96,19 @@ export default async function sleepRoutes(fastify) {
   // GET /gyms/:gymId/members/:memberId/sleep/history — get sleep logs
   fastify.get('/gyms/:gymId/members/:memberId/sleep/history', memberAuth, async (request) => {
     const { gymId, memberId } = request.params;
-    const { days = 30, limit = 30, offset = 0 } = request.query;
+    const days = Math.min(Math.max(parseInt(request.query.days) || 30, 1), 365);
+    const limit = Math.min(Math.max(parseInt(request.query.limit) || 30, 1), 100);
+    const offset = Math.max(parseInt(request.query.offset) || 0, 0);
 
     const since = new Date();
-    since.setDate(since.getDate() - parseInt(days));
+    since.setDate(since.getDate() - days);
 
     const logs = await db('sleep_logs')
       .where({ gym_id: gymId, member_id: memberId })
       .where('date', '>=', since.toISOString().split('T')[0])
       .orderBy('date', 'desc')
-      .limit(parseInt(limit))
-      .offset(parseInt(offset));
+      .limit(limit)
+      .offset(offset);
 
     return { sleep_logs: logs };
   });
@@ -114,10 +116,10 @@ export default async function sleepRoutes(fastify) {
   // GET /gyms/:gymId/members/:memberId/sleep/stats — get sleep statistics
   fastify.get('/gyms/:gymId/members/:memberId/sleep/stats', memberAuth, async (request) => {
     const { gymId, memberId } = request.params;
-    const { days = 30 } = request.query;
+    const days = Math.min(Math.max(parseInt(request.query.days) || 30, 1), 365);
 
     const since = new Date();
-    since.setDate(since.getDate() - parseInt(days));
+    since.setDate(since.getDate() - days);
 
     const logs = await db('sleep_logs')
       .where({ gym_id: gymId, member_id: memberId })
@@ -177,7 +179,7 @@ export default async function sleepRoutes(fastify) {
     return {
       stats: {
         total_logs: logs.length,
-        period_days: parseInt(days),
+        period_days: days,
         avg_duration_minutes: avgDuration,
         avg_duration_hours: +(avgDuration / 60).toFixed(1),
         avg_quality_rating: avgQuality,

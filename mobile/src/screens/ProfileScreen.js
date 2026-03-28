@@ -12,6 +12,7 @@ import {
   TextInput,
   ActivityIndicator,
   Image,
+  RefreshControl,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
@@ -25,7 +26,7 @@ import api from '../lib/api'
 import { getItem, setItem } from '../lib/storage'
 
 let ImagePicker = null
-try { ImagePicker = require('expo-image-picker') } catch {}
+try { ImagePicker = require('expo-image-picker') } catch (err) { console.warn('[Profile] ImagePicker load:', err?.message) }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -107,6 +108,7 @@ const CHECKIN_METHOD_ICONS = {
 export default function ProfileScreen({ navigation }) {
   const { member, gymId, gymInfo, logout, biometricAvailable, biometricEnabled, setBiometricEnabled, refreshProfile, connectGym } = useAuth()
   const { mode: themeMode, setMode: setThemeMode, colors, isDark, card } = useTheme()
+  const [refreshing, setRefreshing] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [qrModalVisible, setQrModalVisible] = useState(false)
 
@@ -163,13 +165,13 @@ export default function ProfileScreen({ navigation }) {
   useEffect(() => {
     if (member?.height_cm) setHeightCm(String(member.height_cm))
     if (member?.weight_kg) setWeightKg(String(member.weight_kg))
-    getItem('leaderboard_visible').then(v => { if (v === 'true') setLeaderboardVisible(true) }).catch(() => {})
-    isGeofencingActive().then(active => setGymProximityEnabled(active)).catch(() => {})
+    getItem('leaderboard_visible').then(v => { if (v === 'true') setLeaderboardVisible(true) }).catch(err => console.warn('[Profile]', err?.message))
+    isGeofencingActive().then(active => setGymProximityEnabled(active)).catch(err => console.warn('[Profile]', err?.message))
     // Load profile photo from storage or member data
     if (member?.photo_url) {
       setProfilePhoto(member.photo_url)
     } else {
-      getItem('ivira_profile_photo').then(uri => { if (uri) setProfilePhoto(uri) }).catch(() => {})
+      getItem('ivira_profile_photo').then(uri => { if (uri) setProfilePhoto(uri) }).catch(err => console.warn('[Profile]', err?.message))
     }
   }, [member?.height_cm, member?.weight_kg, member?.photo_url])
 
@@ -306,7 +308,8 @@ export default function ProfileScreen({ navigation }) {
     try {
       const res = await api.get(`/gyms/${gymId}/members/${member.id}/bookings`)
       setBookings(res.data?.bookings || res.data || [])
-    } catch {
+    } catch (err) {
+      console.warn('[Profile] loadBookings:', err?.message)
       setBookings([])
     } finally {
       setBookingsLoading(false)
@@ -353,7 +356,8 @@ export default function ProfileScreen({ navigation }) {
     try {
       const res = await api.get(`/gyms/${gymId}/members/${member.id}/checkins?limit=10`)
       setCheckins(res.data?.checkins || res.data || [])
-    } catch {
+    } catch (err) {
+      console.warn('[Profile] loadCheckins:', err?.message)
       setCheckins([])
     } finally {
       setCheckinsLoading(false)
@@ -419,11 +423,11 @@ export default function ProfileScreen({ navigation }) {
 
   const handleLeaderboardToggle = (val) => {
     setLeaderboardVisible(val)
-    setItem('leaderboard_visible', val ? 'true' : 'false').catch(() => {})
+    setItem('leaderboard_visible', val ? 'true' : 'false').catch(err => console.warn('[Profile]', err?.message))
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     // Sync to backend
     if (gymId && member?.id) {
-      api.patch(`/gyms/${gymId}/members/${member.id}`, { show_location_data: val }).catch(() => {})
+      api.patch(`/gyms/${gymId}/members/${member.id}`, { show_location_data: val }).catch(err => console.warn('[Profile]', err?.message))
     }
   }
 
@@ -513,6 +517,20 @@ export default function ProfileScreen({ navigation }) {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true)
+              try {
+                await refreshProfile?.()
+              } catch (err) { console.warn('[Profile] refresh:', err?.message) }
+              setRefreshing(false)
+            }}
+            tintColor="#10B981"
+            colors={['#10B981']}
+          />
+        }
       >
         {/* Profile Header Card */}
         <View style={[styles.headerCard, card]}>

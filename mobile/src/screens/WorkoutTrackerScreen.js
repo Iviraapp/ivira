@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,
-  Alert, Animated, ActivityIndicator, Modal, FlatList, Platform,
+  Alert, Animated, ActivityIndicator, Modal, FlatList, Platform, RefreshControl,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -201,6 +201,7 @@ export default function WorkoutTrackerScreen({ navigation }) {
   const { colors, isDark } = useTheme()
   const { member, gymId } = useAuth()
 
+  const [refreshing, setRefreshing] = useState(false)
   const [sessionName, setSessionName] = useState('')
   const [exercises, setExercises] = useState([]) // [{exercise, sets: [{weight, reps}]}]
   const [showPicker, setShowPicker] = useState(false)
@@ -511,6 +512,20 @@ export default function WorkoutTrackerScreen({ navigation }) {
         contentContainerStyle={{ paddingBottom: insets.bottom + 160 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true)
+              try {
+                await loadHistory()
+              } catch {}
+              setRefreshing(false)
+            }}
+            tintColor="#10B981"
+            colors={['#10B981']}
+          />
+        }
       >
         {/* Session name */}
         <View style={styles.nameRow}>

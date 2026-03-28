@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   logoPrestige: {
     fontSize: 36,
     fontWeight: '900',
-    color: '#10B981',
+    color: COLORS.accent,
     letterSpacing: -1.5,
     textAlign: 'center',
   },

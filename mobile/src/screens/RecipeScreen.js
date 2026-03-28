@@ -720,6 +720,7 @@ export default function RecipeScreen() {
         setRecipes(data.map(mapBackendRecipe))
       }
     } catch (e) {
+      console.warn('[Recipe] fetchRecipes:', e?.message)
       // Fallback: keep existing recipes (DEMO_RECIPES on first load)
     }
   }, [activeCategory, search])
@@ -747,6 +748,7 @@ export default function RecipeScreen() {
           return
         }
       } catch (e) {
+        console.warn('[Recipe] loadFavorites API:', e?.message)
         // Fall through to AsyncStorage
       }
     }
@@ -755,7 +757,7 @@ export default function RecipeScreen() {
       const stored = await AsyncStorage.getItem(FAVORITES_KEY)
       if (stored) setFavorites(JSON.parse(stored))
     } catch (e) {
-      // silent
+      console.warn('[Recipe] loadFavorites storage:', e?.message)
     }
   }
 
@@ -763,7 +765,7 @@ export default function RecipeScreen() {
     try {
       await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavs))
     } catch (e) {
-      // silent
+      console.warn('[Recipe] saveFavorites:', e?.message)
     }
   }
 
@@ -786,6 +788,7 @@ export default function RecipeScreen() {
           await api.post(`/gyms/${gymId}/members/${member.id}/recipes/favorites`, { recipe_id: recipeId })
         }
       } catch (e) {
+        console.warn('[Recipe] toggleFavorite sync:', e?.message)
         // Revert on failure
         setFavorites(favorites)
         saveFavorites(favorites)

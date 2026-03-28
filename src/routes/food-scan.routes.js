@@ -28,6 +28,7 @@ async function analyzeWithVision(imageBase64) {
   if (config.openrouter.enabled) {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
+      signal: AbortSignal.timeout(30000),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config.openrouter.apiKey}`,
@@ -64,6 +65,7 @@ async function analyzeWithVision(imageBase64) {
   if (config.anthropic.enabled) {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: AbortSignal.timeout(30000),
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': config.anthropic.apiKey,
@@ -106,7 +108,15 @@ async function analyzeWithVision(imageBase64) {
 function parseAIResponse(text) {
   // Strip markdown code fences if present
   const jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-  const parsed = JSON.parse(jsonStr);
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    const err = new Error('AI returned invalid JSON');
+    err.code = 'AI_PARSE_ERROR';
+    err.responsePreview = text.substring(0, 200);
+    throw err;
+  }
 
   const items = (parsed.items || []).map(item => ({
     name: item.name || 'Unknown Item',
@@ -145,7 +155,7 @@ export default async function foodScanRoutes(fastify) {
 
     try {
       // Open Food Facts API — free, no key needed
-      const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+      const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`, { signal: AbortSignal.timeout(10000) });
       if (!response.ok) {
         return reply.code(404).send({ error: 'Product not found' });
       }
@@ -191,7 +201,7 @@ export default async function foodScanRoutes(fastify) {
     }
 
     try {
-      const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10`);
+      const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10`, { signal: AbortSignal.timeout(10000) });
       const data = await response.json();
 
       const products = (data.products || []).map(p => {
@@ -230,6 +240,10 @@ export default async function foodScanRoutes(fastify) {
       const aiText = await analyzeWithVision(image);
       analysis = parseAIResponse(aiText);
     } catch (err) {
+      if (err.code === 'AI_PARSE_ERROR') {
+        request.log.warn({ text: err.responsePreview }, 'AI returned invalid JSON');
+        return reply.code(502).send({ error: 'AI_PARSE_ERROR', message: 'Could not parse nutrition data from image' });
+      }
       request.log.error(err, 'AI food analysis failed');
       return reply.code(502).send({
         error: 'ANALYSIS_FAILED',
@@ -271,13 +285,14 @@ export default async function foodScanRoutes(fastify) {
   // GET /gyms/:gymId/members/:memberId/food/scans — list past scans
   fastify.get('/gyms/:gymId/members/:memberId/food/scans', authHooks, async (request) => {
     const { gymId, memberId } = request.params;
-    const { limit = 20, offset = 0 } = request.query;
+    const limit = Math.min(Math.max(parseInt(request.query.limit) || 20, 1), 100);
+    const offset = Math.max(parseInt(request.query.offset) || 0, 0);
 
     const scans = await db('food_scan_logs')
       .where({ gym_id: gymId, member_id: memberId })
       .orderBy('created_at', 'desc')
-      .limit(parseInt(limit))
-      .offset(parseInt(offset));
+      .limit(limit)
+      .offset(offset);
 
     return { scans };
   });

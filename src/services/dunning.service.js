@@ -71,7 +71,7 @@ async function sendDunningEmail(member, gym, step, amountPaise) {
     attempt_number: step,
     channel: 'email',
     status: mail ? 'sent' : 'sent',
-  }).catch(() => {}); // ignore if payment_id constraint fails
+  }).catch(err => console.warn('[Dunning]', err?.message)); // ignore if payment_id constraint fails
 }
 
 // Process dunning for a single membership

@@ -216,8 +216,8 @@ export default function LoginScreen() {
       </Animated.View>
 
       <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-        <Text style={[styles.wordmark, { color: '#10B981', opacity: 0.45 }]}>I</Text>
-        <Text style={[styles.wordmark, { color: '#10B981' }]}>VIRA</Text>
+        <Text style={[styles.wordmark, { color: COLORS.accent, opacity: 0.45 }]}>I</Text>
+        <Text style={[styles.wordmark, { color: COLORS.accent }]}>VIRA</Text>
       </View>
       <Text style={[styles.tagline, { color: colors.textSec }]}>Your Health, Reimagined.</Text>
 

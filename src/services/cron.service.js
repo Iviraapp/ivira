@@ -129,12 +129,12 @@ export async function runMembershipExpiryCheck() {
         const gym = { id: m.gym_id, name: m.gym_name, gym_name: m.gym_name };
         const tasks = [];
         if (prefs.whatsapp_enabled !== false) {
-          tasks.push(sendRenewalReminder(member, gym, daysLeft).catch(() => {}));
+          tasks.push(sendRenewalReminder(member, gym, daysLeft).catch(err => console.warn('[Cron]', err?.message)));
         }
         if (prefs.sms_enabled !== false) {
-          tasks.push(sendRenewalSMS(m.phone, m.member_name, m.gym_name, daysLeft).catch(() => {}));
+          tasks.push(sendRenewalSMS(m.phone, m.member_name, m.gym_name, daysLeft).catch(err => console.warn('[Cron]', err?.message)));
         }
-        Promise.all(tasks).catch(() => {});
+        Promise.all(tasks).catch(err => console.warn('[Cron]', err?.message));
         // Rate limit
         await new Promise(r => setTimeout(r, 100));
       }
@@ -143,9 +143,9 @@ export async function runMembershipExpiryCheck() {
     }
   };
 
-  sendReminders(expiringIn7Days, 7).catch(() => {});
-  sendReminders(expiringIn3Days, 3).catch(() => {});
-  sendReminders(expiringToday, 0).catch(() => {});
+  sendReminders(expiringIn7Days, 7).catch(err => console.warn('[Cron]', err?.message));
+  sendReminders(expiringIn3Days, 3).catch(err => console.warn('[Cron]', err?.message));
+  sendReminders(expiringToday, 0).catch(err => console.warn('[Cron]', err?.message));
 
   return {
     expiringIn7Days,
@@ -213,7 +213,7 @@ export async function runDunningReminders() {
           channel: 'system',
           status: 'pending',
         })
-        .catch(() => {}); // Ignore constraint errors
+        .catch(err => console.warn('[Cron]', err?.message)); // Ignore constraint errors
 
       results.push({
         membership_id: membership.membership_id,
@@ -422,7 +422,7 @@ export async function flagAtRiskMembers() {
           member_phone: member.phone,
           daysSinceLastVisit: row.recent_7d === 0 ? '7+' : null,
         });
-      } catch {} // non-critical
+      } catch (err) { console.warn('[Cron]', err?.message); } // non-critical
     }
   }
 
