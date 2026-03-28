@@ -798,14 +798,7 @@ export default function HealthScreen({ navigation }) {
               <Text style={[styles.heartLabel, { color: colors.textSec }]}>HRV</Text>
             </View>
           </View>
-          {!hasWearable && (
-            <View style={[styles.wearableBanner, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
-              <Feather name="watch" size={14} color={colors.textSec} />
-              <Text style={[styles.wearableBannerText, { color: colors.textSec }]}>
-                Connect a smartwatch for live heart rate, HRV & recovery data
-              </Text>
-            </View>
-          )}
+          {/* Wearable data auto-detected — no connect prompt needed */}
         </View>
 
         {/* Steps & Activity Dashboard Link */}

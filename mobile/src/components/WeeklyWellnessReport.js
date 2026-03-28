@@ -41,7 +41,7 @@ export default function WeeklyWellnessReport({ style }) {
       // Build from local data only
       setWeekData({
         steps: todaySteps || 0,
-        sleep: sleepData?.duration ? sleepData.duration / 60 : 0,
+        sleep: sleepData?.durationMinutes ? sleepData.duration / 60 : 0,
         workouts: 0,
         calories: 0,
       })
@@ -69,7 +69,7 @@ export default function WeeklyWellnessReport({ style }) {
 
       setWeekData({
         steps: todaySteps || 0,
-        sleep: sleepData?.duration ? sleepData.duration / 60 : 0,
+        sleep: sleepData?.durationMinutes ? sleepData.duration / 60 : 0,
         workouts: workouts.length,
         calories: avgCalories,
       })

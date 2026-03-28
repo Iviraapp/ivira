@@ -1012,20 +1012,21 @@ export default function HomeScreen({ navigation, route }) {
               {stepSource && (
                 <View style={styles.stepSourceBadge}>
                   <Feather
-                    name={stepSource === 'health' ? 'heart' : stepSource === 'pedometer' ? 'smartphone' : 'info'}
+                    name={stepSource === 'health' ? 'heart' : 'smartphone'}
                     size={10}
-                    color={stepSource === 'health' || stepSource === 'pedometer' ? COLORS.green : colors.textTer}
+                    color={COLORS.green}
                   />
                   <Text style={[
                     styles.stepSourceText,
-                    { color: colors.textTer },
-                    (stepSource === 'health' || stepSource === 'pedometer') && { color: COLORS.green },
+                    { color: COLORS.green },
                   ]}>
                     {stepSource === 'health'
                       ? (Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect')
                       : stepSource === 'pedometer'
-                        ? 'Pedometer'
-                        : 'No source'}
+                        ? 'Phone Sensors'
+                        : stepSource === 'manual'
+                          ? 'Manual'
+                          : 'Phone Sensors'}
                   </Text>
                 </View>
               )}
@@ -1066,9 +1067,8 @@ export default function HomeScreen({ navigation, route }) {
                   <Text style={[
                     styles.stepCountText,
                     stepCount >= STEP_GOAL && { color: '#22C55E' },
-                    stepSource === 'unavailable' && { opacity: 0.5 },
                   ]}>
-                    {stepSource === 'unavailable' ? '—' : stepCount.toLocaleString()}
+                    {stepCount.toLocaleString()}
                   </Text>
                   <Text style={[styles.stepLabel, { color: colors.textTer }]}>steps</Text>
                 </View>
@@ -1076,19 +1076,12 @@ export default function HomeScreen({ navigation, route }) {
               {/* Stats */}
               <View style={styles.movementStats}>
                 {stepSource === 'unavailable' ? (
-                  /* No real data — show connect prompt */
+                  /* Sensor warming up — show placeholder stats */
                   <View>
-                    <Text style={[styles.movementConnectTitle, { color: colors.text }]}>Steps unavailable</Text>
-                    <Text style={[styles.movementConnectSub, { color: colors.textSec }]}>
-                      {Platform.OS === 'ios'
-                        ? 'Connect Apple Health to track steps'
-                        : Platform.OS === 'android'
-                          ? 'Connect Health Connect to track steps'
-                          : 'Step tracking requires a mobile device'}
-                    </Text>
-                    <Text style={[styles.movementConnectHint, { color: colors.textTer }]}>
-                      Build with EAS to enable health sync
-                    </Text>
+                    <Text style={styles.movementActiveTime}>00:00:00</Text>
+                    <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>ACTIVE TIME</Text>
+                    <Text style={[styles.movementDistance, { color: colors.text }]}>0.0 km</Text>
+                    <Text style={[styles.movementSubLabel, { color: colors.textTer }]}>DISTANCE</Text>
                   </View>
                 ) : (
                   <>
@@ -1244,11 +1237,9 @@ export default function HomeScreen({ navigation, route }) {
             ) : sleepSource === 'unavailable' ? (
               <View style={styles.sleepBody}>
                 <View style={{ flex: 1, paddingVertical: 12 }}>
-                  <Text style={[styles.movementConnectTitle, { color: colors.text }]}>No sleep data</Text>
+                  <Text style={[styles.movementConnectTitle, { color: colors.text }]}>No sleep data yet</Text>
                   <Text style={[styles.movementConnectSub, { color: colors.textSec }]}>
-                    {Platform.OS === 'ios'
-                      ? 'Connect Apple Health to auto-track sleep'
-                      : 'Connect Health Connect to auto-track sleep'}
+                    Track your sleep or log it manually below
                   </Text>
                   <TouchableOpacity
                     style={styles.sleepLogBtn}

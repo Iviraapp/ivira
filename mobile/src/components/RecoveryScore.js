@@ -51,7 +51,7 @@ export default function RecoveryScore({ style }) {
 
   const { score, color, label, insight } = useMemo(() => {
     // Sleep score (0-50 points)
-    const sleepHours = sleepData?.duration ? sleepData.duration / 60 : 0
+    const sleepHours = sleepData?.durationMinutes ? sleepData.duration / 60 : 0
     const sleepQuality = sleepData?.quality || 0 // 1-5
     let sleepScore = 0
     if (sleepHours >= 8) sleepScore = 30
