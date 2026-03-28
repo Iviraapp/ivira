@@ -16,7 +16,7 @@ export async function requestAllPermissions() {
         PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION,
         {
           title: 'Step Counter',
-          message: 'I V I R A needs access to your activity data to count steps and track daily movement.',
+          message: 'IVIRA needs access to your activity data to count steps and track daily movement.',
           buttonPositive: 'Allow',
           buttonNegative: 'Not Now',
         },
@@ -33,7 +33,7 @@ export async function requestAllPermissions() {
         PermissionsAndroid.PERMISSIONS.BODY_SENSORS,
         {
           title: 'Body Sensors',
-          message: 'I V I R A can read fitness sensor data to enhance your workout tracking.',
+          message: 'IVIRA can read fitness sensor data to enhance your workout tracking.',
           buttonPositive: 'Allow',
           buttonNegative: 'Not Now',
         },

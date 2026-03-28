@@ -63,7 +63,7 @@ export default function Layout() {
               <Activity size={18} color="#fff" />
             </div>
             <div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: 15, letterSpacing: 2 }}>IVIRA</div>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}><span style={{ opacity: 0.45 }}>I</span><span>VIRA</span></div>
               <div style={{ color: '#666', fontSize: 11 }}>Owner Dashboard</div>
             </div>
           </div>

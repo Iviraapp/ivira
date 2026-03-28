@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" fill="none">
+  <!--
+    IVIRA — Stacked Block (Athletic/Performance)
+    Heavy condensed type in a square-ish block
+  -->
+
+  <!-- === STACKED ICON (Square format for app icon) === -->
+  <g id="stacked">
+    <!-- Background rounded square -->
+    <rect x="8" y="8" width="144" height="144" rx="28" fill="#10B981"/>
+
+    <!-- IVI — top row, white knockout -->
+    <rect x="28" y="26" width="14" height="48" rx="2" fill="#0A0E1A"/>
+    <polygon points="52,26 64,26 78,62 82,74 86,62 100,26 112,26 86,80 78,80" fill="#0A0E1A"/>
+    <rect x="118" y="26" width="14" height="48" rx="2" fill="#0A0E1A"/>
+
+    <!-- RA — bottom row, white knockout -->
+    <path d="M28 120 L28 86 L54 86 Q68 86 68 98 Q68 108 56 110 L72 120 L60 120 L46 110 L42 110 L42 120 Z M42 96 L42 104 L52 104 Q58 104 58 100 Q58 96 52 96 Z" fill="#0A0E1A"/>
+    <path d="M78 120 L98 86 L102 86 L122 120 L110 120 L106 112 L94 112 L90 120 Z M97 104 L100 96 L103 104 Z" fill="#0A0E1A"/>
+    <rect x="96" y="102" width="10" height="10" rx="1" fill="#0A0E1A"/>
+  </g>
+
+  <!-- === FULL WORDMARK beside it === -->
+  <g id="full" transform="translate(184, 10)">
+    <!-- I -->
+    <rect x="0" y="24" width="24" height="100" rx="2" fill="#10B981"/>
+
+    <!-- V -->
+    <polygon points="48,24 70,24 88,104 94,124 100,104 118,24 140,24 100,134 88,134" fill="#10B981"/>
+
+    <!-- I -->
+    <rect x="160" y="24" width="24" height="100" rx="2" fill="#10B981"/>
+
+    <!-- R -->
+    <path d="M212 124 L212 24 L252 24 Q280 24 280 50 Q280 72 258 76 L288 124 L264 124 L238 78 L236 76 L250 76 Q260 76 260 52 Q260 46 250 46 L236 46 L236 124 Z" fill="#10B981"/>
+
+    <!-- A -->
+    <path d="M306 124 L340 24 L346 24 L380 124 L358 124 L352 106 L336 106 L330 124 Z" fill="#10B981"/>
+    <rect x="332" y="84" width="24" height="18" rx="2" fill="#10B981"/>
+  </g>
+</svg>

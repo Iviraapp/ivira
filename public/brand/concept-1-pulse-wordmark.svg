@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 160" fill="none">
+  <!-- IVIRA Pulse Wordmark — The V dips like a heartbeat pulse -->
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Dark variant (on dark bg) -->
+  <g id="pulse-dark">
+    <!-- I -->
+    <rect x="40" y="24" width="28" height="112" rx="4" fill="#10B981"/>
+
+    <!-- V — with extended pulse dip -->
+    <path d="M108 24 L108 24 L142 118 L150 142 L158 118 L192 24"
+          stroke="#10B981" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- I -->
+    <rect x="228" y="24" width="28" height="112" rx="4" fill="#10B981"/>
+
+    <!-- R -->
+    <path d="M296 136 L296 24 L340 24 C368 24 384 40 384 60 C384 80 368 94 340 94 L296 94 L360 136"
+          stroke="#10B981" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- A -->
+    <path d="M400 136 L434 24 L468 136 M412 100 L456 100"
+          stroke="#10B981" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- Pulse line extending from V -->
+    <path d="M0 80 L90 80 L108 80" stroke="#10B981" stroke-width="3" stroke-opacity="0.3" stroke-dasharray="4 6"/>
+    <path d="M192 80 L210 80 L600 80" stroke="#10B981" stroke-width="3" stroke-opacity="0.3" stroke-dasharray="4 6"/>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<!-- IVIRA Icon Mark — Light Background Variant -->
+<!-- Bold geometric "V" with pulse dot | Darker emerald #059669 -->
+<!-- Centered in 120x120 square viewBox -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+
+  <!-- V letterform: bold geometric, centered -->
+  <polygon points="14,16 42,16 60,76 78,16 106,16 68,100 52,100" fill="#059669"/>
+
+  <!-- Pulse dot beneath V -->
+  <circle cx="60" cy="112" r="4" fill="#059669" opacity="0.5"/>
+
+</svg>

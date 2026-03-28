@@ -44,7 +44,7 @@ export default function TrainerLayout() {
               color: '#fff', fontWeight: 700, fontSize: 16,
             }}>G</div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: theme.text, letterSpacing: '0.3em' }}>I V I R A</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: theme.text }}><span style={{ opacity: 0.45 }}>I</span><span>VIRA</span></div>
               <div style={{ fontSize: 10, fontWeight: 600, color: theme.brandAccent, letterSpacing: '1px', textTransform: 'uppercase' }}>
                 TRAINER
               </div>

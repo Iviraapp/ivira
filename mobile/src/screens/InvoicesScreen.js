@@ -48,7 +48,7 @@ function getMethodIcon(method) {
 function buildInvoiceText(invoice, gymName) {
   const status = getStatusInfo(invoice.status)
   return (
-    `Invoice — ${gymName || 'I V I R A'}\n` +
+    `Invoice — ${gymName || 'IVIRA'}\n` +
     `Date: ${formatDate(invoice.created_at || invoice.payment_date)}\n` +
     `Amount: ${formatPaise(invoice.amount)}\n` +
     `Status: ${status.label}\n` +

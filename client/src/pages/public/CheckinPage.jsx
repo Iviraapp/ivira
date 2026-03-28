@@ -1014,7 +1014,7 @@ function IdleScreen({ ad, gymName, theme, onWake }) {
         textAlign: 'center',
       }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.2)', fontFamily: FONT }}>
-          {gymName || 'I V I R A'}
+          {gymName || 'IVIRA'}
         </div>
       </div>
 
@@ -1035,8 +1035,7 @@ function Logo({ theme }) {
       fontSize: 32, fontWeight: 800, fontFamily: FONT,
       background: theme.grad, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
       marginBottom: 4,
-    letterSpacing: 2,
-    }}>I V I R A</div>
+    }}><span style={{ opacity: 0.45 }}>I</span><span>VIRA</span></div>
   )
 }
 

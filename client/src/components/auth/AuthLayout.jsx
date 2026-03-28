@@ -177,7 +177,7 @@ function FloatingOrbs({ accent, isDark }) {
 
 export default function AuthLayout({
   children,
-  title = 'I V I R A',
+  title = 'IVIRA',
   subtitle = 'Access your enterprise dashboard.',
   tagline = 'Secure. Real-time. Global.',
   role = 'owner', // 'owner' | 'member' | 'trainer' | 'admin'
@@ -299,7 +299,7 @@ export default function AuthLayout({
               background: `linear-gradient(135deg, ${heroTheme.accent}, ${ACCENT_LIGHT})`,
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>
-              {title}
+              <span style={{ opacity: 0.45 }}>{title.charAt(0)}</span>{title.slice(1)}
             </h1>
           </div>
 

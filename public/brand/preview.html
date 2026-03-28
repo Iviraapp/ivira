@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IVIRA Logo Concepts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #050810;
+    color: #F9FAFB;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  .header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #10B981;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: #6B7280;
+    font-size: 13px;
+  }
+
+  .concepts {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+  }
+
+  .concept {
+    border: 1px solid #1F2937;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .concept-label {
+    padding: 16px 24px;
+    border-bottom: 1px solid #1F2937;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .concept-label h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #F9FAFB;
+  }
+  .concept-label span {
+    font-size: 11px;
+    color: #10B981;
+    background: rgba(16,185,129,0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .concept-desc {
+    padding: 12px 24px;
+    color: #9CA3AF;
+    font-size: 13px;
+    border-bottom: 1px solid #1F2937;
+    line-height: 1.5;
+  }
+
+  .previews {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .preview {
+    padding: 48px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .preview.dark {
+    background: #0A0E1A;
+  }
+  .preview.light {
+    background: #F8FAF9;
+  }
+  .preview.light svg { filter: brightness(0.85); }
+
+  .preview svg {
+    max-width: 100%;
+    height: 60px;
+  }
+
+  .note {
+    text-align: center;
+    margin-top: 20px;
+    padding: 20px;
+    color: #6B7280;
+    font-size: 12px;
+    border: 1px solid #1F2937;
+    border-radius: 12px;
+    max-width: 900px;
+    margin: 40px auto 0;
+    line-height: 1.6;
+  }
+
+  /* --- CONCEPT 1: Refined Pulse Wordmark --- */
+  .pulse-logo {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  .pulse-logo .letters {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .pulse-logo .letters span { color: #10B981; }
+  .pulse-logo .letters .v {
+    position: relative;
+    display: inline-block;
+  }
+  .pulse-logo .letters .v::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: #10B981;
+    border-radius: 50%;
+    opacity: 0.6;
+  }
+  .pulse-line {
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(16,185,129,0.15) 20%, rgba(16,185,129,0.15) 80%, transparent 100%);
+  }
+  .light .pulse-logo .letters span { color: #059669; }
+  .light .pulse-line { background: linear-gradient(90deg, transparent 0%, rgba(5,150,105,0.15) 20%, rgba(5,150,105,0.15) 80%, transparent 100%); }
+
+  /* --- CONCEPT 2: Shield Monogram --- */
+  .shield-logo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .shield-mark {
+    width: 56px;
+    height: 62px;
+    background: #10B981;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 65%, 50% 100%, 0% 65%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .shield-mark::after {
+    content: 'IV';
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 24px;
+    letter-spacing: -1px;
+    color: #0A0E1A;
+    margin-top: -6px;
+  }
+  .shield-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 44px;
+    letter-spacing: -1px;
+    color: #10B981;
+  }
+  .light .shield-mark { background: #059669; }
+  .light .shield-mark::after { color: #F8FAF9; }
+  .light .shield-text { color: #059669; }
+
+  /* --- CONCEPT 3: Block Stacked --- */
+  .block-logo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .block-icon {
+    width: 64px;
+    height: 64px;
+    background: #10B981;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .block-icon .top, .block-icon .bot {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    color: #0A0E1A;
+    line-height: 1;
+  }
+  .block-icon .top { font-size: 18px; letter-spacing: -0.5px; }
+  .block-icon .bot { font-size: 18px; letter-spacing: 1px; }
+  .block-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 44px;
+    letter-spacing: -1px;
+    color: #10B981;
+  }
+  .light .block-icon { background: #059669; }
+  .light .block-icon .top, .light .block-icon .bot { color: #F8FAF9; }
+  .light .block-text { color: #059669; }
+
+  /* --- VIRA emphasis variant --- */
+  .vira-logo .letters span.dim { opacity: 0.45; }
+  .vira-logo .letters span.bright { opacity: 1; }
+
+  /* Context note: VIRA meaning */
+  .meaning {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    padding: 20px 24px;
+    background: rgba(16,185,129,0.06);
+    border: 1px solid rgba(16,185,129,0.15);
+    border-radius: 12px;
+    color: #9CA3AF;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .meaning strong { color: #10B981; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>IVIRA Brand Concepts</h1>
+  <p>Bold fitness identity — single emerald color</p>
+</div>
+
+<div class="meaning">
+  <strong>VIRA</strong> (Sanskrit: <em>v&#299;ra</em>) means <strong>hero, brave, warrior, courageous one</strong>. In Ayurveda and yoga, <em>Virabhadrasana</em> (Warrior Pose) derives from this root. The name embodies strength, vitality, and courage — perfect for a fitness &amp; health platform.<br>
+  <strong>IVIRA</strong> = the platform domain identity wrapping the core <em>VIRA</em> meaning.
+</div>
+
+<div class="concepts">
+
+  <!-- CONCEPT 1: Pulse Wordmark -->
+  <div class="concept">
+    <div class="concept-label">
+      <h2>Concept 1 — Pulse Wordmark</h2>
+      <span>RECOMMENDED</span>
+    </div>
+    <div class="concept-desc">
+      Bold geometric type. The V subtly echoes a heartbeat pulse — health meets strength.
+      Clean, powerful, no icons needed. Works at any size.
+    </div>
+    <div class="previews">
+      <div class="preview dark">
+        <div class="pulse-logo">
+          <div class="letters">
+            <span>I</span><span class="v">V</span><span>I</span><span>R</span><span>A</span>
+          </div>
+          <div class="pulse-line"></div>
+        </div>
+      </div>
+      <div class="preview light">
+        <div class="pulse-logo">
+          <div class="letters">
+            <span>I</span><span class="v">V</span><span>I</span><span>R</span><span>A</span>
+          </div>
+          <div class="pulse-line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCEPT 1B: Pulse with VIRA emphasis -->
+  <div class="concept">
+    <div class="concept-label">
+      <h2>Concept 1B — VIRA Emphasis</h2>
+      <span>VIRA = WARRIOR</span>
+    </div>
+    <div class="concept-desc">
+      Same bold wordmark but "VIRA" is full opacity while the leading "I" is softer —
+      subtly highlighting the Sanskrit warrior meaning within the name.
+    </div>
+    <div class="previews">
+      <div class="preview dark">
+        <div class="pulse-logo vira-logo">
+          <div class="letters">
+            <span class="dim">I</span><span class="bright v">V</span><span class="bright">I</span><span class="bright">R</span><span class="bright">A</span>
+          </div>
+          <div class="pulse-line"></div>
+        </div>
+      </div>
+      <div class="preview light">
+        <div class="pulse-logo vira-logo">
+          <div class="letters">
+            <span class="dim">I</span><span class="bright v">V</span><span class="bright">I</span><span class="bright">R</span><span class="bright">A</span>
+          </div>
+          <div class="pulse-line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCEPT 2: Shield Monogram -->
+  <div class="concept">
+    <div class="concept-label">
+      <h2>Concept 2 — IV Shield</h2>
+      <span>MONOGRAM</span>
+    </div>
+    <div class="concept-desc">
+      Shield-shaped "IV" monogram works as standalone app icon, favicon, and watermark.
+      The shield represents protection (health) and the warrior spirit of VIRA.
+    </div>
+    <div class="previews">
+      <div class="preview dark">
+        <div class="shield-logo">
+          <div class="shield-mark"></div>
+          <div class="shield-text">IVIRA</div>
+        </div>
+      </div>
+      <div class="preview light">
+        <div class="shield-logo">
+          <div class="shield-mark"></div>
+          <div class="shield-text">IVIRA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCEPT 3: Block Stacked -->
+  <div class="concept">
+    <div class="concept-label">
+      <h2>Concept 3 — Block Stack</h2>
+      <span>ATHLETIC</span>
+    </div>
+    <div class="concept-desc">
+      Compact square icon with IVI/RA stacked inside. Athletic performance feel —
+      reads bold at small sizes. Great for app icons and social media avatars.
+    </div>
+    <div class="previews">
+      <div class="preview dark">
+        <div class="block-logo">
+          <div class="block-icon">
+            <span class="top">IVI</span>
+            <span class="bot">RA</span>
+          </div>
+          <div class="block-text">IVIRA</div>
+        </div>
+      </div>
+      <div class="preview light">
+        <div class="block-logo">
+          <div class="block-icon">
+            <span class="top">IVI</span>
+            <span class="bot">RA</span>
+          </div>
+          <div class="block-text">IVIRA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  All concepts use single-color emerald (#10B981). No gradients, no second color on the mark itself.<br>
+  Preview on both dark (#0A0E1A) and light backgrounds. Pick one and I'll implement it across the entire platform.
+</div>
+
+</body>
+</html>

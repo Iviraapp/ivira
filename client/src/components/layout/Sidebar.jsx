@@ -100,9 +100,9 @@ export default function Sidebar({ open, onClose }) {
             <div>
               <div style={{
                 fontFamily: FONT,
-                fontWeight: 700, fontSize: 20, letterSpacing: '-0.5px',
+                fontWeight: 700, fontSize: 20,
                 color: theme.text,
-              }}>I V I R A</div>
+              }}><span style={{ opacity: 0.45 }}>I</span><span>VIRA</span></div>
               <div style={{ fontSize: 12, color: theme.textTer, marginTop: 2, fontWeight: 400, fontFamily: FONT }}>
                 {gym?.gym_name || 'Dashboard'}
               </div>

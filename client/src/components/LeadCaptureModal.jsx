@@ -130,7 +130,7 @@ export default function LeadCaptureModal({ open, onClose }) {
             ) : (
               <>
                 <h2 style={{ color: '#FFF', fontSize: 22, margin: '0 0 4px', fontWeight: 700 }}>
-                  Get Started with I V I R A
+                  Get Started with IVIRA
                 </h2>
                 <p style={{ color: '#777', fontSize: 14, margin: '0 0 24px' }}>
                   Fill in your details and we'll get you set up.
@@ -221,7 +221,7 @@ export default function LeadCaptureModal({ open, onClose }) {
                       style={{ marginTop: 2, accentColor: '#10B981', flexShrink: 0 }}
                     />
                     <span>
-                      I consent to I V I R A processing my personal data as per the{' '}
+                      I consent to IVIRA processing my personal data as per the{' '}
                       <a href="/privacy" target="_blank" style={{ color: '#10B981', textDecoration: 'none' }}>Privacy Policy</a>{' '}
                       and <a href="/terms" target="_blank" style={{ color: '#10B981', textDecoration: 'none' }}>Terms of Service</a>,
                       in compliance with applicable privacy laws.

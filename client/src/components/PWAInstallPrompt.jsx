@@ -158,7 +158,7 @@ export default function PWAInstallPrompt() {
             fontFamily: FONT_BRAND, fontSize: 20, fontWeight: 800,
             color: c.text, textAlign: 'center', margin: '0 0 8px',
             letterSpacing: '-0.02em',
-          }}>Welcome to I V I R A</h3>
+          }}>Welcome to <span style={{ opacity: 0.45 }}>I</span><span>VIRA</span></h3>
           <p style={{
             fontFamily: FONT_BODY, fontSize: 14, color: c.sub,
             textAlign: 'center', lineHeight: 1.6, margin: '0 0 28px',
@@ -319,8 +319,8 @@ export default function PWAInstallPrompt() {
           color: c.text, letterSpacing: '-0.01em',
         }}>
           {desktop
-            ? (auth.isReturning ? 'Install I V I R A Desktop' : 'Install I V I R A App')
-            : 'Add I V I R A to Home Screen'}
+            ? (auth.isReturning ? <>Install <span style={{ opacity: 0.45 }}>I</span>VIRA Desktop</> : <>Install <span style={{ opacity: 0.45 }}>I</span>VIRA App</>)
+            : <>Add <span style={{ opacity: 0.45 }}>I</span>VIRA to Home Screen</>}
         </div>
         <div style={{
           fontFamily: FONT_BODY, fontSize: 11, color: c.sub,

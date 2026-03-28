@@ -54,7 +54,7 @@ export default function Contact() {
   }
 
   return (
-    <LegalLayout title="Contact Us" documentTitle="Contact Us | I V I R A">
+    <LegalLayout title="Contact Us" documentTitle="Contact Us | IVIRA">
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',

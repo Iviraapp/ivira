@@ -1,0 +1,29 @@
+<!-- IVIRA Wordmark — Light Background Variant -->
+<!-- "VIRA Emphasis": leading I at 45% opacity, VIRA full opacity -->
+<!-- Darker emerald #059669 for contrast on white | Pulse dot under V -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 112">
+
+  <!-- I (dimmed leading letter) -->
+  <rect x="0" y="0" width="30" height="92" fill="#059669" opacity="0.45"/>
+
+  <!-- V (bold, slightly wider for emphasis) -->
+  <polygon points="38,0 68,0 93,72 118,0 148,0 105,92 81,92" fill="#059669"/>
+
+  <!-- Pulse dot under V center -->
+  <circle cx="93" cy="108" r="4" fill="#059669" opacity="0.5"/>
+
+  <!-- I -->
+  <rect x="160" y="0" width="30" height="92" fill="#059669"/>
+
+  <!-- R: vertical stem + bowl + leg -->
+  <path d="M206,0 L206,92 L236,92 L236,66 L254,66 L278,92 L314,92 L284,62
+           C298,56 306,44 306,30 C306,12 292,0 270,0 Z
+           M236,24 L236,44 L264,44 C274,44 278,40 278,34 C278,28 274,24 264,24 Z"
+        fill="#059669" fill-rule="evenodd"/>
+
+  <!-- A: triangle with counter cutout -->
+  <path d="M320,92 L362,0 L390,0 L432,92 L400,92 L392,74 L360,74 L352,92 Z
+           M367,54 L385,54 L376,32 Z"
+        fill="#059669" fill-rule="evenodd"/>
+
+</svg>

@@ -147,9 +147,9 @@ export default function AppLanding() {
         }}>
           <Link to="/" style={{
             fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: 22,
-            color: t.text, textDecoration: 'none', letterSpacing: '0.3em',
+            color: t.text, textDecoration: 'none',
           }}>
-            I V I R A
+            <span style={{ opacity: 0.45 }}>I</span><span>VIRA</span>
           </Link>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <Link to="/member/login" style={{
@@ -230,7 +230,7 @@ export default function AppLanding() {
             maxWidth: 500, margin: '0 auto 36px', fontFamily: FONT_BODY,
           }}
         >
-          Check in with QR, track workouts, browse your gym's store, and manage your membership — all from the I V I R A app.
+          Check in with QR, track workouts, browse your gym's store, and manage your membership — all from the IVIRA app.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -321,13 +321,13 @@ export default function AppLanding() {
               fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 700, letterSpacing: '-0.03em',
               lineHeight: 1.15, color: t.text, fontFamily: FONT_DISPLAY, marginBottom: 12,
             }}>
-              Your gym is on I V I R A
+              Your gym is on IVIRA
             </h2>
             <p style={{
               fontSize: 16, color: t.textSec, lineHeight: 1.6, maxWidth: 480,
               margin: '0 auto', fontFamily: FONT_BODY,
             }}>
-              If your gym uses I V I R A, sign in to access your membership, check-in with QR, and manage everything from your phone.
+              If your gym uses IVIRA, sign in to access your membership, check-in with QR, and manage everything from your phone.
             </p>
           </motion.div>
 
@@ -406,7 +406,7 @@ export default function AppLanding() {
             fontSize: 16, color: t.textSec, lineHeight: 1.6, maxWidth: 520,
             marginBottom: 48, fontFamily: FONT_BODY,
           }}>
-            From scanning your QR to tracking your macros — I V I R A is your complete fitness companion.
+            From scanning your QR to tracking your macros — IVIRA is your complete fitness companion.
           </p>
         </motion.div>
 
@@ -468,7 +468,7 @@ export default function AppLanding() {
               lineHeight: 1.15, color: t.text, fontFamily: FONT_DISPLAY,
               maxWidth: 480, margin: '0 auto 12px',
             }}>
-              Get the I V I R A app
+              Get the IVIRA app
             </h2>
             <p style={{
               fontSize: 16, color: t.textSec, lineHeight: 1.6,
@@ -587,9 +587,9 @@ export default function AppLanding() {
         }}>
           <Link to="/" style={{
             fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: 22,
-            color: t.text, textDecoration: 'none', letterSpacing: '0.3em',
+            color: t.text, textDecoration: 'none',
           }}>
-            I V I R A
+            <span style={{ opacity: 0.45 }}>I</span><span>VIRA</span>
           </Link>
 
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
@@ -611,7 +611,7 @@ export default function AppLanding() {
           </div>
 
           <div style={{ fontSize: 12, color: t.textDim, fontFamily: FONT_BODY }}>
-            &copy; {new Date().getFullYear()} I V I R A. All rights reserved.
+            &copy; {new Date().getFullYear()} IVIRA. All rights reserved.
           </div>
         </div>
       </footer>

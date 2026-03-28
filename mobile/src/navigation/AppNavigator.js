@@ -61,7 +61,10 @@ function PrestigeSplash({ onFinish }) {
         transform: [{ scale: logoScale }],
         opacity: logoOpacity,
       }}>
-        <Text style={styles.logoPrestige}>IVIRA</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+          <Text style={[styles.logoPrestige, { opacity: 0.45 }]}>I</Text>
+          <Text style={styles.logoPrestige}>VIRA</Text>
+        </View>
       </Animated.View>
 
       <Animated.View style={{ opacity: bgOpacity, marginTop: 32 }}>
@@ -147,7 +150,10 @@ function BiometricGate({ children }) {
   if (checking || !authed) {
     return (
       <View style={styles.loading}>
-        <Text style={styles.logoPrestige}>IVIRA</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+          <Text style={[styles.logoPrestige, { opacity: 0.45 }]}>I</Text>
+          <Text style={styles.logoPrestige}>VIRA</Text>
+        </View>
         {checking && <ActivityIndicator size="small" color={COLORS.accent} style={{ marginTop: 24 }} />}
         {!checking && !authed && (
           <Text style={styles.biometricHint}>Authentication required</Text>
@@ -260,7 +266,7 @@ const styles = StyleSheet.create({
   logoPrestige: {
     fontSize: 36,
     fontWeight: '900',
-    color: COLORS.text,
+    color: '#10B981',
     letterSpacing: -1.5,
     textAlign: 'center',
   },

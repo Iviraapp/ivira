@@ -954,7 +954,7 @@ function ImportMembersModal({ gymId, plans, onClose, onSuccess }) {
               <h2 style={{ fontSize: 16, fontWeight: 700, color: theme.text, margin: 0, fontFamily: FONT }}>Import Members</h2>
               <p style={{ fontSize: 12, color: theme.textTer, margin: 0, fontFamily: FONT }}>
                 {step === 'upload' && 'Upload a CSV or Excel file'}
-                {step === 'map' && 'Map columns to I V I R A fields'}
+                {step === 'map' && 'Map columns to IVIRA fields'}
                 {step === 'validate' && 'Review and confirm'}
                 {step === 'importing' && 'Importing...'}
               </p>
@@ -1047,7 +1047,7 @@ function ImportMembersModal({ gymId, plans, onClose, onSuccess }) {
               }}>
                 Found <strong style={{ color: theme.text }}>{fileData.rows.length}</strong> rows
                 with <strong style={{ color: theme.text }}>{fileData.headers.length}</strong> columns.
-                Map each file column to a I V I R A field.
+                Map each file column to a IVIRA field.
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1072,10 +1072,10 @@ function ImportMembersModal({ gymId, plans, onClose, onSuccess }) {
 
                     <ArrowRight size={16} color={theme.textTer} style={{ flexShrink: 0 }} />
 
-                    {/* I V I R A field selector */}
+                    {/* IVIRA field selector */}
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 10, color: theme.textTer, fontFamily: FONT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>
-                        I V I R A Field
+                        IVIRA Field
                       </div>
                       <select
                         value={mapping[idx] || ''}

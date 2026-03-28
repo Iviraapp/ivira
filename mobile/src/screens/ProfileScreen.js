@@ -388,8 +388,8 @@ export default function ProfileScreen({ navigation }) {
 
   const handleAbout = () => {
     Alert.alert(
-      'About I V I R A',
-      'I V I R A v1.0.0\nGym management made simple.\n\n\u00A9 2026 I V I R A',
+      'About IVIRA',
+      'IVIRA v1.0.0\nGym management made simple.\n\n\u00A9 2026 IVIRA',
     )
   }
 

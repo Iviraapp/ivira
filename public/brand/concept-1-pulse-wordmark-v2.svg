@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 140" fill="none">
+  <!--
+    IVIRA — Bold Pulse Wordmark v2
+    Clean geometric letterforms with the V as heartbeat dip
+    Emerald #10B981 on transparent
+  -->
+
+  <!-- I — Bold rectangular pillar -->
+  <rect x="20" y="16" width="30" height="108" rx="3" fill="#10B981"/>
+
+  <!-- V — The heartbeat: dips deeper than baseline for pulse effect -->
+  <polygon points="80,16 108,16 130,108 138,132 146,108 168,16 196,16 148,140 128,140" fill="#10B981"/>
+
+  <!-- I — Matching pillar -->
+  <rect x="216" y="16" width="30" height="108" rx="3" fill="#10B981"/>
+
+  <!-- R — Geometric with angled leg -->
+  <path d="M272 124 L272 16 L320 16 Q354 16 354 48 Q354 76 324 80 L360 124 L332 124 L300 82 L300 80 L316 80 Q328 80 328 50 Q328 40 316 40 L300 40 L300 124 Z" fill="#10B981"/>
+
+  <!-- A — Wide geometric with crossbar -->
+  <path d="M374 124 L414 16 L422 16 L462 124 L434 124 L426 100 L410 100 L402 124 Z M416 78 L420 64 L424 78 Z" fill="#10B981"/>
+  <!-- Wider crossbar for readability -->
+  <rect x="404" y="76" width="28" height="22" rx="2" fill="#10B981"/>
+
+  <!-- Subtle pulse line through V center -->
+  <line x1="0" y1="70" x2="80" y2="70" stroke="#10B981" stroke-width="2" stroke-opacity="0.15"/>
+  <line x1="196" y1="70" x2="216" y2="70" stroke="#10B981" stroke-width="2" stroke-opacity="0.15"/>
+</svg>

@@ -137,7 +137,7 @@ export default function Terms() {
   const geo = GEO_CONFIG[region] || GEO_CONFIG.GLOBAL
 
   return (
-    <LegalLayout title="Terms of Service" documentTitle="Terms of Service | I V I R A">
+    <LegalLayout title="Terms of Service" documentTitle="Terms of Service | IVIRA">
       <p style={S.p}>
         <strong>Last updated:</strong> March 2026
       </p>
@@ -162,7 +162,7 @@ export default function Terms() {
 
       <h2 style={S.h2}>1. Acceptance of Terms</h2>
       <p style={S.p}>
-        By accessing or using the I V I R A platform, you agree to be bound by these Terms of Service. If you do not agree to these terms, you may not use our services.
+        By accessing or using the IVIRA platform, you agree to be bound by these Terms of Service. If you do not agree to these terms, you may not use our services.
       </p>
       {(region === 'EU' || region === 'GB') && (
         <p style={S.p}>
@@ -172,7 +172,7 @@ export default function Terms() {
 
       <h2 style={S.h2}>2. Service Description</h2>
       <p style={S.p}>
-        I V I R A is a Software-as-a-Service (SaaS) platform for fitness and gym management, offering tools for member management, check-ins, payments, nutrition tracking, AI coaching, training facility discovery, and analytics.
+        IVIRA is a Software-as-a-Service (SaaS) platform for fitness and gym management, offering tools for member management, check-ins, payments, nutrition tracking, AI coaching, training facility discovery, and analytics.
       </p>
       <p style={S.p}>Service tiers:</p>
       <ul style={S.ul}>
@@ -192,7 +192,7 @@ export default function Terms() {
       <h2 style={S.h2}>4. Account &amp; Data Ownership</h2>
       <ul style={S.ul}>
         <li style={S.li}>Gym owners retain full ownership of their member data</li>
-        <li style={S.li}>I V I R A retains platform analytics data in anonymized form</li>
+        <li style={S.li}>IVIRA retains platform analytics data in anonymized form</li>
         <li style={S.li}>Data export is available on request and will be delivered within 7 business days</li>
         <li style={S.li}>Your data is processed in accordance with {geo.dataLaw}</li>
       </ul>
@@ -213,10 +213,10 @@ export default function Terms() {
 
       <h2 style={S.h2} id="payment-split">6. Payment Split Liability</h2>
       <ul style={S.ul}>
-        <li style={S.li}>I V I R A facilitates payment collection on behalf of gyms via {geo.paymentProcessor}</li>
+        <li style={S.li}>IVIRA facilitates payment collection on behalf of gyms via {geo.paymentProcessor}</li>
         <li style={S.li}><strong>Revenue split:</strong> Gym receives 89%, Trainers 10%, Platform 1%</li>
         <li style={S.li}>Settlements are processed within 3&ndash;5 business days via {geo.paymentProcessor}</li>
-        <li style={S.li}>I V I R A is not liable for trainer-gym payment disputes</li>
+        <li style={S.li}>IVIRA is not liable for trainer-gym payment disputes</li>
         <li style={S.li}>Refunds follow the originating gym's refund policy{(region === 'EU' || region === 'GB') ? `, subject to your statutory rights under ${geo.consumerLaw}` : ''}</li>
       </ul>
 
@@ -235,18 +235,18 @@ export default function Terms() {
 
       <h2 style={S.h2}>8. AI Features &amp; Disclaimer</h2>
       <ul style={S.ul}>
-        <li style={S.li}>I V I R A's AI coaching and nutrition features provide general fitness guidance only</li>
+        <li style={S.li}>IVIRA's AI coaching and nutrition features provide general fitness guidance only</li>
         <li style={S.li}>AI recommendations are <strong>not</strong> a substitute for professional medical, dietary, or fitness advice</li>
         <li style={S.li}>Users should consult qualified professionals before making changes to their health regimen</li>
-        <li style={S.li}>I V I R A is not liable for any injury, illness, or adverse outcome resulting from following AI-generated recommendations</li>
+        <li style={S.li}>IVIRA is not liable for any injury, illness, or adverse outcome resulting from following AI-generated recommendations</li>
       </ul>
 
       <h2 style={S.h2}>9. Concierge Service Terms</h2>
       <ul style={S.ul}>
         <li style={S.li}>The Concierge Service connects users with third-party training facilities (MMA, yoga, boxing, etc.)</li>
-        <li style={S.li}>I V I R A acts as an intermediary and does not operate, manage, or control third-party facilities</li>
+        <li style={S.li}>IVIRA acts as an intermediary and does not operate, manage, or control third-party facilities</li>
         <li style={S.li}>Facility listings, pricing, and availability are provided by facility owners and may change without notice</li>
-        <li style={S.li}>I V I R A is not responsible for the quality, safety, or legality of services provided by third-party facilities</li>
+        <li style={S.li}>IVIRA is not responsible for the quality, safety, or legality of services provided by third-party facilities</li>
         <li style={S.li}>Users are encouraged to verify facility credentials, insurance, and safety standards independently</li>
       </ul>
 
@@ -255,20 +255,20 @@ export default function Terms() {
         <li style={S.li}>No illegal activities, data scraping, or reverse engineering of the platform</li>
         <li style={S.li}>Gym owners are responsible for the accuracy of member data they manage</li>
         <li style={S.li}>No impersonation, harassment, or abuse of other users on leaderboards or community features</li>
-        <li style={S.li}>I V I R A reserves the right to suspend or terminate accounts that violate these terms</li>
+        <li style={S.li}>IVIRA reserves the right to suspend or terminate accounts that violate these terms</li>
       </ul>
 
       <h2 style={S.h2}>11. Intellectual Property</h2>
       <ul style={S.ul}>
-        <li style={S.li}>The I V I R A brand, source code, and design are proprietary and protected by applicable intellectual property laws</li>
+        <li style={S.li}>The IVIRA brand, source code, and design are proprietary and protected by applicable intellectual property laws</li>
         <li style={S.li}>Gym owners retain all rights to their own brand assets uploaded to the platform</li>
-        <li style={S.li}>User-generated content (reviews, photos) grants I V I R A a non-exclusive license to display within the platform</li>
+        <li style={S.li}>User-generated content (reviews, photos) grants IVIRA a non-exclusive license to display within the platform</li>
       </ul>
 
       <h2 style={S.h2}>12. Limitation of Liability</h2>
       <ul style={S.ul}>
         <li style={S.li}>Maximum liability is limited to the total fees paid by you in the preceding 12 months</li>
-        <li style={S.li}>I V I R A shall not be liable for any indirect, incidental, special, or consequential damages</li>
+        <li style={S.li}>IVIRA shall not be liable for any indirect, incidental, special, or consequential damages</li>
         {(region === 'EU' || region === 'GB') && (
           <li style={S.li}>Nothing in these terms limits or excludes liability for death or personal injury caused by negligence, fraud, or any other liability that cannot be limited or excluded by law</li>
         )}

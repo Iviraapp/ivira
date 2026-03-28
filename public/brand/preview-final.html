@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IVIRA Final Brand — VIRA Emphasis</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #030508; color: #F9FAFB; padding: 32px 20px; }
+
+  h1 { font-size: 12px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: #10B981; text-align: center; margin-bottom: 40px; }
+
+  .grid {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .card {
+    border: 1px solid #1F2937;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .card-label {
+    padding: 12px 16px;
+    border-bottom: 1px solid #1F2937;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6B7280;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .card-body {
+    padding: 40px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+  }
+  .card-body.dark { background: #0A0E1A; }
+  .card-body.light { background: #F4F7F5; }
+  .card-body img, .card-body object {
+    max-width: 100%;
+    max-height: 80px;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+  .icon-row {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-row img, .icon-row object {
+    width: 64px;
+    height: 64px;
+  }
+  .icon-row .big { width: 96px; height: 96px; border-radius: 22%; }
+
+  .splash-card .card-body {
+    min-height: 400px;
+    padding: 0;
+  }
+  .splash-card img, .splash-card object {
+    max-height: 380px;
+    max-width: 200px;
+  }
+
+  .sizes {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .sizes img { height: auto; }
+  .s16 { width: 16px; }
+  .s32 { width: 32px; }
+  .s48 { width: 48px; }
+  .s64 { width: 64px; }
+  .s96 { width: 96px; }
+</style>
+</head>
+<body>
+
+<h1>IVIRA — VIRA Emphasis Brand System</h1>
+
+<div class="grid">
+  <!-- Wordmark dark -->
+  <div class="card">
+    <div class="card-label">Wordmark — Dark BG</div>
+    <div class="card-body dark">
+      <img src="ivira-wordmark-dark.svg" alt="IVIRA wordmark dark">
+    </div>
+  </div>
+
+  <!-- Wordmark light -->
+  <div class="card">
+    <div class="card-label">Wordmark — Light BG</div>
+    <div class="card-body light">
+      <img src="ivira-wordmark-light.svg" alt="IVIRA wordmark light">
+    </div>
+  </div>
+
+  <!-- Icons -->
+  <div class="card full-width">
+    <div class="card-label">Icon Marks + App Icon</div>
+    <div class="card-body dark">
+      <div class="icon-row">
+        <img src="ivira-icon-dark.svg" alt="V mark dark">
+        <img src="ivira-icon-light.svg" alt="V mark light" style="background: #F4F7F5; border-radius: 12px; padding: 8px;">
+        <img src="ivira-app-icon.svg" alt="App icon" class="big">
+      </div>
+    </div>
+  </div>
+
+  <!-- Scale test -->
+  <div class="card full-width">
+    <div class="card-label">Scale Test — 16px to 96px</div>
+    <div class="card-body dark">
+      <div class="sizes">
+        <img src="ivira-app-icon.svg" class="s16" alt="16px">
+        <img src="ivira-app-icon.svg" class="s32" alt="32px">
+        <img src="ivira-app-icon.svg" class="s48" alt="48px">
+        <img src="ivira-app-icon.svg" class="s64" alt="64px">
+        <img src="ivira-app-icon.svg" class="s96" alt="96px">
+      </div>
+    </div>
+  </div>
+
+  <!-- Splash -->
+  <div class="card full-width splash-card">
+    <div class="card-label">Splash Screen (1080x1920)</div>
+    <div class="card-body dark">
+      <img src="ivira-splash.svg" alt="Splash screen">
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -601,7 +601,7 @@ export default function GymFinder() {
             <div style={{ display: 'flex', gap: 4 }}>
               {[
                 { key: 'all', label: 'All' },
-                ...(internalGyms.length > 0 ? [{ key: 'internal', label: `I V I R A (${internalGyms.length})` }] : []),
+                ...(internalGyms.length > 0 ? [{ key: 'internal', label: `IVIRA (${internalGyms.length})` }] : []),
                 ...(googleGyms.length > 0 ? [{ key: 'google', label: `Nearby (${googleGyms.length})` }] : []),
               ].map(tab => (
                 <button
@@ -907,7 +907,7 @@ export default function GymFinder() {
                         textTransform: 'uppercase',
                         display: 'inline-flex', alignItems: 'center', gap: 4,
                       }}>
-                        <ShieldCheck size={11} /> I V I R A Partner
+                        <ShieldCheck size={11} /> IVIRA Partner
                       </span>
                     )}
                   </div>
@@ -1387,7 +1387,7 @@ export default function GymFinder() {
                         fontSize: 11, color: theme.textTer,
                         fontFamily: "'Inter', -apple-system, sans-serif",
                       }}>
-                        Claim your listing & manage it on I V I R A
+                        Claim your listing & manage it on IVIRA
                       </div>
                     </div>
                     <ChevronRight size={16} style={{ color: theme.textTer }} />

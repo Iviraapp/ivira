@@ -74,7 +74,7 @@ function InviteCodeCard({ gymId, theme, sp }) {
 
   const share = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: 'Join my gym on I V I R A', url: shareLink }) } catch {}
+      try { await navigator.share({ title: 'Join my gym on IVIRA', url: shareLink }) } catch {}
     } else {
       copyText(shareLink, 'link')
     }
@@ -956,7 +956,7 @@ function DataPrivacyTab({ gymId, theme, sp }) {
             </span>
           </div>
           <p style={{ fontSize: 13, color: theme.textSec, marginTop: 0, marginBottom: sp(12), lineHeight: 1.6, fontFamily: "'Inter', -apple-system, sans-serif" }}>
-            Permanently delete all your gym data from I V I R A. This action is <strong style={{ color: theme.red || '#EF4444' }}>irreversible</strong>.
+            Permanently delete all your gym data from IVIRA. This action is <strong style={{ color: theme.red || '#EF4444' }}>irreversible</strong>.
             Member records, payment history, check-in logs, and all associated data will be erased within 30 days.
             Payment records may be retained as required by applicable tax law.
           </p>
@@ -999,7 +999,7 @@ function DataPrivacyTab({ gymId, theme, sp }) {
             </div>
 
             <p style={{ fontSize: 14, color: theme.textSec, lineHeight: 1.7, marginTop: 0, marginBottom: sp(20), fontFamily: "'Inter', -apple-system, sans-serif" }}>
-              This will permanently erase all your gym data from I V I R A, including member records, payment history, and check-in logs.
+              This will permanently erase all your gym data from IVIRA, including member records, payment history, and check-in logs.
               This action <strong style={{ color: theme.red || '#EF4444' }}>cannot be undone</strong>.
             </p>
 

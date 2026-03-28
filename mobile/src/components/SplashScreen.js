@@ -62,7 +62,10 @@ export default function SplashScreen({ onFinish }) {
           opacity: logoOpacity,
         }}
       >
-        <Text style={styles.logo}>I V I R A</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+          <Text style={[styles.logo, { opacity: 0.45 }]}>I</Text>
+          <Text style={styles.logo}>VIRA</Text>
+        </View>
       </Animated.View>
     </View>
   )
@@ -85,8 +88,8 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 42,
     fontWeight: '900',
-    color: COLORS.text,
-    letterSpacing: 8,
+    color: '#10B981',
+    letterSpacing: -1,
     textAlign: 'center',
   },
   tagline: {

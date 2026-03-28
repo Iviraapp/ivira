@@ -58,7 +58,7 @@ export default function Login() {
           }}>
             <Activity size={28} color="#fff" />
           </div>
-          <h1 style={{ color: '#fff', fontSize: 22, fontWeight: 700, margin: 0, letterSpacing: 2 }}>IVIRA</h1>
+          <h1 style={{ color: '#fff', fontSize: 22, fontWeight: 700, margin: 0 }}><span style={{ opacity: 0.45 }}>I</span><span>VIRA</span></h1>
           <p style={{ color: '#666', fontSize: 14, margin: '6px 0 0' }}>Owner Dashboard</p>
         </div>
 

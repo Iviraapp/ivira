@@ -215,10 +215,10 @@ export default function LoginScreen() {
         </View>
       </Animated.View>
 
-      <Text style={[styles.wordmark, { color: colors.text }]}>
-        <Text style={styles.wordmarkGym}>IVI</Text>
-        <Text style={styles.wordmarkOS}>RA</Text>
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+        <Text style={[styles.wordmark, { color: '#10B981', opacity: 0.45 }]}>I</Text>
+        <Text style={[styles.wordmark, { color: '#10B981' }]}>VIRA</Text>
+      </View>
       <Text style={[styles.tagline, { color: colors.textSec }]}>Your Health, Reimagined.</Text>
 
       {/* Feature pills */}
@@ -469,15 +469,9 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     fontSize: 36,
-    marginBottom: SPACING.xs,
-    letterSpacing: 2,
-  },
-  wordmarkGym: {
-    fontFamily: FONT.bold,
-  },
-  wordmarkOS: {
     fontFamily: FONT.extraBold,
-    color: COLORS.accent,
+    marginBottom: SPACING.xs,
+    letterSpacing: -1,
   },
   tagline: {
     fontSize: 16,

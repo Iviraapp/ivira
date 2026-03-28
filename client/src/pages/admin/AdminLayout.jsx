@@ -70,7 +70,7 @@ export default function AdminLayout() {
               color: '#fff', fontWeight: 700, fontSize: 16,
             }}>G</div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: N.text, lineHeight: 1.2, letterSpacing: '0.3em' }}>I V I R A</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: N.text, lineHeight: 1.2 }}><span style={{ opacity: 0.45 }}>I</span><span>VIRA</span></div>
               <div style={{
                 fontSize: 10, fontWeight: 700, letterSpacing: '1.5px',
                 color: N.accent, textTransform: 'uppercase',

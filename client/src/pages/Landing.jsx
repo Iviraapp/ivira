@@ -156,7 +156,7 @@ const ownerFeatures = [
 
 const seekerFeatures = [
   { icon: 'search', title: 'Gym Finder', desc: 'Discover gyms near you powered by Google Places API. View ratings, photos, amenities, contact info, and distance. Filter by type — CrossFit, yoga, MMA, traditional gyms, and more.', highlights: ['Google Maps powered', 'Photos & ratings', 'Distance sorting'] },
-  { icon: 'daypass', title: 'Day Pass Booking', desc: 'Walk into any I V I R A partner gym and pay per visit. No commitment, no contracts. Ideal for travelers or anyone exploring new workout spots. Book and pay online.', highlights: ['Pay per visit', 'No contracts', 'Online booking'] },
+  { icon: 'daypass', title: 'Day Pass Booking', desc: 'Walk into any IVIRA partner gym and pay per visit. No commitment, no contracts. Ideal for travelers or anyone exploring new workout spots. Book and pay online.', highlights: ['Pay per visit', 'No contracts', 'Online booking'] },
   { icon: 'portal', title: 'Member Portal', desc: 'Your complete fitness hub: view active membership, remaining days, payment history, GST invoices, upcoming class bookings, and complete check-in records.', highlights: ['Membership status', 'Invoice downloads', 'Check-in history'] },
   { icon: 'nutrition', title: 'Nutrition Tracking', desc: 'Log meals with calorie and macro breakdowns. Set daily targets for protein, carbs, and fat. AI-powered food recognition and personalized diet protocols based on your goals.', highlights: ['Macro tracking', 'AI food recognition', 'Goal-based diets'] },
   { icon: 'steps', title: 'Step Counter & Activity', desc: 'Built-in pedometer with daily, weekly, and monthly step counts. Syncs with Apple Health and Google Fit. Track active minutes, calories burned, and set daily movement goals.', highlights: ['Apple Health sync', 'Google Fit sync', 'Activity goals'] },
@@ -391,7 +391,7 @@ function GymSignUpModal({ open, onClose, isDark }) {
               letterSpacing: '-0.02em', color: m.textPrimary, marginBottom: 12,
             }}>Application Received</h3>
             <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: m.textSec, lineHeight: 1.6 }}>
-              Our team will review your application and contact you within 24 hours to set up your I V I R A Command Center.
+              Our team will review your application and contact you within 24 hours to set up your IVIRA Command Center.
             </p>
             <button onClick={onClose} style={{
               fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600,
@@ -748,9 +748,9 @@ export default function Landing() {
           {/* Wordmark */}
           <Link to="/" style={{
             fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 900,
-            letterSpacing: '0.3em', color: t.wordmark, textDecoration: 'none',
+            color: t.wordmark, textDecoration: 'none',
           }}>
-            I V I R A
+            <span style={{ opacity: 0.45 }}>I</span><span>VIRA</span>
           </Link>
 
           {/* Desktop Nav Links */}
@@ -1055,7 +1055,7 @@ export default function Landing() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 }}>
                   <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Download I V I R A (Beta)
+                  Download IVIRA (Beta)
                 </a>
                 <div style={{
                   fontFamily: FONT_BODY, fontSize: 12, color: t.textDim,
@@ -1207,12 +1207,12 @@ export default function Landing() {
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
-              <div style={{ ...sectionLabel, color: t.textMuted }}>How I V I R A Works</div>
+              <div style={{ ...sectionLabel, color: t.textMuted }}>How IVIRA Works</div>
               <h2 style={{ ...sectionHeading, color: t.text, fontSize: 'clamp(28px, 4.5vw, 44px)' }}>
                 Two Sides. One Platform.
               </h2>
               <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 640, margin: '0 auto', lineHeight: 1.7 }}>
-                I V I R A powers both the business and the athlete. Gym owners get a complete
+                IVIRA powers both the business and the athlete. Gym owners get a complete
                 command center. Members get a personal fitness companion.
               </p>
             </div>
@@ -1737,17 +1737,17 @@ export default function Landing() {
         </Section>
       </section>
 
-      {/* ── WHY I V I R A ─────────────────────────────────────── */}
+      {/* ── WHY IVIRA ─────────────────────────────────────── */}
       <section style={{ padding: 'clamp(60px, 10vw, 120px) 0', ...(isDark ? { background: t.bgAlt } : t.meshBgAlt) }}>
         <Section>
           <div style={containerStyle}>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
-              <div style={{ ...sectionLabel, color: t.textMuted }}>Why I V I R A</div>
+              <div style={{ ...sectionLabel, color: t.textMuted }}>Why IVIRA</div>
               <h2 style={{ ...sectionHeading, color: t.text, fontSize: 'clamp(28px, 4.5vw, 44px)' }}>
                 Built Different.
               </h2>
               <p style={{ fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted, maxWidth: 680, margin: '0 auto', lineHeight: 1.7 }}>
-                Not another generic gym management SaaS. I V I R A is a complete fitness ecosystem
+                Not another generic gym management SaaS. IVIRA is a complete fitness ecosystem
                 that serves both sides of the gym — the business and the athlete.
               </p>
             </div>
@@ -1760,7 +1760,7 @@ export default function Landing() {
               {[
                 {
                   title: 'Two-Sided Platform',
-                  desc: 'Most gym software only serves owners. I V I R A gives members their own app experience — workouts, nutrition, AI coaching — while gym owners get a complete management dashboard.',
+                  desc: 'Most gym software only serves owners. IVIRA gives members their own app experience — workouts, nutrition, AI coaching — while gym owners get a complete management dashboard.',
                   accent: IVIRA_BLUE,
                   number: '01',
                 },
@@ -2016,7 +2016,7 @@ export default function Landing() {
               fontFamily: FONT_BODY, fontSize: 17, color: t.textMuted,
               maxWidth: 500, margin: '0 auto 48px', lineHeight: 1.7,
             }}>
-              Take the full I V I R A experience with you. Available on every platform.
+              Take the full IVIRA experience with you. Available on every platform.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
@@ -2140,7 +2140,7 @@ export default function Landing() {
                 fontFamily: FONT_BODY, fontSize: 13, color: t.textMuted,
                 lineHeight: 1.6, margin: 0, textAlign: 'left',
               }}>
-                Try the I V I R A app! We'd love your feedback.{' '}
+                Try the IVIRA app! We'd love your feedback.{' '}
                 <a href="/contact" style={{ color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>
                   Share your thoughts
                 </a>{' '}
@@ -2163,9 +2163,9 @@ export default function Landing() {
           {/* Wordmark */}
           <Link to="/" style={{
             fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 900,
-            letterSpacing: '0.3em', color: t.text, textDecoration: 'none',
+            color: t.text, textDecoration: 'none',
           }}>
-            I V I R A
+            <span style={{ opacity: 0.45 }}>I</span><span>VIRA</span>
           </Link>
 
           {/* Links */}
@@ -2199,7 +2199,7 @@ export default function Landing() {
             <div style={{
               fontFamily: FONT_BODY, fontSize: 13, color: t.textDim,
             }}>
-              &copy; {new Date().getFullYear()} I V I R A. All rights reserved.
+              &copy; {new Date().getFullYear()} IVIRA. All rights reserved.
             </div>
           </div>
         </div>

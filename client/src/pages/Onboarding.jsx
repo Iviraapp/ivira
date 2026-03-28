@@ -282,7 +282,7 @@ export default function Onboarding() {
       await api.patch(`/gyms/${gymId}/onboarding`, { step: 7 })
 
       await refreshProfile()
-      toast.success('Your gym is live! Welcome to I V I R A.')
+      toast.success('Your gym is live! Welcome to IVIRA.')
       navigate('/dashboard', { replace: true })
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Something went wrong')
@@ -953,7 +953,7 @@ export default function Onboarding() {
             color: '#fff', fontWeight: 700, fontSize: 20, marginBottom: 8,
           }}>G</div>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: theme.text, marginBottom: 2, fontFamily: font }}>Set Up Your Gym</h1>
-          <p style={{ fontSize: 14, color: theme.textSec }}>Complete these steps to get started on I V I R A</p>
+          <p style={{ fontSize: 14, color: theme.textSec }}>Complete these steps to get started on IVIRA</p>
         </div>
 
         {/* Progress Bar */}
@@ -998,7 +998,7 @@ export default function Onboarding() {
       {/* WhatsApp Chat Widget */}
       {showWhatsApp && (
         <a
-          href="https://wa.me/18148957439?text=Hi, I need help setting up my gym on I V I R A"
+          href="https://wa.me/18148957439?text=Hi, I need help setting up my gym on IVIRA"
           target="_blank"
           rel="noopener noreferrer"
           style={{

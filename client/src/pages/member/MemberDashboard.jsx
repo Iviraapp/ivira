@@ -600,7 +600,7 @@ function Sidebar({ tabs, activeTab, onTabChange, onCheckin }) {
           fontSize: 20, fontWeight: 800, color: M.text,
           letterSpacing: '-0.02em',
         }}>
-          I V I R A
+          <span style={{ opacity: 0.45 }}>I</span><span>VIRA</span>
         </span>
       </div>
 

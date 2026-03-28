@@ -1,26 +1,15 @@
-<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1024" height="1024" rx="220" fill="#0B1128"/>
+<!-- IVIRA App Icon — Rounded square with white V mark -->
+<!-- 512x512 standard app icon | Emerald #10B981 background -->
+<!-- Corner radius ~22% (112px on 512) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 
-  <g transform="translate(512 512) rotate(-38) scale(0.85) translate(-512 -512)"
-     stroke="white" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="#10B981"/>
 
-    <!-- LEFT weight plates -->
-    <line x1="100" y1="330" x2="310" y2="330"/>
-    <line x1="100" y1="550" x2="310" y2="550"/>
+  <!-- White V letterform: bold geometric, centered -->
+  <polygon points="128,120 184,120 256,360 328,120 384,120 276,420 236,420" fill="#FFFFFF"/>
 
-    <!-- LEFT V-connector -->
-    <line x1="310" y1="330" x2="440" y2="440"/>
-    <line x1="310" y1="550" x2="440" y2="440"/>
+  <!-- White pulse dot beneath V -->
+  <circle cx="256" cy="440" r="14" fill="#FFFFFF" opacity="0.6"/>
 
-    <!-- CENTER grip -->
-    <line x1="440" y1="440" x2="584" y2="440"/>
-
-    <!-- RIGHT V-connector -->
-    <line x1="584" y1="440" x2="714" y2="330"/>
-    <line x1="584" y1="440" x2="714" y2="550"/>
-
-    <!-- RIGHT weight plates -->
-    <line x1="714" y1="330" x2="924" y2="330"/>
-    <line x1="714" y1="550" x2="924" y2="550"/>
-  </g>
 </svg>

@@ -85,13 +85,13 @@ export default function TrainerLogin() {
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
         <path d="M7 11V7a5 5 0 0110 0v4" />
       </svg>
-      <span style={{ fontSize: 12, color: textTer }}>Secured by I V I R A Guard</span>
+      <span style={{ fontSize: 12, color: textTer }}>Secured by IVIRA Guard</span>
     </div>
   )
 
   return (
     <AuthLayout
-      title="I V I R A"
+      title="IVIRA"
       subtitle="Trainer Portal — manage your sessions."
       tagline="Coach. Inspire. Earn."
       role="trainer"
@@ -112,8 +112,8 @@ export default function TrainerLogin() {
             <div style={{ width: 56, height: 56, borderRadius: 16, background: `linear-gradient(135deg, ${accent}, #3B6FD4)`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 0 40px rgba(16,185,129,0.25)' }}>
               <span style={{ fontSize: 24, fontWeight: 900, color: '#fff', fontFamily: ff }}>G</span>
             </div>
-            <h2 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: textPrimary, letterSpacing: '-0.02em', fontFamily: ff }}>
-              I V I R A
+            <h2 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: textPrimary, fontFamily: ff }}>
+              <span style={{ opacity: 0.45 }}>I</span><span>VIRA</span>
             </h2>
             <p style={{ fontSize: 14, color: textSec, margin: 0, fontFamily: ff }}>Trainer Portal</p>
           </div>

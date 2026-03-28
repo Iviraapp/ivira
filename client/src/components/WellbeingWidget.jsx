@@ -188,8 +188,8 @@ export default function WellbeingWidget() {
             style={{ width: 20, height: 20, borderRadius: 4 }} />
           <span style={{
             fontFamily: FONT_BRAND, fontSize: 11, fontWeight: 900,
-            color: WHITE, letterSpacing: '0.25em', textTransform: 'uppercase',
-          }}>I V I R A</span>
+            color: WHITE, textTransform: 'uppercase',
+          }}><span style={{ opacity: 0.45 }}>I</span>VIRA</span>
           <div style={{
             width: 5, height: 5, borderRadius: '50%',
             background: '#22C55E',
