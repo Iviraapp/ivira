@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useAuth } from '../context/AuthContext'
@@ -10,7 +10,7 @@ import ProfileSetupScreen, { PROFILE_SETUP_KEY } from '../screens/ProfileSetupSc
 import TabNavigator from './TabNavigator'
 import SplashScreen from '../components/SplashScreen'
 import { getItem } from '../lib/storage'
-import { View, ActivityIndicator, Text, StyleSheet, Platform, Animated } from 'react-native'
+import { View, ActivityIndicator, Text, StyleSheet, Platform, Animated, Alert } from 'react-native'
 
 // Biometric auth
 let LocalAuthentication = null
@@ -71,10 +71,23 @@ function PrestigeSplash({ onFinish }) {
   )
 }
 
+const MAX_BIOMETRIC_RETRIES = 3
+
 function BiometricGate({ children }) {
   const { biometricEnabled } = useAuth()
   const [authed, setAuthed] = useState(false)
   const [checking, setChecking] = useState(true)
+  const retryCount = React.useRef(0)
+
+  const failOpen = useCallback(() => {
+    Alert.alert(
+      'Authentication Failed',
+      'Biometric authentication could not be completed. You can continue using the app.',
+      [{ text: 'OK' }],
+    )
+    setAuthed(true)
+    setChecking(false)
+  }, [])
 
   const authenticate = useCallback(async () => {
     // Skip biometric gate entirely if user hasn't opted in
@@ -101,18 +114,31 @@ function BiometricGate({ children }) {
         disableDeviceFallback: false,
       })
 
-      setAuthed(result.success)
-      if (!result.success) {
-        setTimeout(authenticate, 1000)
+      if (result.success) {
+        setAuthed(true)
+        setChecking(false)
+      } else {
+        retryCount.current += 1
+        if (retryCount.current >= MAX_BIOMETRIC_RETRIES) {
+          failOpen()
+        } else {
+          const delay = 1000 * Math.pow(2, retryCount.current - 1) // 1s, 2s, 4s
+          setTimeout(authenticate, delay)
+        }
       }
     } catch (e) {
-      console.warn('[biometric] Auth failed, retrying:', e?.message)
-      // Don't fail open — retry instead
-      setTimeout(authenticate, 1500)
+      console.warn('[biometric] Auth error:', e?.message)
+      retryCount.current += 1
+      if (retryCount.current >= MAX_BIOMETRIC_RETRIES) {
+        failOpen()
+      } else {
+        const delay = 1000 * Math.pow(2, retryCount.current - 1)
+        setTimeout(authenticate, delay)
+      }
     } finally {
       setChecking(false)
     }
-  }, [biometricEnabled])
+  }, [biometricEnabled, failOpen])
 
   useEffect(() => {
     authenticate()

@@ -168,7 +168,7 @@ export default function HomeScreen({ navigation, route }) {
     if (member?.photo_url) {
       setProfilePhoto(member.photo_url)
     } else {
-      getItem('ivira_profile_photo').then(uri => { if (uri) setProfilePhoto(uri) }).catch(() => {})
+      getItem('ivira_profile_photo').then(uri => { if (uri) setProfilePhoto(uri) }).catch(err => console.warn('[HomeScreen]', err?.message))
     }
   }, [member?.photo_url])
 
@@ -216,13 +216,13 @@ export default function HomeScreen({ navigation, route }) {
       .then(res => {
         if (res.data?.length) setBadges(res.data)
       })
-      .catch(() => {})
+      .catch(err => console.warn('[HomeScreen]', err?.message))
   }, [gymId, member?.id])
 
   // Request all device permissions on first load + check wallet
   useEffect(() => {
-    requestAllPermissions().catch(() => {})
-    canAddToWallet().then(setWalletAvailable).catch(() => {})
+    requestAllPermissions().catch(err => console.warn('[HomeScreen]', err?.message))
+    canAddToWallet().then(setWalletAvailable).catch(err => console.warn('[HomeScreen]', err?.message))
   }, [])
 
   // Step tracking is now handled by HealthContext (shared across all screens)
@@ -326,13 +326,13 @@ export default function HomeScreen({ navigation, route }) {
         data.forEach(cls => { map[cls.id] = cls.spots })
         setClassSpots(map)
       })
-      .catch(() => {})
+      .catch(err => console.warn('[HomeScreen]', err?.message))
   }, [gymId])
 
   // --- QR generation ---
   // Request a signed JWT token from backend for kiosk scanning
   const generateQR = useCallback(async () => {
-    if (!gymId || !member?.id) return
+    if (!gymId || !member?.id || !member?.phone) return
     try {
       const res = await api.post(`/gyms/${gymId}/qr/generate`, {
         phone: member.phone,
@@ -424,39 +424,42 @@ export default function HomeScreen({ navigation, route }) {
       await NfcManager.requestTechnology(NfcTech.Ndef)
       const tag = await NfcManager.getTag()
 
-      if (tag) {
-        // Extract kiosk tag UID — this proves physical presence at the gym
-        const tagUid = tag.id || tag.ndefMessage?.[0]?.payload?.toString() || ''
+      if (!tag) {
+        Alert.alert('NFC Read Failed', 'Hold your phone closer to the NFC tag and try again.')
+        return
+      }
 
-        if (!tagUid) {
-          Alert.alert('Invalid Tag', 'Could not read NFC tag. Try again.')
-          return
-        }
+      // Extract kiosk tag UID — this proves physical presence at the gym
+      const tagUid = tag.id || tag.ndefMessage?.[0]?.payload?.toString() || ''
 
-        if (gymId) {
-          // Send tag_uid (kiosk identity) — member identity comes from JWT
-          const startMs = Date.now()
-          const res = await api.post(`/gyms/${gymId}/checkins/nfc`, { tag_uid: tagUid })
-          const elapsed = Date.now() - startMs
+      if (!tagUid) {
+        Alert.alert('Invalid Tag', 'Could not read NFC tag. Try again.')
+        return
+      }
 
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-          setQrModalVisible(false)
+      if (gymId) {
+        // Send tag_uid (kiosk identity) — member identity comes from JWT
+        const startMs = Date.now()
+        const res = await api.post(`/gyms/${gymId}/checkins/nfc`, { tag_uid: tagUid })
+        const elapsed = Date.now() - startMs
 
-          const memberName = res.data?.checkin?.member_name || member?.name || ''
-          Alert.alert(
-            'Checked In!',
-            `${memberName} — NFC check-in complete (${elapsed}ms)`,
-          )
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        setQrModalVisible(false)
 
-          // Show interstitial ad after check-in (natural transition)
-          setTimeout(() => showInterstitialAd(), 1500)
+        const memberName = res.data?.checkin?.member_name || member?.name || ''
+        Alert.alert(
+          'Checked In!',
+          `${memberName} — NFC check-in complete (${elapsed}ms)`,
+        )
 
-          // Record workout pattern for smart notifications
-          recordWorkout().catch(() => {})
+        // Show interstitial ad after check-in (natural transition)
+        setTimeout(() => showInterstitialAd(), 1500)
 
-          // Refresh profile to update check-in count
-          refreshProfile?.()
-        }
+        // Record workout pattern for smart notifications
+        recordWorkout().catch(err => console.warn('[HomeScreen]', err?.message))
+
+        // Refresh profile to update check-in count
+        refreshProfile?.()
       }
     } catch (err) {
       if (err.message === 'cancelled') return
@@ -465,7 +468,7 @@ export default function HomeScreen({ navigation, route }) {
       Alert.alert('Check-in Failed', msg)
     } finally {
       setNfcScanning(false)
-      NfcManager?.cancelTechnologyRequest?.().catch(() => {})
+      NfcManager?.cancelTechnologyRequest?.().catch(err => console.warn('[HomeScreen]', err?.message))
     }
   }, [gymId, member?.name])
 
@@ -500,7 +503,7 @@ export default function HomeScreen({ navigation, route }) {
       const dist = res.data?.checkin?.distance_meters || 0
       Alert.alert('Checked In!', `${name} — GPS check-in (${dist}m from gym)`)
       setTimeout(() => showInterstitialAd(), 1500)
-      recordWorkout().catch(() => {})
+      recordWorkout().catch(err => console.warn('[HomeScreen]', err?.message))
       refreshProfile?.()
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)

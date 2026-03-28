@@ -113,15 +113,15 @@ export async function qrCheckin(gymId, qrToken, { latitude, longitude, deviceId 
     .returning('*');
 
   // Fire-and-forget: occupancy + real-time event
-  recordCheckinEvent(gymId, memberId, member.name, 'qr').catch(() => {});
+  recordCheckinEvent(gymId, memberId, member.name, 'qr').catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
   // Fire-and-forget WhatsApp notification
   import('../services/whatsapp.service.js').then(({ sendCheckInAlert }) => {
-    sendCheckInAlert(member, gym).catch(() => {})
-  }).catch(() => {})
+    sendCheckInAlert(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message))
+  }).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message))
 
   // Fire-and-forget affiliate promo
-  sendAffiliatePromo(member, gym).catch(() => {})
+  sendAffiliatePromo(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message))
 
   return enrichCheckinResponse(checkin, member, gymId);
 }
@@ -192,7 +192,7 @@ export async function verifyOTPCheckin(gymId, phone, code) {
     .returning('*');
 
   // Fire-and-forget: occupancy + real-time event
-  recordCheckinEvent(gymId, member.id, member.name, 'otp').catch(() => {});
+  recordCheckinEvent(gymId, member.id, member.name, 'otp').catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
   return checkin;
 }
@@ -250,15 +250,15 @@ export async function manualCheckin(gymId, memberId, { staffName } = {}) {
     .returning('*');
 
   // Fire-and-forget: occupancy + real-time event
-  recordCheckinEvent(gymId, memberId, member.name, 'manual').catch(() => {});
+  recordCheckinEvent(gymId, memberId, member.name, 'manual').catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
   // Fire-and-forget WhatsApp notification
   import('../services/whatsapp.service.js').then(({ sendCheckInAlert }) => {
-    sendCheckInAlert(member, gym).catch(() => {});
-  }).catch(() => {});
+    sendCheckInAlert(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
+  }).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
   // Fire-and-forget affiliate promo
-  sendAffiliatePromo(member, gym).catch(() => {})
+  sendAffiliatePromo(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message))
 
   return enrichCheckinResponse(checkin, member, gymId);
 }
@@ -324,15 +324,15 @@ export async function nfcCheckin(gymId, memberId, tagUid) {
   console.log(`[nfc-checkin] ${member.name} checked in via NFC in ${responseTimeMs}ms`);
 
   // 5. Fire-and-forget: SSE event, WhatsApp alert, affiliate promo
-  recordCheckinEvent(gymId, memberId, member.name, 'nfc').catch(() => {});
+  recordCheckinEvent(gymId, memberId, member.name, 'nfc').catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
   db('gyms').where({ id: gymId }).first().then((gym) => {
     if (!gym) return;
     import('../services/whatsapp.service.js').then(({ sendCheckInAlert }) => {
-      sendCheckInAlert(member, gym).catch(() => {});
-    }).catch(() => {});
-    sendAffiliatePromo(member, gym).catch(() => {});
-  }).catch(() => {});
+      sendCheckInAlert(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
+    }).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
+    sendAffiliatePromo(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
+  }).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
   const enriched = await enrichCheckinResponse(checkin, member, gymId);
   return { ...enriched, response_time_ms: responseTimeMs };
@@ -389,11 +389,11 @@ export async function gpsCheckin(gymId, memberId, { latitude, longitude }) {
     .returning('*');
 
   // Fire-and-forget
-  recordCheckinEvent(gymId, memberId, member.name, 'gps').catch(() => {});
+  recordCheckinEvent(gymId, memberId, member.name, 'gps').catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
   import('../services/whatsapp.service.js').then(({ sendCheckInAlert }) => {
-    sendCheckInAlert(member, gym).catch(() => {});
-  }).catch(() => {});
-  sendAffiliatePromo(member, gym).catch(() => {});
+    sendCheckInAlert(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
+  }).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
+  sendAffiliatePromo(member, gym).catch(err => console.warn('[CheckinService] notification/sync failed:', err?.message));
 
   const enriched = await enrichCheckinResponse(checkin, member, gymId);
   return { ...enriched, distance_meters: Math.round(distance) };

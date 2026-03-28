@@ -279,12 +279,12 @@ export async function refreshToken(token) {
     return { token: newToken };
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
-      // Allow refresh within 30 days of expiry
+      // Allow refresh within 48 hours of expiry
       const decoded = jwt.decode(token);
       if (!decoded) throw new UnauthorizedError('Invalid token');
       const expiredAt = new Date(decoded.exp * 1000);
-      const daysSinceExpiry = (Date.now() - expiredAt.getTime()) / (1000 * 60 * 60 * 24);
-      if (daysSinceExpiry > 30) throw new UnauthorizedError('Token too old to refresh');
+      const hoursSinceExpiry = (Date.now() - expiredAt.getTime()) / (1000 * 60 * 60);
+      if (hoursSinceExpiry > 48) throw new UnauthorizedError('Token too old to refresh');
 
       const newToken = jwt.sign(
         { gymId: decoded.gymId, memberId: decoded.memberId, email: decoded.email, role: decoded.role },

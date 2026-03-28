@@ -236,18 +236,18 @@ export async function handlePaymentCaptured(razorpayPaymentId, razorpayOrderId, 
     if (member && gym) {
       Promise.all([
         import('../services/whatsapp.service.js').then(({ sendPaymentConfirmation }) =>
-          sendPaymentConfirmation(member, gym, payment.amount_paise).catch(() => {})
+          sendPaymentConfirmation(member, gym, payment.amount_paise).catch(err => console.warn('[PaymentService] notification/sync failed:', err?.message))
         ),
         import('../services/sms.service.js').then(({ sendPaymentSMS }) =>
-          sendPaymentSMS(member.phone, member.name, payment.amount_paise, gym.name || gym.gym_name).catch(() => {})
+          sendPaymentSMS(member.phone, member.name, payment.amount_paise, gym.name || gym.gym_name).catch(err => console.warn('[PaymentService] notification/sync failed:', err?.message))
         ),
-      ]).catch(() => {})
+      ]).catch(err => console.warn('[PaymentService] notification/sync failed:', err?.message))
     }
 
     // Sync to revenue ledger (fire-and-forget)
     import('./revenue.service.js').then(({ syncPaymentToLedger }) =>
-      syncPaymentToLedger(payment).catch(() => {})
-    ).catch(() => {})
+      syncPaymentToLedger(payment).catch(err => console.warn('[PaymentService] notification/sync failed:', err?.message))
+    ).catch(err => console.warn('[PaymentService] notification/sync failed:', err?.message))
   }
 
   return payment;

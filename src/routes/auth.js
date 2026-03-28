@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import config from '../config/index.js';
 import db from '../config/database.js';
 import redis from '../config/redis.js';
@@ -122,9 +123,10 @@ export default async function authRoutes(fastify) {
     const { contact, otp } = request.body || {}
     if (!contact || !otp) return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'Contact and OTP required' })
 
-    // Verify OTP
+    // Verify OTP (timing-safe comparison)
     const storedOtp = await redis.get(`subdomain_otp:${contact}`)
-    if (!storedOtp || storedOtp !== otp) {
+    if (!storedOtp || !otp || storedOtp.length !== otp.length ||
+        !crypto.timingSafeEqual(Buffer.from(storedOtp), Buffer.from(otp))) {
       return reply.code(401).send({ error: 'INVALID_OTP', message: 'Invalid or expired OTP' })
     }
 
@@ -233,8 +235,29 @@ export default async function authRoutes(fastify) {
 
   // Admin: one-time test gym setup (protected by secret)
   fastify.post('/admin/setup-test-gym', async (request, reply) => {
+    // Disable entirely in production
+    if (process.env.NODE_ENV === 'production') {
+      return reply.code(404).send({ error: 'Not found' });
+    }
+
+    // Rate limit: max 3 requests per hour via Redis
+    const rateLimitKey = 'admin:setup-test-gym:rate';
+    const attempts = parseInt(await redis.get(rateLimitKey) || '0', 10);
+    if (attempts >= 3) {
+      return reply.code(429).send({ error: 'Too many requests. Try again later.' });
+    }
+    await redis.incr(rateLimitKey);
+    await redis.expire(rateLimitKey, 3600); // 1 hour TTL
+
+    // Timing-safe secret comparison
     const { secret } = request.body || {};
-    if (secret !== config.jwt.secret) return reply.code(403).send({ error: 'Forbidden' });
+    const secretStr = String(secret || '');
+    const expectedStr = String(config.jwt.secret || '');
+    const secretBuf = Buffer.from(secretStr);
+    const expectedBuf = Buffer.from(expectedStr);
+    if (secretBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(secretBuf, expectedBuf)) {
+      return reply.code(403).send({ error: 'Forbidden' });
+    }
 
     const GYM_ID = 'e1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6';
     const results = [];

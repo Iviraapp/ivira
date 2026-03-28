@@ -218,8 +218,8 @@ export default async function classRoutes(fastify) {
   fastify.get('/gyms/:gymId/announcements', memberAuth, async (request) => {
     const { limit, offset, type } = request.query;
     return classService.listAnnouncements(request.params.gymId, {
-      limit: limit ? parseInt(limit, 10) : 50,
-      offset: offset ? parseInt(offset, 10) : 0,
+      limit: Math.min(Math.max(parseInt(limit) || 50, 1), 100),
+      offset: Math.max(parseInt(offset) || 0, 0),
       type,
     });
   });

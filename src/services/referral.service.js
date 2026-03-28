@@ -69,53 +69,57 @@ export async function getMyReferralCode(memberId, gymId) {
 }
 
 export async function redeemReferralCode(code, newMemberId, gymId) {
-  const referralCode = await db('referral_codes')
-    .where({ code: code.toUpperCase(), gym_id: gymId })
-    .first();
+  return db.transaction(async (trx) => {
+    // Lock the referral code row to prevent race conditions
+    const referralCode = await trx('referral_codes')
+      .where({ code: code.toUpperCase(), gym_id: gymId })
+      .forUpdate()
+      .first();
 
-  if (!referralCode) throw new NotFoundError('Referral code');
-  if (!referralCode.is_active) throw new ValidationError('Referral code is no longer active');
-  if (referralCode.expires_at && new Date(referralCode.expires_at) < new Date()) {
-    throw new ValidationError('Referral code has expired');
-  }
-  if (referralCode.max_uses > 0 && referralCode.times_used >= referralCode.max_uses) {
-    throw new ValidationError('Referral code has reached maximum uses');
-  }
-  if (referralCode.member_id === newMemberId) {
-    throw new ValidationError('You cannot use your own referral code');
-  }
+    if (!referralCode) throw new NotFoundError('Referral code');
+    if (!referralCode.is_active) throw new ValidationError('Referral code is no longer active');
+    if (referralCode.expires_at && new Date(referralCode.expires_at) < new Date()) {
+      throw new ValidationError('Referral code has expired');
+    }
+    if (referralCode.max_uses > 0 && referralCode.times_used >= referralCode.max_uses) {
+      throw new ValidationError('Referral code has reached maximum uses');
+    }
+    if (referralCode.member_id === newMemberId) {
+      throw new ValidationError('You cannot use your own referral code');
+    }
 
-  // Check if this member already redeemed a code for this gym
-  const alreadyRedeemed = await db('referral_redemptions')
-    .where({ referred_member_id: newMemberId, gym_id: gymId })
-    .first();
-  if (alreadyRedeemed) {
-    throw new ValidationError('You have already used a referral code for this gym');
-  }
+    // Check if this member already redeemed a code for this gym
+    const alreadyRedeemed = await trx('referral_redemptions')
+      .where({ referred_member_id: newMemberId, gym_id: gymId })
+      .first();
+    if (alreadyRedeemed) {
+      throw new ValidationError('You have already used a referral code for this gym');
+    }
 
-  const [redemption] = await db('referral_redemptions')
-    .insert({
-      referral_code_id: referralCode.id,
-      referrer_member_id: referralCode.member_id,
-      referred_member_id: newMemberId,
-      gym_id: gymId,
-      status: 'pending',
-    })
-    .returning('*');
+    const [redemption] = await trx('referral_redemptions')
+      .insert({
+        referral_code_id: referralCode.id,
+        referrer_member_id: referralCode.member_id,
+        referred_member_id: newMemberId,
+        gym_id: gymId,
+        status: 'pending',
+      })
+      .returning('*');
 
-  // Increment times_used
-  await db('referral_codes')
-    .where({ id: referralCode.id })
-    .increment('times_used', 1)
-    .update({ updated_at: new Date() });
+    // Increment times_used
+    await trx('referral_codes')
+      .where({ id: referralCode.id })
+      .increment('times_used', 1)
+      .update({ updated_at: new Date() });
 
-  return {
-    redemption,
-    reward: {
-      type: referralCode.reward_type,
-      value: referralCode.reward_value,
-    },
-  };
+    return {
+      redemption,
+      reward: {
+        type: referralCode.reward_type,
+        value: referralCode.reward_value,
+      },
+    };
+  });
 }
 
 export async function applyReferralRewards(redemptionId) {

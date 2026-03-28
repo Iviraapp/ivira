@@ -6,7 +6,9 @@ export default async function recipeRoutes(fastify) {
 
   // GET /recipes — list all recipes
   fastify.get('/recipes', authHooks, async (request) => {
-    const { category, search, tags, limit = 50, offset = 0 } = request.query;
+    const { category, search, tags, limit: rawLimit, offset: rawOffset } = request.query;
+    const safeLimit = Math.min(Math.max(parseInt(rawLimit) || 20, 1), 100);
+    const safeOffset = Math.max(parseInt(rawOffset) || 0, 0);
 
     let query = db('recipes').where('is_active', true);
 
@@ -28,8 +30,8 @@ export default async function recipeRoutes(fastify) {
 
     const recipes = await query
       .orderBy('title')
-      .limit(parseInt(limit))
-      .offset(parseInt(offset));
+      .limit(safeLimit)
+      .offset(safeOffset);
 
     return { recipes, count: recipes.length };
   });

@@ -74,7 +74,9 @@ export default async function memberRoutes(fastify) {
 
   fastify.get('/gyms/:gymId/members/me/checkins', { preHandler: [verifyMemberToken] }, async (request) => {
     const { page, limit } = request.query;
-    return memberService.getMemberCheckins(request.params.gymId, request.member.memberId, { page, limit });
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    return memberService.getMemberCheckins(request.params.gymId, request.member.memberId, { page: safePage, limit: safeLimit });
   });
 
   // --- Member profile photo upload (30-day cooldown) ---
@@ -99,7 +101,9 @@ export default async function memberRoutes(fastify) {
 
   fastify.get('/gyms/:gymId/members', authHooks, async (request) => {
     const { page, limit, status, search } = request.query;
-    return memberService.listMembers(request.params.gymId, { page, limit, status, search });
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    return memberService.listMembers(request.params.gymId, { page: safePage, limit: safeLimit, status, search });
   });
 
   fastify.get('/gyms/:gymId/members/:memberId', authHooks, async (request) => {

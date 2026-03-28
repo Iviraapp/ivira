@@ -53,9 +53,10 @@ export default async function referralRoutes(fastify) {
   // Get gym referral leaderboard
   fastify.get('/gyms/:gymId/referrals/leaderboard', authHooks, async (request) => {
     const { limit } = request.query;
+    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
     const leaderboard = await referralService.getGymReferralLeaderboard(
       request.params.gymId,
-      limit ? parseInt(limit, 10) : 10
+      safeLimit
     );
     return { leaderboard };
   });

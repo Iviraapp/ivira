@@ -63,7 +63,9 @@ export default async function paymentRoutes(fastify) {
   // List payments
   fastify.get('/gyms/:gymId/payments', authHooks, async (request) => {
     const { page, limit, status, memberId } = request.query;
-    return paymentService.getPayments(request.params.gymId, { page, limit, status, memberId });
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    return paymentService.getPayments(request.params.gymId, { page: safePage, limit: safeLimit, status, memberId });
   });
 
   // Run dunning for expired memberships

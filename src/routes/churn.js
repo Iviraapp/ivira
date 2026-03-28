@@ -22,7 +22,8 @@ export default async function churnRoutes(fastify) {
   // Get top at-risk members
   fastify.get('/gyms/:gymId/churn/at-risk', authHooks, async (request) => {
     const { limit } = request.query;
-    const members = await churnService.getAtRiskMembers(request.params.gymId, limit);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
+    const members = await churnService.getAtRiskMembers(request.params.gymId, safeLimit);
     return { members };
   });
 
