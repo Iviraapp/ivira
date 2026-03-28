@@ -79,7 +79,7 @@ export default function AIChatModal({ visible, onClose }) {
     {
       id: '1',
       role: 'ai',
-      text: "Hey! I'm your AI fitness coach. Ask me anything about workouts, nutrition, recovery, or your fitness goals. 🙌",
+      text: "Hey! I'm Vira AI, your fitness coach. Ask me anything about workouts, nutrition, recovery, or your fitness goals. 🙌",
     },
   ])
   const [input, setInput] = useState('')
@@ -123,7 +123,7 @@ export default function AIChatModal({ visible, onClose }) {
       setMessages((prev) => [...prev, aiMsg])
     } catch (err) {
       const errorText = err.response?.data?.message
-        || 'AI Coach is temporarily unavailable. Please check your connection and try again.'
+        || 'Vira AI is temporarily unavailable. Please check your connection and try again.'
       const aiMsg = { id: (Date.now() + 1).toString(), role: 'ai', text: errorText }
       setMessages((prev) => [...prev, aiMsg])
     } finally {
@@ -158,7 +158,7 @@ export default function AIChatModal({ visible, onClose }) {
                   <Text style={styles.headerIconText}>✨</Text>
                 </View>
                 <View>
-                  <Text style={[styles.headerTitle, { color: colors.text }]}>IVIRA AI Coach</Text>
+                  <Text style={[styles.headerTitle, { color: colors.text }]}>Vira AI</Text>
                   <Text style={[styles.headerSub, { color: colors.textSec }]}>Always ready to help</Text>
                 </View>
               </View>

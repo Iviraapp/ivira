@@ -144,7 +144,7 @@ export default function FoodScannerScreen({ navigation, route }) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       }
     } catch (err) {
-      console.log('[FoodScanner] Camera error:', err)
+      if (__DEV__) console.log('[FoodScanner] Camera error:', err)
       Alert.alert('Error', 'Could not open camera. Please try again.')
     }
   }, [])
@@ -177,7 +177,7 @@ export default function FoodScannerScreen({ navigation, route }) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       }
     } catch (err) {
-      console.log('[FoodScanner] Gallery error:', err)
+      if (__DEV__) console.log('[FoodScanner] Gallery error:', err)
       Alert.alert('Error', 'Could not open gallery. Please try again.')
     }
   }, [])

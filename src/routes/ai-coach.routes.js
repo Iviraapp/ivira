@@ -1,6 +1,6 @@
 import config from '../config/index.js';
 
-const SYSTEM_PROMPT = `You are IVIRA AI Coach — a certified fitness, health, and wellness assistant embedded in a gym management app used across India.
+const SYSTEM_PROMPT = `You are Vira AI — a certified fitness, health, and wellness assistant embedded in a gym management app used across India.
 
 ROLE & SCOPE:
 - You ONLY answer questions related to: fitness, exercise, workouts, nutrition, diet, supplements, recovery, sleep, injury prevention, weight management, yoga, sports, mental health as it relates to fitness, and general wellness.
@@ -126,7 +126,7 @@ export default async function aiCoachRoutes(fastify) {
     if (!useDeepSeek && !useAnthropic) {
       return reply.code(503).send({
         error: 'AI_NOT_CONFIGURED',
-        message: 'AI Coach is not available at this time.',
+        message: 'Vira AI is not available at this time.',
       });
     }
 
@@ -165,7 +165,7 @@ export default async function aiCoachRoutes(fastify) {
           request.log.error({ status: response.status, err }, 'DeepSeek API error');
           return reply.code(502).send({
             error: 'AI_ERROR',
-            message: 'AI Coach is temporarily unavailable. Please try again.',
+            message: 'Vira AI is temporarily unavailable. Please try again.',
           });
         }
 
@@ -193,7 +193,7 @@ export default async function aiCoachRoutes(fastify) {
           request.log.error({ status: response.status, err }, 'Anthropic API error');
           return reply.code(502).send({
             error: 'AI_ERROR',
-            message: 'AI Coach is temporarily unavailable. Please try again.',
+            message: 'Vira AI is temporarily unavailable. Please try again.',
           });
         }
 
@@ -203,10 +203,10 @@ export default async function aiCoachRoutes(fastify) {
 
       return { reply: text };
     } catch (err) {
-      request.log.error(err, 'AI Coach request failed');
+      request.log.error(err, 'Vira AI request failed');
       return reply.code(502).send({
         error: 'AI_ERROR',
-        message: 'AI Coach is temporarily unavailable. Please try again.',
+        message: 'Vira AI is temporarily unavailable. Please try again.',
       });
     }
   });
@@ -224,7 +224,7 @@ export default async function aiCoachRoutes(fastify) {
     if (!useDeepSeek && !useAnthropic) {
       return reply.code(503).send({
         error: 'AI_NOT_CONFIGURED',
-        message: 'AI workout planner is not available at this time.',
+        message: 'Vira AI workout planner is not available at this time.',
       });
     }
 
@@ -271,7 +271,7 @@ Return the plan as JSON following the exact format specified.`;
           request.log.error({ status: response.status, err }, 'DeepSeek API error (workout plan)');
           return reply.code(502).send({
             error: 'AI_ERROR',
-            message: 'AI workout planner is temporarily unavailable. Please try again.',
+            message: 'Vira AI workout planner is temporarily unavailable. Please try again.',
           });
         }
 
@@ -299,7 +299,7 @@ Return the plan as JSON following the exact format specified.`;
           request.log.error({ status: response.status, err }, 'Anthropic API error (workout plan)');
           return reply.code(502).send({
             error: 'AI_ERROR',
-            message: 'AI workout planner is temporarily unavailable. Please try again.',
+            message: 'Vira AI workout planner is temporarily unavailable. Please try again.',
           });
         }
 
@@ -336,7 +336,7 @@ Return the plan as JSON following the exact format specified.`;
       request.log.error(err, 'AI workout plan request failed');
       return reply.code(502).send({
         error: 'AI_ERROR',
-        message: 'AI workout planner is temporarily unavailable. Please try again.',
+        message: 'Vira AI workout planner is temporarily unavailable. Please try again.',
       });
     }
   });

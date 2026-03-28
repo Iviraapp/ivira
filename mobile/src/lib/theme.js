@@ -40,17 +40,17 @@ export const FONT = {
 export const SPACING = {
   xs: 4,
   sm: 8,
-  md: 16,
-  lg: 24,
+  md: 20,
+  lg: 28,
   xl: 32,
   xxl: 48,
 }
 
 export const RADIUS = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 24,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 28,
   full: 9999,
 }
 
@@ -85,47 +85,77 @@ export const METABOLIC = {
   stepsGlow: 'rgba(249,115,22,0.25)',
 }
 
-// Elite card presets (Premium Glass)
+// Elite card presets (Premium Glass — depth via shadow, no borders)
 export const ELITE_CARD = {
   backgroundColor: 'rgba(17, 24, 39, 0.65)',
-  borderRadius: 20,
-  borderWidth: 1,
-  borderColor: 'rgba(16,185,129,0.08)',
+  borderRadius: 22,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.18,
+  shadowRadius: 16,
+  elevation: 6,
 }
 
-// Glass card with emerald accent glow
+// Glass card with emerald accent glow (shadow replaces border)
 export const GLASS_CARD = {
   backgroundColor: 'rgba(16,185,129,0.06)',
-  borderRadius: 20,
-  borderWidth: 1,
-  borderColor: 'rgba(16,185,129,0.15)',
+  borderRadius: 22,
+  shadowColor: 'rgba(16,185,129,0.35)',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 1,
+  shadowRadius: 12,
+  elevation: 4,
 }
 
-// Feature action card presets
+// Feature action card presets (shadow depth, no borders)
 export const ACTION_CARDS = {
   emerald: {
     backgroundColor: 'rgba(16,185,129,0.10)',
-    borderColor: 'rgba(16,185,129,0.20)',
+    shadowColor: 'rgba(16,185,129,0.30)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   purple: {
     backgroundColor: 'rgba(139,92,246,0.10)',
-    borderColor: 'rgba(139,92,246,0.15)',
+    shadowColor: 'rgba(139,92,246,0.25)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   amber: {
     backgroundColor: 'rgba(245,158,11,0.10)',
-    borderColor: 'rgba(245,158,11,0.15)',
+    shadowColor: 'rgba(245,158,11,0.25)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   cyan: {
     backgroundColor: 'rgba(6,182,212,0.10)',
-    borderColor: 'rgba(6,182,212,0.15)',
+    shadowColor: 'rgba(6,182,212,0.25)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   orange: {
     backgroundColor: 'rgba(249,115,22,0.10)',
-    borderColor: 'rgba(249,115,22,0.15)',
+    shadowColor: 'rgba(249,115,22,0.25)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   red: {
     backgroundColor: 'rgba(239,68,68,0.10)',
-    borderColor: 'rgba(239,68,68,0.12)',
+    shadowColor: 'rgba(239,68,68,0.25)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
   },
 }
 
@@ -186,12 +216,12 @@ export const TYPE = {
   numSm: { fontFamily: 'Inter_600SemiBold', fontSize: 16, lineHeight: 20 },
 }
 
-// Shadow / Elevation system
+// Shadow / Elevation system (richer depth for dark UI)
 export const SHADOW = {
-  sm: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
-  md: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 4 },
-  lg: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 16, elevation: 8 },
-  xl: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.20, shadowRadius: 24, elevation: 12 },
+  sm: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 3 },
+  md: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 12, elevation: 6 },
+  lg: { shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.22, shadowRadius: 20, elevation: 10 },
+  xl: { shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.28, shadowRadius: 32, elevation: 16 },
 }
 
 // Unified semantic status colors

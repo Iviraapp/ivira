@@ -157,7 +157,7 @@ export default function HomeScreen({ navigation, route }) {
   const [aiWorkoutDismissed, setAiWorkoutDismissed] = useState(false)
   const aiCardAnim = useRef(new Animated.Value(0)).current
 
-  // AI Coach insight state
+  // Vira AI insight state
   const [aiInsight, setAiInsight] = useState('')
   const [aiInsightDisplayed, setAiInsightDisplayed] = useState('')
   const [recoveryTip, setRecoveryTip] = useState(null)
@@ -544,7 +544,7 @@ export default function HomeScreen({ navigation, route }) {
   const checkinCount = member?.checkin_count || member?.total_checkins || member?.monthly_checkins || 0
   const streak = member?.streak || 0
 
-  // --- AI Coach insight ---
+  // --- Vira AI insight ---
   useEffect(() => {
     const insight = getDailyInsight(
       { name: member?.name, streak, checkin_count: checkinCount },
@@ -721,7 +721,7 @@ export default function HomeScreen({ navigation, route }) {
           />
         }
       >
-        {/* AI Coach Greeting */}
+        {/* Vira AI Greeting */}
         <MotiView
           from={{ opacity: 0, translateY: 50 }}
           animate={{ opacity: 1, translateY: 0 }}
@@ -731,7 +731,7 @@ export default function HomeScreen({ navigation, route }) {
             {/* AI Badge */}
             <Animated.View style={[styles.aiBadge, { opacity: aiBadgeGlow }]}>
               <Feather name="activity" size={11} color={colors.accent} />
-              <Text style={[styles.aiBadgeText, { color: colors.accent }]}>AI Coach</Text>
+              <Text style={[styles.aiBadgeText, { color: colors.accent }]}>Vira AI</Text>
             </Animated.View>
 
             {/* Personalized insight with typing animation */}

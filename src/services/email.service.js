@@ -196,7 +196,7 @@ export async function sendOTPEmail(email, otp) {
                       <tr>
                         <td style="padding:16px 14px;background-color:#0B1224;border:1px solid #151E33;border-radius:12px;">
                           <p style="margin:0 0 6px;font-size:20px;line-height:1;">&#129504;</p>
-                          <p style="margin:0 0 4px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#FFFFFF;line-height:1.2;">Vira AI Coach</p>
+                          <p style="margin:0 0 4px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;color:#FFFFFF;line-height:1.2;">Vira AI</p>
                           <p style="margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:400;color:#5A6A82;line-height:1.4;">Personalised workout &amp; diet advice, anytime</p>
                         </td>
                       </tr>

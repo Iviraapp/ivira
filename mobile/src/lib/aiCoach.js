@@ -1,5 +1,5 @@
 /**
- * AI Coach Engine — local, deterministic, offline-friendly.
+ * Vira AI Engine — local, deterministic, offline-friendly.
  * Generates personalized fitness insights without backend calls.
  * Locale-aware: adapts greetings, food references, and cultural phrases
  * based on device language/region (Hindi, Tamil, Telugu, Kannada, Malayalam, English).

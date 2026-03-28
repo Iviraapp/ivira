@@ -44,7 +44,7 @@ const SLIDES = [
     tagline: 'YOUR BODY, YOUR DATA',
     title: 'Move',
     titleAccent: 'Smart',
-    subtitle: 'AI-powered coaching, step tracking, and fasting timers to keep you on track.',
+    subtitle: 'Vira AI coaching, step tracking, and fasting timers to keep you on track.',
     bgBase: '#060D1A',
     orbs: [
       { x: W * 0.6, y: H * 0.1, size: 280, color: 'rgba(34,197,94,0.2)', delay: 200 },

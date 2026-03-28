@@ -8,6 +8,7 @@ import {
   Switch,
   Animated,
   Platform,
+  ActivityIndicator,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -57,6 +58,8 @@ export default function NotificationSettingsScreen({ navigation }) {
       setPrefs(p)
       setPatterns(s)
       Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start()
+    }).catch(() => {
+      setPrefs({})
     })
   }, [])
 
@@ -72,7 +75,11 @@ export default function NotificationSettingsScreen({ navigation }) {
     }
   }
 
-  if (!prefs) return <View style={[styles.container, { backgroundColor: colors.bg }]} />
+  if (!prefs) return (
+    <View style={[styles.container, { backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }]}>
+      <ActivityIndicator size="large" color={colors.accent} />
+    </View>
+  )
 
   return (
     <ScrollView

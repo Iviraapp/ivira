@@ -62,7 +62,7 @@ function TypingIndicator({ colors }) {
     <View style={typingStyles.container}>
       <View style={typingStyles.badge}>
         <Feather name="zap" size={10} color={COLORS.accent} />
-        <Text style={[typingStyles.badgeText, { color: COLORS.accent }]}>IVIRA AI</Text>
+        <Text style={[typingStyles.badgeText, { color: COLORS.accent }]}>Vira AI</Text>
       </View>
       <View style={typingStyles.dots}>
         {[dot1, dot2, dot3].map((anim, i) => (
@@ -542,11 +542,11 @@ export default function NutritionScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* IVIRA AI Badge + Confidence */}
+            {/* Vira AI Badge + Confidence */}
             <View style={styles.aiBannerRow}>
               <View style={styles.aiBadgeLarge}>
                 <Feather name="zap" size={12} color={COLORS.accent} />
-                <Text style={styles.aiBadgeLargeText}>IVIRA AI</Text>
+                <Text style={styles.aiBadgeLargeText}>Vira AI</Text>
               </View>
               <View style={styles.confidenceRow}>
                 <View style={[styles.confidenceDot, { backgroundColor: COLORS.green }]} />
