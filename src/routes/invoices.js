@@ -1,4 +1,5 @@
 import * as invoiceService from '../services/invoice.service.js';
+import db from '../config/database.js'
 
 const createInvoiceSchema = {
   body: {
@@ -85,4 +86,58 @@ export default async function invoiceRoutes(fastify) {
     reply.header('Content-Disposition', `attachment; filename="invoice-${request.params.invoiceId}.pdf"`);
     return reply.send(buffer);
   });
+
+  // Send invoice via email or WhatsApp
+  fastify.post('/gyms/:gymId/invoices/:invoiceId/send', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['method'],
+        properties: {
+          method: { type: 'string', enum: ['email', 'whatsapp'] },
+        },
+      },
+    },
+    ...authHooks,
+  }, async (request, reply) => {
+    const result = await invoiceService.sendInvoice(
+      request.params.gymId,
+      request.params.invoiceId,
+      request.body.method,
+    );
+    return reply.send(result);
+  });
+
+  // ─── Member-facing routes (member token auth only) ────────────────────────
+  const memberAuthHooks = { preHandler: [fastify.verifyToken] }
+
+  // List own invoices
+  fastify.get('/gyms/:gymId/members/me/invoices', memberAuthHooks, async (request) => {
+    const memberId = request.user.memberId
+    if (!memberId) {
+      throw fastify.httpErrors.forbidden('Member access only')
+    }
+    const invoices = await db('invoices')
+      .where({ gym_id: request.params.gymId, member_id: memberId })
+      .orderBy('invoice_date', 'desc')
+      .limit(50)
+    return { invoices }
+  })
+
+  // Download own invoice PDF
+  fastify.get('/gyms/:gymId/members/me/invoices/:invoiceId/pdf', memberAuthHooks, async (request, reply) => {
+    const memberId = request.user.memberId
+    if (!memberId) throw fastify.httpErrors.forbidden('Member access only')
+
+    // Verify this invoice belongs to this member
+    const invoice = await db('invoices')
+      .where({ id: request.params.invoiceId, gym_id: request.params.gymId, member_id: memberId })
+      .first()
+    if (!invoice) throw fastify.httpErrors.notFound('Invoice not found')
+
+    const buffer = await invoiceService.generateInvoicePDF(request.params.gymId, request.params.invoiceId)
+    reply.header('Content-Type', 'application/pdf')
+    reply.header('Content-Disposition', `attachment; filename="invoice-${invoice.invoice_number}.pdf"`)
+    return reply.send(buffer)
+  })
 }

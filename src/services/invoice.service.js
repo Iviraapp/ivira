@@ -509,3 +509,49 @@ export async function generateInvoicePDF(gymId, invoiceId) {
   doc.end();
   return pdfReady;
 }
+
+// ---------------------------------------------------------------------------
+// Send Invoice (email or WhatsApp)
+// ---------------------------------------------------------------------------
+
+/**
+ * Send invoice via email or WhatsApp.
+ * method: 'email' | 'whatsapp'
+ */
+export async function sendInvoice(gymId, invoiceId, method) {
+  const invoice = await getInvoice(gymId, invoiceId)
+
+  // getInvoice doesn't join gyms, so fetch gym_name separately
+  const gym = await db('gyms').where({ id: gymId }).first()
+  const gymName = gym?.gym_name || gym?.name || null
+
+  if (method === 'email') {
+    if (!invoice.member_id) throw new ValidationError('Invoice has no linked member')
+    const member = await db('members').where({ id: invoice.member_id }).first()
+    if (!member?.email) throw new ValidationError('Member has no email address')
+
+    const pdfBuffer = await generateInvoicePDF(gymId, invoiceId)
+    const { sendInvoiceEmail } = await import('./email.service.js')
+    await sendInvoiceEmail({
+      to: member.email,
+      memberName: member.name,
+      invoiceNumber: invoice.invoice_number,
+      totalPaise: invoice.total_paise,
+      gymName,
+      pdfBuffer,
+    })
+    return { sent: true, method: 'email', to: member.email }
+  }
+
+  if (method === 'whatsapp') {
+    if (!invoice.member_id) throw new ValidationError('Invoice has no linked member')
+    const member = await db('members').where({ id: invoice.member_id }).first()
+    if (!member?.phone) throw new ValidationError('Member has no phone number')
+
+    const { sendInvoiceWhatsApp } = await import('./whatsapp.service.js')
+    await sendInvoiceWhatsApp(member, { ...invoice, gym_name: gymName })
+    return { sent: true, method: 'whatsapp', to: member.phone }
+  }
+
+  throw new ValidationError('method must be email or whatsapp')
+}

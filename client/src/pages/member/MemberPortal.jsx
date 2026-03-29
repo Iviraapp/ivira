@@ -99,12 +99,12 @@ export default function MemberPortal() {
       // Load checkins, invoices, products, brands in parallel
       Promise.allSettled([
         api.get(`/gyms/${gymId}/members/me/checkins`, { headers }),
-        api.get(`/gyms/${gymId}/members/me/payments`, { headers }),
+        api.get(`/gyms/${gymId}/members/me/invoices`, { headers }),
         api.get(`/gyms/${gymId}/products`, { params: { status: 'active' } }),
         api.get('/affiliate/brands'),
       ]).then(([ci, inv, prods, br]) => {
         if (ci.status === 'fulfilled') setCheckins(ci.value.data?.checkins || ci.value.data || [])
-        if (inv.status === 'fulfilled') setInvoices(inv.value.data?.data || inv.value.data || [])
+        if (inv.status === 'fulfilled') setInvoices(inv.value.data?.invoices || [])
         if (prods.status === 'fulfilled') setProducts(prods.value.data?.data || prods.value.data || [])
         if (br.status === 'fulfilled') setBrands(br.value.data?.brands || [])
       })
@@ -227,27 +227,15 @@ export default function MemberPortal() {
     } finally { setLoading(false) }
   }
 
-  async function downloadInvoice(payment) {
+  function downloadInvoice(invoice) {
     triggerHaptic('tap')
-    try {
-      const invoiceId = payment.invoice_id || payment.id
-      const res = await api.get(`/gyms/${gymId}/invoices/${invoiceId}/pdf`, { responseType: 'blob' })
-      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `invoice-${formatDate(payment.paid_at || payment.created_at)}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
-    } catch {
-      window.open(`/api/v1/gyms/${gymId}/invoices/${payment.invoice_id || payment.id}/pdf`, '_blank')
-    }
+    window.open(`/api/v1/gyms/${gymId}/members/me/invoices/${invoice.id}/pdf`, '_blank')
   }
 
-  async function shareInvoiceWhatsApp(payment) {
+  function shareInvoiceWhatsApp(invoice) {
     triggerHaptic('tap')
-    try {
-      await api.post(`/gyms/${gymId}/invoices/${payment.invoice_id || payment.id}/send`, { method: 'whatsapp' })
-    } catch {}
+    const text = `Invoice ${invoice.invoice_number}\nAmount: ₹${(invoice.total_paise / 100).toLocaleString('en-IN')}\nDate: ${new Date(invoice.invoice_date).toLocaleDateString('en-IN')}\nStatus: ${invoice.status}`
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`)
   }
 
   async function buyProduct(product) {

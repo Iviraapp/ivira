@@ -82,6 +82,16 @@ export async function sendCheckinPromo(member, brand, discount, link) {
   ])
 }
 
+export async function sendInvoiceWhatsApp(member, invoice) {
+  const amount = ((invoice.total_paise || 0) / 100).toLocaleString('en-IN')
+  return sendTemplateMessage(member.phone, 'invoice_generated', [
+    { name: 'member_name', value: member.name },
+    { name: 'invoice_number', value: invoice.invoice_number || '\u2014' },
+    { name: 'amount', value: `\u20B9${amount}` },
+    { name: 'gym_name', value: invoice.gym_name || 'your gym' },
+  ])
+}
+
 export async function sendBroadcast(gymId, memberPhones, templateName, params) {
   const results = { sent: 0, failed: 0, errors: [] }
   for (const phone of memberPhones) {

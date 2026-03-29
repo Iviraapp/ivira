@@ -234,14 +234,38 @@ export async function handlePaymentCaptured(razorpayPaymentId, razorpayOrderId, 
     ]);
 
     if (member && gym) {
-      Promise.all([
-        import('../services/whatsapp.service.js').then(({ sendPaymentConfirmation }) =>
-          sendPaymentConfirmation(member, gym, payment.amount_paise).catch(err => console.warn('[PaymentService] notification/sync failed:', err?.message))
-        ),
-        import('../services/sms.service.js').then(({ sendPaymentSMS }) =>
-          sendPaymentSMS(member.phone, member.name, payment.amount_paise, gym.name || gym.gym_name).catch(err => console.warn('[PaymentService] notification/sync failed:', err?.message))
-        ),
-      ]).catch(err => console.warn('[PaymentService] notification/sync failed:', err?.message))
+      // Auto-generate invoice (fire-and-forget — never blocks payment capture)
+      setImmediate(async () => {
+        try {
+          const membership = await db('memberships').where({ id: payment.membership_id }).first()
+          const { createInvoice } = await import('./invoice.service.js')
+          const invoice = await createInvoice(payment.gym_id, {
+            memberId: payment.member_id,
+            paymentId: payment.id,
+            buyerName: member.name,
+            buyerAddress: member.address || '',
+            lineItems: [{
+              description: `${membership?.plan_name || 'Membership'} — ${gym.name || gym.gym_name}`,
+              amountPaise: payment.amount_paise,
+              quantity: 1,
+              hsnCode: '99972',
+            }],
+          })
+          const invoiceUrl = `${config.baseUrl}/api/v1/gyms/${payment.gym_id}/invoices/${invoice.id}/pdf`
+
+          // Notify with invoice URL
+          const [{ sendPaymentConfirmation }, { sendPaymentSMS }] = await Promise.all([
+            import('./whatsapp.service.js'),
+            import('./sms.service.js'),
+          ])
+          await Promise.allSettled([
+            sendPaymentConfirmation(member, gym, payment.amount_paise, invoiceUrl),
+            sendPaymentSMS(member.phone, member.name, payment.amount_paise, gym.name || gym.gym_name),
+          ])
+        } catch (err) {
+          console.warn('[PaymentService] invoice/notification failed:', err?.message)
+        }
+      })
     }
 
     // Sync to revenue ledger (fire-and-forget)

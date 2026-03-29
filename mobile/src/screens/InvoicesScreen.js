@@ -49,11 +49,11 @@ function buildInvoiceText(invoice, gymName) {
   const status = getStatusInfo(invoice.status)
   return (
     `Invoice — ${gymName || 'IVIRA'}\n` +
-    `Date: ${formatDate(invoice.created_at || invoice.payment_date)}\n` +
-    `Amount: ${formatPaise(invoice.amount)}\n` +
+    (invoice.invoice_number ? `No: ${invoice.invoice_number}\n` : '') +
+    `Date: ${formatDate(invoice.created_at || invoice.invoice_date || invoice.payment_date)}\n` +
+    `Amount: ${formatPaise(invoice.amount || invoice.total_paise || 0)}\n` +
     `Status: ${status.label}\n` +
-    `Method: ${(invoice.payment_method || 'N/A').toUpperCase()}\n` +
-    `Ref: ${invoice.razorpay_payment_id || invoice.id || '—'}`
+    `Ref: ${invoice.invoice_number || invoice.razorpay_payment_id || invoice.id || '—'}`
   )
 }
 
@@ -67,11 +67,27 @@ export default function InvoicesScreen() {
   const fetchInvoices = useCallback(async () => {
     if (!gymId) return
     try {
-      const res = await api.get(`/gyms/${gymId}/payments`)
-      const data = res.data?.payments || res.data || []
-      setInvoices(Array.isArray(data) ? data : [])
-    } catch (err) {
-      Alert.alert('Error', 'Could not load invoices. Please try again.')
+      // Try member invoices endpoint first (returns proper invoice data)
+      const res = await api.get(`/gyms/${gymId}/members/me/invoices`)
+      const data = res.data?.invoices || []
+      // Normalize invoice fields to match the display (invoice uses total_paise not amount)
+      const normalized = data.map(inv => ({
+        ...inv,
+        amount: inv.total_paise || inv.amount_paise || 0,
+        payment_method: inv.payment_method || 'N/A',
+        status: inv.status === 'issued' ? 'pending' : inv.status === 'paid' ? 'paid' : inv.status,
+        created_at: inv.invoice_date || inv.created_at,
+      }))
+      setInvoices(normalized)
+    } catch {
+      // Fallback to payments endpoint
+      try {
+        const res = await api.get(`/gyms/${gymId}/payments`)
+        const data = res.data?.payments || res.data || []
+        setInvoices(Array.isArray(data) ? data : [])
+      } catch (err) {
+        Alert.alert('Error', 'Could not load invoices. Please try again.')
+      }
     }
   }, [gymId])
 

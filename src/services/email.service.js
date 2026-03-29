@@ -71,6 +71,83 @@ export async function sendEmail({ from, to, subject, text, html }) {
   return mail.sendMail({ from, to, subject, text, html });
 }
 
+// --- Invoice Email ---
+export async function sendInvoiceEmail({ to, memberName, invoiceNumber, totalPaise, gymName, pdfBuffer }) {
+  const amount = (totalPaise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })
+
+  if (config.email.resendApiKey) {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.email.resendApiKey}`,
+      },
+      body: JSON.stringify({
+        from: `${gymName || 'IVIRA'} <${config.email.user || 'noreply@ivira.app'}>`,
+        to: [to],
+        subject: `Invoice ${invoiceNumber} \u2014 ${amount}`,
+        html: buildInvoiceEmailHtml({ memberName, invoiceNumber, amount, gymName }),
+        attachments: [{
+          filename: `invoice-${invoiceNumber}.pdf`,
+          content: pdfBuffer.toString('base64'),
+        }],
+      }),
+    })
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(`Resend error ${response.status}: ${err}`)
+    }
+    return response.json()
+  }
+
+  // SMTP fallback
+  const mail = getTransporter()
+  if (!mail) throw new Error('No email provider configured')
+  return mail.sendMail({
+    from: `${gymName || 'IVIRA'} <${config.email.user}>`,
+    to,
+    subject: `Invoice ${invoiceNumber} \u2014 ${amount}`,
+    html: buildInvoiceEmailHtml({ memberName, invoiceNumber, amount, gymName }),
+    attachments: [{ filename: `invoice-${invoiceNumber}.pdf`, content: pdfBuffer }],
+  })
+}
+
+function buildInvoiceEmailHtml({ memberName, invoiceNumber, amount, gymName }) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#050A12;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#050A12;">
+    <tr><td align="center" style="padding:48px 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+        <tr><td align="center" style="padding-bottom:32px;">
+          <p style="margin:0;font-size:28px;font-weight:700;color:#fff;letter-spacing:4px;">IVIRA</p>
+        </td></tr>
+        <tr><td style="background:#0B1224;border:1px solid #151E33;border-radius:16px;padding:32px;">
+          <p style="margin:0 0 8px;font-size:20px;font-weight:600;color:#fff;">Hi ${memberName},</p>
+          <p style="margin:0 0 24px;font-size:14px;color:#7A8599;">Your invoice from ${gymName || 'your gym'} is attached.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F1A30;border-radius:12px;padding:20px;margin-bottom:24px;">
+            <tr>
+              <td style="font-size:13px;color:#7A8599;">Invoice Number</td>
+              <td align="right" style="font-size:13px;font-weight:600;color:#fff;">${invoiceNumber}</td>
+            </tr>
+            <tr>
+              <td style="font-size:13px;color:#7A8599;padding-top:12px;">Amount</td>
+              <td align="right" style="font-size:20px;font-weight:700;color:#10B981;padding-top:12px;">${amount}</td>
+            </tr>
+          </table>
+          <p style="margin:0;font-size:12px;color:#3D4A5C;text-align:center;">The full GST invoice is attached as a PDF.</p>
+        </td></tr>
+        <tr><td align="center" style="padding-top:24px;">
+          <p style="margin:0;font-size:11px;color:#2D3748;">Secured by IVIRA &middot; ivira.app</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
 // --- OTP Email ---
 export async function sendOTPEmail(email, otp) {
   const digits = otp.toString().split('');
