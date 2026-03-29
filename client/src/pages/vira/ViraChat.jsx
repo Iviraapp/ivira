@@ -1,32 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
+import axios from 'axios'
 import { V, G, GR, FONT, FONT_D, PERSONA, CRISIS_KEYWORDS, glass } from '../../components/vira/theme'
 import RedFlagOverlay from '../../components/vira/RedFlagOverlay'
 
-const MOCK_REPLIES = {
-  mental_health: [
-    "I hear you. It's okay to feel that way. Would you like to talk about what's been weighing on you?",
-    "Thank you for sharing that. Your feelings are valid. Let's explore this together — no rush.",
-    "I've noticed you've been logging lower moods this week. Sometimes it helps to identify small wins. Can you think of one thing that went well today?",
-    "That takes courage to say. Remember, reaching out is a sign of strength. How are you feeling right now, in this moment?",
-  ],
-  hypertension: [
-    "Your last blood pressure reading was 138/88. Let's check — have you taken your Amlodipine today?",
-    "Great job logging consistently! Your 7-day average is trending down. Keep up the low-sodium meals.",
-    "I noticed a 2-day gap in your medication log. Skipping doses can cause rebound spikes. Shall I set a reminder?",
-    "Your readings look stable this week. Remember: 30 minutes of walking daily can reduce systolic pressure by 5-8 points.",
-  ],
-  pharmacy: [
-    "Your Metformin refill is due in 3 days. I can notify your pharmacy — shall I proceed?",
-    "Quick check: any side effects from the new dosage? Common ones include nausea or headache.",
-    "Your insurance pre-authorization for Humira has been approved. Next infusion is scheduled for March 28.",
-    "All medications logged for today. Your adherence this month is 94% — excellent consistency.",
-  ],
-  general: [
-    "Welcome back! How are you feeling today? You can log your mood, check medications, or just chat.",
-    "I'm Vira, your personal health companion. I'm here to help you stay on track with your wellness goals.",
-    "Is there anything specific you'd like to focus on today? I can help with mood tracking, medication reminders, or general wellness.",
-  ],
-}
+// Member-scoped API client — reads ivira_member_token (not the gym-owner ivira_token)
+const memberApi = axios.create({ baseURL: '/api/v1' })
+memberApi.interceptors.request.use(cfg => {
+  const token = localStorage.getItem('ivira_member_token') || localStorage.getItem('ivira_token')
+  if (token) cfg.headers.Authorization = `Bearer ${token}`
+  return cfg
+})
 
 // Rule 4: Vira avatar always visible on left, user messages have 2px violet-500/30 border
 // Rule 3: gap-4 (16px) between bubbles via GR.md padding
@@ -226,17 +209,33 @@ function ContextSidebar({ persona }) {
 }
 
 export default function ViraChat({ persona = 'general' }) {
-  const [messages, setMessages] = useState([
-    { role: 'vira', text: PERSONA[persona]?.tone === 'reflective'
-        ? "Hello. I'm Vira, your wellness companion. This is a safe space — no judgement, just support. How are you feeling today?"
-        : PERSONA[persona]?.tone === 'instructional'
-        ? "Good morning! I'm Vira, your heart health assistant. Let's start with today's vitals. Have you taken your blood pressure reading?"
-        : PERSONA[persona]?.tone === 'efficient'
-        ? "Hi there! I'm Vira, your pharmacy assistant. I can help with refills, medication tracking, and side effect monitoring. What do you need?"
-        : "Welcome! I'm Vira, your personal health companion. How can I help you today?",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    },
-  ])
+  const STORAGE_KEY = `ivira_vira_chat_${persona}`
+  const MAX_STORED = 30 // keep last 30 messages
+
+  const defaultGreeting = {
+    role: 'vira',
+    text: PERSONA[persona]?.tone === 'reflective'
+      ? "Hey! 👋 I'm Vira, your personal fitness & wellness coach. Whether it's workouts, nutrition, recovery or stress — I've got you covered. What are we working on today?"
+      : PERSONA[persona]?.tone === 'instructional'
+      ? "Good day! 🏋️ I'm Vira, your fitness coach. I can help with cardio programming, heart-healthy workouts, and nutrition for your goals. Where do you want to start?"
+      : PERSONA[persona]?.tone === 'efficient'
+      ? "Hi! 🎯 I'm Vira — quick answers on workouts, nutrition, supplements, and recovery. What do you need?"
+      : "Welcome! 💪 I'm Vira, your AI fitness coach. Ask me anything about workouts, nutrition, fat loss, muscle building, or recovery. How can I help?",
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  }
+
+  const loadMessages = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch {}
+    return [defaultGreeting]
+  }
+
+  const [messages, setMessages] = useState(loadMessages)
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const [showCrisis, setShowCrisis] = useState(false)
@@ -255,37 +254,64 @@ export default function ViraChat({ persona = 'general' }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, typing])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_STORED)))
+    } catch {}
+  }, [messages, STORAGE_KEY])
+
   const checkCrisis = (text) => {
     const lower = text.toLowerCase()
     return CRISIS_KEYWORDS.some(kw => lower.includes(kw))
   }
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const text = input.trim()
-    if (!text) return
+    if (!text || typing) return
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    // Snapshot messages before adding user msg (for history building)
+    const currentMessages = messages
+
     setMessages(prev => [...prev, { role: 'user', text, timestamp: now }])
     setInput('')
+
     if (checkCrisis(text)) { setShowCrisis(true); return }
+
     setTyping(true)
-    const replies = MOCK_REPLIES[persona] || MOCK_REPLIES.general
-    const reply = replies[Math.floor(Math.random() * replies.length)]
-    setTimeout(() => {
+
+    // Build history from conversation so far (exclude the initial greeting from history
+    // to keep context tight; backend accepts last 16 msgs)
+    const history = currentMessages
+      .filter(m => m.role === 'user' || m.role === 'vira')
+      .map(m => ({ role: m.role === 'vira' ? 'assistant' : 'user', content: m.text }))
+
+    try {
+      const { data } = await memberApi.post('/ai/coach', { message: text, history })
       setTyping(false)
       setMessages(prev => [...prev, {
-        role: 'vira', text: reply,
+        role: 'vira',
+        text: data.reply || "I couldn't generate a response. Please try again.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }])
-    }, 1200 + Math.random() * 800)
+    } catch (err) {
+      setTyping(false)
+      const errMsg = err?.response?.data?.message || 'Vira is temporarily unavailable. Please try again in a moment.'
+      setMessages(prev => [...prev, {
+        role: 'vira',
+        text: errMsg,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }])
+    }
   }
 
   const quickActions = persona === 'mental_health'
-    ? ['Log my mood', 'Breathing exercise', 'Gratitude check']
+    ? ['Stress relief exercises', 'Sleep better tips', 'Breathing techniques']
     : persona === 'hypertension'
-    ? ['Log BP reading', 'Took my meds', 'Salt intake today']
+    ? ['Cardio for heart health', 'Low-impact workouts', 'Recovery nutrition']
     : persona === 'pharmacy'
-    ? ['Refill status', 'Side effects', 'Next appointment']
-    : ['How am I doing?', 'Log mood', 'My medications']
+    ? ['Pre-workout nutrition', 'Supplement safety', 'Hydration guide']
+    : ['Create a workout plan', 'Best foods for muscle', 'How to lose fat fast']
 
   return (
     <div style={{
@@ -316,8 +342,23 @@ export default function ViraChat({ persona = 'general' }) {
             {PERSONA[persona]?.label || 'General'}
           </div>
           <div style={{ flex: 1 }} />
-          <div style={{ fontSize: 11, color: V.textTer, fontFamily: FONT }}>
-            AI Assistant
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: FONT, fontSize: 10, color: V.textTer }}>AI Assistant</span>
+            {messages.length > 1 && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem(STORAGE_KEY)
+                  setMessages([defaultGreeting])
+                }}
+                style={{
+                  fontFamily: FONT, fontSize: 10, color: V.textTer,
+                  background: 'none', border: `1px solid ${V.border}`,
+                  borderRadius: 6, padding: '2px 8px', cursor: 'pointer',
+                }}
+              >
+                Clear
+              </button>
+            )}
           </div>
         </div>
 
@@ -325,7 +366,7 @@ export default function ViraChat({ persona = 'general' }) {
         <div ref={scrollRef} style={{
           flex: 1, overflowY: 'auto',
           padding: `${GR.xs}px ${GR.md}px`,
-          paddingBottom: isMobile ? GR.xl * 3 : GR.xl * 2,
+          paddingBottom: isMobile ? 180 : 120,
         }}>
           {messages.map((msg, i) => (
             <ChatBubble key={i} {...msg} persona={persona} />
@@ -333,11 +374,18 @@ export default function ViraChat({ persona = 'general' }) {
           {typing && <TypingIndicator />}
         </div>
 
-        {/* Quick actions */}
+        {/* Quick actions — fixed just above the input bar */}
         {messages.length <= 2 && (
           <div style={{
-            padding: `0 ${GR.md}px ${GR.xs}px`, display: 'flex', gap: GR.xs,
+            position: 'fixed',
+            bottom: isMobile ? G * 8 + 72 : GR.md + 72,
+            left: isMobile ? 0 : 'auto',
+            right: isMobile ? 0 : 'auto',
+            width: isMobile ? '100%' : undefined,
+            padding: `${G}px ${GR.sm}px`,
+            display: 'flex', gap: GR.xs,
             overflowX: 'auto', scrollbarWidth: 'none',
+            zIndex: 49,
           }}>
             {quickActions.map(q => (
               <QuickAction key={q} label={q} accent={accent} onClick={() => {

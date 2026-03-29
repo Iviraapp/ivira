@@ -3,6 +3,7 @@ import db from '../config/database.js';
 import config from '../config/index.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 import { notifyDayPassPurchase } from './day-pass-notification.service.js';
+import { geocodeAddress } from './geocoding.service.js';
 
 const razorpayEnabled = !!(config.razorpay.keyId && config.razorpay.keyId !== 'your-key-id');
 
@@ -38,6 +39,23 @@ export async function updateGymProfile(gymId, data) {
   const gym = await db('gyms').where({ id: gymId }).first();
   if (!gym) throw new NotFoundError('Gym');
 
+  let resolvedLat = data.latitude;
+  let resolvedLng = data.longitude;
+
+  // Auto-geocode when address/city is provided but coordinates are missing.
+  // This ensures India gyms get lat/lng stored so geo search works for them.
+  if ((resolvedLat == null || resolvedLng == null) && (data.address || data.city)) {
+    try {
+      const geocoded = await geocodeAddress(data.address || data.city);
+      if (geocoded) {
+        resolvedLat = resolvedLat ?? geocoded.lat;
+        resolvedLng = resolvedLng ?? geocoded.lng;
+      }
+    } catch {
+      // Geocoding is best-effort — never block profile updates
+    }
+  }
+
   const payload = {
     gym_id: gymId,
     description: data.description,
@@ -47,8 +65,8 @@ export async function updateGymProfile(gymId, data) {
     address: data.address,
     city: data.city?.toLowerCase().trim(),
     area: data.area?.toLowerCase().trim(),
-    latitude: data.latitude,
-    longitude: data.longitude,
+    latitude: resolvedLat,
+    longitude: resolvedLng,
     day_pass_paise: data.dayPassPaise,
     accepts_day_pass: data.acceptsDayPass,
     is_listed: data.isListed,
@@ -98,12 +116,30 @@ export async function getGymProfile(gymId) {
 }
 
 /**
- * Search publicly listed gyms with optional geo, city, area, and amenity filters.
+ * Search publicly listed gyms with optional geo, city, area, amenity, and text filters.
+ *
+ * Geo search (lat/lng/radius) works for any country — the Haversine formula is
+ * geography-agnostic. Gyms without stored coordinates are still returned when a
+ * text/city query matches them, so India gyms that haven't set coordinates yet
+ * are not silently excluded.
  */
-export async function searchGyms({ city, area, amenities, lat, lng, radius = 10, page = 1, limit = 20 } = {}) {
+export async function searchGyms({ q, city, area, amenities, lat, lng, radius = 10, page = 1, limit = 20 } = {}) {
   page = Math.max(1, parseInt(page, 10) || 1);
   limit = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
   const offset = (page - 1) * limit;
+
+  const hasGeo = lat != null && lng != null;
+  let latNum, lngNum, radiusKm;
+
+  if (hasGeo) {
+    latNum = parseFloat(lat);
+    lngNum = parseFloat(lng);
+    radiusKm = parseFloat(radius) || 10;
+
+    if (isNaN(latNum) || isNaN(lngNum) || isNaN(radiusKm)) {
+      throw new ValidationError('Invalid latitude, longitude, or radius');
+    }
+  }
 
   const query = db('gym_profiles')
     .where({ 'gym_profiles.is_listed': true })
@@ -112,56 +148,84 @@ export async function searchGyms({ city, area, amenities, lat, lng, radius = 10,
       'gym_profiles.*',
       'gyms.gym_name as gym_name',
       'gyms.owner_phone as gym_phone',
+      'gyms.city as gym_city',
     );
 
-  const countQuery = db('gym_profiles').where({ is_listed: true });
+  const countQuery = db('gym_profiles').where({ is_listed: true }).join('gyms', 'gym_profiles.gym_id', 'gyms.id');
+
+  // Text search across gym name, city, area, and address
+  if (q && q.trim().length > 0) {
+    const term = `%${q.trim().toLowerCase()}%`;
+    query.andWhere((builder) => {
+      builder
+        .orWhereRaw('LOWER(gyms.gym_name) LIKE ?', [term])
+        .orWhereRaw('LOWER(COALESCE(gym_profiles.city, gyms.city, \'\')) LIKE ?', [term])
+        .orWhereRaw('LOWER(COALESCE(gym_profiles.area, \'\')) LIKE ?', [term])
+        .orWhereRaw('LOWER(COALESCE(gym_profiles.address, gyms.address, \'\')) LIKE ?', [term]);
+    });
+    countQuery.andWhere((builder) => {
+      builder
+        .orWhereRaw('LOWER(gyms.gym_name) LIKE ?', [term])
+        .orWhereRaw('LOWER(COALESCE(gym_profiles.city, gyms.city, \'\')) LIKE ?', [term])
+        .orWhereRaw('LOWER(COALESCE(gym_profiles.area, \'\')) LIKE ?', [term])
+        .orWhereRaw('LOWER(COALESCE(gym_profiles.address, gyms.address, \'\')) LIKE ?', [term]);
+    });
+  }
 
   if (city) {
     const cityLower = city.toLowerCase().trim();
-    query.andWhere('gym_profiles.city', cityLower);
-    countQuery.andWhere('city', cityLower);
+    query.andWhere((b) =>
+      b.orWhereRaw('LOWER(gym_profiles.city) = ?', [cityLower])
+        .orWhereRaw('LOWER(gyms.city) = ?', [cityLower])
+    );
+    countQuery.andWhere((b) =>
+      b.orWhereRaw('LOWER(gym_profiles.city) = ?', [cityLower])
+        .orWhereRaw('LOWER(gyms.city) = ?', [cityLower])
+    );
   }
 
   if (area) {
     const areaLower = area.toLowerCase().trim();
     query.andWhere('gym_profiles.area', areaLower);
-    countQuery.andWhere('area', areaLower);
+    countQuery.andWhere('gym_profiles.area', areaLower);
   }
 
   if (amenities && amenities.length > 0) {
     const amenityList = Array.isArray(amenities) ? amenities : [amenities];
     for (const amenity of amenityList) {
       query.andWhereRaw('gym_profiles.amenities::text ILIKE ?', [`%${amenity}%`]);
-      countQuery.andWhereRaw('amenities::text ILIKE ?', [`%${amenity}%`]);
+      countQuery.andWhereRaw('gym_profiles.amenities::text ILIKE ?', [`%${amenity}%`]);
     }
   }
 
-  // If lat/lng provided, apply bounding box pre-filter for performance
-  if (lat != null && lng != null) {
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    const radiusKm = parseFloat(radius);
-
-    if (isNaN(latNum) || isNaN(lngNum) || isNaN(radiusKm)) {
-      throw new ValidationError('Invalid latitude, longitude, or radius');
-    }
-
-    // Rough bounding box (1 degree ~ 111km)
+  // Geo search: apply bounding box pre-filter ONLY on gyms that have coordinates.
+  // Gyms without coordinates are still returned via a separate OR branch so India
+  // gyms that haven't stored lat/lng yet appear in text/city searches.
+  if (hasGeo) {
     const deltaLat = radiusKm / 111;
     const deltaLng = radiusKm / (111 * Math.cos((latNum * Math.PI) / 180));
 
-    query
-      .andWhere('gym_profiles.latitude', '>=', latNum - deltaLat)
-      .andWhere('gym_profiles.latitude', '<=', latNum + deltaLat)
-      .andWhere('gym_profiles.longitude', '>=', lngNum - deltaLng)
-      .andWhere('gym_profiles.longitude', '<=', lngNum + deltaLng);
-
-    countQuery
-      .andWhereNotNull('latitude')
-      .andWhere('latitude', '>=', latNum - deltaLat)
-      .andWhere('latitude', '<=', latNum + deltaLat)
-      .andWhere('longitude', '>=', lngNum - deltaLng)
-      .andWhere('longitude', '<=', lngNum + deltaLng);
+    // Only pre-filter by bounding box — exact haversine is applied post-fetch.
+    // We intentionally do NOT exclude NULL-coordinate gyms here; instead we return
+    // all gyms and compute distance_km = null for those without coordinates.
+    query.andWhere((b) =>
+      b
+        .orWhere((inner) =>
+          inner
+            .whereNotNull('gym_profiles.latitude')
+            .whereNotNull('gym_profiles.longitude')
+            .andWhere('gym_profiles.latitude', '>=', latNum - deltaLat)
+            .andWhere('gym_profiles.latitude', '<=', latNum + deltaLat)
+            .andWhere('gym_profiles.longitude', '>=', lngNum - deltaLng)
+            .andWhere('gym_profiles.longitude', '<=', lngNum + deltaLng)
+        )
+        // Also include gyms without coordinates (show them at the bottom)
+        .orWhere((inner) =>
+          inner
+            .whereNull('gym_profiles.latitude')
+            .orWhereNull('gym_profiles.longitude')
+        )
+    );
   }
 
   const [{ count }] = await countQuery.count();
@@ -171,21 +235,34 @@ export async function searchGyms({ city, area, amenities, lat, lng, radius = 10,
     .limit(limit)
     .offset(offset);
 
-  // Post-filter by exact haversine distance if geo search
-  if (lat != null && lng != null) {
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    const radiusKm = parseFloat(radius);
+  // Compute distance and sort: gyms with coordinates sorted by distance first,
+  // then gyms without coordinates (sorted by rating, appended at the end).
+  if (hasGeo) {
+    const withCoords = [];
+    const withoutCoords = [];
 
-    gyms = gyms
-      .map((g) => ({
+    for (const g of gyms) {
+      const parsed = {
         ...g,
         amenities: typeof g.amenities === 'string' ? JSON.parse(g.amenities) : g.amenities,
         photos: typeof g.photos === 'string' ? JSON.parse(g.photos) : g.photos,
-        distance_km: haversineKm(latNum, lngNum, parseFloat(g.latitude), parseFloat(g.longitude)),
-      }))
-      .filter((g) => g.distance_km <= radiusKm)
-      .sort((a, b) => a.distance_km - b.distance_km);
+      };
+
+      const gLat = parseFloat(g.latitude);
+      const gLng = parseFloat(g.longitude);
+
+      if (!isNaN(gLat) && !isNaN(gLng)) {
+        const dist = haversineKm(latNum, lngNum, gLat, gLng);
+        if (dist <= radiusKm) {
+          withCoords.push({ ...parsed, distance_km: Math.round(dist * 10) / 10 });
+        }
+      } else {
+        withoutCoords.push({ ...parsed, distance_km: null });
+      }
+    }
+
+    withCoords.sort((a, b) => a.distance_km - b.distance_km);
+    gyms = [...withCoords, ...withoutCoords];
   } else {
     gyms = gyms.map((g) => ({
       ...g,

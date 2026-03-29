@@ -3,10 +3,11 @@
   "configurations": [
     {
       "name": "ivira-client",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "5174"],
-      "port": 5174,
-      "cwd": "/Users/niel/ivara/client"
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "5173"],
+      "port": 5173,
+      "autoPort": true,
+      "cwd": "client"
     }
   ]
 }

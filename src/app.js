@@ -17,6 +17,9 @@ import websocket from '@fastify/websocket';
 import db from './config/database.js';
 import { connectRedis } from './config/redis.js';
 import authPlugin from './plugins/auth.js';
+import permissionsPlugin from './plugins/permissions.js';
+import trialGuardPlugin from './plugins/trial-guard.js';
+import auditMiddlewarePlugin from './plugins/audit-middleware.js';
 import healthRoutes from './routes/health.js';
 import authRoutes from './routes/auth.js';
 import gymRoutes from './routes/gyms.js';
@@ -117,6 +120,15 @@ export async function buildApp(opts = {}) {
 
   // Auth plugin (Firebase token verification)
   await fastify.register(authPlugin);
+
+  // Permissions plugin — exposes fastify.requireRole() decorator for staff routes
+  await fastify.register(permissionsPlugin);
+
+  // Trial guard — exposes fastify.verifyTrial decorator for owner routes
+  await fastify.register(trialGuardPlugin);
+
+  // Audit middleware — logs all mutating owner/staff requests to audit_logs
+  await fastify.register(auditMiddlewarePlugin);
 
   // Serve static files (login page etc.)
   await fastify.register(fastifyStatic, {

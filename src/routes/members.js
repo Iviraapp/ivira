@@ -79,6 +79,91 @@ export default async function memberRoutes(fastify) {
     return memberService.getMemberCheckins(request.params.gymId, request.member.memberId, { page: safePage, limit: safeLimit });
   });
 
+  // GET /gyms/:gymId/members/me/export — Member self-service data export (GDPR/DPDPA)
+  fastify.get('/gyms/:gymId/members/me/export', { preHandler: [verifyMemberToken] }, async (request, reply) => {
+    const { gymId } = request.params;
+    const memberId = request.member.memberId;
+
+    const tables = [
+      ['members', { id: memberId, gym_id: gymId }],
+      ['memberships', { member_id: memberId, gym_id: gymId }],
+      ['checkins', { member_id: memberId, gym_id: gymId }],
+      ['payments', { member_id: memberId, gym_id: gymId }],
+    ];
+
+    const results = {};
+    for (const [table, where] of tables) {
+      try {
+        results[table] = await db(table).where(where).orderBy('created_at', 'desc').limit(200);
+      } catch {
+        results[table] = []; // Table may not exist
+      }
+    }
+
+    // Sanitize sensitive fields
+    if (results.members && results.members[0]) {
+      const m = results.members[0];
+      results.member = { name: m.name, email: m.email, phone: m.phone, status: m.status, created_at: m.created_at };
+      delete results.members;
+    }
+
+    reply.header('Content-Disposition', 'attachment; filename="my-ivira-data.json"');
+    return {
+      exported_at: new Date().toISOString(),
+      request_by: 'member_self_service',
+      ...results,
+    };
+  });
+
+  // DELETE /gyms/:gymId/members/me — Member self-service account deletion (GDPR/DPDPA soft delete)
+  fastify.delete('/gyms/:gymId/members/me', { preHandler: [verifyMemberToken] }, async (request, reply) => {
+    const { gymId } = request.params;
+    const memberId = request.member.memberId;
+
+    const member = await db('members').where({ id: memberId, gym_id: gymId }).first();
+    if (!member) return reply.code(404).send({ error: 'Member not found' });
+    if (member.status === 'deleted') return reply.code(409).send({ error: 'Account already deleted' });
+
+    // Soft delete — anonymize PII
+    await db('members').where({ id: memberId }).update({
+      name: 'Deleted Member',
+      phone: null,
+      email: `deleted_${memberId}@removed.invalid`,
+      date_of_birth: null,
+      profile_photo_url: null,
+      status: 'deleted',
+      updated_at: new Date(),
+    });
+
+    // Cancel active memberships
+    await db('memberships')
+      .where({ member_id: memberId, gym_id: gymId, status: 'active' })
+      .update({ status: 'cancelled', updated_at: new Date() });
+
+    return { message: 'Your account has been deleted. Your financial records are retained for accounting compliance.' };
+  });
+
+  // PATCH /gyms/:gymId/members/me — Member update own profile
+  fastify.patch('/gyms/:gymId/members/me', { preHandler: [verifyMemberToken] }, async (request, reply) => {
+    const { gymId } = request.params;
+    const memberId = request.member.memberId;
+
+    const { name, email, gender, date_of_birth } = request.body || {};
+    const updates = {};
+    if (name && name.length >= 2) updates.name = name;
+    if (email) updates.email = email;
+    if (gender && ['male', 'female', 'other'].includes(gender)) updates.gender = gender;
+    if (date_of_birth) updates.date_of_birth = date_of_birth;
+
+    if (Object.keys(updates).length === 0) {
+      return reply.code(400).send({ error: 'No valid fields to update' });
+    }
+
+    updates.updated_at = new Date();
+    const [updated] = await db('members').where({ id: memberId, gym_id: gymId }).update(updates).returning('id, name, email, phone, gender, status, created_at');
+    return { member: updated };
+  });
+
   // --- Member profile photo upload (30-day cooldown) ---
   fastify.put('/gyms/:gymId/members/me/photo', { preHandler: [verifyMemberToken] }, async (request, reply) => {
     const { image, mimetype } = request.body || {};

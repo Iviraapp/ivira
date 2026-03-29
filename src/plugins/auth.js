@@ -54,6 +54,13 @@ async function authPlugin(fastify) {
     // Try JWT first (email OTP login)
     try {
       const decoded = jwt.verify(token, config.jwt.secret);
+      // Check token blacklist (logout / revocation)
+      if (fastify.isTokenBlacklisted) {
+        const blacklisted = await fastify.isTokenBlacklisted(token);
+        if (blacklisted) {
+          return reply.code(401).send({ error: 'Token has been revoked' });
+        }
+      }
       // JWT from email OTP login has { gymId, email, role }
       request.user = { gymId: decoded.gymId, email: decoded.email, role: decoded.role, memberId: decoded.memberId };
       return;

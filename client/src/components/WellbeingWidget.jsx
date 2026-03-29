@@ -163,8 +163,8 @@ export default function WellbeingWidget() {
     setTimeout(() => setNudgeVisible(false), 8000)
   }
 
-  // Only show on dashboard routes, never on public/landing/login pages
-  const isDashboardRoute = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/member/dashboard')
+  // Only show on gym-owner dashboard routes (not member/trainer/vira — they have their own mobile UI)
+  const isDashboardRoute = location.pathname.startsWith('/dashboard')
   if (!compact || !isDashboardRoute) return null
 
   const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

@@ -19,7 +19,7 @@ function getMobilePlatform() {
 
 export default function MemberLogin() {
   const [mode, setMode] = useState('signin') // signin | signup
-  const [step, setStep] = useState(() => isMobileDevice() ? 'app_prompt' : 'form')
+  const [step, setStep] = useState('form')
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -299,7 +299,7 @@ export default function MemberLogin() {
             <p style={{ fontSize: 14, color: textSec, margin: 0, lineHeight: 1.5, fontFamily: ff }}>
               {mode === 'signup'
                 ? 'Join IVIRA to track workouts and connect with your gym'
-                : 'Sign in to access your gym, track progress'}
+                : 'Sign in to access your gym and track your progress'}
             </p>
           </div>
 
@@ -372,7 +372,7 @@ export default function MemberLogin() {
                 </label>
                 <input
                   type="tel"
-                  placeholder="+1 (814) 895-7439"
+                  placeholder="+91 98765 43210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   style={t.inputStyle(false)}

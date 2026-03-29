@@ -107,6 +107,12 @@ const config = {
     gpsRadiusMeters: parseInt(process.env.GPS_RADIUS_METERS || '150', 10),
     trialMaxMembers: parseInt(process.env.TRIAL_MAX_MEMBERS || '50', 10),
   },
+
+  features: {
+    trialGuard: process.env.ENABLE_TRIAL_GUARD === 'true',   // default: OFF — set to 'true' when ready
+    auditLog: process.env.ENABLE_AUDIT_LOG !== 'false',       // default: ON — set to 'false' to disable
+    tokenBlacklist: process.env.ENABLE_TOKEN_BLACKLIST !== 'false', // default: ON (fails open)
+  },
 };
 
 // Warn about insecure defaults in production

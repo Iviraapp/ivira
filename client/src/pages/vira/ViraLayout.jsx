@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { V, G, GR, FONT, FONT_D, PERSONA, glass } from '../../components/vira/theme'
 import ViraBottomNav from '../../components/vira/ViraBottomNav'
 import ViraChat from './ViraChat'
 import ViraMoodLog from './ViraMoodLog'
 import ViraMeds from './ViraMeds'
 import ViraIntake from './ViraIntake'
-import { MessageCircle, Heart, User } from 'lucide-react'
+import { MessageCircle, Heart, User, ChevronLeft } from 'lucide-react'
 
 function PillIcon({ size = 20, color }) {
   return (
@@ -158,6 +159,7 @@ function DesktopNav({ tabs, activeTab, onTabChange, persona, onPersonaChange, sh
 }
 
 export default function ViraLayout() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('chat')
   const [persona, setPersona] = useState('general')
   const [showPersonaPicker, setShowPersonaPicker] = useState(false)
@@ -201,6 +203,19 @@ export default function ViraLayout() {
           borderBottom: `1px solid ${V.border}`,
           display: 'flex', alignItems: 'center', gap: GR.sm,
         }}>
+          {/* Back button */}
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+              background: 'rgba(255,255,255,0.05)', border: `1px solid ${V.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <ChevronLeft size={18} color={V.textSec} />
+          </button>
+
           <div style={{
             width: G * 4.5, height: G * 4.5, borderRadius: GR.sm,
             background: `linear-gradient(135deg, ${currentPersona.accent}, #EC4899)`,

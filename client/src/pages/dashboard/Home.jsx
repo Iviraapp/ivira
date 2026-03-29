@@ -9,6 +9,8 @@ import { Users, QrCode, IndianRupee, AlertTriangle, Plus, Mail, Link, ChevronRig
 import Avatar from '../../components/ui/Avatar'
 import Badge from '../../components/ui/Badge'
 import { useNavigate } from 'react-router-dom'
+import OnboardingChecklist from '../../components/dashboard/OnboardingChecklist'
+import PlanFeatures from '../../components/dashboard/PlanFeatures'
 
 const FONT = "'Inter', -apple-system, sans-serif"
 const FONT_D = "'Inter', -apple-system, sans-serif"
@@ -1055,6 +1057,12 @@ export default function Home() {
         {/* Activity Ticker */}
         <AnimatedItem delay={100} style={{ marginTop: 20 }}>
           <ActivityTicker checkins={recentCheckins} theme={theme} />
+        </AnimatedItem>
+
+        {/* Plan Features + Onboarding Checklist */}
+        <AnimatedItem delay={140} style={{ marginTop: 20 }}>
+          <PlanFeatures api={api} gymId={gymId} />
+          <OnboardingChecklist api={api} gymId={gymId} />
         </AnimatedItem>
 
         {/* Financial Heartbeat Cards */}

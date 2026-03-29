@@ -50,10 +50,12 @@ const addCommissionSchema = {
 
 export default async function staffRoutes(fastify) {
   const authHooks = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] };
+  const ownerOnly = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner, fastify.requireRole(['owner'])] };
+  const managerPlus = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner, fastify.requireRole(['owner', 'manager'])] };
 
   // ── Staff CRUD ──────────────────────────────────────────────────────────
 
-  fastify.post('/gyms/:gymId/staff', { schema: addStaffSchema, ...authHooks }, async (request, reply) => {
+  fastify.post('/gyms/:gymId/staff', { schema: addStaffSchema, ...managerPlus }, async (request, reply) => {
     const staff = await staffService.addStaff(request.params.gymId, request.body);
     return reply.code(201).send({ staff });
   });
@@ -77,7 +79,7 @@ export default async function staffRoutes(fastify) {
     return { staff };
   });
 
-  fastify.delete('/gyms/:gymId/staff/:staffId', authHooks, async (request) => {
+  fastify.delete('/gyms/:gymId/staff/:staffId', managerPlus, async (request) => {
     const staff = await staffService.terminateStaff(request.params.gymId, request.params.staffId);
     return { staff, message: 'Staff member terminated' };
   });
@@ -106,7 +108,7 @@ export default async function staffRoutes(fastify) {
 
   // ── Commissions ─────────────────────────────────────────────────────────
 
-  fastify.post('/gyms/:gymId/staff/commissions', { schema: addCommissionSchema, ...authHooks }, async (request, reply) => {
+  fastify.post('/gyms/:gymId/staff/commissions', { schema: addCommissionSchema, ...managerPlus }, async (request, reply) => {
     const commission = await staffService.addCommission(request.params.gymId, request.body);
     return reply.code(201).send({ commission });
   });
@@ -121,7 +123,7 @@ export default async function staffRoutes(fastify) {
     });
   });
 
-  fastify.patch('/gyms/:gymId/staff/commissions/:commissionId/pay', authHooks, async (request) => {
+  fastify.patch('/gyms/:gymId/staff/commissions/:commissionId/pay', ownerOnly, async (request) => {
     const commission = await staffService.markCommissionPaid(
       request.params.gymId,
       request.params.commissionId,
@@ -131,7 +133,7 @@ export default async function staffRoutes(fastify) {
 
   // ── Payroll ─────────────────────────────────────────────────────────────
 
-  fastify.get('/gyms/:gymId/staff/payroll', authHooks, async (request) => {
+  fastify.get('/gyms/:gymId/staff/payroll', managerPlus, async (request) => {
     const { month, year } = request.query;
     return staffService.getPayroll(request.params.gymId, month, year);
   });

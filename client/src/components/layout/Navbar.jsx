@@ -695,10 +695,11 @@ export default function Navbar({ onMenuClick }) {
       height: 56, background: 'transparent',
       borderBottom: `1px solid ${theme.border}`,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 24px', position: 'sticky', top: 0, zIndex: 100,
+      padding: '0 20px', position: 'sticky', top: 0, zIndex: 100,
       backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
       backgroundColor: theme.navBg, fontFamily: FONT,
       transition: 'background-color 0.3s ease, border-color 0.3s ease',
+      gap: 12,
     }}>
       {/* Left: hamburger (mobile only) */}
       <button
@@ -708,27 +709,37 @@ export default function Navbar({ onMenuClick }) {
           display: 'none', width: 36, height: 36, borderRadius: 8, border: 'none',
           background: theme.bgTer, color: theme.textSec, alignItems: 'center',
           justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s',
+          flexShrink: 0,
         }}
       >
         <Menu size={20} />
       </button>
 
-      <div style={{ flex: 1 }} />
+      {/* Mobile gym name (center, hidden on desktop) */}
+      <div className="navbar-gym-mobile" style={{
+        display: 'none', flex: 1, textAlign: 'center',
+      }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: theme.text, fontFamily: FONT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {gym?.gym_name || 'Dashboard'}
+        </div>
+      </div>
+
+      <div className="navbar-spacer" style={{ flex: 1 }} />
 
       {/* Right section */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <CommandPalette theme={theme} isDark={isDark} onNavigate={(route) => navigate(route)} features={features} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <div className="navbar-cmd">
+          <CommandPalette theme={theme} isDark={isDark} onNavigate={(route) => navigate(route)} features={features} />
+        </div>
 
         {/* Separator */}
-        <div style={{ width: 1, height: 24, background: theme.border, margin: '0 4px' }} />
+        <div className="navbar-sep" style={{ width: 1, height: 24, background: theme.border, margin: '0 2px' }} />
 
         <ThemeToggle mode={mode} setMode={setMode} theme={theme} isDark={isDark} gymId={gymId} />
         <NotificationBell gymId={gymId} theme={theme} isDark={isDark} />
 
         {/* Separator */}
-        <div style={{
-          width: 1, height: 24, background: theme.border, margin: '0 6px',
-        }} />
+        <div className="navbar-sep" style={{ width: 1, height: 24, background: theme.border, margin: '0 4px' }} />
 
         <ProfileDropdown gym={gym} theme={theme} isDark={isDark} onLogout={handleLogout} />
       </div>
@@ -751,7 +762,11 @@ export default function Navbar({ onMenuClick }) {
         }
         @media (max-width: 768px) {
           .menu-button { display: flex !important; }
-          .navbar-name { display: none; }
+          .navbar-name { display: none !important; }
+          .navbar-gym-mobile { display: block !important; }
+          .navbar-spacer { display: none !important; }
+          .navbar-cmd { display: none !important; }
+          .navbar-sep { display: none !important; }
           .cmd-trigger-text { display: none; }
         }
       `}</style>
