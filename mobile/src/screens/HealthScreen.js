@@ -1255,9 +1255,9 @@ function CalorieRing({ caloriesRemaining, calorieGoal }) {
       <View style={{ width: RING_SIZE, height: RING_SIZE, borderRadius: RING_SIZE / 2, borderWidth: strokeWidth, borderColor: COLORS.accent, justifyContent: 'center', alignItems: 'center' }} />
       )}
       <View style={styles.ringCenter}>
-        <Text style={[styles.calorieRingCount, { color: colors.text }]}>{caloriesRemaining}</Text>
+        <Text style={[styles.calorieRingCount, { color: colors.text }]}>{caloriesRemaining >= 1000 ? `${(caloriesRemaining/1000).toFixed(1)}k` : caloriesRemaining}</Text>
         <Text style={[styles.calorieRingLabel, { color: colors.textSec }]}>kcal left</Text>
-        <Text style={[styles.ringGoalText, { color: colors.textTer }]}>of {(calorieGoal / 1000).toFixed(1)}k</Text>
+        <Text style={[styles.ringGoalText, { color: colors.textTer }]}>of {calorieGoal >= 1000 ? `${(calorieGoal/1000).toFixed(0)}k` : calorieGoal}</Text>
       </View>
     </View>
   )
@@ -1411,23 +1411,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepCount: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: FONT.numBlack,
     fontWeight: '900',
     color: COLORS.text,
-    letterSpacing: -1.5,
+    letterSpacing: -1,
     fontVariant: ['tabular-nums'],
   },
   stepLabel: {
-    fontSize: 13,
+    fontSize: 11,
     fontFamily: FONT.medium,
     color: '#94A3B8',
     marginTop: 1,
   },
   ringGoalText: {
-    fontSize: 11,
+    fontSize: 9,
+    fontFamily: FONT.regular,
     color: '#64748B',
-    marginTop: 2,
+    marginTop: 1,
   },
   goalBadge: {
     flexDirection: 'row',
@@ -1649,14 +1650,16 @@ const styles = StyleSheet.create({
 
   // Calorie Ring
   calorieRingCount: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '700',
+    fontFamily: FONT.numBold,
     color: COLORS.text,
-    letterSpacing: -1,
+    letterSpacing: -0.5,
     fontVariant: ['tabular-nums'],
   },
   calorieRingLabel: {
-    fontSize: 13,
+    fontSize: 10,
+    fontFamily: FONT.medium,
     color: '#94A3B8',
     marginTop: 1,
   },
