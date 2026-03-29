@@ -3,7 +3,7 @@ import db from '../config/database.js'
 export async function createPod({ gymId, name, goalType, intensity, timePreference, timezone }) {
   const [pod] = await db('pods')
     .insert({
-      gym_id: gymId,
+      gym_id: gymId || null,
       name,
       goal_type: goalType,
       intensity,
@@ -86,7 +86,16 @@ export async function leavePod({ podId, memberId }) {
 
 export async function findMatchingPods({ gymId, goalType, intensity, timePreference, timezone, excludeMemberId }) {
   let query = db('pods')
-    .where({ 'pods.gym_id': gymId, 'pods.is_active': true })
+    .where('pods.is_active', true)
+    .where(function () {
+      if (gymId) {
+        // Gym members see their gym's squads + open squads
+        this.where('pods.gym_id', gymId).orWhereNull('pods.gym_id')
+      } else {
+        // B2C users see only open squads
+        this.whereNull('pods.gym_id')
+      }
+    })
     .leftJoin('pod_members', 'pods.id', 'pod_members.pod_id')
     .groupBy('pods.id')
     .havingRaw('count(pod_members.id) < 5')

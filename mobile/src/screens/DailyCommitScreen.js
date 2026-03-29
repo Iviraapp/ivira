@@ -153,7 +153,7 @@ export default function DailyCommitScreen({ navigation, route }) {
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
         <Feather name="arrow-left" size={22} color={colors.text} />
         <Text style={[styles.backLabel, { color: colors.textSec, fontFamily: FONT.medium }]}>
-          {podName || 'Pod'}
+          {podName || 'Squad'}
         </Text>
       </TouchableOpacity>
 
@@ -264,7 +264,7 @@ export default function DailyCommitScreen({ navigation, route }) {
           <View style={styles.notifyRow}>
             <Feather name="users" size={14} color={colors.textTer} />
             <Text style={[styles.notifyText, { color: colors.textTer, fontFamily: FONT.regular }]}>
-              Your pod will be notified
+              Your squad will be notified
             </Text>
           </View>
         </View>
@@ -285,7 +285,7 @@ export default function DailyCommitScreen({ navigation, route }) {
               {commitment?.commitmentText || commitment?.commitment_text || activity}
             </Text>
             <Text style={[styles.successSub, { color: colors.textSec, fontFamily: FONT.regular }]}>
-              Your pod is counting on you
+              Your squad is counting on you
             </Text>
           </View>
 
@@ -293,7 +293,7 @@ export default function DailyCommitScreen({ navigation, route }) {
           {committedCount > 0 && (
             <View style={[styles.podStatus, { ...card, borderTopWidth: 3, borderTopColor: COLORS.cyan }]}>
               <Text style={[styles.podStatusLabel, { color: colors.textSec, fontFamily: FONT.semibold }]}>
-                Pod Activity
+                Squad Activity
               </Text>
               <View style={styles.avatarRow}>
                 {podCommitments.slice(0, 6).map((c, i) => (
@@ -378,7 +378,7 @@ export default function DailyCommitScreen({ navigation, route }) {
           >
             <Feather name="message-circle" size={18} color={COLORS.accent} />
             <Text style={[styles.feedBtnText, { color: COLORS.accent, fontFamily: FONT.semibold }]}>
-              View Pod Feed
+              View Squad Feed
             </Text>
           </TouchableOpacity>
         </View>

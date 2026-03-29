@@ -66,7 +66,7 @@ export default function PodStatsScreen({ navigation, route }) {
   const { colors, card } = useTheme()
   const { member, gymId } = useAuth()
   const podId = route?.params?.podId
-  const podName = route?.params?.podName || 'Pod'
+  const podName = route?.params?.podName || 'Squad'
 
   const [period, setPeriod] = useState(30)
   const [stats, setStats] = useState(null)
@@ -97,9 +97,9 @@ export default function PodStatsScreen({ navigation, route }) {
   const getInsights = () => {
     if (!stats) return []
     const lines = []
-    if (stats.avg_health >= 80) lines.push('Your pod is crushing it! Keep the momentum.')
+    if (stats.avg_health >= 80) lines.push('Your squad is crushing it! Keep the momentum.')
     else if (stats.avg_health >= 60) lines.push('Solid consistency. Push for Gold tier.')
-    else lines.push('The pod needs a reset. Rally your members.')
+    else lines.push('The squad needs a reset. Rally your members.')
 
     const weak = (stats.member_stats || []).find(m => m.consistency_pct < 50)
     if (weak) lines.push(`${weak.name} needs support. Send a nudge.`)
@@ -181,7 +181,7 @@ export default function PodStatsScreen({ navigation, route }) {
             )
           })}
         </Svg>
-        <Text style={[s.chartLabel, { color: colors.textSec }]}>Pod Health Trend</Text>
+        <Text style={[s.chartLabel, { color: colors.textSec }]}>Squad Health Trend</Text>
       </View>
     )
   }
@@ -341,7 +341,7 @@ export default function PodStatsScreen({ navigation, route }) {
             <View style={s.podBestRow}>
               <Feather name="trophy" size={14} color={COLORS.amber} />
               <Text style={[s.podBestText, { color: colors.textSec }]}>
-                Pod best: {podBest.longest_streak} days by {podBest.name}
+                Squad best: {podBest.longest_streak} days by {podBest.name}
               </Text>
             </View>
           )}

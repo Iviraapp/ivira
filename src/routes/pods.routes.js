@@ -10,10 +10,16 @@ async function verifyMemberToken(request, reply) {
   }
   try {
     const decoded = jwt.verify(authHeader.slice(7), config.jwt.secret)
-    if (decoded.role !== 'member' || decoded.gymId !== request.params.gymId) {
+    if (decoded.role !== 'member') {
+      return reply.code(403).send({ error: 'Access denied' })
+    }
+    // For gym-scoped routes, verify gym matches. For open routes (no gymId param), skip.
+    if (request.params.gymId && decoded.gymId !== request.params.gymId) {
       return reply.code(403).send({ error: 'Access denied' })
     }
     request.member = decoded
+    // Set effective gymId (from route params or token, null for open squads)
+    request.effectiveGymId = request.params.gymId || decoded.gymId || null
   } catch {
     return reply.code(401).send({ error: 'Invalid or expired token' })
   }
@@ -294,6 +300,80 @@ export default async function podRoutes(fastify) {
   fastify.get('/gyms/:gymId/members/:memberId/pods', memberAuth, async (request, reply) => {
     try {
       const pods = await podsService.getMemberPods(request.params.memberId)
+      return { pods }
+    } catch (err) {
+      return reply.code(err.statusCode || 500).send({ error: err.message })
+    }
+  })
+
+  // ─── Open Squad routes (for B2C users without a gym) ────────────────
+  const openAuth = { preHandler: [fastify.verifyToken] }
+
+  // Browse open squads
+  fastify.get('/squads', openAuth, async (request, reply) => {
+    try {
+      const { goalType, intensity, timePreference } = request.query
+      const memberId = request.user.memberId
+      const pods = await podsService.findMatchingPods({
+        gymId: null, goalType, intensity, timePreference, excludeMemberId: memberId,
+      })
+      return { pods }
+    } catch (err) {
+      return reply.code(err.statusCode || 500).send({ error: err.message })
+    }
+  })
+
+  // Create open squad
+  fastify.post('/squads', {
+    ...openAuth,
+    schema: {
+      body: {
+        type: 'object',
+        required: ['name', 'goalType'],
+        properties: {
+          name: { type: 'string', minLength: 1, maxLength: 100 },
+          goalType: { type: 'string' },
+          intensity: { type: 'string' },
+          timePreference: { type: 'string' },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const pod = await podsService.createPod({
+        gymId: null,
+        name: request.body.name,
+        goalType: request.body.goalType,
+        intensity: request.body.intensity || 'serious',
+        timePreference: request.body.timePreference || 'flexible',
+      })
+      await podsService.joinPod(pod.id, request.user.memberId, 'leader')
+      return reply.code(201).send({ pod })
+    } catch (err) {
+      return reply.code(err.statusCode || 500).send({ error: err.message })
+    }
+  })
+
+  // Auto-match to open squad
+  fastify.post('/squads/auto-match', openAuth, async (request, reply) => {
+    try {
+      const result = await podsService.autoMatchMember({
+        gymId: null,
+        memberId: request.user.memberId,
+        goalType: request.body?.goalType || 'Gym',
+        intensity: request.body?.intensity || 'serious',
+        timePreference: request.body?.timePreference || 'flexible',
+      })
+      return { pod: result }
+    } catch (err) {
+      return reply.code(err.statusCode || 500).send({ error: err.message })
+    }
+  })
+
+  // My squads (B2C)
+  fastify.get('/squads/mine', openAuth, async (request, reply) => {
+    try {
+      const pods = await podsService.getMemberPods(request.user.memberId)
       return { pods }
     } catch (err) {
       return reply.code(err.statusCode || 500).send({ error: err.message })
