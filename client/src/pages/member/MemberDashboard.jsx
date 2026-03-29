@@ -330,26 +330,54 @@ function UpcomingStrip({ onSeeAll, gymId }) {
 }
 
 /* ────────── TODAY'S PLAN CARD ────────── */
+const PLAN_CACHE_KEY = 'ivira_todays_plan'
+const PLAN_CACHE_DATE_KEY = 'ivira_todays_plan_date'
+
 function TodaysPlanCard({ onWorkout }) {
   const [plan, setPlan] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const fetchPlan = () => {
     const token = localStorage.getItem('ivira_member_token')
     if (!token) { setLoading(false); return }
-    api.get('/ai/workout-plan', {
+
+    const today = new Date().toISOString().split('T')[0]
+    const cachedDate = localStorage.getItem(PLAN_CACHE_DATE_KEY)
+    const cachedPlan = localStorage.getItem(PLAN_CACHE_KEY)
+    if (cachedDate === today && cachedPlan) {
+      setPlan(JSON.parse(cachedPlan))
+      setLoading(false)
+      return
+    }
+
+    api.post('/ai/workout-plan', {
+      goal: 'general_fitness',
+      experience_level: 'intermediate',
+      days_per_week: 4,
+      equipment_available: ['barbell', 'dumbbell', 'machine', 'cable'],
+      focus_areas: ['chest', 'back', 'legs', 'core'],
+    }, {
       headers: { Authorization: `Bearer ${token}` }
     }).then(res => {
       const data = res.data
-      // Support { exercises: [...] } or { plan: { exercises: [...] } } or array
-      const exercises = data?.exercises || data?.plan?.exercises || (Array.isArray(data) ? data : null)
+      const dayIndex = new Date().getDay()
+      const days = data?.days || []
+      const todayDay = days[dayIndex % days.length] || days[0]
+      const exercises = todayDay?.exercises?.filter(e => !e.is_warmup).slice(0, 5) || null
+
       if (exercises && exercises.length > 0) {
-        setPlan(exercises.slice(0, 5))
+        setPlan(exercises)
+        localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify(exercises))
+        localStorage.setItem(PLAN_CACHE_DATE_KEY, today)
       }
       setLoading(false)
     }).catch(() => {
       setLoading(false)
     })
+  }
+
+  useEffect(() => {
+    fetchPlan()
   }, [])
 
   if (loading) {
@@ -378,11 +406,25 @@ function TodaysPlanCard({ onWorkout }) {
         <span style={{ fontSize: 14, fontWeight: 700, color: M.text, fontFamily: FONT }}>
           Today's Plan ✨
         </span>
-        <span style={{
-          fontSize: 10, fontWeight: 700, color: M.accent, letterSpacing: '0.06em',
-          textTransform: 'uppercase', background: M.accent + '15',
-          padding: '3px 8px', borderRadius: 20,
-        }}>AI</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span
+            onClick={() => {
+              localStorage.removeItem(PLAN_CACHE_KEY)
+              localStorage.removeItem(PLAN_CACHE_DATE_KEY)
+              setLoading(true)
+              setPlan(null)
+              fetchPlan()
+            }}
+            style={{ fontSize: 10, color: M.textSec, cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            refresh
+          </span>
+          <span style={{
+            fontSize: 10, fontWeight: 700, color: M.accent, letterSpacing: '0.06em',
+            textTransform: 'uppercase', background: M.accent + '15',
+            padding: '3px 8px', borderRadius: 20,
+          }}>AI</span>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
@@ -427,6 +469,98 @@ function TodaysPlanCard({ onWorkout }) {
       >
         Start Workout
       </button>
+    </div>
+  )
+}
+
+/* ────────── WORKOUT HISTORY ────────── */
+function WorkoutHistory({ gymId, memberId }) {
+  const [sessions, setSessions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [expanded, setExpanded] = useState(null) // expanded session id
+
+  useEffect(() => {
+    if (!gymId || !memberId) { setLoading(false); return }
+    const token = localStorage.getItem('ivira_member_token') || localStorage.getItem('ivira_token')
+    api.get(`/gyms/${gymId}/members/${memberId}/workout-sessions`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { limit: 10 }
+    }).then(res => {
+      setSessions(res.data?.sessions || res.data?.data || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [gymId, memberId])
+
+  if (loading) return (
+    <div style={{ background: M.card, borderRadius: 16, padding: '16px 20px', border: `1px solid ${M.border}` }}>
+      <div style={{ height: 14, width: 100, borderRadius: 8, background: M.cardSec, marginBottom: 12 }} />
+      {[1,2,3].map(i => <div key={i} style={{ height: 52, borderRadius: 12, background: M.cardSec, marginBottom: 8 }} />)}
+    </div>
+  )
+
+  if (!sessions.length) return null // Don't show if no history yet
+
+  return (
+    <div style={{ background: M.card, borderRadius: 16, padding: '16px 20px', border: `1px solid ${M.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: M.text, fontFamily: FONT }}>Workout History</span>
+        <span style={{ fontSize: 12, color: M.textSec, fontFamily: FONT }}>{sessions.length} sessions</span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {sessions.slice(0, 5).map(s => {
+          const isExp = expanded === s.id
+          const date = new Date(s.session_date || s.created_at)
+          const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+          const type = s.workout_type || s.name || 'Workout'
+          const duration = s.duration_minutes ? `${s.duration_minutes}m` : null
+          const exCount = s.exercise_count || s.sets?.length || null
+
+          return (
+            <div key={s.id}
+              onClick={() => setExpanded(isExp ? null : s.id)}
+              style={{
+                padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
+                background: M.cardSec, border: `1px solid ${M.border}`,
+                transition: 'all 0.15s',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8, background: M.accent + '18',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                  }}>
+                    <Dumbbell size={15} color={M.accent} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: M.text, fontFamily: FONT, textTransform: 'capitalize' }}>
+                      {type.replace(/_/g, ' ')}
+                    </div>
+                    <div style={{ fontSize: 11, color: M.textSec, fontFamily: FONT, marginTop: 2 }}>
+                      {dateStr}{duration ? ` · ${duration}` : ''}{exCount ? ` · ${exCount} exercises` : ''}
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight size={14} color={M.textSec} style={{ transform: isExp ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+              </div>
+
+              {isExp && s.exercises && s.exercises.length > 0 && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${M.border}` }}>
+                  {s.exercises.slice(0, 4).map((ex, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 12, color: M.textSec, fontFamily: FONT }}>{ex.exercise_name || ex.name}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: M.text, fontFamily: FONT_M }}>
+                        {ex.best_weight_kg ? `${ex.best_weight_kg}kg` : ''} {ex.total_sets ? `${ex.total_sets}×` : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -1479,6 +1613,7 @@ function HomeTab({ member, gymId, onTabChange, onVira, onWorkout }) {
       <GoalTracker goals={goals} />
       <UpcomingStrip onSeeAll={() => onTabChange('classes')} gymId={gymId} />
       <TodaysPlanCard onWorkout={onWorkout} />
+      <WorkoutHistory gymId={gymId} memberId={member?.id} />
     </div>
   )
 }
