@@ -23,9 +23,16 @@ try { Pedometer = require('expo-sensors').Pedometer } catch (err) { console.warn
 
 const HealthContext = createContext(null)
 
-const SYNC_INTERVAL = 30_000 // 30 seconds for steps
-const HR_SYNC_INTERVAL = 120_000 // 2 minutes for heart rate
+const SYNC_INTERVAL = 120_000 // 2 minutes for steps (was 30s — battery drain)
+const HR_SYNC_INTERVAL = 300_000 // 5 minutes for heart rate
 const DEFAULT_STEP_GOAL = 10000
+const STEPS_PER_ACTIVE_MINUTE = 115 // average walking cadence
+
+// Local date helper (avoids UTC timezone bugs for date keys)
+function localDateKey() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 export function HealthProvider({ children, gymId, memberId }) {
   // Steps
@@ -65,7 +72,7 @@ export function HealthProvider({ children, gymId, memberId }) {
         const savedMode = await getItem('ivira_step_mode')
         if (savedMode) setStepModeState(savedMode)
         if (savedMode === 'manual') {
-          const today = new Date().toISOString().split('T')[0]
+          const today = localDateKey()
           const manualSteps = await getItem(`ivira_manual_steps_${today}`)
           if (manualSteps) {
             setSteps(parseInt(manualSteps) || 0)
@@ -113,68 +120,77 @@ export function HealthProvider({ children, gymId, memberId }) {
     }
   }, [stepMode])
 
-  // Re-fetch on app foreground
+  // Pause polling when backgrounded, resume on foreground
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active' && stepMode === 'auto') {
+        // Resume: fetch immediately + restart intervals
         fetchSteps()
         fetchHeartData()
+        if (!stepSyncRef.current) stepSyncRef.current = setInterval(fetchSteps, SYNC_INTERVAL)
+        if (!hrSyncRef.current) hrSyncRef.current = setInterval(fetchHeartData, HR_SYNC_INTERVAL)
+      } else if (state === 'background') {
+        // Pause: clear intervals to save battery
+        if (stepSyncRef.current) { clearInterval(stepSyncRef.current); stepSyncRef.current = null }
+        if (hrSyncRef.current) { clearInterval(hrSyncRef.current); hrSyncRef.current = null }
       }
     })
     return () => sub?.remove()
-  }, [stepMode])
+  }, [stepMode, fetchSteps, fetchHeartData])
 
   // Fetch steps from native health API or pedometer
+  const pedometerAvailable = useRef(null) // cache pedometer availability
+
   const fetchSteps = useCallback(async () => {
     if (stepMode === 'manual') return
 
+    const updateSteps = (newSteps, source) => {
+      setSteps(prev => {
+        // Monotonic guard — steps should only go up during a day
+        const safe = Math.max(prev, newSteps)
+        const newMilestone = Math.floor(safe / 1000)
+        if (newMilestone > lastMilestoneRef.current && lastMilestoneRef.current > 0) {
+          lastMilestoneRef.current = newMilestone
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        } else {
+          lastMilestoneRef.current = newMilestone
+        }
+        return safe
+      })
+      setStepSource(source)
+      setActiveMinutes(Math.floor(newSteps / STEPS_PER_ACTIVE_MINUTE))
+
+      if (gymId && memberId && newSteps > 0) {
+        syncStepsToBackend(gymId, memberId, newSteps).catch(err => console.warn('[HealthCtx]', err?.message))
+      }
+    }
+
+    // Try native health API first (Health Connect / HealthKit)
     try {
       const result = await getTodaySteps()
       if (result.source) {
-        setSteps(prev => {
-          const newMilestone = Math.floor(result.steps / 1000)
-          if (newMilestone > lastMilestoneRef.current && lastMilestoneRef.current > 0) {
-            lastMilestoneRef.current = newMilestone
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-          } else {
-            lastMilestoneRef.current = newMilestone
-          }
-          return result.steps
-        })
-        setStepSource('health')
-        // Derive active minutes: ~100 steps per minute of walking
-        setActiveMinutes(Math.floor(result.steps / 100))
-
-        // Sync to backend
-        if (gymId && memberId) {
-          syncStepsToBackend(gymId, memberId, result.steps).catch(err => console.warn('[HealthCtx]', err?.message))
-        }
-        return
+        updateSteps(result.steps, 'health')
+        return // Success — don't fall through to pedometer (prevents double counting)
       }
     } catch (err) { console.warn('[HealthCtx] fetchSteps health:', err?.message) }
 
-    // Fallback: Pedometer
+    // Fallback: Pedometer (only if health API returned no source)
     if (Pedometer) {
       try {
-        const available = await Pedometer.isAvailableAsync()
-        if (available) {
+        if (pedometerAvailable.current === null) {
+          pedometerAvailable.current = await Pedometer.isAvailableAsync()
+        }
+        if (pedometerAvailable.current) {
           const start = new Date()
           start.setHours(0, 0, 0, 0)
           const { steps: pedometerSteps } = await Pedometer.getStepCountAsync(start, new Date())
-          setSteps(pedometerSteps || 0)
-          setStepSource('pedometer')
-          setActiveMinutes(Math.floor((pedometerSteps || 0) / 100))
-
-          if (gymId && memberId && pedometerSteps > 0) {
-            syncStepsToBackend(gymId, memberId, pedometerSteps).catch(err => console.warn('[HealthCtx]', err?.message))
-          }
+          updateSteps(pedometerSteps || 0, 'pedometer')
           return
         }
       } catch (err) { console.warn('[HealthCtx] fetchSteps pedometer:', err?.message) }
     }
 
-    // Neither Health Connect nor Pedometer available — still mark as attempted
-    setSteps(0)
+    // Neither available
     setStepSource('unavailable')
   }, [stepMode, gymId, memberId])
 
@@ -218,7 +234,7 @@ export function HealthProvider({ children, gymId, memberId }) {
       // Fallback: check backend for last sleep log
       if (gymId && memberId) {
         try {
-          const today = new Date().toISOString().split('T')[0]
+          const today = localDateKey()
           const res = await (await import('../lib/api')).default.get(
             `/gyms/${gymId}/members/${memberId}/sleep?date=${today}`
           )
@@ -265,7 +281,7 @@ export function HealthProvider({ children, gymId, memberId }) {
 
   // Manual step update
   const setManualSteps = useCallback(async (count) => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = localDateKey()
     setSteps(count)
     setStepSource('manual')
     setActiveMinutes(Math.floor(count / 100))

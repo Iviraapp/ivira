@@ -172,11 +172,19 @@ export async function getTodaySteps() {
           endTime: now.toISOString(),
         },
       })
-      const totalSteps = (result?.records || []).reduce(
-        (sum, record) => sum + (record.count || 0),
-        0
-      )
-      console.log('[HealthKit] Health Connect steps:', totalSteps, 'records:', result?.records?.length)
+      // Deduplicate overlapping records from multiple sources
+      // Group by time window and take max per window to avoid double counting
+      const records = result?.records || []
+      const windowMap = new Map()
+      for (const record of records) {
+        const key = `${record.startTime}-${record.endTime}`
+        const existing = windowMap.get(key)
+        if (!existing || (record.count || 0) > existing) {
+          windowMap.set(key, record.count || 0)
+        }
+      }
+      const totalSteps = Array.from(windowMap.values()).reduce((sum, count) => sum + count, 0)
+      console.log('[HealthKit] Health Connect steps:', totalSteps, 'records:', records.length, 'deduped windows:', windowMap.size)
       return { steps: totalSteps, source: 'health_connect' }
     }
   } catch (err) {
