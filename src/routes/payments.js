@@ -1,5 +1,27 @@
 import * as paymentService from '../services/payment.service.js';
 import * as dunningService from '../services/dunning.service.js';
+import redis from '../config/redis.js';
+
+async function checkIdempotency(key, reply) {
+  if (!key) return null;
+  try {
+    if (!redis) return null;
+    const cached = await redis.get(`idem:${key}`);
+    if (cached) {
+      reply.header('X-Idempotency-Replayed', 'true');
+      return JSON.parse(cached);
+    }
+  } catch { /* redis unavailable — proceed normally */ }
+  return null;
+}
+
+async function storeIdempotency(key, data) {
+  if (!key) return;
+  try {
+    if (!redis) return;
+    await redis.set(`idem:${key}`, JSON.stringify(data), { EX: 86400 }); // 24h
+  } catch { /* ignore */ }
+}
 
 const createMembershipSchema = {
   body: {
@@ -29,10 +51,13 @@ const collectSchema = {
 };
 
 export default async function paymentRoutes(fastify) {
+  // Base auth — identity + gym ownership
   const authHooks = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] };
+  // Auth + trial guard — required for all money-collecting operations
+  const authHooksWithTrial = { preHandler: [fastify.verifyToken, fastify.verifyGymOwner, fastify.verifyTrial] };
 
-  // Create membership for a member
-  fastify.post('/gyms/:gymId/memberships', { schema: createMembershipSchema, ...authHooks }, async (request, reply) => {
+  // Create membership for a member (blocked after trial expiry)
+  fastify.post('/gyms/:gymId/memberships', { schema: createMembershipSchema, ...authHooksWithTrial }, async (request, reply) => {
     const membership = await paymentService.createMembership(
       request.params.gymId,
       request.body.memberId,
@@ -41,18 +66,23 @@ export default async function paymentRoutes(fastify) {
     return reply.code(201).send({ membership });
   });
 
-  // Collect payment from a member (creates membership + payment)
-  fastify.post('/gyms/:gymId/members/:memberId/collect', { schema: collectSchema, ...authHooks }, async (request, reply) => {
+  // Collect payment from a member — creates membership + payment (blocked after trial expiry)
+  fastify.post('/gyms/:gymId/members/:memberId/collect', { schema: collectSchema, ...authHooksWithTrial }, async (request, reply) => {
+    const idempKey = request.headers['x-idempotency-key'];
+    const cached = await checkIdempotency(idempKey, reply);
+    if (cached) return reply.code(201).send(cached);
+
     const result = await paymentService.collectPayment(
       request.params.gymId,
       request.params.memberId,
       request.body
     );
+    await storeIdempotency(idempKey, result);
     return reply.code(201).send(result);
   });
 
-  // Create payment order (Razorpay)
-  fastify.post('/gyms/:gymId/memberships/:membershipId/pay', authHooks, async (request, reply) => {
+  // Create Razorpay payment order (blocked after trial expiry)
+  fastify.post('/gyms/:gymId/memberships/:membershipId/pay', authHooksWithTrial, async (request, reply) => {
     const result = await paymentService.createPaymentOrder(
       request.params.gymId,
       request.params.membershipId
@@ -60,7 +90,7 @@ export default async function paymentRoutes(fastify) {
     return reply.code(201).send(result);
   });
 
-  // List payments
+  // List payments — read-only, allowed during trial
   fastify.get('/gyms/:gymId/payments', authHooks, async (request) => {
     const { page, limit, status, memberId } = request.query;
     const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
@@ -68,12 +98,12 @@ export default async function paymentRoutes(fastify) {
     return paymentService.getPayments(request.params.gymId, { page: safePage, limit: safeLimit, status, memberId });
   });
 
-  // Run dunning for expired memberships
-  fastify.post('/gyms/:gymId/dunning/run', authHooks, async (request) => {
+  // Run dunning for expired memberships (blocked after trial expiry)
+  fastify.post('/gyms/:gymId/dunning/run', authHooksWithTrial, async (request) => {
     return dunningService.runDunning(request.params.gymId);
   });
 
-  // Get dunning status
+  // Get dunning status — read-only, allowed during trial
   fastify.get('/gyms/:gymId/dunning', authHooks, async (request) => {
     return dunningService.getDunningStatus(request.params.gymId);
   });

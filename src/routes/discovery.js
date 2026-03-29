@@ -61,9 +61,11 @@ export default async function discoveryRoutes(fastify) {
   // ─── Public routes (no auth) ───────────────────────────────────
 
   // Search listed gyms
+  // Accepts: q (text search), city, area, amenities, lat, lng, radius (km), page, limit
+  // lat/lng geo search works for any country — no country-specific restrictions.
   fastify.get('/discover/gyms', async (request) => {
-    const { city, area, amenities, lat, lng, radius, page, limit } = request.query;
-    return discoveryService.searchGyms({ city, area, amenities, lat, lng, radius, page, limit });
+    const { q, city, area, amenities, lat, lng, radius, page, limit } = request.query;
+    return discoveryService.searchGyms({ q, city, area, amenities, lat, lng, radius, page, limit });
   });
 
   // Get a gym's public profile

@@ -5,6 +5,7 @@ import redis from '../config/redis.js';
 import { NotFoundError, ValidationError, UnauthorizedError } from '../utils/errors.js';
 import { normalizePhone, generateOTP, isValidEmail } from '../utils/validators.js';
 import { sendOTPEmail } from './email.service.js';
+import { geocodeAddress } from './geocoding.service.js';
 
 export async function registerGym({ ownerName, ownerPhone, ownerEmail, gymName, city, address, latitude, longitude }) {
   const phone = normalizePhone(ownerPhone);
@@ -18,6 +19,21 @@ export async function registerGym({ ownerName, ownerPhone, ownerEmail, gymName, 
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + config.app.trialDays);
 
+  // Auto-geocode if coordinates not provided but address/city is known
+  let resolvedLat = latitude;
+  let resolvedLng = longitude;
+  if ((resolvedLat == null || resolvedLng == null) && (address || city)) {
+    try {
+      const geocoded = await geocodeAddress(address || `${gymName}, ${city}`);
+      if (geocoded) {
+        resolvedLat = resolvedLat ?? geocoded.lat;
+        resolvedLng = resolvedLng ?? geocoded.lng;
+      }
+    } catch {
+      // Geocoding is best-effort — never block registration
+    }
+  }
+
   const [gym] = await db('gyms')
     .insert({
       owner_firebase_uid: email, // use email as unique identifier
@@ -27,8 +43,8 @@ export async function registerGym({ ownerName, ownerPhone, ownerEmail, gymName, 
       gym_name: gymName,
       city,
       address,
-      latitude,
-      longitude,
+      latitude: resolvedLat ?? null,
+      longitude: resolvedLng ?? null,
       status: 'trial',
       trial_ends_at: trialEndsAt,
     })

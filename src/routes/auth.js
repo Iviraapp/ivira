@@ -336,6 +336,15 @@ export default async function authRoutes(fastify) {
     return { gym: { id: gym.id, name: gym.gym_name, invite_code: gym.invite_code, lat: gym.latitude, lng: gym.longitude }, members, actions: results };
   });
 
+  // Logout — blacklist the current token so it cannot be reused
+  fastify.post('/logout', { preHandler: [fastify.verifyToken] }, async (request, reply) => {
+    const token = request.headers.authorization?.slice(7);
+    if (token && fastify.blacklistToken) {
+      await fastify.blacklistToken(token);
+    }
+    return { message: 'Logged out successfully' };
+  });
+
   // Refresh JWT token (extend expiry without re-login, supports expired tokens within 30-day grace window)
   fastify.post('/auth/refresh', async (request, reply) => {
     const authHeader = request.headers.authorization;
