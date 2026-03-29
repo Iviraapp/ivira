@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   Switch,
   Modal,
   Dimensions,
@@ -24,6 +23,7 @@ import { calculateBMI, getBMICategory } from '../lib/healthCalculator'
 import { startGymGeofencing, stopGymGeofencing, isGeofencingActive } from '../lib/gymGeofence'
 import api from '../lib/api'
 import { getItem, setItem } from '../lib/storage'
+import { premiumAlert } from '../components/PremiumAlert'
 
 let ImagePicker = null
 try { ImagePicker = require('expo-image-picker') } catch (err) { console.warn('[Profile] ImagePicker load:', err?.message) }
@@ -197,7 +197,7 @@ export default function ProfileScreen({ navigation }) {
     const h = parseFloat(heightCm)
     const w = parseFloat(weightKg)
     if (!h || !w || h <= 0 || w <= 0) {
-      Alert.alert('Invalid Input', 'Please enter valid height and weight values.')
+      premiumAlert('Invalid Input', 'Please enter valid height and weight values.')
       return
     }
 
@@ -208,10 +208,10 @@ export default function ProfileScreen({ navigation }) {
         weight_kg: w,
       })
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      Alert.alert('Saved', 'Body stats updated successfully.')
+      premiumAlert('Saved', 'Body stats updated successfully.')
       if (refreshProfile) refreshProfile()
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to save body stats.')
+      premiumAlert('Error', err.response?.data?.message || 'Failed to save body stats.')
     } finally {
       setSavingStats(false)
     }
@@ -220,14 +220,14 @@ export default function ProfileScreen({ navigation }) {
   // --- Profile Picture Upload (30-day cooldown enforced by backend) ---
   const handleProfilePictureUpload = async () => {
     if (!ImagePicker) {
-      Alert.alert('Not Available', 'Photo picker is not available on this device.')
+      premiumAlert('Not Available', 'Photo picker is not available on this device.')
       return
     }
 
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'We need photo library access to upload your profile picture.')
+        premiumAlert('Permission Denied', 'We need photo library access to upload your profile picture.')
         return
       }
 
@@ -259,7 +259,7 @@ export default function ProfileScreen({ navigation }) {
       if (refreshProfile) refreshProfile()
     } catch (err) {
       const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to upload profile picture.'
-      Alert.alert('Cannot Update Photo', msg)
+      premiumAlert('Cannot Update Photo', msg)
     } finally {
       setUploadingPhoto(false)
     }
@@ -268,14 +268,14 @@ export default function ProfileScreen({ navigation }) {
   // --- Photo Upload ---
   const handlePhotoUpload = async () => {
     if (!ImagePicker) {
-      Alert.alert('Not Available', 'Photo picker is not available on this device.')
+      premiumAlert('Not Available', 'Photo picker is not available on this device.')
       return
     }
 
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'We need photo library access to upload progress photos.')
+        premiumAlert('Permission Denied', 'We need photo library access to upload progress photos.')
         return
       }
 
@@ -293,10 +293,10 @@ export default function ProfileScreen({ navigation }) {
         type: 'progress',
       })
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      Alert.alert('Success', 'Progress photo uploaded successfully.')
+      premiumAlert('Success', 'Progress photo uploaded successfully.')
       if (refreshProfile) refreshProfile()
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to upload photo.')
+      premiumAlert('Error', err.response?.data?.message || 'Failed to upload photo.')
     } finally {
       setUploadingPhoto(false)
     }
@@ -324,7 +324,7 @@ export default function ProfileScreen({ navigation }) {
   }
 
   const handleCancelBooking = (bookingId, className) => {
-    Alert.alert(
+    premiumAlert(
       'Cancel Booking',
       `Cancel your booking for ${className || 'this class'}?`,
       [
@@ -338,9 +338,9 @@ export default function ProfileScreen({ navigation }) {
               await api.post(`/gyms/${gymId}/bookings/${bookingId}/cancel`)
               await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
               setBookings((prev) => prev.filter((b) => b.id !== bookingId))
-              Alert.alert('Cancelled', 'Booking has been cancelled.')
+              premiumAlert('Cancelled', 'Booking has been cancelled.')
             } catch (err) {
-              Alert.alert('Error', err.response?.data?.message || 'Failed to cancel booking.')
+              premiumAlert('Error', err.response?.data?.message || 'Failed to cancel booking.')
             } finally {
               setCancellingBookingId(null)
             }
@@ -384,14 +384,14 @@ export default function ProfileScreen({ navigation }) {
   }
 
   const handleSupport = () => {
-    Alert.alert(
+    premiumAlert(
       'Contact Support',
       'Reach us at support@ivira.app or WhatsApp +91 98765 43210',
     )
   }
 
   const handleAbout = () => {
-    Alert.alert(
+    premiumAlert(
       'About IVIRA',
       'IVIRA v1.0.0\nGym management made simple.\n\n\u00A9 2026 IVIRA',
     )
@@ -399,19 +399,19 @@ export default function ProfileScreen({ navigation }) {
 
   const handleExportData = async () => {
     if (!gymId) {
-      Alert.alert('Not Connected', 'Connect a gym to export your data.')
+      premiumAlert('Not Connected', 'Connect a gym to export your data.')
       return
     }
     try {
       await api.get(`/gyms/${gymId}/members/me/export`)
-      Alert.alert('Data Export', 'Your data has been emailed to you.')
+      premiumAlert('Data Export', 'Your data has been emailed to you.')
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to export data. Please try again.')
+      premiumAlert('Error', err.response?.data?.message || 'Failed to export data. Please try again.')
     }
   }
 
   const handleDeleteAccount = () => {
-    Alert.alert(
+    premiumAlert(
       'Delete Account',
       'This permanently deletes your account and all data. This cannot be undone.',
       [
@@ -426,7 +426,7 @@ export default function ProfileScreen({ navigation }) {
               }
               await logout()
             } catch (err) {
-              Alert.alert('Error', err.response?.data?.message || 'Failed to delete account. Please try again.')
+              premiumAlert('Error', err.response?.data?.message || 'Failed to delete account. Please try again.')
             }
           },
         },
@@ -435,7 +435,7 @@ export default function ProfileScreen({ navigation }) {
   }
 
   const handleLogout = () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+    premiumAlert('Log Out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Log Out',
@@ -476,11 +476,11 @@ export default function ProfileScreen({ navigation }) {
         const started = await startGymGeofencing(gymInfo)
         if (!started) {
           setGymProximityEnabled(false)
-          Alert.alert('Location Required', 'Please enable location permissions to use gym proximity alerts.')
+          premiumAlert('Location Required', 'Please enable location permissions to use gym proximity alerts.')
         }
       } else {
         setGymProximityEnabled(false)
-        Alert.alert('Not Available', 'Your gym hasn\'t set its location yet. Contact your gym to enable this feature.')
+        premiumAlert('Not Available', 'Your gym hasn\'t set its location yet. Contact your gym to enable this feature.')
       }
     } else {
       await stopGymGeofencing()
@@ -503,7 +503,7 @@ export default function ProfileScreen({ navigation }) {
   const handleSaveProfile = async () => {
     const name = editName.trim()
     if (!name) {
-      Alert.alert('Required', 'Name cannot be empty.')
+      premiumAlert('Required', 'Name cannot be empty.')
       return
     }
 
@@ -522,7 +522,7 @@ export default function ProfileScreen({ navigation }) {
       setShowEditProfile(false)
       if (refreshProfile) refreshProfile()
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to update profile.')
+      premiumAlert('Error', err.response?.data?.message || 'Failed to update profile.')
     } finally {
       setSavingProfile(false)
     }
@@ -531,7 +531,7 @@ export default function ProfileScreen({ navigation }) {
   const handleConnectGym = async () => {
     const code = gymCode.trim()
     if (!code) {
-      Alert.alert('Enter Code', 'Please enter your facility code.')
+      premiumAlert('Enter Code', 'Please enter your facility code.')
       return
     }
     setConnectingGym(true)
@@ -541,7 +541,7 @@ export default function ProfileScreen({ navigation }) {
       setShowConnectGym(false)
       setGymCode('')
     } catch (err) {
-      Alert.alert('Connection Failed', err.response?.data?.message || err.message || 'Invalid facility code. Please try again.')
+      premiumAlert('Connection Failed', err.response?.data?.message || err.message || 'Invalid facility code. Please try again.')
     } finally {
       setConnectingGym(false)
     }
@@ -627,7 +627,7 @@ export default function ProfileScreen({ navigation }) {
               {isExpired && (
                 <TouchableOpacity
                   style={styles.renewButton}
-                  onPress={() => Alert.alert('Renew Membership', 'Please contact your gym to renew.')}
+                  onPress={() => premiumAlert('Renew Membership', 'Please contact your gym to renew.')}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.renewButtonText, { color: colors.text }]}>Renew Membership</Text>

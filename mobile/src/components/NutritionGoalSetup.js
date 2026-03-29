@@ -7,9 +7,9 @@ import {
   Modal,
   ScrollView,
   TextInput,
-  Alert,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from './PremiumAlert'
 import Haptics from '../lib/haptics'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -99,11 +99,11 @@ export default function NutritionGoalSetup({ visible, onClose, onSave, memberWei
   const handleNext = () => {
     if (step === 1) {
       if (!age || !weight || !height) {
-        Alert.alert('Missing Info', 'Please fill in your age, weight, and height.')
+        premiumAlert('Missing Info', 'Please fill in your age, weight, and height.')
         return
       }
       if (parseInt(age, 10) < 13 || parseInt(age, 10) > 100) {
-        Alert.alert('Invalid Age', 'Please enter an age between 13 and 100.')
+        premiumAlert('Invalid Age', 'Please enter an age between 13 and 100.')
         return
       }
     }

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   Animated,
   ScrollView,
   ActivityIndicator,
@@ -19,6 +18,7 @@ import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
+import { premiumAlert } from '../components/PremiumAlert'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -214,17 +214,17 @@ export default function MembershipActivationScreen({ navigation }) {
   const handleLinkGym = async () => {
     const code = inviteCode.trim()
     if (!code) {
-      Alert.alert('Enter Code', 'Please enter your gym activation code.')
+      premiumAlert('Enter Code', 'Please enter your gym activation code.')
       return
     }
     setLinking(true)
     try {
       await connectGym(code)
-      Alert.alert('Welcome!', 'Your membership is now active. Check in anytime!', [
+      premiumAlert('Welcome!', 'Your membership is now active. Check in anytime!', [
         { text: 'Let\'s Go', onPress: () => navigation.goBack() },
       ])
     } catch (err) {
-      Alert.alert('Invalid Code', err.response?.data?.message || 'Could not activate this code. Please check with your gym owner.')
+      premiumAlert('Invalid Code', err.response?.data?.message || 'Could not activate this code. Please check with your gym owner.')
     } finally {
       setLinking(false)
     }
@@ -233,23 +233,23 @@ export default function MembershipActivationScreen({ navigation }) {
   const handleSubmitForm = async () => {
     // Validate required fields
     if (facilityTypes.length === 0) {
-      Alert.alert('Required', 'Please select at least one facility type you\'re looking for.')
+      premiumAlert('Required', 'Please select at least one facility type you\'re looking for.')
       return
     }
     if (fitnessGoals.length === 0) {
-      Alert.alert('Required', 'Please select at least one fitness goal.')
+      premiumAlert('Required', 'Please select at least one fitness goal.')
       return
     }
     if (!city) {
-      Alert.alert('Required', 'Please select your city.')
+      premiumAlert('Required', 'Please select your city.')
       return
     }
     if (!name.trim()) {
-      Alert.alert('Required', 'Please enter your name so we can reach you.')
+      premiumAlert('Required', 'Please enter your name so we can reach you.')
       return
     }
     if (!phone.trim() || phone.trim().length < 10) {
-      Alert.alert('Required', 'Please enter a valid phone number.')
+      premiumAlert('Required', 'Please enter a valid phone number.')
       return
     }
 
@@ -282,13 +282,13 @@ export default function MembershipActivationScreen({ navigation }) {
       const facilityLabels = facilityTypes.map(k => FACILITY_TYPES.find(f => f.key === k)?.label).filter(Boolean)
       const goalLabels = fitnessGoals.map(k => FITNESS_GOALS.find(g => g.key === k)?.label).filter(Boolean)
 
-      Alert.alert(
+      premiumAlert(
         'We\'re On It!',
         `Our concierge team will find the best ${facilityLabels.slice(0, 2).join(' & ')} options${area ? ` near ${area}` : ` in ${city}`} for ${goalLabels.slice(0, 2).join(' & ')}.\n\nExpect a call on ${phone} within 24 hours with personalized recommendations and exclusive deals.`,
         [{ text: 'Got it', onPress: () => navigation.goBack() }]
       )
     } catch (err) {
-      Alert.alert('Error', 'Something went wrong. Please try again.')
+      premiumAlert('Error', 'Something went wrong. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -414,7 +414,7 @@ export default function MembershipActivationScreen({ navigation }) {
             style={[styles.secondaryBtn, {
               borderColor: isDark ? 'rgba(255,255,255,0.1)' : colors.border,
             }]}
-            onPress={() => Alert.alert('Coming Soon', 'Gym credential login will be available shortly.')}
+            onPress={() => premiumAlert('Coming Soon', 'Gym credential login will be available shortly.')}
             activeOpacity={0.7}
           >
             <Feather name="log-in" size={16} color={colors.textSec} style={{ marginRight: 8 }} />

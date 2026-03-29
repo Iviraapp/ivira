@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Share, Alert, ActivityIndicator, RefreshControl, Platform,
+  Share, ActivityIndicator, RefreshControl, Platform,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -89,7 +90,7 @@ export default function ReferralScreen({ navigation }) {
         fetchData()
       }
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to generate referral code')
+      premiumAlert('Error', err.response?.data?.message || 'Failed to generate referral code')
     } finally {
       setGenerating(false)
     }

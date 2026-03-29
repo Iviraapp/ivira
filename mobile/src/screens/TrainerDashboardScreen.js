@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
-  Alert,
   FlatList,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -292,7 +292,7 @@ export default function TrainerDashboardScreen({ navigation }) {
   // ─── Mark session complete ───
   const handleMarkComplete = useCallback(async (session) => {
     const sessionId = session._id || session.id
-    Alert.alert(
+    premiumAlert(
       'Complete Session',
       `Mark session with ${session.clientName || session.client_name || 'client'} as completed?`,
       [
@@ -308,7 +308,7 @@ export default function TrainerDashboardScreen({ navigation }) {
                 )
               )
             } catch (err) {
-              Alert.alert('Error', 'Could not update session. Please try again.')
+              premiumAlert('Error', 'Could not update session. Please try again.')
             }
           },
         },

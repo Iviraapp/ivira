@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Dimensions,
   RefreshControl,
-  ImageBackground,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
@@ -459,17 +458,8 @@ export default function FastingLogScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      {/* Aesthetic hero accent */}
-      <View style={[styles.heroAccent, { backgroundColor: '#1a2a3a' }]}>
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=50' }}
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.heroAccentImage}
-          resizeMode="cover"
-        >
-          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
-        </ImageBackground>
-      </View>
+      {/* Hero accent */}
+      <View style={[styles.heroAccent, { backgroundColor: '#1A2236' }]} />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -613,15 +603,6 @@ const styles = StyleSheet.create({
     right: 0,
     height: 120,
     zIndex: 0,
-  },
-  heroAccentImage: {
-  },
-  heroAccentOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(10,14,26,0.55)',
-  },
-  heroAccentOverlayLight: {
-    backgroundColor: 'rgba(247,245,242,0.45)',
   },
   center: {
     flex: 1,

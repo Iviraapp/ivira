@@ -12,11 +12,10 @@ import {
   Modal,
   TextInput,
   FlatList,
-  Alert,
   RefreshControl,
-  ImageBackground,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 let Svg = null
 let Circle = null
 try {
@@ -426,7 +425,7 @@ export default function HealthScreen({ navigation }) {
       }
     } catch (err) {
       console.warn('[Health] sync:', err?.message)
-      Alert.alert('Sync Failed', 'Could not sync health data. Please try again.')
+      premiumAlert('Sync Failed', 'Could not sync health data. Please try again.')
     } finally {
       setSyncing(false)
     }
@@ -504,14 +503,7 @@ export default function HealthScreen({ navigation }) {
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Wellness hero accent */}
       <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=50' }}
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.heroAccentImage}
-          resizeMode="cover"
-        >
-          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
-        </ImageBackground>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors?.bgTer || '#1A2236' }]} />
       </View>
       <ScrollView
         contentContainerStyle={styles.content}
@@ -995,7 +987,7 @@ export default function HealthScreen({ navigation }) {
                         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
                         loadData()
                       } catch (err) {
-                        Alert.alert('Failed to save', 'Please try again.')
+                        premiumAlert('Failed to save', 'Please try again.')
                         loadData()
                       }
                     }}

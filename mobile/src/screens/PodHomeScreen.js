@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  RefreshControl, TextInput, ActivityIndicator, Alert,
+  RefreshControl, TextInput, ActivityIndicator,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -119,7 +120,7 @@ export default function PodHomeScreen({ navigation }) {
       setTimeout(() => setMatchSuccess(false), 3000)
       await fetchPodData()
     } catch (err) {
-      Alert.alert('Match Failed', err.response?.data?.message || 'Please try again later.')
+      premiumAlert('Match Failed', err.response?.data?.message || 'Please try again later.')
     } finally {
       setMatching(false)
     }
@@ -134,17 +135,17 @@ export default function PodHomeScreen({ navigation }) {
       (c.member_id === member?.id || c.memberId === member?.id) && c.status === 'pending'
     )
     if (!myCommitment) {
-      Alert.alert('No Commitment', 'Commit to a plan first before checking in.')
+      premiumAlert('No Commitment', 'Commit to a plan first before checking in.')
       return
     }
     try {
       await api.post(`/gyms/${gymId}/pods/${podId}/checkin`, {
         commitmentId: myCommitment.id || myCommitment._id,
       })
-      Alert.alert('Checked In', 'Nice work. Your squad can see you showed up.')
+      premiumAlert('Checked In', 'Nice work. Your squad can see you showed up.')
       onRefresh()
     } catch (err) {
-      Alert.alert('Check-In Failed', err.response?.data?.message || 'Try again.')
+      premiumAlert('Check-In Failed', err.response?.data?.message || 'Try again.')
     }
   }
 
@@ -163,7 +164,7 @@ export default function PodHomeScreen({ navigation }) {
       setCommitActivity('')
       onRefresh()
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Could not save commitment.')
+      premiumAlert('Error', err.response?.data?.message || 'Could not save commitment.')
     } finally {
       setSubmitting(false)
     }

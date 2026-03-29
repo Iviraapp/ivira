@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Image,
-  Dimensions, Modal, ActivityIndicator, Alert, Animated, PanResponder,
+  Dimensions, Modal, ActivityIndicator, Animated, PanResponder,
   Platform,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import Svg, { Line, Circle as SvgCircle, Polyline, Text as SvgText } from 'react-native-svg'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
@@ -328,13 +329,13 @@ export default function ProgressPhotosScreen({ navigation }) {
   // Take / pick photo
   const handleAddPhoto = useCallback(async () => {
     if (!ImagePicker) {
-      Alert.alert('Camera Unavailable', 'expo-image-picker is not installed.')
+      premiumAlert('Camera Unavailable', 'expo-image-picker is not installed.')
       return
     }
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Camera access is needed to take progress photos.')
+        premiumAlert('Permission Required', 'Camera access is needed to take progress photos.')
         return
       }
 
@@ -350,7 +351,7 @@ export default function ProgressPhotosScreen({ navigation }) {
 
       const asset = result.assets?.[0] || result
       if (!asset.base64) {
-        Alert.alert('Error', 'Could not capture photo data.')
+        premiumAlert('Error', 'Could not capture photo data.')
         return
       }
 
@@ -362,12 +363,12 @@ export default function ProgressPhotosScreen({ navigation }) {
         })
         await fetchData()
       } catch (err) {
-        Alert.alert('Upload Failed', 'Could not save your progress photo. Please try again.')
+        premiumAlert('Upload Failed', 'Could not save your progress photo. Please try again.')
       } finally {
         setUploading(false)
       }
     } catch (err) {
-      Alert.alert('Error', 'Something went wrong while taking the photo.')
+      premiumAlert('Error', 'Something went wrong while taking the photo.')
     }
   }, [gymId, memberId, fetchData])
 

@@ -4,7 +4,7 @@
  * Locale-aware: adapts greetings, food references, and cultural phrases
  * based on device language/region (Hindi, Tamil, Telugu, Kannada, Malayalam, English).
  */
-import { Platform, NativeModules } from 'react-native'
+// Platform/NativeModules no longer needed — region is set from gym city
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -44,50 +44,59 @@ function firstName(name) {
 }
 
 // ---------------------------------------------------------------------------
-// Locale Detection — determines regional flavor for greetings & food refs
+// Region Detection — determines regional flavor for greetings & food refs
 // ---------------------------------------------------------------------------
-// Returns: 'hi' (Hindi), 'ta' (Tamil), 'te' (Telugu), 'kn' (Kannada),
-//          'ml' (Malayalam), 'en' (English/International)
+// Uses gym city (IP/location-based) rather than device locale, because not
+// everyone speaks the language their phone is set to.
 
-let _cachedLocale = null
+let _regionOverride = null
 
-function getDeviceLocale() {
-  if (_cachedLocale) return _cachedLocale
-
-  try {
-    let locale = ''
-    if (Platform.OS === 'ios') {
-      locale = (
-        NativeModules.SettingsManager?.settings?.AppleLocale ||
-        NativeModules.SettingsManager?.settings?.AppleLanguages?.[0] ||
-        ''
-      )
-    } else if (Platform.OS === 'android') {
-      locale = NativeModules.I18nManager?.localeIdentifier || ''
-    }
-    // Normalize: "hi_IN" → "hi", "en_US" → "en", "ta_IN" → "ta"
-    _cachedLocale = (locale.split(/[_-]/)[0] || 'en').toLowerCase()
-  } catch {
-    _cachedLocale = 'en'
-  }
-  return _cachedLocale
+// City → region mapping for Indian cities
+const CITY_REGION_MAP = {
+  // North India (Hindi belt)
+  delhi: 'north', 'new delhi': 'north', noida: 'north', gurgaon: 'north', gurugram: 'north',
+  mumbai: 'north', pune: 'north', nagpur: 'north', nashik: 'north', thane: 'north',
+  ahmedabad: 'north', surat: 'north', vadodara: 'north', rajkot: 'north',
+  jaipur: 'north', lucknow: 'north', kanpur: 'north', patna: 'north',
+  chandigarh: 'north', ludhiana: 'north', amritsar: 'north',
+  kolkata: 'north', bhopal: 'north', indore: 'north',
+  // Tamil Nadu
+  chennai: 'tamil', coimbatore: 'tamil', madurai: 'tamil', trichy: 'tamil',
+  salem: 'tamil', tirunelveli: 'tamil', erode: 'tamil', vellore: 'tamil',
+  // Telangana / Andhra Pradesh
+  hyderabad: 'telugu', visakhapatnam: 'telugu', vijayawada: 'telugu',
+  warangal: 'telugu', guntur: 'telugu', tirupati: 'telugu', vizag: 'telugu',
+  // Karnataka
+  bengaluru: 'kannada', bangalore: 'kannada', mysuru: 'kannada', mysore: 'kannada',
+  mangalore: 'kannada', hubli: 'kannada', dharwad: 'kannada', belgaum: 'kannada',
+  // Kerala
+  kochi: 'malayalam', thiruvananthapuram: 'malayalam', kozhikode: 'malayalam',
+  thrissur: 'malayalam', ernakulam: 'malayalam', calicut: 'malayalam',
 }
 
 /**
- * Allow external override (e.g. from user profile language preference or gym setting).
+ * Set region based on gym city. Call this when gym info is loaded.
+ * @param {string} city - Gym's city name
  */
+export function setCoachRegion(city) {
+  if (!city) { _regionOverride = 'international'; return }
+  _regionOverride = CITY_REGION_MAP[city.toLowerCase().trim()] || 'international'
+}
+
+/** @deprecated Use setCoachRegion(city) instead */
 export function setCoachLocale(locale) {
-  _cachedLocale = (locale || 'en').toLowerCase().split(/[_-]/)[0]
+  // Keep for backwards compatibility but map to region
+  const loc = (locale || 'en').toLowerCase().split(/[_-]/)[0]
+  if (loc === 'hi' || loc === 'mr' || loc === 'gu' || loc === 'bn' || loc === 'pa') _regionOverride = 'north'
+  else if (loc === 'ta') _regionOverride = 'tamil'
+  else if (loc === 'te') _regionOverride = 'telugu'
+  else if (loc === 'kn') _regionOverride = 'kannada'
+  else if (loc === 'ml') _regionOverride = 'malayalam'
+  else _regionOverride = 'international'
 }
 
 function getRegion() {
-  const loc = getDeviceLocale()
-  if (loc === 'hi' || loc === 'mr' || loc === 'gu' || loc === 'bn' || loc === 'pa') return 'north'
-  if (loc === 'ta') return 'tamil'
-  if (loc === 'te') return 'telugu'
-  if (loc === 'kn') return 'kannada'
-  if (loc === 'ml') return 'malayalam'
-  return 'international'
+  return _regionOverride || 'international'
 }
 
 // ---------------------------------------------------------------------------
@@ -306,7 +315,7 @@ const TIME_INSIGHTS = {
     'Morning workouts spike your metabolism for the next 14 hours.',
     'Cortisol peaks in the AM \u2014 your body is primed for intensity.',
     'Early grind. While others sleep, you build.',
-    'Surya Namaskar before breakfast? Ancient wisdom, modern results.',
+    'A quick stretch before breakfast? Small habit, big results.',
     'Morning light + movement = better sleep tonight. Science backs it.',
   ],
   afternoon: [

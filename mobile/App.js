@@ -16,6 +16,7 @@ import { ThemeProvider, useTheme } from './src/context/ThemeContext'
 import { HealthProvider } from './src/context/HealthContext'
 import AppNavigator from './src/navigation/AppNavigator'
 import NotificationManager from './src/components/NotificationManager'
+import { PremiumAlertOverlay } from './src/components/PremiumAlert'
 import ErrorBoundary from './src/components/ErrorBoundary'
 import { preloadInterstitialAd } from './src/components/AdBanner'
 import {
@@ -64,6 +65,7 @@ function ThemedApp() {
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <NotificationManager />
             <AppNavigator />
+            <PremiumAlertOverlay />
           </HealthProviderBridge>
         </AuthProvider>
       </SafeAreaProvider>

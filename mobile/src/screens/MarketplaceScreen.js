@@ -7,12 +7,12 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   Dimensions,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { formatPaise } from '../lib/utils'
@@ -220,7 +220,7 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
       const res = await api.get(`/gyms/${gymId}/trainers`)
       setProfessionals(res.data?.trainers || res.data || [])
     } catch (err) {
-      Alert.alert('Error', 'Could not load professionals. Pull down to retry.')
+      premiumAlert('Error', 'Could not load professionals. Pull down to retry.')
     }
   }, [gymId])
 
@@ -290,7 +290,7 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
     } catch (err) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
       const msg = err.response?.data?.message || err.response?.data?.error || 'Could not reserve spot'
-      Alert.alert('Booking Failed', msg)
+      premiumAlert('Booking Failed', msg)
     } finally {
       setReservingId(null)
     }

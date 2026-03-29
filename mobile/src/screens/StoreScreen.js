@@ -7,13 +7,13 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   TextInput,
   ScrollView,
   Dimensions,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import Haptics from '../lib/haptics'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
 import { formatPaise } from '../lib/utils'
@@ -51,7 +51,7 @@ export default function StoreScreen({ embedded = false }) {
       const res = await api.get(`/gyms/${gymId}/products`)
       setProducts(res.data?.products || res.data || [])
     } catch (err) {
-      Alert.alert('Error', 'Could not load products. Pull down to retry.')
+      premiumAlert('Error', 'Could not load products. Pull down to retry.')
     }
   }, [gymId])
 
@@ -96,7 +96,7 @@ export default function StoreScreen({ embedded = false }) {
         quantity: 1,
       })
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      Alert.alert('Success', `${product.name} purchased successfully!`)
+      premiumAlert('Success', `${product.name} purchased successfully!`)
       fetchProducts()
     } catch (err) {
       const status = err.response?.status
@@ -115,7 +115,7 @@ export default function StoreScreen({ embedded = false }) {
       } else {
         msg = detail
       }
-      Alert.alert('Purchase Failed', msg)
+      premiumAlert('Purchase Failed', msg)
     } finally {
       setBuyingId(null)
     }
@@ -127,13 +127,13 @@ export default function StoreScreen({ embedded = false }) {
     setBuyingId(product.id)
     try {
       await api.post(`/gyms/${gymId}/products/${product.id}/waitlist`)
-      Alert.alert('Notified', `We'll notify you when ${product.name} is back in stock.`)
+      premiumAlert('Notified', `We'll notify you when ${product.name} is back in stock.`)
     } catch (err) {
       const detail = err.response?.data?.message || err.message || 'Unknown error'
       if (__DEV__) {
         console.warn('[StoreScreen] Waitlist failed:', { status: err.response?.status, detail, productId: product.id })
       }
-      Alert.alert('Error', detail)
+      premiumAlert('Error', detail)
     } finally {
       setBuyingId(null)
     }

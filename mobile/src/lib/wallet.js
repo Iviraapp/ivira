@@ -1,6 +1,7 @@
 // Apple Wallet / Google Wallet integration for membership passes
 // When added, the OS automatically shows the pass on the lock screen near the gym
-import { Platform, Alert, Linking } from 'react-native'
+import { Platform, Linking } from 'react-native'
+import { premiumAlert } from '../components/PremiumAlert'
 import api from './api'
 
 let WalletManager = null
@@ -41,7 +42,7 @@ export async function addMembershipToWallet({ gymId, memberId, memberName, gymNa
         return true
       }
 
-      Alert.alert(
+      premiumAlert(
         'Setup Required',
         'Google Wallet pass is being configured. Your QR code works for check-in in the meantime.',
       )
@@ -60,7 +61,7 @@ export async function addMembershipToWallet({ gymId, memberId, memberName, gymNa
       }
 
       // Apple certs not yet configured — show message
-      Alert.alert(
+      premiumAlert(
         'Coming Soon',
         'Apple Wallet pass will be available soon. Your QR code works for check-in.',
       )
@@ -70,12 +71,12 @@ export async function addMembershipToWallet({ gymId, memberId, memberName, gymNa
     const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to add to wallet'
 
     if (err.response?.status === 404 || msg.includes('not configured')) {
-      Alert.alert(
+      premiumAlert(
         'Setup in Progress',
         'Wallet pass generation is being set up. Your QR code works for check-in in the meantime.',
       )
     } else {
-      Alert.alert('Wallet Error', msg)
+      premiumAlert('Wallet Error', msg)
     }
     return false
   }

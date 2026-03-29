@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Alert, ActivityIndicator, RefreshControl, Linking, Platform,
+  ActivityIndicator, RefreshControl, Linking, Platform,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -220,14 +221,14 @@ export default function MembershipRenewalScreen({ navigation }) {
       if (order?.payment_link) {
         // Open Razorpay payment link in browser
         await Linking.openURL(order.payment_link)
-        Alert.alert(
+        premiumAlert(
           'Payment Started',
           'Complete the payment in your browser. Your membership will be updated automatically once payment is confirmed.',
           [{ text: 'OK', onPress: fetchData }]
         )
       } else if (order?.order_id) {
         // If using Razorpay SDK directly (future)
-        Alert.alert(
+        premiumAlert(
           'Payment Order Created',
           `Order ID: ${order.order_id}\nAmount: ${formatCurrency(plan.price)}\n\nComplete the payment to renew your membership.`,
           [{ text: 'OK' }]
@@ -235,7 +236,7 @@ export default function MembershipRenewalScreen({ navigation }) {
       }
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to create payment order. Please try again.'
-      Alert.alert('Payment Error', msg)
+      premiumAlert('Payment Error', msg)
     } finally {
       setRenewing(false)
       setSelectedPlan(null)

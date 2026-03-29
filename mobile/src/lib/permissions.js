@@ -1,5 +1,6 @@
 // Centralized permission requests for all device features
-import { Platform, Alert, Linking } from 'react-native'
+import { Platform, Linking } from 'react-native'
+import { premiumAlert } from '../components/PremiumAlert'
 
 /**
  * Request all necessary permissions on app launch.
@@ -115,7 +116,7 @@ export async function checkPermission(type) {
  * Show alert directing user to settings when permission is denied.
  */
 export function showPermissionDeniedAlert(permissionName) {
-  Alert.alert(
+  premiumAlert(
     `${permissionName} Access Required`,
     `Please enable ${permissionName.toLowerCase()} access in your device settings to use this feature.`,
     [

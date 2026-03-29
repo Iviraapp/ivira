@@ -13,7 +13,6 @@ import {
   Platform,
   Animated,
   Dimensions,
-  Alert,
   FlatList,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
@@ -23,6 +22,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 import { formatDate } from '../lib/utils'
 import Haptics from '../lib/haptics'
+import { premiumAlert } from '../components/PremiumAlert'
 
 let ImagePicker = null
 try { ImagePicker = require('expo-image-picker') } catch {}
@@ -119,13 +119,13 @@ export default function FoodScannerScreen({ navigation, route }) {
   // Pick image from camera
   const pickFromCamera = useCallback(async () => {
     if (!ImagePicker) {
-      Alert.alert('Not Available', 'Camera is not available on this device.')
+      premiumAlert('Not Available', 'Camera is not available on this device.')
       return
     }
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Camera access is needed to scan food photos.')
+        premiumAlert('Permission Required', 'Camera access is needed to scan food photos.')
         return
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -145,20 +145,20 @@ export default function FoodScannerScreen({ navigation, route }) {
       }
     } catch (err) {
       if (__DEV__) console.log('[FoodScanner] Camera error:', err)
-      Alert.alert('Error', 'Could not open camera. Please try again.')
+      premiumAlert('Error', 'Could not open camera. Please try again.')
     }
   }, [])
 
   // Pick image from gallery
   const pickFromGallery = useCallback(async () => {
     if (!ImagePicker) {
-      Alert.alert('Not Available', 'Gallery is not available on this device.')
+      premiumAlert('Not Available', 'Gallery is not available on this device.')
       return
     }
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Gallery access is needed to select food photos.')
+        premiumAlert('Permission Required', 'Gallery access is needed to select food photos.')
         return
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -178,7 +178,7 @@ export default function FoodScannerScreen({ navigation, route }) {
       }
     } catch (err) {
       if (__DEV__) console.log('[FoodScanner] Gallery error:', err)
-      Alert.alert('Error', 'Could not open gallery. Please try again.')
+      premiumAlert('Error', 'Could not open gallery. Please try again.')
     }
   }, [])
 
@@ -225,7 +225,7 @@ export default function FoodScannerScreen({ navigation, route }) {
   // Analyze the food photo
   const analyzePhoto = useCallback(async () => {
     if (!imageBase64) {
-      Alert.alert('No Image', 'Please take or select a photo first.')
+      premiumAlert('No Image', 'Please take or select a photo first.')
       return
     }
 
@@ -263,7 +263,7 @@ export default function FoodScannerScreen({ navigation, route }) {
 
       if (isConfigError) {
         // AI not configured — offer manual entry
-        Alert.alert(
+        premiumAlert(
           'AI Scanner Unavailable',
           'The AI food scanner is being set up. You can add nutrition info manually.',
           [
@@ -293,7 +293,7 @@ export default function FoodScannerScreen({ navigation, route }) {
           ]
         )
       } else {
-        Alert.alert(
+        premiumAlert(
           'Analysis Failed',
           'Could not analyze the photo. Please try again with a clearer image.'
         )
@@ -348,7 +348,7 @@ export default function FoodScannerScreen({ navigation, route }) {
     if (!scanResult) return
     const itemsToLog = scanResult.items.filter((_, i) => selectedItems[i])
     if (itemsToLog.length === 0) {
-      Alert.alert('No Items Selected', 'Please select at least one food item to log.')
+      premiumAlert('No Items Selected', 'Please select at least one food item to log.')
       return
     }
 
@@ -380,7 +380,7 @@ export default function FoodScannerScreen({ navigation, route }) {
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      Alert.alert(
+      premiumAlert(
         'Logged Successfully',
         `${itemsToLog.length} item${itemsToLog.length > 1 ? 's' : ''} added to ${mealType} (${totalCals} kcal)`,
         [{
@@ -398,7 +398,7 @@ export default function FoodScannerScreen({ navigation, route }) {
         }]
       )
     } catch (err) {
-      Alert.alert('Log Failed', err.response?.data?.message || 'Could not save. Please try again.')
+      premiumAlert('Log Failed', err.response?.data?.message || 'Could not save. Please try again.')
     } finally {
       setLogging(false)
     }

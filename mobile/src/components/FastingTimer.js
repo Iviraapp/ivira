@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch, Modal, TextInput, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
 // react-native-svg — fallback if native module not linked
 let Svg = null
 let Circle = null
@@ -30,6 +30,7 @@ import {
 import { getFastingCaloriesBurned } from '../utils/healthMath'
 import { useTheme } from '../context/ThemeContext'
 import { recordFastingStart } from '../lib/SmartNotificationEngine'
+import { premiumAlert } from './PremiumAlert'
 
 const PROTOCOLS = [
   { label: '16:8', fastHours: 16, eatHours: 8 },
@@ -299,13 +300,13 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
         duration_minutes: durationMinutes,
         completed: didComplete,
       })
-      Alert.alert(
+      premiumAlert(
         'Fast Logged',
         `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`,
       )
     } catch (err) {
       console.warn('[FastingTimer]', err?.message)
-      Alert.alert('Error', 'Failed to log fast. Please try again.')
+      premiumAlert('Error', 'Failed to log fast. Please try again.')
     }
 
     setIsFasting(false)
@@ -348,7 +349,7 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
         // Only allow switching to a longer or equal protocol
         // (can't switch to 16:8 if you're already 17h in on 18:6)
         if (newProtocol.fastHours <= currentElapsedHours) {
-          Alert.alert(
+          premiumAlert(
             'Cannot Switch',
             `You've already fasted ${formatDuration(Math.floor(currentElapsedHours * 60))}. The ${newProtocol.label} target (${newProtocol.fastHours}h) is already reached.`,
           )
@@ -356,7 +357,7 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
         }
 
         // Confirm the switch
-        Alert.alert(
+        premiumAlert(
           `Switch to ${newProtocol.label}?`,
           `Your ${formatDuration(Math.floor(currentElapsedHours * 60))} progress stays. New target: ${newProtocol.fastHours}h.`,
           [
@@ -424,18 +425,18 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
     const eM = parseInt(manualEndMin, 10)
 
     if (isNaN(sH) || isNaN(sM) || isNaN(eH) || isNaN(eM)) {
-      Alert.alert('Invalid Time', 'Please enter valid hours and minutes.')
+      premiumAlert('Invalid Time', 'Please enter valid hours and minutes.')
       return
     }
     if (sH < 0 || sH > 23 || eH < 0 || eH > 23 || sM < 0 || sM > 59 || eM < 0 || eM > 59) {
-      Alert.alert('Invalid Time', 'Hours must be 0-23 and minutes 0-59.')
+      premiumAlert('Invalid Time', 'Hours must be 0-23 and minutes 0-59.')
       return
     }
 
     // Build start and end dates
     const dateParts = manualDate.split('-').map(Number)
     if (dateParts.length !== 3) {
-      Alert.alert('Invalid Date', 'Please enter a valid date.')
+      premiumAlert('Invalid Date', 'Please enter a valid date.')
       return
     }
     const manualStart = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], sH, sM, 0)
@@ -448,7 +449,7 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
 
     // Sanity: must not be in the future
     if (manualEnd > new Date()) {
-      Alert.alert('Invalid Time', 'End time cannot be in the future.')
+      premiumAlert('Invalid Time', 'End time cannot be in the future.')
       return
     }
 
@@ -458,7 +459,7 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
     const didComplete = durationHours >= protocol.fastHours
 
     if (durationMinutes < 30) {
-      Alert.alert('Too Short', 'A fast must be at least 30 minutes.')
+      premiumAlert('Too Short', 'A fast must be at least 30 minutes.')
       return
     }
 
@@ -472,12 +473,12 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
         completed: didComplete,
         manual: true,
       })
-      Alert.alert('Fast Logged', `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`)
+      premiumAlert('Fast Logged', `Duration: ${formatDuration(durationMinutes)}\n${didComplete ? 'Completed!' : 'Ended early'}`)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setIsManualModalVisible(false)
     } catch (err) {
       console.warn('[FastingTimer]', err?.message)
-      Alert.alert('Error', 'Failed to log fast. Please try again.')
+      premiumAlert('Error', 'Failed to log fast. Please try again.')
     } finally {
       setSavingManual(false)
     }
@@ -495,17 +496,8 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
 
   return (
     <View style={[styles.card, { backgroundColor: card.backgroundColor, borderColor: card.borderColor }]}>
-      {/* Aesthetic hero accent */}
-      <View style={[styles.heroAccent, { backgroundColor: '#1a2a3a' }]}>
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&q=50' }}
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.heroAccentImage}
-          resizeMode="cover"
-        >
-          <View style={styles.heroAccentOverlay} />
-        </ImageBackground>
-      </View>
+      {/* Top gradient accent */}
+      <View style={styles.heroAccent} />
       {/* Header */}
       <View style={styles.header}>
         <Feather name="clock" size={18} color={isFasting ? phase.color : COLORS.accent} />
@@ -920,15 +912,10 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 90,
-  },
-  heroAccentImage: {
+    height: 3,
+    backgroundColor: COLORS.accent,
     borderTopLeftRadius: ELITE_CARD.borderRadius || 22,
     borderTopRightRadius: ELITE_CARD.borderRadius || 22,
-  },
-  heroAccentOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(10,14,26,0.55)',
   },
   header: {
     flexDirection: 'row',

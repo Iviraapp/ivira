@@ -7,15 +7,14 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Animated,
   Dimensions,
   Modal,
   Easing,
   RefreshControl,
-  ImageBackground,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import Haptics from '../lib/haptics'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -172,7 +171,7 @@ export default function NutritionScreen({ navigation }) {
 
   const handleEstimate = useCallback(async () => {
     if (!logText.trim()) {
-      Alert.alert('Empty Input', 'Type what you ate, e.g. "2 roti, dal, rice"')
+      premiumAlert('Empty Input', 'Type what you ate, e.g. "2 roti, dal, rice"')
       return
     }
     setEstimating(true)
@@ -187,7 +186,7 @@ export default function NutritionScreen({ navigation }) {
       setShowReview(true)
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     } catch (err) {
-      Alert.alert('Estimation Failed', err.response?.data?.message || 'Could not estimate nutrition.')
+      premiumAlert('Estimation Failed', err.response?.data?.message || 'Could not estimate nutrition.')
     } finally {
       setEstimating(false)
     }
@@ -239,10 +238,10 @@ export default function NutritionScreen({ navigation }) {
       const newCals = (daily?.totals?.calories || 0) + (estimatedTotal?.calories || 0)
       if (goal && newCals >= goal.calorie_goal) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        Alert.alert('Goal Reached!', `You've hit your ${goal.calorie_goal} cal target for today!`)
+        premiumAlert('Goal Reached!', `You've hit your ${goal.calorie_goal} cal target for today!`)
       }
     } catch (err) {
-      Alert.alert('Save Failed', err.response?.data?.message || 'Could not save meal.')
+      premiumAlert('Save Failed', err.response?.data?.message || 'Could not save meal.')
     } finally {
       setSaving(false)
     }
@@ -274,14 +273,7 @@ export default function NutritionScreen({ navigation }) {
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Fresh food hero accent */}
       <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=50' }}
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.heroAccentImage}
-          resizeMode="cover"
-        >
-          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
-        </ImageBackground>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors?.bgTer || '#1A2236' }]} />
       </View>
       <ScrollView
         contentContainerStyle={styles.content}

@@ -7,11 +7,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   Share,
-  Alert,
   RefreshControl,
   ScrollView,
   Linking,
 } from 'react-native'
+import { premiumAlert } from '../components/PremiumAlert'
 import { COLORS, SPACING, RADIUS } from '../lib/theme'
 import { formatPaise, formatDate } from '../lib/utils'
 import api from '../lib/api'
@@ -86,7 +86,7 @@ export default function InvoicesScreen() {
         const data = res.data?.payments || res.data || []
         setInvoices(Array.isArray(data) ? data : [])
       } catch (err) {
-        Alert.alert('Error', 'Could not load invoices. Please try again.')
+        premiumAlert('Error', 'Could not load invoices. Please try again.')
       }
     }
   }, [gymId])
@@ -136,7 +136,7 @@ export default function InvoicesScreen() {
         if (supported) {
           Linking.openURL(url)
         } else {
-          Alert.alert('WhatsApp not available', 'WhatsApp is not installed on this device.')
+          premiumAlert('WhatsApp not available', 'WhatsApp is not installed on this device.')
         }
       })
     },

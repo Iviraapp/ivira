@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,
-  Alert, Animated, ActivityIndicator, Modal, FlatList, Platform, RefreshControl,
+  Animated, ActivityIndicator, Modal, FlatList, Platform, RefreshControl,
   Image,
-  ImageBackground,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -14,6 +13,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 import { safeApiCall } from '../lib/offlineQueue'
 import WorkoutSummaryModal from '../components/WorkoutSummaryModal'
+import { premiumAlert } from '../components/PremiumAlert'
 
 // ── Default exercise library (used when API unavailable) ─────────
 const DEFAULT_EXERCISES = [
@@ -528,7 +528,7 @@ export default function WorkoutTrackerScreen({ navigation }) {
   }
 
   const removeExercise = (index) => {
-    Alert.alert('Remove Exercise', 'Remove this exercise and all its sets?', [
+    premiumAlert('Remove Exercise', 'Remove this exercise and all its sets?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: () => {
         setExercises(prev => prev.filter((_, i) => i !== index))
@@ -555,7 +555,7 @@ export default function WorkoutTrackerScreen({ navigation }) {
 
   const handleFinish = async () => {
     if (exercises.length === 0) {
-      Alert.alert('No Exercises', 'Add at least one exercise before finishing.')
+      premiumAlert('No Exercises', 'Add at least one exercise before finishing.')
       return
     }
 
@@ -659,7 +659,7 @@ export default function WorkoutTrackerScreen({ navigation }) {
         calories_estimate: duration * 7,
       })
     } catch (err) {
-      Alert.alert('Error', 'Could not save workout. Please try again.')
+      premiumAlert('Error', 'Could not save workout. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -682,14 +682,7 @@ export default function WorkoutTrackerScreen({ navigation }) {
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Gym floor hero accent */}
       <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=50' }}
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.heroAccentImage}
-          resizeMode="cover"
-        >
-          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
-        </ImageBackground>
+        <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
       </View>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + SPACING.sm, borderBottomColor: colors.border }]}>
@@ -929,7 +922,7 @@ export default function WorkoutTrackerScreen({ navigation }) {
         <View style={[styles.finishBar, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg, borderTopColor: colors.border }]}>
           <TouchableOpacity
             style={[styles.discardBtn, { borderColor: colors.border }]}
-            onPress={() => Alert.alert('Discard Workout?', 'All progress will be lost.', [
+            onPress={() => premiumAlert('Discard Workout?', 'All progress will be lost.', [
               { text: 'Cancel', style: 'cancel' },
               { text: 'Discard', style: 'destructive', onPress: () => navigation.goBack() },
             ])}

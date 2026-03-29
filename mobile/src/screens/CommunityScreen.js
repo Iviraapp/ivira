@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ScrollView, Dimensions, Alert, ActivityIndicator, ImageBackground } from 'react-native'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ScrollView, Dimensions, ActivityIndicator } from 'react-native'
+import { premiumAlert } from '../components/PremiumAlert'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -146,7 +147,7 @@ export default function CommunityScreen({ embedded = false }) {
               onPress={() => {
                 if (locked) {
                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
-                  Alert.alert(
+                  premiumAlert(
                     'Elite Feature',
                     'Upgrade to Elite to see your City & State ranking and compete beyond your gym.',
                     [{ text: 'OK' }]
@@ -192,14 +193,7 @@ export default function CommunityScreen({ embedded = false }) {
     <View style={[styles.container, { backgroundColor: colors.bg }, embedded && { paddingTop: 0 }]}>
       {/* Community hero accent */}
       <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=50' }}
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.heroAccentImage}
-          resizeMode="cover"
-        >
-          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
-        </ImageBackground>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors?.bgTer || '#1A2236' }]} />
       </View>
       {/* Header — hidden when embedded in CommunityHubScreen */}
       {!embedded && (

@@ -9,10 +9,10 @@ import {
   Platform,
   ActivityIndicator,
   Animated,
-  Alert,
   Dimensions,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -364,7 +364,7 @@ export default function ProfileSetupScreen({ onComplete }) {
 
   const handleNext = () => {
     if (step === 1 && !name.trim()) {
-      Alert.alert('Name required', 'Please enter your name to continue.')
+      premiumAlert('Name required', 'Please enter your name to continue.')
       return
     }
     if (step < TOTAL_STEPS) {

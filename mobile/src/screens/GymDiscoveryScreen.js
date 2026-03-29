@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TextInput,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   Modal,
   ScrollView,
@@ -17,6 +16,7 @@ import {
   Keyboard,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD, GLASS_CARD, SHADOW, CARD_ACCENTS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -196,15 +196,15 @@ function DayPassForm({ gym, colors, isDark, member, onClose, onSuccess }) {
 
   const handlePurchase = async () => {
     if (!buyerName.trim()) {
-      Alert.alert('Required', 'Please enter your name')
+      premiumAlert('Required', 'Please enter your name')
       return
     }
     if (!buyerPhone.trim() || buyerPhone.replace(/\D/g, '').length < 10) {
-      Alert.alert('Required', 'Please enter a valid phone number')
+      premiumAlert('Required', 'Please enter a valid phone number')
       return
     }
     if (!validDate) {
-      Alert.alert('Required', 'Please select a date')
+      premiumAlert('Required', 'Please select a date')
       return
     }
 
@@ -215,12 +215,12 @@ function DayPassForm({ gym, colors, isDark, member, onClose, onSuccess }) {
         buyerPhone: buyerPhone.trim(),
         validDate,
       })
-      Alert.alert('Success', `Day pass purchased for ${validDate}!`, [
+      premiumAlert('Success', `Day pass purchased for ${validDate}!`, [
         { text: 'OK', onPress: onSuccess },
       ])
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to purchase day pass'
-      Alert.alert('Error', msg)
+      premiumAlert('Error', msg)
     } finally {
       setSubmitting(false)
     }
@@ -599,7 +599,7 @@ export default function GymDiscoveryScreen({ navigation }) {
       if (!append) setGyms([])
       if (pageNum === 1) {
         const msg = err?.response?.data?.message || 'Could not load gyms. Please try again.'
-        Alert.alert('Error', msg)
+        premiumAlert('Error', msg)
       }
     } finally {
       setLoading(false)

@@ -3,6 +3,7 @@
 import { Platform } from 'react-native'
 import Constants from 'expo-constants'
 import api from './api'
+import { enqueue } from './offlineQueue'
 
 export const DEMO_STEPS = 0 // No fake step data — show empty state
 const isExpoGo = Constants.appOwnership === 'expo'
@@ -50,6 +51,39 @@ function ensureHealthConnectReady() {
   })()
 
   return _hcInitPromise
+}
+
+/**
+ * Get a summary of health data availability on this device.
+ * Returns { available: boolean, source: 'healthconnect'|'healthkit'|'pedometer'|'manual', message: string }
+ */
+export async function getHealthStatus() {
+  if (Platform.OS === 'web' || isExpoGo) {
+    return { available: false, source: 'manual', message: 'Running in web or Expo Go — manual entry only' }
+  }
+
+  if (Platform.OS === 'ios' && AppleHealthKit) {
+    return { available: true, source: 'healthkit', message: 'Apple HealthKit available' }
+  }
+
+  if (Platform.OS === 'android' && HealthConnect) {
+    const hcAvailable = await isHealthConnectAvailable()
+    if (hcAvailable) {
+      return { available: true, source: 'healthconnect', message: 'Health Connect available' }
+    }
+    return { available: false, source: 'manual', message: 'Health Connect not installed or outdated — install from Play Store' }
+  }
+
+  // Check pedometer as last resort
+  try {
+    const { Pedometer } = require('expo-sensors')
+    const pedometerOk = await Pedometer.isAvailableAsync()
+    if (pedometerOk) {
+      return { available: true, source: 'pedometer', message: 'Using device pedometer (limited data)' }
+    }
+  } catch (_) { /* pedometer not available */ }
+
+  return { available: false, source: 'manual', message: 'No health data source available — use manual entry' }
 }
 
 /**
@@ -197,19 +231,42 @@ export async function getTodaySteps() {
 
 /**
  * Sync step count to the backend.
+ * Returns { success: boolean, error?: string, queued?: boolean }
  */
 export async function syncStepsToBackend(gymId, memberId, steps) {
+  const today = new Date().toISOString().split('T')[0]
+  const url = `/gyms/${gymId}/members/${memberId}/health/steps`
+  const data = {
+    steps,
+    date: today,
+    source: Platform.OS === 'ios' ? 'apple_health' : Platform.OS === 'android' ? 'health_connect' : 'manual',
+  }
+
   try {
-    const today = new Date().toISOString().split('T')[0]
-    await api.post(`/gyms/${gymId}/members/${memberId}/health/steps`, {
-      steps,
-      date: today,
-      source: Platform.OS === 'ios' ? 'apple_health' : Platform.OS === 'android' ? 'health_connect' : 'manual',
-    })
-    return true
+    const res = await api.post(url, data)
+    const status = res?.status || res?.response?.status
+    if (status && status >= 400) {
+      const errMsg = `Server returned ${status}`
+      console.warn('[HealthKit] syncStepsToBackend:', errMsg)
+      return { success: false, error: errMsg }
+    }
+    return { success: true }
   } catch (err) {
-    console.warn('[HealthKit] Failed to sync steps:', err)
-    return false
+    const status = err?.response?.status
+    const errMsg = err?.message || 'Unknown error'
+    console.warn('[HealthKit] Failed to sync steps:', errMsg)
+
+    // Queue for offline retry on network/server errors
+    const isRetryable = !status || status >= 500 || status === 408 || status === 429
+    if (isRetryable) {
+      try {
+        await enqueue('post', url, data)
+        return { success: false, error: errMsg, queued: true }
+      } catch (queueErr) {
+        console.warn('[HealthKit] Failed to queue steps:', queueErr?.message)
+      }
+    }
+    return { success: false, error: errMsg }
   }
 }
 
@@ -377,19 +434,42 @@ export async function getLastNightSleep() {
 
 /**
  * Sync sleep data to the backend.
+ * Returns { success: boolean, error?: string, queued?: boolean }
  */
 export async function syncSleepToBackend(gymId, memberId, sleepData) {
+  const url = `/gyms/${gymId}/members/${memberId}/sleep`
+  const data = {
+    bedtime: sleepData.bedtime,
+    wake_time: sleepData.wakeTime,
+    quality_rating: sleepData.quality,
+    notes: sleepData.source ? `Auto-synced from ${sleepData.source}` : undefined,
+  }
+
   try {
-    await api.post(`/gyms/${gymId}/members/${memberId}/sleep`, {
-      bedtime: sleepData.bedtime,
-      wake_time: sleepData.wakeTime,
-      quality_rating: sleepData.quality,
-      notes: sleepData.source ? `Auto-synced from ${sleepData.source}` : undefined,
-    })
-    return true
+    const res = await api.post(url, data)
+    const status = res?.status || res?.response?.status
+    if (status && status >= 400) {
+      const errMsg = `Server returned ${status}`
+      console.warn('[HealthKit] syncSleepToBackend:', errMsg)
+      return { success: false, error: errMsg }
+    }
+    return { success: true }
   } catch (err) {
-    console.warn('[HealthKit] Failed to sync sleep:', err)
-    return false
+    const status = err?.response?.status
+    const errMsg = err?.message || 'Unknown error'
+    console.warn('[HealthKit] Failed to sync sleep:', errMsg)
+
+    // Queue for offline retry on network/server errors
+    const isRetryable = !status || status >= 500 || status === 408 || status === 429
+    if (isRetryable) {
+      try {
+        await enqueue('post', url, data)
+        return { success: false, error: errMsg, queued: true }
+      } catch (queueErr) {
+        console.warn('[HealthKit] Failed to queue sleep:', queueErr?.message)
+      }
+    }
+    return { success: false, error: errMsg }
   }
 }
 
@@ -703,6 +783,8 @@ export default {
   getHRV,
   getHeartRateSamples,
   isWearableConnected,
+  isHealthConnectAvailable,
+  getHealthStatus,
   syncStepsToBackend,
   syncSleepToBackend,
   DEMO_STEPS,

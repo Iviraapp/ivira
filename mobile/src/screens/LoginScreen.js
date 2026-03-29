@@ -9,7 +9,6 @@ import {
   Platform,
   ActivityIndicator,
   Animated,
-  Alert,
   Dimensions,
   ScrollView,
 } from 'react-native'
@@ -18,6 +17,7 @@ import Haptics from '../lib/haptics'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { premiumAlert } from '../components/PremiumAlert'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 
@@ -164,7 +164,7 @@ export default function LoginScreen() {
       animateTransition('otp')
     } catch (err) {
       const message = err.response?.data?.message || err.response?.data?.error || 'Failed to send login code. Please try again.'
-      Alert.alert('Error', message)
+      premiumAlert('Error', message)
     } finally {
       setLoading(false)
     }
@@ -177,7 +177,7 @@ export default function LoginScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (err) {
       const message = err.response?.data?.message || err.response?.data?.error || 'Invalid code. Please try again.'
-      Alert.alert('Verification Failed', message)
+      premiumAlert('Verification Failed', message)
       setOtpDigits(['', '', '', '', '', ''])
       setTimeout(() => otpRefs.current[0].current?.focus(), 100)
     } finally {
@@ -193,7 +193,7 @@ export default function LoginScreen() {
       startResendTimer()
     } catch (err) {
       const message = err.response?.data?.message || err.response?.data?.error || 'Failed to resend code.'
-      Alert.alert('Error', message)
+      premiumAlert('Error', message)
     }
   }, [email, resendTimer, requestOtp, startResendTimer])
 

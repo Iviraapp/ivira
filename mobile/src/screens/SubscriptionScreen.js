@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
@@ -14,6 +13,7 @@ import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD, GLASS_CARD, SHADOW, CARD_ACC
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
+import { premiumAlert } from '../components/PremiumAlert'
 
 // ── Plan accent colors ──────────────────────────────────────────
 const PLAN_COLORS = {
@@ -294,7 +294,7 @@ export default function SubscriptionScreen({ navigation }) {
     const action = subscription ? 'change' : 'subscribe'
     const verb = isDowngrade ? 'downgrade to' : subscription ? 'upgrade to' : 'subscribe to'
 
-    Alert.alert(
+    premiumAlert(
       `${isDowngrade ? 'Downgrade' : subscription ? 'Change' : 'Subscribe to'} ${plan.name}?`,
       `Are you sure you want to ${verb} the ${plan.name} plan?${
         isDowngrade ? '\n\nYou may lose access to some features.' : ''
@@ -313,10 +313,10 @@ export default function SubscriptionScreen({ navigation }) {
                 await api.post(`/gyms/${gymId}/subscription`, { planId: plan.id })
               }
               await fetchData()
-              Alert.alert('Success', `You are now on the ${plan.name} plan.`)
+              premiumAlert('Success', `You are now on the ${plan.name} plan.`)
             } catch (err) {
               const msg = err.response?.data?.message || err.message || 'Something went wrong.'
-              Alert.alert('Error', msg)
+              premiumAlert('Error', msg)
             } finally {
               setActionLoading(null)
             }
@@ -330,7 +330,7 @@ export default function SubscriptionScreen({ navigation }) {
   const handleCancel = useCallback(() => {
     if (!subscription) return
 
-    Alert.alert(
+    premiumAlert(
       'Cancel Subscription',
       'Are you sure you want to cancel your subscription? You will retain access until the end of your current billing period.',
       [
@@ -343,10 +343,10 @@ export default function SubscriptionScreen({ navigation }) {
             try {
               await api.delete(`/gyms/${gymId}/subscription`)
               await fetchData()
-              Alert.alert('Subscription Cancelled', 'Your subscription has been cancelled.')
+              premiumAlert('Subscription Cancelled', 'Your subscription has been cancelled.')
             } catch (err) {
               const msg = err.response?.data?.message || err.message || 'Could not cancel subscription.'
-              Alert.alert('Error', msg)
+              premiumAlert('Error', msg)
             } finally {
               setActionLoading(null)
             }

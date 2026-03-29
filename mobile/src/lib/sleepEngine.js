@@ -105,6 +105,8 @@ let _sleepStartTime = null
 let _alarmTime = null        // Target alarm time (user-set)
 let _alarmTriggered = false
 let _listeners = new Set()   // UI update callbacks
+let _audioRetryCount = 0     // Prevent infinite audio retry loops
+const MAX_AUDIO_RETRIES = 3
 
 // ── Public API ─────────────────────────────────────────────────────
 
@@ -424,6 +426,7 @@ function classifyEpoch() {
 // ── Audio Monitoring ───────────────────────────────────────────────
 
 async function startAudioMonitoring() {
+  _audioRetryCount = 0
   try {
     const { granted } = await Audio.requestPermissionsAsync()
     if (!granted) {
@@ -446,13 +449,32 @@ async function startAudioMonitoring() {
     await sampleAudio()
   } catch (err) {
     console.warn('[SleepEngine] Audio monitoring failed:', err.message)
+    // Clean up audio mode on failure
+    try {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: false,
+        staysActiveInBackground: false,
+      })
+    } catch (_) { /* ignore cleanup error */ }
   }
 }
 
 async function sampleAudio() {
+  // Stop retrying after MAX_AUDIO_RETRIES consecutive failures
+  if (_audioRetryCount >= MAX_AUDIO_RETRIES) {
+    console.warn('[SleepEngine] Audio sampling disabled after', MAX_AUDIO_RETRIES, 'consecutive failures')
+    if (_audioTimer) {
+      clearInterval(_audioTimer)
+      _audioTimer = null
+    }
+    return
+  }
+
+  let recording = null
   try {
     // Record a short 5-second clip and analyze its metering
-    const recording = new Audio.Recording()
+    recording = new Audio.Recording()
     await recording.prepareToRecordAsync({
       ...Audio.RecordingOptionsPresets.LOW_QUALITY,
       android: {
@@ -480,21 +502,31 @@ async function sampleAudio() {
     const meterReadings = []
     for (let i = 0; i < 5; i++) {
       await new Promise(r => setTimeout(r, 1000))
-      const status = await recording.getStatusAsync()
-      if (status.metering != null) {
-        meterReadings.push(status.metering)
+      try {
+        const status = await recording.getStatusAsync()
+        if (status.metering != null) {
+          meterReadings.push(status.metering)
+        }
+      } catch (meterErr) {
+        console.warn('[SleepEngine] Metering read error:', meterErr?.message)
+        break
       }
     }
 
+    // Capture URI before unloading (some platforms clear it after unload)
+    const recordingUri = recording.getURI?.() || null
     await recording.stopAndUnloadAsync()
+    recording = null // Mark as cleaned up
+
+    // Reset retry count on success
+    _audioRetryCount = 0
 
     // Delete the recording file — we only need the metering data (privacy!)
-    const uri = recording.getURI()
-    if (uri) {
+    if (recordingUri) {
       try {
         const FileSystem = require('expo-file-system')
-        await FileSystem.deleteAsync(uri, { idempotent: true })
-      } catch (err) { console.warn('[SleepEngine]', err?.message) }
+        await FileSystem.deleteAsync(recordingUri, { idempotent: true })
+      } catch (fsErr) { console.warn('[SleepEngine] File cleanup:', fsErr?.message) }
     }
 
     // Analyze metering pattern
@@ -533,8 +565,19 @@ async function sampleAudio() {
       }
     }
   } catch (err) {
-    // Audio sampling can fail silently — not critical
-    console.warn('[SleepEngine] Audio sample error:', err.message)
+    _audioRetryCount++
+    console.warn('[SleepEngine] Audio sample error (attempt', _audioRetryCount + '/' + MAX_AUDIO_RETRIES + '):', err.message)
+
+    // Clean up the recording on error to prevent resource leaks
+    if (recording) {
+      try {
+        await recording.stopAndUnloadAsync()
+      } catch (cleanupErr) {
+        // Recording may already be stopped — ignore
+        console.warn('[SleepEngine] Recording cleanup:', cleanupErr?.message)
+      }
+      recording = null
+    }
   }
 }
 

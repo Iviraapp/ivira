@@ -10,7 +10,6 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
@@ -19,6 +18,7 @@ import { useTheme } from '../context/ThemeContext'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { waterfallLookup, searchByText } from '../utils/foodApi'
+import { premiumAlert } from '../components/PremiumAlert'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const SCAN_FRAME_SIZE = SCREEN_WIDTH * 0.7
@@ -92,7 +92,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
         setScanned(false)
       }
     } catch {
-      Alert.alert('Lookup Failed', 'Could not connect to food database. Try again or use Quick Add.')
+      premiumAlert('Lookup Failed', 'Could not connect to food database. Try again or use Quick Add.')
       setScanned(false)
     } finally {
       setSearching(false)
@@ -110,10 +110,10 @@ export default function BarcodeScannerScreen({ navigation, route }) {
         setShowResult(true)
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
       } else {
-        Alert.alert('Not Found', 'No products found. Try a different search or use Quick Add.')
+        premiumAlert('Not Found', 'No products found. Try a different search or use Quick Add.')
       }
     } catch {
-      Alert.alert('Search Failed', 'Could not search food database.')
+      premiumAlert('Search Failed', 'Could not search food database.')
     } finally {
       setSearching(false)
     }
@@ -158,7 +158,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
       setScanned(false)
       setProduct(null)
       // Navigate back with logged item so HomeScreen can update Today's Fuel
-      Alert.alert('Logged', `${product?.name} added to ${mealType}`, [
+      premiumAlert('Logged', `${product?.name} added to ${mealType}`, [
         { text: 'OK', onPress: () => {
           // Pass logged nutrition back so HomeScreen updates instantly
           navigation?.navigate?.('HomeMain', {
@@ -172,7 +172,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
         }},
       ])
     } catch (err) {
-      Alert.alert('Log Failed', err.response?.data?.message || 'Could not save food. Try again.')
+      premiumAlert('Log Failed', err.response?.data?.message || 'Could not save food. Try again.')
     } finally {
       setLogging(false)
     }
@@ -186,7 +186,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     const fat = parseInt(quickAdd.fats, 10) || 0
 
     if (cal === 0 && prot === 0 && carb === 0 && fat === 0) {
-      Alert.alert('Empty Entry', 'Please enter at least one value.')
+      premiumAlert('Empty Entry', 'Please enter at least one value.')
       return
     }
 
@@ -202,7 +202,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setShowQuickAdd(false)
-      Alert.alert('Logged', 'Quick entry saved', [
+      premiumAlert('Logged', 'Quick entry saved', [
         { text: 'OK', onPress: () => {
           navigation?.navigate?.('HomeMain', {
             nutritionLogged: { calories: cal, protein: prot, carbs: carb, fats: fat },
@@ -210,7 +210,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
         }},
       ])
     } catch (err) {
-      Alert.alert('Save Failed', err.response?.data?.message || 'Could not save entry.')
+      premiumAlert('Save Failed', err.response?.data?.message || 'Could not save entry.')
     } finally {
       setLogging(false)
     }
@@ -544,7 +544,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
                 const carb = parseInt(manualEntry.carbs, 10) || 0
                 const fat = parseInt(manualEntry.fats, 10) || 0
                 if (cal === 0 && prot === 0 && carb === 0 && fat === 0) {
-                  Alert.alert('Empty Entry', 'Please enter at least one macro value.')
+                  premiumAlert('Empty Entry', 'Please enter at least one macro value.')
                   return
                 }
                 setLogging(true)
@@ -565,7 +565,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
                   setShowManualFallback(false)
                   setManualEntry({ name: '', calories: '', protein: '', carbs: '', fats: '' })
-                  Alert.alert('Logged', `${manualEntry.name || 'Entry'} added to ${mealType}`, [
+                  premiumAlert('Logged', `${manualEntry.name || 'Entry'} added to ${mealType}`, [
                     { text: 'OK', onPress: () => {
                       navigation?.navigate?.('HomeMain', {
                         nutritionLogged: { calories: cal, protein: prot, carbs: carb, fats: fat },
@@ -573,7 +573,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
                     }},
                   ])
                 } catch (err) {
-                  Alert.alert('Save Failed', err.response?.data?.message || 'Could not save entry.')
+                  premiumAlert('Save Failed', err.response?.data?.message || 'Could not save entry.')
                 } finally {
                   setLogging(false)
                 }

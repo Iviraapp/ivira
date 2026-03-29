@@ -4,10 +4,10 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ScrollView,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { premiumAlert } from '../components/PremiumAlert'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { formatPaise } from '../lib/utils'
@@ -41,7 +41,7 @@ export default function ServiceDetailScreen({ navigation, route }) {
   }
 
   const handleBook = async (service) => {
-    Alert.alert('Booking flow coming soon', 'Razorpay integration is in progress.')
+    premiumAlert('Booking flow coming soon', 'Razorpay integration is in progress.')
   }
 
   const renderStars = (rating) => {

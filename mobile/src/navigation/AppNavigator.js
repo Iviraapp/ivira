@@ -10,7 +10,8 @@ import ProfileSetupScreen, { PROFILE_SETUP_KEY } from '../screens/ProfileSetupSc
 import TabNavigator from './TabNavigator'
 import SplashScreen from '../components/SplashScreen'
 import { getItem } from '../lib/storage'
-import { View, ActivityIndicator, Text, StyleSheet, Platform, Animated, Alert } from 'react-native'
+import { View, ActivityIndicator, Text, StyleSheet, Platform, Animated } from 'react-native'
+import { premiumAlert } from '../components/PremiumAlert'
 
 // Biometric auth
 let LocalAuthentication = null
@@ -83,7 +84,7 @@ function BiometricGate({ children }) {
   const retryCount = React.useRef(0)
 
   const failOpen = useCallback(() => {
-    Alert.alert(
+    premiumAlert(
       'Authentication Failed',
       'Biometric authentication could not be completed. You can continue using the app.',
       [{ text: 'OK' }],

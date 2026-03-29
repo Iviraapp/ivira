@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Animated,
   Dimensions,
   ScrollView,
@@ -12,11 +11,11 @@ import {
   TextInput,
   Platform,
   Image,
-  ImageBackground,
   RefreshControl,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
+import { premiumAlert } from '../components/PremiumAlert'
 
 // react-native-svg — fallback if native module not linked
 let Svg = null
@@ -68,7 +67,7 @@ import { canAddToWallet, addMembershipToWallet } from '../lib/wallet'
 import { syncSleepToBackend } from '../lib/healthKit'
 import { useHealth } from '../context/HealthContext'
 import { requestAllPermissions } from '../lib/permissions'
-import DailyQuote from '../components/DailyQuote'
+// DailyQuote removed
 import LiveGymIndicator from '../components/LiveGymIndicator'
 // WalletWidget moved to Profile screen
 import ProfileCompletionBar from '../components/ProfileCompletionBar'
@@ -83,7 +82,7 @@ import WorkoutHeatMap from '../components/WorkoutHeatMap'
 // BodyCompositionTimeline, AccountabilityBuddy, NutritionInsights moved to Health tab
 // FeaturedExercises removed — wger data kept in WorkoutTracker only
 
-import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion } from '../lib/aiCoach'
+import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion, setCoachRegion } from '../lib/aiCoach'
 import { recordWorkout } from '../lib/SmartNotificationEngine'
 
 const REFRESH_INTERVAL = 30 // seconds
@@ -407,7 +406,7 @@ export default function HomeScreen({ navigation, route }) {
   const handleNfcCheckIn = useCallback(async () => {
     loadNfc()
     if (!NfcManager || Platform.OS === 'web') {
-      Alert.alert('NFC Unavailable', 'NFC is not supported on this device.')
+      premiumAlert('NFC Unavailable', 'NFC is not supported on this device.')
       return
     }
     try {
@@ -416,7 +415,7 @@ export default function HomeScreen({ navigation, route }) {
         await NfcManager.start()
         const isSupported = await NfcManager.isSupported()
         if (!isSupported) {
-          Alert.alert('NFC Unavailable', 'This device does not support NFC.')
+          premiumAlert('NFC Unavailable', 'This device does not support NFC.')
           return
         }
         nfcInitialized.current = true
@@ -430,7 +429,7 @@ export default function HomeScreen({ navigation, route }) {
       const tag = await NfcManager.getTag()
 
       if (!tag) {
-        Alert.alert('NFC Read Failed', 'Hold your phone closer to the NFC tag and try again.')
+        premiumAlert('NFC Read Failed', 'Hold your phone closer to the NFC tag and try again.')
         return
       }
 
@@ -438,7 +437,7 @@ export default function HomeScreen({ navigation, route }) {
       const tagUid = tag.id || tag.ndefMessage?.[0]?.payload?.toString() || ''
 
       if (!tagUid) {
-        Alert.alert('Invalid Tag', 'Could not read NFC tag. Try again.')
+        premiumAlert('Invalid Tag', 'Could not read NFC tag. Try again.')
         return
       }
 
@@ -452,7 +451,7 @@ export default function HomeScreen({ navigation, route }) {
         setQrModalVisible(false)
 
         const memberName = res.data?.checkin?.member_name || member?.name || ''
-        Alert.alert(
+        premiumAlert(
           'Checked In!',
           `${memberName} — NFC check-in complete (${elapsed}ms)`,
         )
@@ -470,7 +469,7 @@ export default function HomeScreen({ navigation, route }) {
       if (err.message === 'cancelled') return
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
       const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'NFC check-in failed'
-      Alert.alert('Check-in Failed', msg)
+      premiumAlert('Check-in Failed', msg)
     } finally {
       setNfcScanning(false)
       NfcManager?.cancelTechnologyRequest?.().catch(err => console.warn('[HomeScreen]', err?.message))
@@ -481,7 +480,7 @@ export default function HomeScreen({ navigation, route }) {
   const [gpsChecking, setGpsChecking] = useState(false)
   const handleGpsCheckin = useCallback(async () => {
     if (!gymId) {
-      Alert.alert('No Gym', 'You need to be connected to a gym to check in.')
+      premiumAlert('No Gym', 'You need to be connected to a gym to check in.')
       return
     }
     setGpsChecking(true)
@@ -489,12 +488,12 @@ export default function HomeScreen({ navigation, route }) {
       let Location
       try { Location = require('expo-location') } catch {}
       if (!Location) {
-        Alert.alert('Location Unavailable', 'Location services are not available on this device.')
+        premiumAlert('Location Unavailable', 'Location services are not available on this device.')
         return
       }
       const { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required for GPS check-in.')
+        premiumAlert('Permission Denied', 'Location permission is required for GPS check-in.')
         return
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
@@ -506,14 +505,14 @@ export default function HomeScreen({ navigation, route }) {
       setQrModalVisible(false)
       const name = res.data?.checkin?.member_name || member?.name || ''
       const dist = res.data?.checkin?.distance_meters || 0
-      Alert.alert('Checked In!', `${name} — GPS check-in (${dist}m from gym)`)
+      premiumAlert('Checked In!', `${name} — GPS check-in (${dist}m from gym)`)
       setTimeout(() => showInterstitialAd(), 1500)
       recordWorkout().catch(err => console.warn('[HomeScreen]', err?.message))
       refreshProfile?.()
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
       const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'GPS check-in failed'
-      Alert.alert('Check-in Failed', msg)
+      premiumAlert('Check-in Failed', msg)
     } finally {
       setGpsChecking(false)
     }
@@ -544,8 +543,9 @@ export default function HomeScreen({ navigation, route }) {
   const checkinCount = member?.checkin_count || member?.total_checkins || member?.monthly_checkins || 0
   const streak = member?.streak || 0
 
-  // --- Vira AI insight ---
+  // --- Vira AI insight (region set from gym city, not device locale) ---
   useEffect(() => {
+    setCoachRegion(gymInfo?.city)
     const insight = getDailyInsight(
       { name: member?.name, streak, checkin_count: checkinCount },
       { daysUntilExpiry: daysRemaining, recentCheckins: checkinCount },
@@ -602,7 +602,7 @@ export default function HomeScreen({ navigation, route }) {
         365: 'One full year! Absolute champion.',
       }
       setTimeout(() => {
-        Alert.alert(
+        premiumAlert(
           `${streak}-Day Streak!`,
           messages[streak] || `${streak} days of consistency!`,
           [{ text: 'Keep Going!', style: 'default' }],
@@ -645,10 +645,10 @@ export default function HomeScreen({ navigation, route }) {
       setBookedClasses(prev => ({ ...prev, [cls.id]: true }))
       setClassSpots(prev => ({ ...prev, [cls.id]: Math.max(0, (prev[cls.id] ?? cls.spots) - 1) }))
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      Alert.alert('Reserved!', `You're booked for ${cls.name} at ${cls.time}.`)
+      premiumAlert('Reserved!', `You're booked for ${cls.name} at ${cls.time}.`)
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-      Alert.alert('Booking failed', err?.response?.data?.message || 'Please try again.')
+      premiumAlert('Booking failed', err?.response?.data?.message || 'Please try again.')
     } finally {
       setBookingClassId(null)
     }
@@ -658,7 +658,6 @@ export default function HomeScreen({ navigation, route }) {
   const actionSections = [
     {
       title: 'QUICK ACTIONS',
-      heroImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=60',
       items: [
         { label: 'Workouts', icon: 'activity', bg: '#F97316', onPress: () => navigation?.navigate?.('WorkoutTracker') },
         { label: 'Scan Food', icon: 'camera', bg: '#EA4335', onPress: () => navigation?.navigate?.('FoodScanner') },
@@ -668,7 +667,6 @@ export default function HomeScreen({ navigation, route }) {
     },
     {
       title: 'DISCOVER',
-      heroImage: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=60',
       items: [
         { label: 'Trainers', icon: 'users', bg: '#34D399', onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'marketplace' } }) },
         { label: 'Challenges', icon: 'target', bg: '#8B5CF6', onPress: () => navigation?.navigate?.('Challenges') },
@@ -678,7 +676,6 @@ export default function HomeScreen({ navigation, route }) {
     },
     {
       title: 'TRACK',
-      heroImage: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=60',
       items: [
         { label: 'Score', icon: 'award', bg: '#3B82F6', onPress: () => navigation?.navigate?.('FitnessScore') },
         { label: 'Achievements', icon: 'star', bg: '#F59E0B', onPress: () => navigation?.navigate?.('Achievements') },
@@ -937,18 +934,6 @@ export default function HomeScreen({ navigation, route }) {
           <View key={section.title} style={styles.credSection}>
             <Text style={[styles.credSectionTitle, { color: colors.textTer }]}>{section.title}</Text>
             <View style={[styles.credSectionCard, card]}>
-              {section.heroImage && (
-                <View style={[styles.credHeroImage, { backgroundColor: '#0e1a2e' }]}>
-                  <ImageBackground
-                    source={{ uri: section.heroImage }}
-                    style={StyleSheet.absoluteFill}
-                    imageStyle={styles.credHeroImageInner}
-                    resizeMode="cover"
-                  >
-                    <View style={[styles.credHeroOverlay, !isDark && styles.credHeroOverlayLight]} />
-                  </ImageBackground>
-                </View>
-              )}
               <View style={[styles.credGrid, { padding: SPACING.md }]}>
                 {section.items.map((action) => (
                   <TouchableOpacity
@@ -969,8 +954,7 @@ export default function HomeScreen({ navigation, route }) {
         ))}
         </MotiView>
 
-        {/* Daily Motivation */}
-        <DailyQuote style={{ marginHorizontal: 4, marginBottom: SPACING.md }} />
+        {/* Daily Motivation — removed per user request */}
 
         {/* Daily Goals Row */}
         <View style={styles.dailyGoalsCard}>
@@ -1168,7 +1152,8 @@ export default function HomeScreen({ navigation, route }) {
           </TouchableOpacity>
         </Modal>
 
-        {/* Membership Status Card */}
+        {/* Membership Status Card — only show when user has subscription data */}
+        {(membership?.plan_name || membership?.end_date || membership?.membership_end || expiryDate) && (
         <View style={[styles.membershipCard, { backgroundColor: card.backgroundColor, borderColor: card.borderColor }]}>
           <View style={styles.membershipHeader}>
             <Text style={[styles.membershipTitle, { color: colors.text }]}>Membership</Text>
@@ -1235,6 +1220,7 @@ export default function HomeScreen({ navigation, route }) {
             </TouchableOpacity>
           )}
         </View>
+        )}
 
         {/* Badges */}
         {badges.length > 0 && (
@@ -1495,7 +1481,7 @@ export default function HomeScreen({ navigation, route }) {
 
                 const durationMinutes = Math.round((wakeTime - bedtime) / 60000)
                 if (durationMinutes <= 0 || durationMinutes > 1440) {
-                  Alert.alert('Invalid Times', 'Please check your bedtime and wake time.')
+                  premiumAlert('Invalid Times', 'Please check your bedtime and wake time.')
                   return
                 }
 
@@ -1539,7 +1525,7 @@ function QuickLogModal({ visible, onClose, gymId, memberId, onSuccess }) {
 
   const handleLog = async () => {
     if (!name || !calories) {
-      Alert.alert('Missing Info', 'Please enter a food name and calories.')
+      premiumAlert('Missing Info', 'Please enter a food name and calories.')
       return
     }
     const item = {
@@ -1561,7 +1547,7 @@ function QuickLogModal({ visible, onClose, gymId, memberId, onSuccess }) {
       onClose()
       resetFields()
     } catch {
-      Alert.alert('Failed to log', 'Please try again.')
+      premiumAlert('Failed to log', 'Please try again.')
     } finally {
       setSaving(false)
     }
@@ -1728,7 +1714,7 @@ function WorkoutLogModal({ visible, onClose, gymId, memberId, onSuccess }) {
 
   const handleSave = async () => {
     if (!duration) {
-      Alert.alert('Missing Info', 'Please enter a duration.')
+      premiumAlert('Missing Info', 'Please enter a duration.')
       return
     }
     setSaving(true)
@@ -1746,7 +1732,7 @@ function WorkoutLogModal({ visible, onClose, gymId, memberId, onSuccess }) {
       setCalories('')
       setNotes('')
     } catch {
-      Alert.alert('Failed to save', 'Please try again.')
+      premiumAlert('Failed to save', 'Please try again.')
     } finally {
       setSaving(false)
     }
@@ -2176,21 +2162,6 @@ const styles = StyleSheet.create({
   credSectionCard: {
     borderRadius: 20,
     overflow: 'hidden',
-  },
-  credHeroImage: {
-    height: 100,
-    width: '100%',
-  },
-  credHeroImageInner: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  credHeroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10,14,26,0.55)',
-  },
-  credHeroOverlayLight: {
-    backgroundColor: 'rgba(247,245,242,0.45)',
   },
   credGrid: {
     flexDirection: 'row',
