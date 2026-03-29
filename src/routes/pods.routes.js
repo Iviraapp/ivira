@@ -211,12 +211,41 @@ export default async function podRoutes(fastify) {
     }
   })
 
-  // Pod activity feed
+  // Pod activity feed (with cursor pagination for chat)
   fastify.get('/gyms/:gymId/pods/:podId/feed', memberAuth, async (request, reply) => {
     try {
-      const limit = parseInt(request.query.limit) || 20
-      const feed = await podsService.getPodFeed(request.params.podId, limit)
+      const limit = parseInt(request.query.limit) || 30
+      const before = request.query.before || null
+      const after = request.query.after || null
+      const feed = await podsService.getPodFeed(request.params.podId, limit, before, after)
       return { feed }
+    } catch (err) {
+      return reply.code(err.statusCode || 500).send({ error: err.message })
+    }
+  })
+
+  // Send message in pod chat
+  fastify.post('/gyms/:gymId/pods/:podId/messages', {
+    ...memberAuth,
+    schema: {
+      body: {
+        type: 'object',
+        required: ['text'],
+        properties: {
+          text: { type: 'string', minLength: 1, maxLength: 1000 },
+          imageUrl: { type: 'string' },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const entry = await podsService.sendMessage({
+        podId: request.params.podId,
+        memberId: request.user.memberId,
+        text: request.body.text,
+        imageUrl: request.body.imageUrl,
+      })
+      return reply.code(201).send(entry)
     } catch (err) {
       return reply.code(err.statusCode || 500).send({ error: err.message })
     }

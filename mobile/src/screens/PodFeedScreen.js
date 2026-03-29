@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, ActivityIndicator,
+  RefreshControl, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -16,6 +17,7 @@ const ACCENT_COLORS = {
   nudge: '#FBBF24',
   milestone: '#8B5CF6',
   joined: '#38BDF8',
+  message: '#94A3B8',
 }
 
 const MILESTONE_THRESHOLDS = [7, 14, 30, 50, 100]
@@ -221,6 +223,32 @@ function FeedCard({ item, colors, card, gymId, member }) {
           </View>
         )
 
+      case 'message': {
+        const isMe = (item.member_id === member?.id)
+        return (
+          <View style={[styles.messageRow, isMe && styles.messageRowMe]}>
+            {!isMe && <Avatar name={item.member_name} size={30} colors={colors} />}
+            <View style={[
+              styles.messageBubble,
+              { backgroundColor: isMe ? colors.accent + '14' : colors.bgTer },
+              isMe && styles.messageBubbleMe,
+            ]}>
+              {!isMe && (
+                <Text style={[styles.messageSender, { color: colors.accent }]}>
+                  {item.member_name}
+                </Text>
+              )}
+              <Text style={[styles.messageText, { color: colors.text }]}>
+                {item.data?.text}
+              </Text>
+              <Text style={[styles.messageTime, { color: colors.textTer }]}>
+                {timeAgo(item.timestamp)}
+              </Text>
+            </View>
+          </View>
+        )
+      }
+
       default:
         return (
           <View style={styles.cardRow}>
@@ -239,6 +267,11 @@ function FeedCard({ item, colors, card, gymId, member }) {
   }
 
   const isMilestone = item.type === 'milestone'
+  const isMessage = item.type === 'message'
+
+  if (isMessage) {
+    return renderContent()
+  }
 
   return (
     <View style={[
@@ -256,18 +289,22 @@ export default function PodFeedScreen({ navigation, route }) {
   const { podId, podName } = route.params
   const { colors, card } = useTheme()
   const { gymId, member } = useAuth()
+  const insets = useSafeAreaInsets()
 
   const [feed, setFeed] = useState([])
   const [healthScore, setHealthScore] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [hasCommittedToday, setHasCommittedToday] = useState(true)
+  const [messageText, setMessageText] = useState('')
+  const [sending, setSending] = useState(false)
+  const flatListRef = useRef(null)
 
   const fetchFeed = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
       const res = await api.get(`/gyms/${gymId}/pods/${podId}/feed`, {
-        params: { limit: 30 },
+        params: { limit: 50 },
       })
       const items = res.data?.feed || res.data || []
       setFeed(items)
@@ -282,7 +319,6 @@ export default function PodFeedScreen({ navigation, route }) {
       )
       setHasCommittedToday(committed)
 
-      // Optionally fetch health score
       if (res.data?.health_score !== undefined) {
         setHealthScore(res.data.health_score)
       }
@@ -296,9 +332,48 @@ export default function PodFeedScreen({ navigation, route }) {
 
   useEffect(() => { fetchFeed() }, [fetchFeed])
 
+  // Poll for new messages every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => fetchFeed(true), 10000)
+    return () => clearInterval(interval)
+  }, [fetchFeed])
+
   const onRefresh = () => {
     setRefreshing(true)
     fetchFeed(true)
+  }
+
+  const handleSendMessage = async () => {
+    const text = messageText.trim()
+    if (!text || sending) return
+    setSending(true)
+
+    // Optimistic insert
+    const tempItem = {
+      id: `temp-${Date.now()}`,
+      type: 'message',
+      member_id: member?.id,
+      member_name: member?.name || 'You',
+      data: { text },
+      timestamp: new Date().toISOString(),
+      _pending: true,
+    }
+    setFeed(prev => [tempItem, ...prev])
+    setMessageText('')
+
+    try {
+      const res = await api.post(`/gyms/${gymId}/pods/${podId}/messages`, { text })
+      // Replace temp with real
+      setFeed(prev => prev.map(item =>
+        item.id === tempItem.id ? { ...res.data, _pending: false } : item
+      ))
+    } catch (e) {
+      // Remove failed message
+      setFeed(prev => prev.filter(item => item.id !== tempItem.id))
+      console.warn('[PodFeed] send failed:', e?.message)
+    } finally {
+      setSending(false)
+    }
   }
 
   const renderItem = useCallback(({ item }) => (
@@ -326,7 +401,11 @@ export default function PodFeedScreen({ navigation, route }) {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.bg }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={0}
+    >
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity
@@ -341,7 +420,7 @@ export default function PodFeedScreen({ navigation, route }) {
           <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
             {podName || 'Pod'}
           </Text>
-          <Text style={[styles.headerSub, { color: colors.textSec }]}>Feed</Text>
+          <Text style={[styles.headerSub, { color: colors.textSec }]}>Feed & Chat</Text>
         </View>
 
         {healthScore !== null && (
@@ -351,6 +430,21 @@ export default function PodFeedScreen({ navigation, route }) {
         )}
       </View>
 
+      {/* Commit banner */}
+      {!hasCommittedToday && !loading && (
+        <TouchableOpacity
+          style={[styles.commitBanner, { backgroundColor: colors.accentSoft }]}
+          onPress={() => navigation.navigate('DailyCommit', { podId })}
+          activeOpacity={0.8}
+        >
+          <Feather name="alert-circle" size={14} color={colors.accent} />
+          <Text style={[styles.commitBannerText, { color: colors.accent }]}>
+            You haven't committed today
+          </Text>
+          <Text style={[styles.commitBannerBtn, { color: colors.accent }]}>Commit →</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Feed List */}
       {loading && feed.length === 0 ? (
         <View style={styles.loadingWrap}>
@@ -358,13 +452,11 @@ export default function PodFeedScreen({ navigation, route }) {
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={feed}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          contentContainerStyle={[
-            styles.listContent,
-            !hasCommittedToday && { paddingBottom: 100 },
-          ]}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={renderEmpty}
           refreshControl={
@@ -378,23 +470,28 @@ export default function PodFeedScreen({ navigation, route }) {
         />
       )}
 
-      {/* Bottom CTA */}
-      {!hasCommittedToday && !loading && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.bgSec, borderTopColor: colors.border }]}>
-          <Text style={[styles.bottomText, { color: colors.textSec }]}>
-            You haven't committed today
-          </Text>
-          <TouchableOpacity
-            style={[styles.commitBtn, { backgroundColor: colors.accent }]}
-            onPress={() => navigation.navigate('DailyCommit', { podId })}
-            activeOpacity={0.8}
-          >
-            <Feather name="check-circle" size={16} color="#FFF" />
-            <Text style={styles.commitBtnText}>Commit Now</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
+      {/* Chat Input Bar */}
+      <View style={[styles.chatBar, { backgroundColor: colors.bgSec, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 8) }]}>
+        <TextInput
+          style={[styles.chatInput, { backgroundColor: colors.bgTer, color: colors.text }]}
+          placeholder="Message your pod..."
+          placeholderTextColor={colors.textTer}
+          value={messageText}
+          onChangeText={setMessageText}
+          multiline
+          maxLength={500}
+          returnKeyType="default"
+        />
+        <TouchableOpacity
+          style={[styles.sendBtn, { backgroundColor: messageText.trim() ? colors.accent : colors.bgTer }]}
+          onPress={handleSendMessage}
+          disabled={!messageText.trim() || sending}
+          activeOpacity={0.7}
+        >
+          <Feather name="send" size={18} color={messageText.trim() ? '#FFF' : colors.textTer} />
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   )
 }
 
@@ -558,35 +655,86 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: SPACING.xl,
   },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  // Commit banner (inline, not bottom bar)
+  commitBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    paddingBottom: SPACING.lg + 8,
-    borderTopWidth: 1,
+    paddingVertical: 10,
   },
-  bottomText: {
+  commitBannerText: {
     fontFamily: FONT.medium,
     fontSize: 13,
     flex: 1,
   },
-  commitBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: RADIUS.md,
-  },
-  commitBtnText: {
+  commitBannerBtn: {
     fontFamily: FONT.bold,
-    fontSize: 14,
-    color: '#FFF',
+    fontSize: 13,
+  },
+
+  // Chat input bar
+  chatBar: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+    paddingHorizontal: SPACING.md,
+    paddingTop: 8,
+    borderTopWidth: 1,
+  },
+  chatInput: {
+    flex: 1,
+    minHeight: 40,
+    maxHeight: 100,
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontFamily: FONT.regular,
+    fontSize: 15,
+  },
+  sendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Message bubble styles
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+    marginBottom: 2,
+  },
+  messageRowMe: {
+    justifyContent: 'flex-end',
+  },
+  messageBubble: {
+    maxWidth: '75%',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: RADIUS.lg,
+    borderBottomLeftRadius: 4,
+  },
+  messageBubbleMe: {
+    borderBottomLeftRadius: RADIUS.lg,
+    borderBottomRightRadius: 4,
+  },
+  messageSender: {
+    fontFamily: FONT.semibold,
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  messageText: {
+    fontFamily: FONT.regular,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  messageTime: {
+    fontFamily: FONT.regular,
+    fontSize: 10,
+    marginTop: 4,
+    alignSelf: 'flex-end',
   },
 })

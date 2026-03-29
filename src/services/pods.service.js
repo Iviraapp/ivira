@@ -368,13 +368,14 @@ export async function getMemberPods(memberId) {
   return results
 }
 
-export async function getPodFeed(podId, limit = 20) {
-  const entries = await db('pod_feed')
+export async function getPodFeed(podId, limit = 20, before = null, after = null) {
+  const query = db('pod_feed')
     .where('pod_feed.pod_id', podId)
     .join('members', 'pod_feed.member_id', 'members.id')
     .select(
       'pod_feed.id',
       'pod_feed.type',
+      'pod_feed.member_id',
       'members.name as member_name',
       'members.photo_url as member_photo',
       'pod_feed.data',
@@ -383,10 +384,46 @@ export async function getPodFeed(podId, limit = 20) {
     .orderBy('pod_feed.created_at', 'desc')
     .limit(limit)
 
+  if (before) query.where('pod_feed.created_at', '<', before)
+  if (after) query.where('pod_feed.created_at', '>', after)
+
+  const entries = await query
+
   return entries.map((entry) => ({
     ...entry,
     data: typeof entry.data === 'string' ? JSON.parse(entry.data) : entry.data,
   }))
+}
+
+export async function sendMessage({ podId, memberId, text, imageUrl }) {
+  // Verify member is in the pod
+  const membership = await db('pod_members')
+    .where({ pod_id: podId, member_id: memberId, status: 'active' })
+    .first()
+  if (!membership) throw new Error('Not a member of this pod')
+
+  // Insert into pod_feed as type='message'
+  const [entry] = await db('pod_feed')
+    .insert({
+      pod_id: podId,
+      member_id: memberId,
+      type: 'message',
+      data: JSON.stringify({ text: text.trim(), ...(imageUrl ? { image_url: imageUrl } : {}) }),
+    })
+    .returning('*')
+
+  // Join member info
+  const member = await db('members').where('id', memberId).select('name', 'photo_url').first()
+
+  return {
+    id: entry.id,
+    type: 'message',
+    member_id: memberId,
+    member_name: member?.name || 'Member',
+    member_photo: member?.photo_url || null,
+    data: { text: text.trim(), ...(imageUrl ? { image_url: imageUrl } : {}) },
+    timestamp: entry.created_at,
+  }
 }
 
 export async function getPodStats(podId, days = 30) {
