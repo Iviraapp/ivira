@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import db from '../config/database.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
+import config from '../config/index.js';
 
 const GST_RATE = 0.18;
 const CGST_RATE = 0.09;
@@ -546,8 +547,25 @@ export async function sendInvoice(gymId, invoiceId, method) {
   if (method === 'whatsapp') {
     if (!invoice.member_id) throw new ValidationError('Invoice has no linked member')
     const member = await db('members').where({ id: invoice.member_id }).first()
-    if (!member?.phone) throw new ValidationError('Member has no phone number')
 
+    // WATI not configured yet — fall back to email delivery
+    const watiReady = !!(config.wati?.apiUrl && config.wati?.apiToken)
+    if (!watiReady) {
+      if (!member?.email) throw new ValidationError('WATI not configured and member has no email for fallback')
+      const pdfBuffer = await generateInvoicePDF(gymId, invoiceId)
+      const { sendInvoiceEmail } = await import('./email.service.js')
+      await sendInvoiceEmail({
+        to: member.email,
+        memberName: member.name,
+        invoiceNumber: invoice.invoice_number,
+        totalPaise: invoice.total_paise,
+        gymName,
+        pdfBuffer,
+      })
+      return { sent: true, method: 'email_fallback', to: member.email, note: 'WATI not configured — sent via email' }
+    }
+
+    if (!member?.phone) throw new ValidationError('Member has no phone number')
     const { sendInvoiceWhatsApp } = await import('./whatsapp.service.js')
     await sendInvoiceWhatsApp(member, { ...invoice, gym_name: gymName })
     return { sent: true, method: 'whatsapp', to: member.phone }

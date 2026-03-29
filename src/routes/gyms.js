@@ -287,4 +287,39 @@ export default async function gymRoutes(fastify) {
       memberGrowth: memberGrowth.rows,
     };
   });
+
+  // Gym data export (GDPR / DPDPA)
+  fastify.post('/gyms/:gymId/data/export', { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] }, async (request, reply) => {
+    const { gymId } = request.params
+
+    // Collect all gym data in parallel
+    const [gym, members, payments, staff, checkins, memberships] = await Promise.all([
+      db('gyms').where({ id: gymId }).first(),
+      db('members').where({ gym_id: gymId }).select('id','name','email','phone','status','created_at'),
+      db('payments').where({ gym_id: gymId }).select('id','member_id','amount_paise','status','method','paid_at','created_at'),
+      db('staff').where({ gym_id: gymId }).select('id','name','email','role','status','created_at'),
+      db('checkins').where({ gym_id: gymId }).orderBy('created_at','desc').limit(1000),
+      db('memberships').where({ gym_id: gymId }).select('id','member_id','plan_name','start_date','end_date','status'),
+    ])
+
+    const exportData = {
+      exported_at: new Date().toISOString(),
+      gym: { id: gym.id, name: gym.gym_name || gym.name, email: gym.email, created_at: gym.created_at },
+      summary: {
+        total_members: members.length,
+        total_payments: payments.length,
+        total_staff: staff.length,
+        total_checkins: checkins.length,
+      },
+      members,
+      memberships,
+      payments,
+      staff,
+      checkins,
+    }
+
+    reply.header('Content-Type', 'application/json')
+    reply.header('Content-Disposition', `attachment; filename="ivira-export-${gymId}-${Date.now()}.json"`)
+    return reply.send(exportData)
+  })
 }
