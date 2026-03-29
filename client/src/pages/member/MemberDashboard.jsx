@@ -565,6 +565,122 @@ function WorkoutHistory({ gymId, memberId }) {
   )
 }
 
+/* ────────── ASSIGNED WORKOUTS (from trainer) ────────── */
+function AssignedWorkouts({ gymId, onWorkout }) {
+  const [workouts, setWorkouts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [expanded, setExpanded] = useState(null)
+
+  useEffect(() => {
+    if (!gymId) { setLoading(false); return }
+    const token = localStorage.getItem('ivira_member_token') || localStorage.getItem('ivira_token')
+    api.get(`/gyms/${gymId}/members/me/assigned-workouts`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => {
+      const all = res.data?.workouts || []
+      // Show only pending/upcoming workouts
+      setWorkouts(all.filter(w => w.status === 'pending' || !w.status).slice(0, 3))
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [gymId])
+
+  if (loading || !workouts.length) return null
+
+  return (
+    <div style={{
+      background: M.card, borderRadius: 16, padding: '16px 20px',
+      border: `1px solid ${M.accent}28`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: M.text, fontFamily: FONT }}>
+          From Your Trainer
+        </span>
+        <span style={{
+          fontSize: 10, fontWeight: 700, color: '#F59E0B',
+          background: '#F59E0B15', padding: '3px 8px', borderRadius: 20, letterSpacing: '0.06em',
+        }}>
+          {workouts.length} PENDING
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {workouts.map(w => {
+          const isExp = expanded === w.id
+          const exercises = Array.isArray(w.exercises) ? w.exercises : []
+          const scheduledStr = w.scheduled_date
+            ? new Date(w.scheduled_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
+            : null
+
+          return (
+            <div key={w.id}
+              style={{
+                background: M.cardSec, borderRadius: 12, padding: '12px 14px',
+                border: `1px solid ${M.border}`, cursor: 'pointer',
+              }}
+              onClick={() => setExpanded(isExp ? null : w.id)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: M.text, fontFamily: FONT }}>
+                    {w.title}
+                  </div>
+                  {scheduledStr && (
+                    <div style={{ fontSize: 11, color: M.textSec, fontFamily: FONT, marginTop: 2 }}>
+                      📅 {scheduledStr}
+                    </div>
+                  )}
+                </div>
+                <ChevronRight size={14} color={M.textSec}
+                  style={{ transform: isExp ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+              </div>
+
+              {isExp && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${M.border}` }}>
+                  {w.description && (
+                    <p style={{ fontSize: 12, color: M.textSec, fontFamily: FONT, marginBottom: 8 }}>
+                      {w.description}
+                    </p>
+                  )}
+                  {exercises.length > 0 && (
+                    <div style={{ marginBottom: 10 }}>
+                      {exercises.slice(0, 5).map((ex, i) => (
+                        <div key={i} style={{
+                          fontSize: 12, color: M.text, fontFamily: FONT,
+                          padding: '4px 0', borderBottom: i < exercises.length - 1 ? `1px solid ${M.border}` : 'none',
+                          display: 'flex', justifyContent: 'space-between',
+                        }}>
+                          <span>{ex.exercise_name || ex.name || `Exercise ${i+1}`}</span>
+                          {ex.notes && <span style={{ color: M.textSec }}>{ex.notes}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {w.notes && (
+                    <p style={{ fontSize: 11, color: M.accent, fontFamily: FONT, marginBottom: 10 }}>
+                      💬 {w.notes}
+                    </p>
+                  )}
+                  <button
+                    onClick={e => { e.stopPropagation(); onWorkout && onWorkout() }}
+                    style={{
+                      width: '100%', padding: '9px 0', borderRadius: 10,
+                      background: `linear-gradient(135deg, ${M.accent}, #9F67FF)`,
+                      border: 'none', color: '#fff', fontSize: 13, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: FONT,
+                    }}
+                  >
+                    Start This Workout
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 /* ────────── HORIZONTAL DATE SCROLLER ────────── */
 function DateScroller({ selectedDate, onSelect }) {
   const scrollRef = useRef(null)
@@ -1612,6 +1728,7 @@ function HomeTab({ member, gymId, onTabChange, onVira, onWorkout }) {
       <ActionHub onTabChange={onTabChange} onWorkout={onWorkout} />
       <GoalTracker goals={goals} />
       <UpcomingStrip onSeeAll={() => onTabChange('classes')} gymId={gymId} />
+      <AssignedWorkouts gymId={gymId} onWorkout={onWorkout} />
       <TodaysPlanCard onWorkout={onWorkout} />
       <WorkoutHistory gymId={gymId} memberId={member?.id} />
     </div>

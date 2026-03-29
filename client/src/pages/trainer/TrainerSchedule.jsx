@@ -34,6 +34,128 @@ const SESSION_COLORS = {
   online: { bg: '#38BDF818', border: '#38BDF8', text: '#38BDF8' },
 }
 
+function AssignWorkoutSheet({ session, onClose, onDone, token, theme }) {
+  const [form, setForm] = useState({
+    title: `${session?.session_type?.toUpperCase() || 'Workout'} Plan`,
+    description: '',
+    exercises: '',
+    scheduled_date: session?.date || '',
+    notes: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const accent = '#10B981'
+
+  async function handleSubmit() {
+    if (!form.title.trim()) return
+    setLoading(true)
+    try {
+      // Parse exercises from newline-separated text into array
+      const exerciseList = form.exercises
+        ? form.exercises.split('\n').filter(Boolean).map(line => {
+            const [name, ...rest] = line.split('-')
+            return { exercise_name: name.trim(), notes: rest.join('-').trim() }
+          })
+        : []
+
+      await import('../../lib/api').then(({ default: apiModule }) =>
+        apiModule.post(`/trainer/clients/${session.member_id}/assigned-workouts`, {
+          title: form.title,
+          description: form.description || null,
+          exercises: exerciseList,
+          scheduled_date: form.scheduled_date || null,
+          notes: form.notes || null,
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      )
+      setDone(true)
+      setTimeout(onDone, 1500)
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Failed to assign workout')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (done) return (
+    <div style={{ padding: 32, textAlign: 'center' }}>
+      <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+      <p style={{ color: accent, fontWeight: 700, fontFamily: FONT }}>Workout assigned!</p>
+      <p style={{ color: theme.textSec, fontSize: 13, fontFamily: FONT }}>Member will receive a push notification</p>
+    </div>
+  )
+
+  return (
+    <div style={{ padding: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <span style={{ fontWeight: 700, fontSize: 16, color: theme.text, fontFamily: FONT }}>Assign Workout</span>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: theme.textSec, fontSize: 20, cursor: 'pointer' }}>×</button>
+      </div>
+      <p style={{ fontSize: 12, color: theme.textSec, marginBottom: 16, fontFamily: FONT }}>
+        For: {session?.member_name}
+      </p>
+
+      {[
+        { key: 'title', label: 'Workout Title *', placeholder: 'e.g. Push Day A', type: 'text' },
+        { key: 'description', label: 'Description', placeholder: 'Brief overview...', type: 'text' },
+        { key: 'scheduled_date', label: 'Scheduled Date', placeholder: '', type: 'date' },
+        { key: 'notes', label: 'Notes for member', placeholder: 'Focus on form, increase weight if...', type: 'text' },
+      ].map(({ key, label, placeholder, type }) => (
+        <div key={key} style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: theme.textSec, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: FONT }}>
+            {label}
+          </label>
+          <input
+            type={type}
+            value={form[key]}
+            onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+            placeholder={placeholder}
+            style={{
+              width: '100%', padding: '10px 12px', borderRadius: 8, marginTop: 4,
+              background: theme.cardBg || theme.bgSec, border: `1px solid ${theme.border}`,
+              color: theme.text, fontSize: 14, fontFamily: FONT, boxSizing: 'border-box',
+              outline: 'none',
+            }}
+          />
+        </div>
+      ))}
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ fontSize: 11, fontWeight: 600, color: theme.textSec, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: FONT }}>
+          Exercises (one per line, e.g. "Bench Press - 4x8")
+        </label>
+        <textarea
+          value={form.exercises}
+          onChange={e => setForm(f => ({ ...f, exercises: e.target.value }))}
+          placeholder={'Bench Press - 4×8 @ 70kg\nIncline Dumbbell - 3×12\nCable Fly - 3×15'}
+          rows={4}
+          style={{
+            width: '100%', padding: '10px 12px', borderRadius: 8, marginTop: 4,
+            background: theme.cardBg || theme.bgSec, border: `1px solid ${theme.border}`,
+            color: theme.text, fontSize: 13, fontFamily: FONT, boxSizing: 'border-box',
+            resize: 'vertical', outline: 'none',
+          }}
+        />
+      </div>
+
+      <button
+        onClick={handleSubmit}
+        disabled={loading || !form.title.trim()}
+        style={{
+          width: '100%', padding: '12px 0', borderRadius: 10,
+          background: loading ? theme.border : accent,
+          border: 'none', color: '#fff', fontSize: 14, fontWeight: 700,
+          cursor: loading ? 'not-allowed' : 'pointer', fontFamily: FONT,
+        }}
+      >
+        {loading ? 'Assigning...' : 'Assign Workout 💪'}
+      </button>
+    </div>
+  )
+}
+
 export default function TrainerSchedule() {
   const { theme } = useTheme()
   const [weekOffset, setWeekOffset] = useState(0)
@@ -41,9 +163,15 @@ export default function TrainerSchedule() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [view, setView] = useState('week') // 'week' | 'day'
+  const [assignSheet, setAssignSheet] = useState(false)
+  const [assignForm, setAssignForm] = useState({ title: '', description: '', exercises: '', scheduled_date: '', notes: '' })
+  const [assigning, setAssigning] = useState(false)
+  const [assignDone, setAssignDone] = useState(false)
 
   const weekDates = getWeekDates(weekOffset)
   const today = new Date()
+
+  const accent = '#10B981'
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -267,7 +395,7 @@ export default function TrainerSchedule() {
       {selected && (
         <>
           <div
-            onClick={() => setSelected(null)}
+            onClick={() => { setSelected(null); setAssignSheet(false) }}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }}
           />
           <div style={{
@@ -279,7 +407,7 @@ export default function TrainerSchedule() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: theme.text, margin: 0 }}>Session</h2>
               <button
-                onClick={() => setSelected(null)}
+                onClick={() => { setSelected(null); setAssignSheet(false) }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.textSec }}
               >✕</button>
             </div>
@@ -337,8 +465,63 @@ export default function TrainerSchedule() {
                 <MessageCircle size={16} /> Message on WhatsApp
               </a>
             )}
+
+            {/* Assign Workout button */}
+            <button
+              onClick={() => setAssignSheet(true)}
+              style={{
+                width: '100%', padding: '10px 0', borderRadius: 8, marginTop: 8,
+                background: accent + '18', border: `1px solid ${accent}`,
+                color: accent, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+              }}
+            >
+              💪 Assign Workout
+            </button>
+
+            {/* Success banner */}
+            {assignDone && (
+              <div style={{
+                marginTop: 12, padding: '10px 14px', borderRadius: 8,
+                background: accent + '18', border: `1px solid ${accent}40`,
+                color: accent, fontSize: 13, fontWeight: 600, textAlign: 'center', fontFamily: FONT,
+              }}>
+                ✅ Workout assigned!
+              </div>
+            )}
           </div>
         </>
+      )}
+
+      {/* Assign Workout Sheet overlay */}
+      {assignSheet && selected && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: '#00000080', zIndex: 300,
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          }}
+          onClick={() => setAssignSheet(false)}
+        >
+          <div
+            style={{
+              background: theme.bg, borderRadius: '20px 20px 0 0',
+              width: '100%', maxWidth: 480,
+              maxHeight: '85vh', overflowY: 'auto',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <AssignWorkoutSheet
+              session={selected}
+              token={localStorage.getItem('ivira_trainer_token')}
+              theme={theme}
+              onClose={() => setAssignSheet(false)}
+              onDone={() => {
+                setAssignSheet(false)
+                setAssignDone(true)
+                setTimeout(() => setAssignDone(false), 3000)
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

@@ -48,7 +48,24 @@ export default async function assignedWorkoutsRoutes(fastify) {
       status: 'pending',
     }).returning('*');
 
-    return reply.code(201).send({ assigned_workout: assigned });
+    reply.code(201).send({ assigned_workout: assigned });
+
+    // Fire-and-forget push notification to member
+    setImmediate(async () => {
+      try {
+        const { sendToMember } = await import('../services/push.service.js')
+        const scheduledStr = scheduled_date
+          ? ` scheduled for ${new Date(scheduled_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}`
+          : ''
+        await sendToMember(request.trainer.gymId, memberId, {
+          title: '💪 New workout from your trainer',
+          body: `${title}${scheduledStr}`,
+          data: { type: 'assigned_workout', workoutId: assigned.id, screen: 'Home' }
+        })
+      } catch (err) {
+        console.warn('[AssignedWorkouts] push notification failed:', err?.message)
+      }
+    })
   });
 
   // GET /trainer/clients/:memberId/assigned-workouts
