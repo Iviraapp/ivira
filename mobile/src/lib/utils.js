@@ -28,11 +28,14 @@ export function formatDateTime(dateStr) {
 export function getInitials(name) {
   if (!name) return '?'
   return name
-    .split(' ')
+    .replace(/[^a-zA-Z\s]/g, '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
     .map((w) => w[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2)
+    .slice(0, 2) || '?'
 }
 
 // Generate a cryptographic nonce for QR anti-screenshot

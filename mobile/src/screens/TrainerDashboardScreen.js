@@ -226,7 +226,7 @@ function EarningsBar({ month, amount, maxAmount, colors }) {
 // ─── Main Screen ─────────────────────────────────────────────
 export default function TrainerDashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets()
-  const { colors, isDark } = useTheme()
+  const { colors, card, isDark } = useTheme()
   const { member, gymId } = useAuth()
 
   const [activeTab, setActiveTab] = useState(0)
@@ -389,17 +389,17 @@ export default function TrainerDashboardScreen({ navigation }) {
 
       {/* Quick stats */}
       <View style={styles.quickStats}>
-        <View style={[styles.quickStatCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: COLORS.cyan }]}>
+        <View style={[styles.quickStatCard, card, { borderTopWidth: 3, borderTopColor: COLORS.cyan }]}>
           <Feather name="clock" size={20} color={COLORS.cyan} />
           <Text style={[styles.quickStatNum, { color: colors.text }]}>{scheduledCount}</Text>
           <Text style={[styles.quickStatLabel, { color: colors.textSec }]}>Upcoming</Text>
         </View>
-        <View style={[styles.quickStatCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: COLORS.green }]}>
+        <View style={[styles.quickStatCard, card, { borderTopWidth: 3, borderTopColor: COLORS.green }]}>
           <Feather name="check-circle" size={20} color={COLORS.green} />
           <Text style={[styles.quickStatNum, { color: colors.text }]}>{completedCount}</Text>
           <Text style={[styles.quickStatLabel, { color: colors.textSec }]}>Completed</Text>
         </View>
-        <View style={[styles.quickStatCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: COLORS.accent }]}>
+        <View style={[styles.quickStatCard, card, { borderTopWidth: 3, borderTopColor: COLORS.accent }]}>
           <Feather name="users" size={20} color={COLORS.accent} />
           <Text style={[styles.quickStatNum, { color: colors.text }]}>{sessions.length}</Text>
           <Text style={[styles.quickStatLabel, { color: colors.textSec }]}>Total</Text>
@@ -470,7 +470,7 @@ export default function TrainerDashboardScreen({ navigation }) {
 
       {/* Monthly breakdown */}
       {earningsData.monthly.length > 0 && (
-        <View style={[styles.sectionCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: CARD_ACCENTS[0] }]}>
+        <View style={[styles.sectionCard, card, { borderTopWidth: 3, borderTopColor: CARD_ACCENTS[0] }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Monthly Breakdown</Text>
           {earningsData.monthly.map((m, idx) => (
             <EarningsBar
@@ -486,7 +486,7 @@ export default function TrainerDashboardScreen({ navigation }) {
 
       {/* Recent transactions */}
       {earningsData.transactions.length > 0 && (
-        <View style={[styles.sectionCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: CARD_ACCENTS[6] }]}>
+        <View style={[styles.sectionCard, card, { borderTopWidth: 3, borderTopColor: CARD_ACCENTS[6] }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Transactions</Text>
           {earningsData.transactions.map((txn, idx) => (
             <View

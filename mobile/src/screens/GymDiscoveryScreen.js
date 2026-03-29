@@ -109,7 +109,7 @@ function ReviewCard({ review, colors }) {
 }
 
 // ─── Gym Card ───────────────────────────────────────────────────────────────
-function GymCard({ gym, index, onPress, colors, isDark }) {
+function GymCard({ gym, index, onPress, colors, card, isDark }) {
   const accentColor = CARD_ACCENTS[index % CARD_ACCENTS.length]
   const amenities = gym.amenities || []
   const displayAmenities = amenities.slice(0, 4)
@@ -119,9 +119,8 @@ function GymCard({ gym, index, onPress, colors, isDark }) {
     <TouchableOpacity
       style={[
         styles.gymCard,
+        card,
         {
-          ...ELITE_CARD,
-          backgroundColor: isDark ? ELITE_CARD.backgroundColor : '#FFFFFF',
           borderTopColor: accentColor,
           borderTopWidth: 3,
         },
@@ -550,7 +549,7 @@ function GymProfileModal({ gym, visible, onClose, colors, isDark, member }) {
 
 // ─── Main Screen ────────────────────────────────────────────────────────────
 export default function GymDiscoveryScreen({ navigation }) {
-  const { colors, isDark } = useTheme()
+  const { colors, card, isDark } = useTheme()
   const { member } = useAuth()
 
   const [gyms, setGyms] = useState([])
@@ -659,9 +658,10 @@ export default function GymDiscoveryScreen({ navigation }) {
       index={index}
       onPress={() => openGymProfile(item)}
       colors={colors}
+      card={card}
       isDark={isDark}
     />
-  ), [colors, isDark, openGymProfile])
+  ), [colors, card, isDark, openGymProfile])
 
   const keyExtractor = useCallback((item, index) => item.id || item._id || `gym-${index}`, [])
 

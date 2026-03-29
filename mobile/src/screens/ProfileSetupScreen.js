@@ -86,7 +86,7 @@ function StepBasics({ name, setName, gender, setGender, colors }) {
           placeholder="Your name"
           placeholderTextColor={colors.textTer}
           value={name}
-          onChangeText={setName}
+          onChangeText={(text) => setName(text.replace(/[^a-zA-Z\s]/g, ''))}
           autoCapitalize="words"
           autoCorrect={false}
           autoFocus

@@ -34,7 +34,7 @@ function formatToday() {
 }
 
 export default function PodHomeScreen({ navigation }) {
-  const { colors, isDark } = useTheme()
+  const { colors, isDark, card } = useTheme()
   const { member, gymId } = useAuth()
 
   const [pod, setPod] = useState(null)
@@ -212,7 +212,7 @@ export default function PodHomeScreen({ navigation }) {
           </View>
         )}
 
-        <View style={[styles.emptyCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: POD_PURPLE }]}>
+        <View style={[styles.emptyCard, card, { borderTopWidth: 3, borderTopColor: POD_PURPLE }]}>
           <View style={styles.emptyIconWrap}>
             <Feather name="shield" size={56} color={POD_PURPLE} />
           </View>
@@ -301,7 +301,7 @@ export default function PodHomeScreen({ navigation }) {
       </View>
 
       {/* Members Row */}
-      <View style={[styles.membersCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: POD_PURPLE }]}>
+      <View style={[styles.membersCard, card, { borderTopWidth: 3, borderTopColor: POD_PURPLE }]}>
         <Text style={[styles.sectionLabel, { color: colors.textSec }]}>MEMBERS</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersScroll}>
           {podMembers.map((m) => {
@@ -323,7 +323,7 @@ export default function PodHomeScreen({ navigation }) {
                   <Text style={[styles.memberInitial, { color: colors.text }]}>{initial}</Text>
                   {isCaptain && (
                     <View style={styles.captainBadge}>
-                      <Feather name="star" size={10} color="#FBBF24" />
+                      <Feather name="star" size={10} color="#FFFFFF" />
                     </View>
                   )}
                 </View>
@@ -342,7 +342,7 @@ export default function PodHomeScreen({ navigation }) {
       </View>
 
       {/* Today's Commitments */}
-      <View style={[styles.commitmentsCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: POD_GREEN }]}>
+      <View style={[styles.commitmentsCard, card, { borderTopWidth: 3, borderTopColor: COLORS.accent }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Today's Plan</Text>
 
         {commitments.length === 0 && userHasCommitted === false && (
@@ -400,7 +400,7 @@ export default function PodHomeScreen({ navigation }) {
               style={[
                 styles.commitBtn,
                 {
-                  backgroundColor: POD_GREEN,
+                  backgroundColor: COLORS.accent,
                   opacity: submitting || !commitTime.trim() || !commitActivity.trim() ? 0.5 : 1,
                 },
               ]}
@@ -421,7 +421,7 @@ export default function PodHomeScreen({ navigation }) {
       {/* Quick Actions */}
       <View style={styles.actionsRow}>
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: POD_GREEN }]}
+          style={[styles.actionBtn, { backgroundColor: COLORS.accent }]}
           onPress={handleCheckIn}
           activeOpacity={0.8}
         >
@@ -447,9 +447,9 @@ export default function PodHomeScreen({ navigation }) {
       </View>
 
       {/* Streak Display */}
-      <View style={[styles.streakCard, ELITE_CARD, { borderTopWidth: 3, borderTopColor: POD_AMBER }]}>
+      <View style={[styles.streakCard, card, { borderTopWidth: 3, borderTopColor: POD_AMBER }]}>
         <View style={styles.streakMain}>
-          <Text style={[styles.streakNumber, { color: POD_GREEN }]}>{myStreak}</Text>
+          <Text style={[styles.streakNumber, { color: COLORS.accent }]}>{myStreak}</Text>
           <Text style={[styles.streakLabel, { color: colors.textSec }]}>day streak</Text>
         </View>
         <View style={styles.streakMeta}>
@@ -614,8 +614,9 @@ const styles = StyleSheet.create({
   },
   podName: {
     fontFamily: FONT.bold,
-    fontSize: 26,
+    fontSize: 22,
     marginBottom: 6,
+    letterSpacing: -0.3,
   },
   tierRow: {
     flexDirection: 'row',
@@ -669,7 +670,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: FONT.semibold,
     fontSize: 11,
-    letterSpacing: 1.2,
+    letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: 12,
   },
@@ -701,7 +702,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#1A2236',
+    backgroundColor: '#FBBF24',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -722,9 +723,9 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   sectionTitle: {
-    fontFamily: FONT.bold,
-    fontSize: 18,
-    marginBottom: 14,
+    fontFamily: FONT.semibold,
+    fontSize: 16,
+    marginBottom: 12,
   },
   noCommitmentsText: {
     fontFamily: FONT.regular,
@@ -834,8 +835,8 @@ const styles = StyleSheet.create({
   },
   streakNumber: {
     fontFamily: FONT.numExtraBold,
-    fontSize: 44,
-    lineHeight: 48,
+    fontSize: 36,
+    lineHeight: 40,
   },
   streakLabel: {
     fontFamily: FONT.medium,

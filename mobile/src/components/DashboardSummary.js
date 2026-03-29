@@ -107,17 +107,19 @@ export default function DashboardSummary({
 
   return (
     <View style={[styles.container, card, { borderTopWidth: 3, borderTopColor: readiness.color }, style]}>
-      {/* Hero accent image */}
-      <View style={[styles.heroAccent, { backgroundColor: isDark ? '#1a2a4a' : '#d4dbe8' }]}>
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=50' }}
-          style={StyleSheet.absoluteFill}
-          imageStyle={styles.heroAccentImage}
-          resizeMode="cover"
-        >
-          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
-        </ImageBackground>
-      </View>
+      {/* Hero accent image — dark mode only */}
+      {isDark && (
+        <View style={[styles.heroAccent, { backgroundColor: '#1a2a4a' }]}>
+          <ImageBackground
+            source={{ uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=50' }}
+            style={StyleSheet.absoluteFill}
+            imageStyle={styles.heroAccentImage}
+            resizeMode="cover"
+          >
+            <View style={styles.heroAccentOverlay} />
+          </ImageBackground>
+        </View>
+      )}
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Today's Summary</Text>

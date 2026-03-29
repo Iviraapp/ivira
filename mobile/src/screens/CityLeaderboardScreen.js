@@ -195,15 +195,15 @@ function PodiumCard({ entry, rank, colors, isCurrentUser }) {
 // Ranking Row
 // ---------------------------------------------------------------------------
 
-function RankingRow({ entry, colors, isCurrentUser }) {
+function RankingRow({ entry, colors, card, isCurrentUser }) {
   const medalColor = MEDAL_COLORS[entry.rank]
 
   return (
     <View
       style={[
         styles.rankRow,
+        card,
         {
-          ...ELITE_CARD,
           borderTopWidth: 3,
           borderTopColor: medalColor || COLORS.accent,
           marginBottom: SPACING.sm,
@@ -300,7 +300,7 @@ function LockedOverlay({ colors, navigation }) {
 
 export default function CityLeaderboardScreen({ navigation }) {
   const insets = useSafeAreaInsets()
-  const { colors, isDark } = useTheme()
+  const { colors, card, isDark } = useTheme()
   const { member, gymId } = useAuth()
 
   const [filter, setFilter] = useState('today')
@@ -390,9 +390,10 @@ export default function CityLeaderboardScreen({ navigation }) {
     <RankingRow
       entry={item}
       colors={colors}
+      card={card}
       isCurrentUser={item.member_id === currentMemberId}
     />
-  ), [colors, currentMemberId])
+  ), [colors, card, currentMemberId])
 
   const keyExtractor = useCallback((item) => String(item.member_id || item.rank), [])
 

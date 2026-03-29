@@ -63,7 +63,7 @@ function Skeleton({ width, height, style }) {
 }
 
 export default function PodStatsScreen({ navigation, route }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { member, gymId } = useAuth()
   const podId = route?.params?.podId
   const podName = route?.params?.podName || 'Pod'
@@ -246,7 +246,7 @@ export default function PodStatsScreen({ navigation, route }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} />}
       >
         {/* 1. Pod Overview */}
-        <View style={[ELITE_CARD, s.card, { borderTopColor: COLORS.green, borderTopWidth: 3 }]}>
+        <View style={[card, s.card, { borderTopColor: COLORS.green, borderTopWidth: 3 }]}>
           <View style={s.overviewRow}>
             <View style={s.scoreBlock}>
               <Text style={[s.bigScore, { color: scoreColor(stats?.avg_health || 0) }]}>
@@ -275,12 +275,12 @@ export default function PodStatsScreen({ navigation, route }) {
         </View>
 
         {/* 2. Health Trend Chart */}
-        <View style={[ELITE_CARD, s.card]}>
+        <View style={[card, s.card]}>
           {renderChart()}
         </View>
 
         {/* 3. Member Leaderboard */}
-        <View style={[ELITE_CARD, s.card, { borderTopColor: '#8B5CF6', borderTopWidth: 3 }]}>
+        <View style={[card, s.card, { borderTopColor: '#8B5CF6', borderTopWidth: 3 }]}>
           <Text style={[s.sectionTitle, { color: colors.text }]}>Member Rankings</Text>
           {members.map((m, i) => {
             const isSelf = m.member_id === member?.id
@@ -318,7 +318,7 @@ export default function PodStatsScreen({ navigation, route }) {
         </View>
 
         {/* 4. Streaks Card */}
-        <View style={[ELITE_CARD, s.card, { borderTopColor: COLORS.amber, borderTopWidth: 3 }]}>
+        <View style={[card, s.card, { borderTopColor: COLORS.amber, borderTopWidth: 3 }]}>
           <Text style={[s.sectionTitle, { color: colors.text }]}>Streak Records</Text>
           {members.map((m, i) => (
             <View key={m.member_id || i} style={s.streakRow}>
@@ -349,7 +349,7 @@ export default function PodStatsScreen({ navigation, route }) {
 
         {/* 5. Insights */}
         {insights.length > 0 && (
-          <View style={[ELITE_CARD, s.card]}>
+          <View style={[card, s.card]}>
             <Text style={[s.sectionTitle, { color: colors.text }]}>Insights</Text>
             {insights.map((line, i) => (
               <View key={i} style={s.insightRow}>
