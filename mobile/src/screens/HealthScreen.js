@@ -362,10 +362,10 @@ export default function HealthScreen({ navigation }) {
   // HealthContext handles all native health API polling, pedometer fallback, and backend sync.
   // Local `steps` state is kept in sync with context for backward compatibility.
   useEffect(() => {
-    if (stepMode === 'auto' && contextSteps > 0) {
+    if (stepMode === 'auto') {
       setSteps(contextSteps)
       setStepSource(contextStepSource)
-      setLastSynced(new Date())
+      if (contextStepSource) setLastSynced(new Date())
     }
   }, [contextSteps, contextStepSource, stepMode])
 
@@ -490,7 +490,7 @@ export default function HealthScreen({ navigation }) {
   }
 
   const formatSyncTime = (date) => {
-    if (!date) return 'Never'
+    if (!date) return contextStepSource === 'unavailable' ? 'No sensor available' : 'Waiting...'
     const now = new Date()
     const diffMs = now - date
     const diffMin = Math.floor(diffMs / 60000)

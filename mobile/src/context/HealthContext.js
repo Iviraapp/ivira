@@ -173,6 +173,8 @@ export function HealthProvider({ children, gymId, memberId }) {
       } catch (err) { console.warn('[HealthCtx] fetchSteps pedometer:', err?.message) }
     }
 
+    // Neither Health Connect nor Pedometer available — still mark as attempted
+    setSteps(0)
     setStepSource('unavailable')
   }, [stepMode, gymId, memberId])
 
