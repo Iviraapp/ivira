@@ -242,10 +242,16 @@ export function AuthProvider({ children }) {
   const isDemo = false // Demo mode removed — always real data
 
   const refreshProfile = useCallback(async () => {
-    if (!gymId) return
     try {
-      const res = await api.get(`/gyms/${gymId}/members/me`)
-      const memberData = res.data?.member || res.data
+      let memberData
+      if (gymId) {
+        const res = await api.get(`/gyms/${gymId}/members/me`)
+        memberData = res.data?.member || res.data
+      } else {
+        // B2C user without a gym — use B2C profile endpoint
+        const res = await api.get('/auth/b2c/profile')
+        memberData = res.data?.member || res.data
+      }
       setMember(memberData)
       await setItem('ivira_member_data', JSON.stringify(memberData))
     } catch (e) {

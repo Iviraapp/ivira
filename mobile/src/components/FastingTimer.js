@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch, Modal, TextInput, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native'
 // react-native-svg — fallback if native module not linked
 let Svg = null
 let Circle = null
@@ -495,6 +495,17 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
 
   return (
     <View style={[styles.card, { backgroundColor: card.backgroundColor, borderColor: card.borderColor }]}>
+      {/* Aesthetic hero accent */}
+      <View style={[styles.heroAccent, { backgroundColor: '#1a2a3a' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&q=50' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.heroAccentImage}
+          resizeMode="cover"
+        >
+          <View style={styles.heroAccentOverlay} />
+        </ImageBackground>
+      </View>
       {/* Header */}
       <View style={styles.header}>
         <Feather name="clock" size={18} color={isFasting ? phase.color : COLORS.accent} />
@@ -902,6 +913,22 @@ const styles = StyleSheet.create({
     ...ELITE_CARD,
     padding: SPACING.lg,
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  heroAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 90,
+  },
+  heroAccentImage: {
+    borderTopLeftRadius: ELITE_CARD.borderRadius || 22,
+    borderTopRightRadius: ELITE_CARD.borderRadius || 22,
+  },
+  heroAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.55)',
   },
   header: {
     flexDirection: 'row',

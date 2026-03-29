@@ -12,6 +12,7 @@ import {
   TextInput,
   Platform,
   Image,
+  ImageBackground,
   RefreshControl,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
@@ -81,7 +82,7 @@ import PostWorkoutRecovery from '../components/PostWorkoutRecovery'
 import HydrationTracker from '../components/HydrationTracker'
 import WorkoutHeatMap from '../components/WorkoutHeatMap'
 // BodyCompositionTimeline, AccountabilityBuddy, NutritionInsights moved to Health tab
-import FeaturedExercises from '../components/FeaturedExercises'
+// FeaturedExercises removed — wger data kept in WorkoutTracker only
 
 import { getDailyInsight, getRecoveryTip, getWorkoutSuggestion } from '../lib/aiCoach'
 import { recordWorkout } from '../lib/SmartNotificationEngine'
@@ -653,25 +654,39 @@ export default function HomeScreen({ navigation, route }) {
     }
   }, [bookedClasses, gymId])
 
-  // --- Primary actions (always visible grid) ---
-  const primaryActions = [
-    { label: 'Workouts', icon: 'activity', bg: '#F97316', onPress: () => navigation?.navigate?.('WorkoutTracker') },
-    { label: 'Scan Food', icon: 'camera', bg: '#EA4335', onPress: () => navigation?.navigate?.('FoodScanner') },
-    { label: 'Classes', icon: 'calendar', bg: COLORS.accent, onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'community' } }) },
-    { label: 'Sleep', icon: 'moon', bg: '#6366F1', onPress: () => navigation?.navigate?.('SleepTracker') },
-  ]
-
-  // --- Secondary actions (horizontal scroll — less frequent) ---
-  const moreActions = [
-    { label: 'Trainers', icon: 'search', bg: COLORS.green, onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'marketplace' } }) },
-    { label: 'Challenges', icon: 'target', bg: '#8B5CF6', onPress: () => navigation?.navigate?.('Challenges') },
-    { label: 'Recipes', icon: 'book-open', bg: '#34A853', onPress: () => navigation?.navigate?.('Recipes') },
-    { label: 'Score', icon: 'award', bg: '#4285F4', onPress: () => navigation?.navigate?.('FitnessScore') },
-    { label: 'Achievements', icon: 'star', bg: '#F59E0B', onPress: () => navigation?.navigate?.('Achievements') },
-    { label: 'Yoga', icon: 'sunrise', bg: '#14B8A6', onPress: () => navigation?.navigate?.('Yoga') },
-    { label: 'Leaderboard', icon: 'bar-chart-2', bg: '#FFD700', onPress: () => navigation?.navigate?.('CityLeaderboard') },
-    { label: 'Find Gyms', icon: 'map-pin', bg: '#06B6D4', onPress: () => navigation?.navigate?.('GymDiscovery') },
-    ...(gymId ? [{ label: 'Revenue', icon: 'dollar-sign', bg: COLORS.green, onPress: () => navigation?.navigate?.('RevenueDashboard') }] : []),
+  // --- CRED-style grouped action sections with hero images ---
+  const actionSections = [
+    {
+      title: 'QUICK ACTIONS',
+      heroImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=60',
+      items: [
+        { label: 'Workouts', icon: 'activity', bg: '#F97316', onPress: () => navigation?.navigate?.('WorkoutTracker') },
+        { label: 'Scan Food', icon: 'camera', bg: '#EA4335', onPress: () => navigation?.navigate?.('FoodScanner') },
+        { label: 'Classes', icon: 'calendar', bg: '#3B82F6', onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'community' } }) },
+        { label: 'Sleep', icon: 'moon', bg: '#6366F1', onPress: () => navigation?.navigate?.('SleepTracker') },
+      ],
+    },
+    {
+      title: 'DISCOVER',
+      heroImage: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=60',
+      items: [
+        { label: 'Trainers', icon: 'users', bg: '#34D399', onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'marketplace' } }) },
+        { label: 'Challenges', icon: 'target', bg: '#8B5CF6', onPress: () => navigation?.navigate?.('Challenges') },
+        { label: 'Recipes', icon: 'book-open', bg: '#14B8A6', onPress: () => navigation?.navigate?.('Recipes') },
+        { label: 'Yoga', icon: 'sunrise', bg: '#EC4899', onPress: () => navigation?.navigate?.('Yoga') },
+      ],
+    },
+    {
+      title: 'TRACK',
+      heroImage: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=60',
+      items: [
+        { label: 'Score', icon: 'award', bg: '#3B82F6', onPress: () => navigation?.navigate?.('FitnessScore') },
+        { label: 'Achievements', icon: 'star', bg: '#F59E0B', onPress: () => navigation?.navigate?.('Achievements') },
+        { label: 'Leaderboard', icon: 'bar-chart-2', bg: '#06B6D4', onPress: () => navigation?.navigate?.('CityLeaderboard') },
+        { label: 'Find Gyms', icon: 'map-pin', bg: '#EF4444', onPress: () => navigation?.navigate?.('GymDiscovery') },
+        ...(gymId ? [{ label: 'Revenue', icon: 'dollar-sign', bg: '#34D399', onPress: () => navigation?.navigate?.('RevenueDashboard') }] : []),
+      ],
+    },
   ]
 
   const formatActiveTime = (secs) => {
@@ -749,8 +764,8 @@ export default function HomeScreen({ navigation, route }) {
               } catch {}
               setRefreshing(false)
             }}
-            tintColor="#10B981"
-            colors={['#10B981']}
+            tintColor="#3B82F6"
+            colors={['#3B82F6']}
           />
         }
       >
@@ -913,49 +928,46 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         </MotiView>
 
-        {/* Primary Actions — fixed 4-icon row */}
+        {/* CRED-style Grouped Action Sections */}
         <MotiView
           from={{ opacity: 0, translateY: 50 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 400 }}
         >
-        <View style={styles.primaryGrid}>
-          {primaryActions.map((action) => (
-            <TouchableOpacity
-              key={action.label}
-              style={styles.primaryTile}
-              onPress={action.onPress}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.primaryIconCircle, { backgroundColor: action.bg + '18' }]}>
-                <Feather name={action.icon} size={20} color={action.bg} />
+        {actionSections.map((section) => (
+          <View key={section.title} style={styles.credSection}>
+            <Text style={[styles.credSectionTitle, { color: colors.textTer }]}>{section.title}</Text>
+            <View style={[styles.credSectionCard, card]}>
+              {section.heroImage && (
+                <View style={[styles.credHeroImage, { backgroundColor: '#0e1a2e' }]}>
+                  <ImageBackground
+                    source={{ uri: section.heroImage }}
+                    style={StyleSheet.absoluteFill}
+                    imageStyle={styles.credHeroImageInner}
+                    resizeMode="cover"
+                  >
+                    <View style={[styles.credHeroOverlay, !isDark && styles.credHeroOverlayLight]} />
+                  </ImageBackground>
+                </View>
+              )}
+              <View style={[styles.credGrid, { padding: SPACING.md }]}>
+                {section.items.map((action) => (
+                  <TouchableOpacity
+                    key={action.label}
+                    style={styles.credTile}
+                    onPress={action.onPress}
+                    activeOpacity={0.65}
+                  >
+                    <View style={[styles.credIconWrap, { backgroundColor: action.bg + (isDark ? '20' : '28') }]}>
+                      <Feather name={action.icon} size={22} color={action.bg} />
+                    </View>
+                    <Text style={[styles.credTileLabel, { color: colors.text }]} numberOfLines={1}>{action.label}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-              <Text style={[styles.primaryLabel, { color: colors.text }]}>{action.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Secondary Actions — horizontal scrollable strip */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.quickActionsStrip}
-          style={styles.quickActionsScroll}
-        >
-          {moreActions.map((action) => (
-            <TouchableOpacity
-              key={action.label}
-              style={styles.quickActionTile}
-              onPress={action.onPress}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.quickActionIcon, { backgroundColor: action.bg + '18' }]}>
-                <Feather name={action.icon} size={18} color={action.bg} />
-              </View>
-              <Text style={[styles.quickActionLabel, { color: colors.text }]} numberOfLines={1}>{action.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+            </View>
+          </View>
+        ))}
         </MotiView>
 
         {/* Daily Motivation */}
@@ -997,12 +1009,6 @@ export default function HomeScreen({ navigation, route }) {
         <ContinueWorkoutCard
           style={{ marginHorizontal: 0 }}
           onStartWorkout={() => navigation?.navigate?.('WorkoutTracker')}
-        />
-
-        {/* Featured Exercises — visual workout showcase with images & videos */}
-        <FeaturedExercises
-          style={{ marginHorizontal: 0 }}
-          navigation={navigation}
         />
 
         {/* Hydration — interactive, quick engagement */}
@@ -2156,56 +2162,61 @@ const styles = StyleSheet.create({
     ...ELITE_GLOW,
   },
 
-  // Primary Actions — fixed 4-across row
-  primaryGrid: {
+  // CRED-style grouped action sections
+  credSection: {
+    marginBottom: SPACING.md,
+  },
+  credSectionTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: FONT.semibold,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: SPACING.sm,
+    marginLeft: 4,
+  },
+  credSectionCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  credHeroImage: {
+    height: 100,
+    width: '100%',
+  },
+  credHeroImageInner: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  credHeroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(10,14,26,0.55)',
+  },
+  credHeroOverlayLight: {
+    backgroundColor: 'rgba(247,245,242,0.45)',
+  },
+  credGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.sm + 4,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
   },
-  primaryTile: {
+  credTile: {
     alignItems: 'center',
-    width: (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.sm * 3) / 4,
+    width: '25%',
+    paddingVertical: SPACING.sm + 2,
   },
-  primaryIconCircle: {
-    width: 48,
-    height: 48,
+  credIconWrap: {
+    width: 52,
+    height: 52,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  primaryLabel: {
+  credTileLabel: {
     fontSize: 11,
     fontWeight: '600',
     fontFamily: FONT.semibold,
     textAlign: 'center',
-  },
-  // Secondary Actions — horizontal scroll strip
-  quickActionsScroll: {
-    marginBottom: SPACING.md,
-  },
-  quickActionsStrip: {
-    gap: SPACING.sm + 2,
-    paddingRight: SPACING.md,
-  },
-  quickActionTile: {
-    alignItems: 'center',
-    width: 64,
-  },
-  quickActionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 5,
-  },
-  quickActionLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    fontFamily: FONT.semibold,
-    textAlign: 'center',
-    color: COLORS.text,
   },
 
   // Daily Goals

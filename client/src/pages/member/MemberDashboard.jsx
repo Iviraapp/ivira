@@ -684,6 +684,25 @@ export default function MemberDashboard() {
     }
   }
 
+  // Show skeleton while member data loads
+  if (!member) {
+    return (
+      <div style={{ minHeight: '100vh', background: M.bg, display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 16px', fontFamily: FONT }}>
+        {/* Skeleton banner */}
+        <div style={{ height: 80, borderRadius: 16, background: M.card, border: `1px solid ${M.border}`, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        {/* Skeleton grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {[1,2,3,4].map(i => (
+            <div key={i} style={{ height: 96, borderRadius: 16, background: M.card, border: `1px solid ${M.border}`, animation: 'pulse 1.5s ease-in-out infinite' }} />
+          ))}
+        </div>
+        {/* Skeleton strip */}
+        <div style={{ height: 120, borderRadius: 16, background: M.card, border: `1px solid ${M.border}`, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
+      </div>
+    )
+  }
+
   return (
     <div style={{
       minHeight: '100vh', background: M.bg, fontFamily: FONT,

@@ -527,8 +527,8 @@ export default function ProfileScreen({ navigation }) {
               } catch (err) { console.warn('[Profile] refresh:', err?.message) }
               setRefreshing(false)
             }}
-            tintColor="#10B981"
-            colors={['#10B981']}
+            tintColor="#3B82F6"
+            colors={['#3B82F6']}
           />
         }
       >
@@ -634,33 +634,66 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Quick Menu — grouped by category */}
+        {/* CRED-style Quick Menu — grouped icon tiles */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textTer }]}>FITNESS</Text>
-          <View style={[styles.sectionCard, card]}>
-            <ActionRow icon="activity" label="Workout Tracker" onPress={() => navigation.navigate('WorkoutTracker')} colors={colors} />
-            <ActionRow icon="bar-chart-2" label="Progress & Photos" onPress={() => navigation.navigate('Progress')} colors={colors} />
-            <ActionRow icon="zap" label="Challenges" onPress={() => navigation.navigate('Challenges')} colors={colors} />
-            <ActionRow icon="star" label="Achievements" onPress={() => navigation.navigate('Achievements')} colors={colors} />
+          <Text style={[styles.credMenuTitle, { color: colors.textTer }]}>FITNESS</Text>
+          <View style={[styles.credMenuCard, card]}>
+            <View style={styles.credMenuGrid}>
+              {[
+                { icon: 'activity', label: 'Workouts', bg: '#F97316', onPress: () => navigation.navigate('WorkoutTracker') },
+                { icon: 'bar-chart-2', label: 'Progress', bg: '#3B82F6', onPress: () => navigation.navigate('Progress') },
+                { icon: 'target', label: 'Challenges', bg: '#8B5CF6', onPress: () => navigation.navigate('Challenges') },
+                { icon: 'star', label: 'Achievements', bg: '#F59E0B', onPress: () => navigation.navigate('Achievements') },
+              ].map(item => (
+                <TouchableOpacity key={item.label} style={styles.credMenuItem} onPress={item.onPress} activeOpacity={0.65}>
+                  <View style={[styles.credMenuIcon, { backgroundColor: item.bg + (isDark ? '1A' : '20') }]}>
+                    <Feather name={item.icon} size={22} color={item.bg} />
+                  </View>
+                  <Text style={[styles.credMenuLabel, { color: colors.text }]} numberOfLines={1}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textTer }]}>NUTRITION & HEALTH</Text>
-          <View style={[styles.sectionCard, card]}>
-            <ActionRow icon="camera" label="AI Food Scanner" onPress={() => navigation.navigate('FoodScanner')} colors={colors} />
-            <ActionRow icon="pie-chart" label="Nutrition Log" onPress={() => navigation.navigate('NutritionLog')} colors={colors} />
-            <ActionRow icon="moon" label="Sleep Tracker" onPress={() => navigation.navigate('SleepTracker')} colors={colors} />
-            <ActionRow icon="clock" label="Intermittent Fasting" onPress={() => navigation.navigate('FastingLog')} colors={colors} />
+          <Text style={[styles.credMenuTitle, { color: colors.textTer }]}>NUTRITION & HEALTH</Text>
+          <View style={[styles.credMenuCard, card]}>
+            <View style={styles.credMenuGrid}>
+              {[
+                { icon: 'camera', label: 'Food Scanner', bg: '#EA4335', onPress: () => navigation.navigate('FoodScanner') },
+                { icon: 'pie-chart', label: 'Nutrition', bg: '#14B8A6', onPress: () => navigation.navigate('NutritionLog') },
+                { icon: 'moon', label: 'Sleep', bg: '#6366F1', onPress: () => navigation.navigate('SleepTracker') },
+                { icon: 'clock', label: 'Fasting', bg: '#8B5CF6', onPress: () => navigation.navigate('FastingLog') },
+              ].map(item => (
+                <TouchableOpacity key={item.label} style={styles.credMenuItem} onPress={item.onPress} activeOpacity={0.65}>
+                  <View style={[styles.credMenuIcon, { backgroundColor: item.bg + (isDark ? '1A' : '20') }]}>
+                    <Feather name={item.icon} size={22} color={item.bg} />
+                  </View>
+                  <Text style={[styles.credMenuLabel, { color: colors.text }]} numberOfLines={1}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textTer }]}>ACCOUNT</Text>
-          <View style={[styles.sectionCard, card]}>
-            <ActionRow icon="credit-card" label="Membership & Renewal" onPress={() => navigation.navigate('MembershipRenewal')} colors={colors} />
-            <ActionRow icon="gift" label="Refer & Earn" onPress={() => navigation.navigate('Referral')} colors={colors} />
-            <ActionRow icon="download" label="Export Data" onPress={() => navigation.navigate('NutritionDetail', { tab: 2 })} colors={colors} />
+          <Text style={[styles.credMenuTitle, { color: colors.textTer }]}>ACCOUNT</Text>
+          <View style={[styles.credMenuCard, card]}>
+            <View style={styles.credMenuGrid}>
+              {[
+                { icon: 'credit-card', label: 'Membership', bg: '#3B82F6', onPress: () => navigation.navigate('MembershipRenewal') },
+                { icon: 'gift', label: 'Refer & Earn', bg: '#EC4899', onPress: () => navigation.navigate('Referral') },
+                { icon: 'download', label: 'Export Data', bg: '#06B6D4', onPress: () => navigation.navigate('NutritionDetail', { tab: 2 }) },
+              ].map(item => (
+                <TouchableOpacity key={item.label} style={styles.credMenuItem} onPress={item.onPress} activeOpacity={0.65}>
+                  <View style={[styles.credMenuIcon, { backgroundColor: item.bg + (isDark ? '1A' : '20') }]}>
+                    <Feather name={item.icon} size={22} color={item.bg} />
+                  </View>
+                  <Text style={[styles.credMenuLabel, { color: colors.text }]} numberOfLines={1}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
 
@@ -1627,6 +1660,43 @@ const styles = StyleSheet.create({
   sectionCard: {
     ...ELITE_CARD,
     overflow: 'hidden',
+  },
+  // CRED-style menu tiles
+  credMenuTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: SPACING.sm,
+    marginLeft: 4,
+  },
+  credMenuCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    padding: SPACING.md,
+  },
+  credMenuGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  credMenuItem: {
+    alignItems: 'center',
+    width: '25%',
+    paddingVertical: SPACING.sm + 2,
+  },
+  credMenuIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  credMenuLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   separator: {
     height: 1,

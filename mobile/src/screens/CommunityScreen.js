@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ScrollView, Dimensions, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ScrollView, Dimensions, Alert, ActivityIndicator, ImageBackground } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -45,11 +45,16 @@ function PodiumCard({ entry, position }) {
   )
 }
 
+const STAT_COLORS = { 'Your Rank': '#3B82F6', 'Total Steps': '#F97316', 'Streak': '#8B5CF6' }
+
 function StatCard({ label, value, icon }) {
   const { colors, isDark } = useTheme()
+  const iconColor = STAT_COLORS[label] || COLORS.accent
   return (
     <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(26,26,26,0.8)' : colors.bgSec, borderColor: isDark ? 'rgba(255,255,255,0.12)' : colors.border }]}>
-      <Feather name={icon} size={18} color={COLORS.accent} />
+      <View style={[styles.statIconWrap, { backgroundColor: iconColor + (isDark ? '1A' : '20') }]}>
+        <Feather name={icon} size={16} color={iconColor} />
+      </View>
       <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: colors.textTer }]}>{label}</Text>
     </View>
@@ -185,6 +190,17 @@ export default function CommunityScreen({ embedded = false }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }, embedded && { paddingTop: 0 }]}>
+      {/* Community hero accent */}
+      <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=50' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.heroAccentImage}
+          resizeMode="cover"
+        >
+          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
+        </ImageBackground>
+      </View>
       {/* Header — hidden when embedded in CommunityHubScreen */}
       {!embedded && (
         <View style={styles.header}>
@@ -256,6 +272,22 @@ export default function CommunityScreen({ embedded = false }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  heroAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    zIndex: 0,
+  },
+  heroAccentImage: {},
+  heroAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.55)',
+  },
+  heroAccentOverlayLight: {
+    backgroundColor: 'rgba(247,245,242,0.45)',
   },
   header: {
     flexDirection: 'row',
@@ -332,6 +364,11 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   podiumInitials: {
     fontWeight: '800',
@@ -373,6 +410,19 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     alignItems: 'center',
     gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  statIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
   },
   statValue: {
     fontSize: 20,
@@ -401,14 +451,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: SPACING.md,
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.sm + 2,
     borderRadius: 24,
     borderWidth: 1.5,
     padding: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   leaderRowHighlight: {
-    borderColor: 'rgba(16,185,129,0.4)',
-    shadowColor: '#10B981',
+    borderColor: 'rgba(59,130,246,0.4)',
+    shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.25,
     shadowRadius: 12,

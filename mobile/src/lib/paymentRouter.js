@@ -212,7 +212,7 @@ async function _checkoutWithRazorpay({
         contact: customerPhone,
         name: customerName,
       },
-      theme: { color: '#10B981' },
+      theme: { color: '#3B82F6' },
     }
 
     const result = await RazorpayCheckout.open(options)

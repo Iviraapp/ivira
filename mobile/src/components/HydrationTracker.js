@@ -1,6 +1,6 @@
 // HydrationTracker — Smart hydration tracker with visual water bottle fill animation
 import React, { useMemo } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -82,6 +82,17 @@ export default function HydrationTracker({ style, glasses = 0, goal = 8, onAddGl
 
   return (
     <View style={[styles.card, { backgroundColor: ELITE_CARD.backgroundColor }, style]}>
+      {/* Aesthetic hero accent */}
+      <View style={[styles.heroAccent, { backgroundColor: '#0a2a3a' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=600&q=50' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.heroAccentImage}
+          resizeMode="cover"
+        >
+          <View style={styles.heroAccentOverlay} />
+        </ImageBackground>
+      </View>
       {/* Colored top accent */}
       <View style={styles.topAccent} />
 
@@ -131,6 +142,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: 0,
     marginBottom: SPACING.md,
+  },
+  heroAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+  },
+  heroAccentImage: {
+    borderTopLeftRadius: ELITE_CARD.borderRadius || 22,
+    borderTopRightRadius: ELITE_CARD.borderRadius || 22,
+  },
+  heroAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.55)',
   },
   topAccent: {
     height: 3,

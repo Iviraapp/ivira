@@ -185,12 +185,10 @@ export default function AppNavigator() {
       return
     }
     getItem(PROFILE_SETUP_KEY).then(val => {
-      if (val === 'true') {
+      if (val === 'true' || member.is_onboarded) {
         setShowProfileSetup(false)
       } else {
-        // Show if both weight and fitness_goal are missing
-        const needsSetup = !member.weight && !member.fitness_goal
-        setShowProfileSetup(needsSetup)
+        setShowProfileSetup(true)
       }
     }).catch(() => setShowProfileSetup(false))
   }, [token, member])

@@ -455,12 +455,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   title: {
-    fontSize: 68,
+    fontSize: 52,
     fontWeight: '900',
     fontFamily: FONT.extraBold,
     color: '#FFFFFF',
-    letterSpacing: -3,
-    lineHeight: 72,
+    letterSpacing: -2.5,
+    lineHeight: 58,
     marginBottom: SPACING.md,
   },
   titleAccent: {

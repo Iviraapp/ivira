@@ -233,6 +233,77 @@ export default async function authRoutes(fastify) {
     return { token, gymId: gym.id, gymName: gym.gym_name };
   });
 
+  // B2C: Get member profile (for gym-less users)
+  fastify.get('/auth/b2c/profile', {
+    preHandler: [fastify.verifyToken],
+  }, async (request, reply) => {
+    const memberId = request.user.memberId;
+    if (!memberId) return reply.code(401).send({ error: 'Not a member token' });
+
+    const member = await db('members').where('id', memberId).first();
+    if (!member) return reply.code(404).send({ error: 'Member not found' });
+
+    const profile = await db('member_profiles').where({ member_id: memberId }).first();
+
+    return {
+      member: {
+        ...member,
+        fitness_goal: profile?.primary_goal || null,
+        weight: profile?.current_weight_grams ? profile.current_weight_grams / 1000 : null,
+        height: profile?.height_cm || null,
+        is_onboarded: profile?.is_onboarded || false,
+      },
+    };
+  });
+
+  // B2C: Update member profile (onboarding)
+  fastify.patch('/auth/b2c/profile', {
+    preHandler: [fastify.verifyToken],
+  }, async (request, reply) => {
+    const memberId = request.user.memberId;
+    if (!memberId) return reply.code(401).send({ error: 'Not a member token' });
+
+    const { name, fitness_goal, weight, height, date_of_birth, gender, weight_unit } = request.body;
+
+    // Update members table (name, date_of_birth, gender)
+    const memberUpdates = { updated_at: new Date() };
+    if (name) memberUpdates.name = name;
+    if (date_of_birth) memberUpdates.date_of_birth = date_of_birth;
+    if (gender) memberUpdates.gender = gender;
+    await db('members').where('id', memberId).update(memberUpdates);
+
+    // Update member_profiles table (goal, weight, height)
+    const profileUpdates = { updated_at: new Date(), is_onboarded: true, onboarded_at: new Date() };
+    if (fitness_goal) profileUpdates.primary_goal = fitness_goal;
+    if (weight) {
+      // Convert lbs to grams if needed, otherwise kg to grams
+      const weightKg = weight_unit === 'lbs' ? weight * 0.453592 : weight;
+      profileUpdates.current_weight_grams = Math.round(weightKg * 1000);
+    }
+    if (height) profileUpdates.height_cm = height;
+
+    const existing = await db('member_profiles').where({ member_id: memberId }).first();
+    if (existing) {
+      await db('member_profiles').where({ member_id: memberId }).update(profileUpdates);
+    } else {
+      await db('member_profiles').insert({ member_id: memberId, ...profileUpdates });
+    }
+
+    // Return merged profile
+    const member = await db('members').where('id', memberId).first();
+    const profile = await db('member_profiles').where({ member_id: memberId }).first();
+    return {
+      success: true,
+      member: {
+        ...member,
+        fitness_goal: profile?.primary_goal || null,
+        weight: profile?.current_weight_grams ? profile.current_weight_grams / 1000 : null,
+        height: profile?.height_cm || null,
+        is_onboarded: true,
+      },
+    };
+  });
+
   // Admin: one-time test gym setup (protected by secret)
   fastify.post('/admin/setup-test-gym', async (request, reply) => {
     // Disable entirely in production

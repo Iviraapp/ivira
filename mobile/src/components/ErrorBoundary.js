@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 
 const BRAND = {
-  primary: '#10B981',
+  primary: '#3B82F6',
   darkBg: '#0A0E1A',
   white: '#FFFFFF',
   muted: '#8892A4',

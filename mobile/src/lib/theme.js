@@ -1,19 +1,19 @@
-// IVIRA Design System v2.0 — Premium Health & Fitness
+// IVIRA Design System v3.0 — Premium Health & Fitness
 // Rich surfaces, deliberate type hierarchy, unified color semantics
 
 export const COLORS = {
-  bg: '#0A0E1A',        // Rich ink (was #050505)
-  bgSec: '#111827',     // Card surface (was #121212)
-  bgTer: '#1A2236',     // Tertiary (was #1A1A1A)
-  bgHover: '#1F2A40',   // Pressed (was #222222)
-  text: '#F8FAFC',      // Warm white (was #FFFFFF)
+  bg: '#0A0E1A',        // Rich ink
+  bgSec: '#111827',     // Card surface
+  bgTer: '#1A2236',     // Tertiary surface
+  bgHover: '#1F2A40',   // Pressed states
+  text: '#F8FAFC',      // Warm white
   textSec: '#94A3B8',   // Slate-400
   textTer: 'rgba(248,250,252,0.50)',
   border: 'rgba(148,163,184,0.08)',
   borderStrong: 'rgba(148,163,184,0.16)',
-  accent: '#10B981',    // IVIRA Emerald
-  accentSoft: 'rgba(16,185,129,0.12)',
-  accentGlow: 'rgba(16,185,129,0.25)',
+  accent: '#3B82F6',    // IVIRA Blue
+  accentSoft: 'rgba(59,130,246,0.12)',
+  accentGlow: 'rgba(59,130,246,0.25)',
   green: '#34D399',     // Emerald-400
   amber: '#FBBF24',     // Amber-400
   red: '#F87171',       // Red-400
@@ -64,9 +64,9 @@ export const COLORS_LIGHT = {
   textTer: 'rgba(15,23,42,0.40)',
   border: 'rgba(15,23,42,0.06)',
   borderStrong: 'rgba(15,23,42,0.12)',
-  accent: '#10B981',
-  accentSoft: 'rgba(16,185,129,0.08)',
-  accentGlow: 'rgba(16,185,129,0.12)',
+  accent: '#3B82F6',
+  accentSoft: 'rgba(59,130,246,0.08)',
+  accentGlow: 'rgba(59,130,246,0.12)',
   green: '#16A34A',
   amber: '#D97706',
   red: '#DC2626',
@@ -96,11 +96,11 @@ export const ELITE_CARD = {
   elevation: 6,
 }
 
-// Glass card with emerald accent glow (shadow replaces border)
+// Glass card with blue accent glow (shadow replaces border)
 export const GLASS_CARD = {
-  backgroundColor: 'rgba(16,185,129,0.06)',
+  backgroundColor: 'rgba(59,130,246,0.06)',
   borderRadius: 22,
-  shadowColor: 'rgba(16,185,129,0.35)',
+  shadowColor: 'rgba(59,130,246,0.35)',
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 1,
   shadowRadius: 12,
@@ -110,8 +110,8 @@ export const GLASS_CARD = {
 // Feature action card presets (shadow depth, no borders)
 export const ACTION_CARDS = {
   emerald: {
-    backgroundColor: 'rgba(16,185,129,0.10)',
-    shadowColor: 'rgba(16,185,129,0.30)',
+    backgroundColor: 'rgba(59,130,246,0.10)',
+    shadowColor: 'rgba(59,130,246,0.30)',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 1,
     shadowRadius: 10,
@@ -182,14 +182,14 @@ export const CARD_ACCENTS = [
   '#14B8A6', // Teal
   '#F97316', // Orange
   '#06B6D4', // Cyan
-  '#10B981', // Emerald
+  '#3B82F6', // Blue
   '#6366F1', // Indigo
   '#E11D48', // Rose
 ]
 
-// Active card glow — COCA Blue
+// Active card glow — IVIRA Blue
 export const ELITE_GLOW = {
-  shadowColor: '#10B981',
+  shadowColor: '#3B82F6',
   shadowOffset: { width: 0, height: 4 },
   shadowOpacity: 0.3,
   shadowRadius: 10,

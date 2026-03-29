@@ -13,6 +13,7 @@ import {
   Platform,
   TextInput,
   Switch,
+  ImageBackground,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
@@ -1216,6 +1217,17 @@ export default function SleepTrackerScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Serene night sky hero accent */}
+      <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=800&q=50' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.heroAccentImage}
+          resizeMode="cover"
+        >
+          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
+        </ImageBackground>
+      </View>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -1609,6 +1621,23 @@ export default function SleepTrackerScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  heroAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    zIndex: 0,
+  },
+  heroAccentImage: {
+  },
+  heroAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.55)',
+  },
+  heroAccentOverlayLight: {
+    backgroundColor: 'rgba(247,245,242,0.45)',
   },
   emptyStateCard: {
     padding: SPACING.lg,

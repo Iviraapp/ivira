@@ -32,7 +32,7 @@ const MUSCLE_COLORS = {
   Shoulders: '#F97316',
   Biceps: '#8B5CF6',
   Triceps: '#EC4899',
-  Legs: '#10B981',
+  Legs: '#34D399',
   Abs: '#FBBF24',
   Glutes: '#14B8A6',
   Calves: '#06B6D4',

@@ -13,7 +13,7 @@ const FILTERS = ['All', 'Check-ins', 'Bookings']
 
 const METHOD_COLORS = {
   NFC: '#3B82F6',
-  QR: '#10B981',
+  QR: '#34D399',
   Manual: '#34A853',
   OTP: '#FBBC05',
 }

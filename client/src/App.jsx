@@ -8,72 +8,72 @@ import PWAInstallPrompt from './components/PWAInstallPrompt'
 import WellbeingWidget from './components/WellbeingWidget'
 import CookieConsent from './components/CookieConsent'
 
-// Pages
-import Login from './pages/Login'
-import Onboarding from './pages/Onboarding'
-import Home from './pages/dashboard/Home'
-import Members from './pages/dashboard/Members'
-import Checkins from './pages/dashboard/Checkins'
-import Payments from './pages/dashboard/Payments'
-import Newsletter from './pages/dashboard/Newsletter'
-import Affiliate from './pages/dashboard/Affiliate'
-import Analytics from './pages/dashboard/Analytics'
-import SettingsPage from './pages/dashboard/Settings'
-import Classes from './pages/dashboard/Classes'
-import Staff from './pages/dashboard/Staff'
-import StaffCheckin from './pages/dashboard/StaffCheckin'
-import MemberPortal from './pages/member/MemberPortal'
-import MemberLogin from './pages/member/MemberLogin'
-import MemberDashboard from './pages/member/MemberDashboard'
-import CheckinPage from './pages/public/CheckinPage'
-import StorePage from './pages/public/StorePage'
-import GymFinder from './pages/GymFinder'
-import FirstTimeSetup from './pages/FirstTimeSetup'
-import Store from './pages/dashboard/Store'
-import Trainers from './pages/dashboard/Trainers'
-import MemberProfile from './pages/dashboard/MemberProfile'
-import StaffPerformance from './pages/dashboard/StaffPerformance'
-import LivePulse from './pages/dashboard/LivePulse'
-import MemberOnboarding from './pages/member/MemberOnboarding'
-import Landing from './pages/Landing'
-import AppLanding from './pages/AppLanding'
-import Privacy from './pages/legal/Privacy'
-import Terms from './pages/legal/Terms'
-import Contact from './pages/legal/Contact'
+// Pages — lazy loaded for faster initial bundle
+const Login = lazy(() => import('./pages/Login'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
+const Home = lazy(() => import('./pages/dashboard/Home'))
+const Members = lazy(() => import('./pages/dashboard/Members'))
+const Checkins = lazy(() => import('./pages/dashboard/Checkins'))
+const Payments = lazy(() => import('./pages/dashboard/Payments'))
+const Newsletter = lazy(() => import('./pages/dashboard/Newsletter'))
+const Affiliate = lazy(() => import('./pages/dashboard/Affiliate'))
+const Analytics = lazy(() => import('./pages/dashboard/Analytics'))
+const SettingsPage = lazy(() => import('./pages/dashboard/Settings'))
+const Classes = lazy(() => import('./pages/dashboard/Classes'))
+const Staff = lazy(() => import('./pages/dashboard/Staff'))
+const StaffCheckin = lazy(() => import('./pages/dashboard/StaffCheckin'))
+const MemberPortal = lazy(() => import('./pages/member/MemberPortal'))
+const MemberLogin = lazy(() => import('./pages/member/MemberLogin'))
+const MemberDashboard = lazy(() => import('./pages/member/MemberDashboard'))
+const CheckinPage = lazy(() => import('./pages/public/CheckinPage'))
+const StorePage = lazy(() => import('./pages/public/StorePage'))
+const GymFinder = lazy(() => import('./pages/GymFinder'))
+const FirstTimeSetup = lazy(() => import('./pages/FirstTimeSetup'))
+const Store = lazy(() => import('./pages/dashboard/Store'))
+const Trainers = lazy(() => import('./pages/dashboard/Trainers'))
+const MemberProfile = lazy(() => import('./pages/dashboard/MemberProfile'))
+const StaffPerformance = lazy(() => import('./pages/dashboard/StaffPerformance'))
+const LivePulse = lazy(() => import('./pages/dashboard/LivePulse'))
+const MemberOnboarding = lazy(() => import('./pages/member/MemberOnboarding'))
+const Landing = lazy(() => import('./pages/Landing'))
+const AppLanding = lazy(() => import('./pages/AppLanding'))
+const Privacy = lazy(() => import('./pages/legal/Privacy'))
+const Terms = lazy(() => import('./pages/legal/Terms'))
+const Contact = lazy(() => import('./pages/legal/Contact'))
 
 // Trainer pages
-import TrainerLogin from './pages/trainer/TrainerLogin'
-import TrainerLayout from './pages/trainer/TrainerLayout'
-import TrainerDashboard from './pages/trainer/TrainerDashboard'
-import TrainerClients from './pages/trainer/TrainerClients'
-import TrainerEarnings from './pages/trainer/TrainerEarnings'
-import TrainerSchedule from './pages/trainer/TrainerSchedule'
+const TrainerLogin = lazy(() => import('./pages/trainer/TrainerLogin'))
+const TrainerLayout = lazy(() => import('./pages/trainer/TrainerLayout'))
+const TrainerDashboard = lazy(() => import('./pages/trainer/TrainerDashboard'))
+const TrainerClients = lazy(() => import('./pages/trainer/TrainerClients'))
+const TrainerEarnings = lazy(() => import('./pages/trainer/TrainerEarnings'))
+const TrainerSchedule = lazy(() => import('./pages/trainer/TrainerSchedule'))
 
 // Vira AI (Health/Wellness)
-import ViraLayout from './pages/vira/ViraLayout'
+const ViraLayout = lazy(() => import('./pages/vira/ViraLayout'))
 
 // Care Compass
-import CareCompass from './pages/dashboard/CareCompass'
+const CareCompass = lazy(() => import('./pages/dashboard/CareCompass'))
 
 // Financial Intelligence
-import Finance from './pages/dashboard/Finance'
+const Finance = lazy(() => import('./pages/dashboard/Finance'))
 
 // Admin pages
-import AdminLogin from './pages/admin/AdminLogin'
-import AdminLayout from './pages/admin/AdminLayout'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminGyms from './pages/admin/AdminGyms'
-import AdminPackages from './pages/admin/AdminPackages'
-import AdminRevenue from './pages/admin/AdminRevenue'
-import AdminAffiliate from './pages/admin/AdminAffiliate'
-import AdminSponsors from './pages/admin/AdminSponsors'
-import AdminSupport from './pages/admin/AdminSupport'
-import AdminPerformance from './pages/admin/AdminPerformance'
-import AdminPayouts from './pages/admin/AdminPayouts'
-import AdminLeads from './pages/admin/AdminLeads'
-import AdminFleet from './pages/admin/AdminFleet'
-import AdminAudit from './pages/admin/AdminAudit'
-import AdminAds from './pages/admin/AdminAds'
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const AdminGyms = lazy(() => import('./pages/admin/AdminGyms'))
+const AdminPackages = lazy(() => import('./pages/admin/AdminPackages'))
+const AdminRevenue = lazy(() => import('./pages/admin/AdminRevenue'))
+const AdminAffiliate = lazy(() => import('./pages/admin/AdminAffiliate'))
+const AdminSponsors = lazy(() => import('./pages/admin/AdminSponsors'))
+const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'))
+const AdminPerformance = lazy(() => import('./pages/admin/AdminPerformance'))
+const AdminPayouts = lazy(() => import('./pages/admin/AdminPayouts'))
+const AdminLeads = lazy(() => import('./pages/admin/AdminLeads'))
+const AdminFleet = lazy(() => import('./pages/admin/AdminFleet'))
+const AdminAudit = lazy(() => import('./pages/admin/AdminAudit'))
+const AdminAds = lazy(() => import('./pages/admin/AdminAds'))
 
 function PageLoader() {
   return (
@@ -117,6 +117,7 @@ function NotFound() {
 export default function App() {
   return (
     <>
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -202,6 +203,7 @@ export default function App() {
         } />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
 
       <CommandBar />
       <PWAInstallPrompt />

@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,
   Alert, Animated, ActivityIndicator, Modal, FlatList, Platform, RefreshControl,
   Image,
+  ImageBackground,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -63,14 +64,14 @@ const CATEGORIES = [
 ]
 
 const WORKOUT_TYPES = [
-  { key: 'push', label: 'Push Day' },
-  { key: 'pull', label: 'Pull Day' },
-  { key: 'legs', label: 'Leg Day' },
-  { key: 'upper', label: 'Upper Body' },
-  { key: 'lower', label: 'Lower Body' },
-  { key: 'full', label: 'Full Body' },
-  { key: 'cardio', label: 'Cardio' },
-  { key: 'custom', label: 'Custom' },
+  { key: 'push', label: 'Push Day', icon: 'arrow-up', color: '#F97316' },
+  { key: 'pull', label: 'Pull Day', icon: 'arrow-down', color: '#3B82F6' },
+  { key: 'legs', label: 'Leg Day', icon: 'zap', color: '#34D399' },
+  { key: 'upper', label: 'Upper Body', icon: 'maximize', color: '#8B5CF6' },
+  { key: 'lower', label: 'Lower Body', icon: 'minimize', color: '#EC4899' },
+  { key: 'full', label: 'Full Body', icon: 'target', color: '#06B6D4' },
+  { key: 'cardio', label: 'Cardio', icon: 'heart', color: '#EF4444' },
+  { key: 'custom', label: 'Custom', icon: 'edit-3', color: '#F59E0B' },
 ]
 
 const WORKOUT_TEMPLATES = {
@@ -679,6 +680,17 @@ export default function WorkoutTrackerScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Gym floor hero accent */}
+      <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=50' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.heroAccentImage}
+          resizeMode="cover"
+        >
+          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
+        </ImageBackground>
+      </View>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + SPACING.sm, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.bgTer }]}>
@@ -714,8 +726,8 @@ export default function WorkoutTrackerScreen({ navigation }) {
               } catch {}
               setRefreshing(false)
             }}
-            tintColor="#10B981"
-            colors={['#10B981']}
+            tintColor="#3B82F6"
+            colors={['#3B82F6']}
           />
         }
       >
@@ -732,18 +744,19 @@ export default function WorkoutTrackerScreen({ navigation }) {
 
         {/* Stats bar */}
         <View style={styles.statsBar}>
-          <View style={[styles.statCard, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
-            <Text style={[styles.statValue, { color: colors.text }]}>{exercises.length}</Text>
-            <Text style={[styles.statLabel, { color: colors.textTer }]}>Exercises</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
-            <Text style={[styles.statValue, { color: colors.text }]}>{getTotalSets()}</Text>
-            <Text style={[styles.statLabel, { color: colors.textTer }]}>Sets</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
-            <Text style={[styles.statValue, { color: colors.text }]}>{getTotalVolume().toLocaleString()}</Text>
-            <Text style={[styles.statLabel, { color: colors.textTer }]}>Volume (kg)</Text>
-          </View>
+          {[
+            { value: exercises.length, label: 'Exercises', icon: 'layers', color: '#3B82F6' },
+            { value: getTotalSets(), label: 'Sets', icon: 'repeat', color: '#8B5CF6' },
+            { value: getTotalVolume().toLocaleString(), label: 'Volume (kg)', icon: 'trending-up', color: '#F97316' },
+          ].map(stat => (
+            <View key={stat.label} style={[styles.statCard, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
+              <View style={[styles.statIconWrap, { backgroundColor: stat.color + (isDark ? '1A' : '20') }]}>
+                <Feather name={stat.icon} size={14} color={stat.color} />
+              </View>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
+              <Text style={[styles.statLabel, { color: colors.textTer }]}>{stat.label}</Text>
+            </View>
+          ))}
         </View>
 
         {/* History panel */}
@@ -870,6 +883,9 @@ export default function WorkoutTrackerScreen({ navigation }) {
                   }}
                   activeOpacity={0.7}
                 >
+                  <View style={[styles.templateChipIcon, { backgroundColor: (wt.color || COLORS.accent) + (isDark ? '1A' : '22') }]}>
+                    <Feather name={wt.icon || 'activity'} size={14} color={wt.color || COLORS.accent} />
+                  </View>
                   <Text style={[styles.templateChipText, { color: colors.text }]}>{wt.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -965,6 +981,22 @@ export default function WorkoutTrackerScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  heroAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    zIndex: 0,
+  },
+  heroAccentImage: {},
+  heroAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.55)',
+  },
+  heroAccentOverlayLight: {
+    backgroundColor: 'rgba(247,245,242,0.45)',
+  },
 
   header: {
     flexDirection: 'row',
@@ -992,7 +1024,11 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1, alignItems: 'center', paddingVertical: 12,
-    borderRadius: RADIUS.md, borderWidth: 1,
+    borderRadius: RADIUS.lg, borderWidth: 1,
+  },
+  statIconWrap: {
+    width: 28, height: 28, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 6,
   },
   statValue: { fontSize: 18, fontWeight: '800', fontFamily: FONT.numExtraBold },
   statLabel: { fontSize: 10, fontFamily: FONT.regular, marginTop: 2 },
@@ -1009,7 +1045,9 @@ const styles = StyleSheet.create({
   // Exercise card
   exerciseCard: {
     marginHorizontal: SPACING.lg, borderRadius: RADIUS.lg,
-    padding: SPACING.md, borderWidth: 1, marginBottom: SPACING.sm,
+    padding: SPACING.md, borderWidth: 1, marginBottom: SPACING.sm + 4,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },
   exerciseCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.sm },
   exerciseCardIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
@@ -1044,7 +1082,14 @@ const styles = StyleSheet.create({
   templatesSection: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
   templatesTitle: { fontSize: 13, fontWeight: '600', fontFamily: FONT.semibold, marginBottom: SPACING.sm },
   templatesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  templateChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: RADIUS.full, borderWidth: 1 },
+  templateChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 14, paddingVertical: 10, borderRadius: RADIUS.lg, borderWidth: 1,
+  },
+  templateChipIcon: {
+    width: 26, height: 26, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
   templateChipText: { fontSize: 13, fontWeight: '600', fontFamily: FONT.semibold },
 
   // Finish bar

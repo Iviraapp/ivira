@@ -73,14 +73,14 @@ export default function SplashScreen({ onFinish }) {
             <Svg width={80} height={48} viewBox="0 0 120 72">
               <Path
                 d="M8 38 L28 38 L42 18 L60 56 L78 10 L92 38 L112 38"
-                stroke="#10B981"
+                stroke="#3B82F6"
                 strokeWidth="7"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 fill="none"
               />
               {SvgCircle && (
-                <SvgCircle cx="60" cy="56" r="3" fill="#10B981" opacity={0.5} />
+                <SvgCircle cx="60" cy="56" r="3" fill="#3B82F6" opacity={0.5} />
               )}
             </Svg>
           </View>
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 44,
     fontWeight: '900',
-    color: '#10B981',
+    color: '#3B82F6',
     letterSpacing: -1,
   },
 })

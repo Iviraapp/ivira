@@ -17,7 +17,7 @@ const PHASES = [
   { max: 120, tip: 'Recovery mode — rest and recover', icon: 'heart', color: '#A78BFA' },
 ]
 
-const ACCENT = '#10B981'
+const ACCENT = '#3B82F6'
 const TWO_HOURS = 120
 
 export default function PostWorkoutRecovery({ style }) {
@@ -61,11 +61,11 @@ export default function PostWorkoutRecovery({ style }) {
   return (
     <View style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: ACCENT }, style]}>
       <View style={styles.header}>
-        <View style={[styles.iconWrap, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
+        <View style={[styles.iconWrap, { backgroundColor: 'rgba(59,130,246,0.12)' }]}>
           <Feather name="activity" size={16} color={ACCENT} />
         </View>
         <Text style={[styles.title, { color: colors.text }]}>Post-Workout Recovery</Text>
-        <View style={[styles.badge, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+        <View style={[styles.badge, { backgroundColor: 'rgba(59,130,246,0.15)' }]}>
           <Text style={[styles.badgeText, { color: ACCENT }]}>{badge}</Text>
         </View>
         <TouchableOpacity onPress={() => setDismissed(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>

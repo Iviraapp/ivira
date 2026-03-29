@@ -4,7 +4,7 @@
  * Each metric is tappable to jump to its detail screen.
  */
 import React, { useMemo } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD, GLASS_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -107,6 +107,17 @@ export default function DashboardSummary({
 
   return (
     <View style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: readiness.color }, style]}>
+      {/* Hero accent image */}
+      <View style={[styles.heroAccent, { backgroundColor: '#1a2a4a' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=50' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.heroAccentImage}
+          resizeMode="cover"
+        >
+          <View style={styles.heroAccentOverlay} />
+        </ImageBackground>
+      </View>
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Today's Summary</Text>
@@ -191,6 +202,22 @@ const styles = StyleSheet.create({
   container: {
     padding: SPACING.md,
     marginBottom: SPACING.md,
+    overflow: 'hidden',
+  },
+  heroAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+  },
+  heroAccentImage: {
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+  },
+  heroAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.55)',
   },
   header: {
     flexDirection: 'row',

@@ -14,7 +14,7 @@ import api from '../lib/api'
 const METRICS = [
   { key: 'steps', label: 'Avg Steps', icon: 'trending-up', color: '#F97316', suffix: '', format: v => Math.round(v).toLocaleString() },
   { key: 'sleep', label: 'Avg Sleep', icon: 'moon', color: '#6366F1', suffix: 'h', format: v => v.toFixed(1) },
-  { key: 'workouts', label: 'Workouts', icon: 'activity', color: '#10B981', suffix: '', format: v => v.toString() },
+  { key: 'workouts', label: 'Workouts', icon: 'activity', color: '#3B82F6', suffix: '', format: v => v.toString() },
   { key: 'calories', label: 'Avg Intake', icon: 'zap', color: '#EF4444', suffix: 'kcal', format: v => Math.round(v).toLocaleString() },
 ]
 
@@ -25,7 +25,7 @@ function getOverallGrade(steps, sleep, workouts) {
   if (workouts >= 4) score += 3; else if (workouts >= 2) score += 2; else if (workouts >= 1) score += 1
 
   if (score >= 8) return { grade: 'A', color: '#22C55E', label: 'Excellent week!' }
-  if (score >= 6) return { grade: 'B', color: '#10B981', label: 'Good progress' }
+  if (score >= 6) return { grade: 'B', color: '#34D399', label: 'Good progress' }
   if (score >= 4) return { grade: 'C', color: '#F59E0B', label: 'Room to improve' }
   return { grade: 'D', color: '#EF4444', label: 'Let\'s bounce back' }
 }

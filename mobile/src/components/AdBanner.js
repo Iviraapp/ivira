@@ -66,7 +66,7 @@ const PROMOS = [
     headline: 'Track every rep, every meal',
     sub: 'Upgrade your fitness game with IVIRA Pro',
     cta: 'Learn More',
-    bg: '#10B981',
+    bg: '#3B82F6',
     icon: 'activity',
   },
   {

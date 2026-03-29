@@ -14,6 +14,7 @@ import {
   FlatList,
   Alert,
   RefreshControl,
+  ImageBackground,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 let Svg = null
@@ -83,7 +84,7 @@ const COMMON_FOODS = [
 
 export default function HealthScreen({ navigation }) {
   const { member, gymId } = useAuth()
-  const { colors, card } = useTheme()
+  const { colors, card, isDark } = useTheme()
 
   // Steps + HR from shared HealthContext (real-time sync across all screens)
   const {
@@ -501,6 +502,17 @@ export default function HealthScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Wellness hero accent */}
+      <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=50' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.heroAccentImage}
+          resizeMode="cover"
+        >
+          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
+        </ImageBackground>
+      </View>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -517,8 +529,8 @@ export default function HealthScreen({ navigation }) {
               } catch (err) { console.warn('[Health] refresh:', err?.message) }
               setRefreshing(false)
             }}
-            tintColor="#10B981"
-            colors={['#10B981']}
+            tintColor="#3B82F6"
+            colors={['#3B82F6']}
           />
         }
       >
@@ -773,30 +785,20 @@ export default function HealthScreen({ navigation }) {
             )}
           </View>
           <View style={styles.heartCards}>
-            <View style={[styles.heartCard, { backgroundColor: colors.bgTer }]}>
-              <Feather name="heart" size={16} color="#EA4335" />
-              <Text style={[styles.heartValue, { color: colors.text }]}>
-                {heartRate ? `${heartRate.bpm}` : '--'}
-              </Text>
-              <Text style={[styles.heartUnit, { color: colors.textTer }]}>bpm</Text>
-              <Text style={[styles.heartLabel, { color: colors.textSec }]}>Current HR</Text>
-            </View>
-            <View style={[styles.heartCard, { backgroundColor: colors.bgTer }]}>
-              <Feather name="activity" size={16} color="#F59E0B" />
-              <Text style={[styles.heartValue, { color: colors.text }]}>
-                {restingHR ? `${restingHR.bpm}` : '--'}
-              </Text>
-              <Text style={[styles.heartUnit, { color: colors.textTer }]}>bpm</Text>
-              <Text style={[styles.heartLabel, { color: colors.textSec }]}>Resting HR</Text>
-            </View>
-            <View style={[styles.heartCard, { backgroundColor: colors.bgTer }]}>
-              <Feather name="trending-up" size={16} color="#8B5CF6" />
-              <Text style={[styles.heartValue, { color: colors.text }]}>
-                {hrv ? `${hrv.ms}` : '--'}
-              </Text>
-              <Text style={[styles.heartUnit, { color: colors.textTer }]}>ms</Text>
-              <Text style={[styles.heartLabel, { color: colors.textSec }]}>HRV</Text>
-            </View>
+            {[
+              { icon: 'heart', color: '#EA4335', value: heartRate ? `${heartRate.bpm}` : '--', unit: 'bpm', label: 'Current HR' },
+              { icon: 'activity', color: '#F59E0B', value: restingHR ? `${restingHR.bpm}` : '--', unit: 'bpm', label: 'Resting HR' },
+              { icon: 'trending-up', color: '#8B5CF6', value: hrv ? `${hrv.ms}` : '--', unit: 'ms', label: 'HRV' },
+            ].map(item => (
+              <View key={item.label} style={[styles.heartCard, { backgroundColor: colors.bgTer }]}>
+                <View style={[styles.heartIconWrap, { backgroundColor: item.color + (isDark ? '1A' : '20') }]}>
+                  <Feather name={item.icon} size={16} color={item.color} />
+                </View>
+                <Text style={[styles.heartValue, { color: colors.text }]}>{item.value}</Text>
+                <Text style={[styles.heartUnit, { color: colors.textTer }]}>{item.unit}</Text>
+                <Text style={[styles.heartLabel, { color: colors.textSec }]}>{item.label}</Text>
+              </View>
+            ))}
           </View>
           {/* Wearable data auto-detected — no connect prompt needed */}
         </View>
@@ -1327,6 +1329,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.bg,
+  },
+  heroAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    zIndex: 0,
+  },
+  heroAccentImage: {},
+  heroAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.55)',
+  },
+  heroAccentOverlayLight: {
+    backgroundColor: 'rgba(247,245,242,0.45)',
   },
   center: {
     alignItems: 'center',
@@ -2109,6 +2127,11 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     marginHorizontal: SPACING.lg,
     marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   heartHeader: {
     flexDirection: 'row',
@@ -2129,8 +2152,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: SPACING.md,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     gap: 2,
+  },
+  heartIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   heartValue: {
     fontSize: 22,

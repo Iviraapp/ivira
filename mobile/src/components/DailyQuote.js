@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, Animated } from 'react-native'
+import { View, Text, StyleSheet, Animated, ImageBackground } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { COLORS, SPACING, RADIUS, FONT, GLASS_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -134,6 +134,17 @@ export default function DailyQuote({ style }) {
 
   return (
     <Animated.View style={[styles.card, { backgroundColor: colors.accentSoft || GLASS_CARD.backgroundColor, borderColor: colors.accent ? `${colors.accent}26` : GLASS_CARD.borderColor }, { opacity: fadeAnim }, style]}>
+      {/* Atmospheric background */}
+      <View style={[styles.bgAccent, { backgroundColor: '#0a1428' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?w=600&q=40' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.bgAccentImage}
+          resizeMode="cover"
+        >
+          <View style={styles.bgAccentOverlay} />
+        </ImageBackground>
+      </View>
       {/* Decorative quote mark */}
       <Text style={[styles.quoteMark, { color: colors.accent || COLORS.accent }]}>{'\u201C'}</Text>
 
@@ -157,6 +168,20 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
     paddingHorizontal: SPACING.lg,
     overflow: 'hidden',
+  },
+  bgAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  bgAccentImage: {
+    borderRadius: GLASS_CARD.borderRadius || 20,
+  },
+  bgAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.6)',
   },
   quoteMark: {
     position: 'absolute',

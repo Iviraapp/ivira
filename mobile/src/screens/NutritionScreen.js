@@ -13,6 +13,7 @@ import {
   Modal,
   Easing,
   RefreshControl,
+  ImageBackground,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
@@ -100,7 +101,7 @@ const typingStyles = StyleSheet.create({
 
 export default function NutritionScreen({ navigation }) {
   const { member, gymId } = useAuth()
-  const { colors, card } = useTheme()
+  const { colors, card, isDark } = useTheme()
 
   const [daily, setDaily] = useState(null)
   const [weekly, setWeekly] = useState(null)
@@ -261,7 +262,7 @@ export default function NutritionScreen({ navigation }) {
   const remaining = Math.max(goals.calorie_goal - totals.calories, 0)
 
   const macros = [
-    { label: 'Protein', value: totals.protein, goal: goals.protein_goal, color: '#10B981', unit: 'g' },
+    { label: 'Protein', value: totals.protein, goal: goals.protein_goal, color: '#34D399', unit: 'g' },
     { label: 'Carbs', value: totals.carbs, goal: goals.carb_goal, color: '#4285F4', unit: 'g' },
     { label: 'Fats', value: totals.fats, goal: goals.fat_goal, color: '#FBBC05', unit: 'g' },
   ]
@@ -271,6 +272,17 @@ export default function NutritionScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Fresh food hero accent */}
+      <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=50' }}
+          style={StyleSheet.absoluteFill}
+          imageStyle={styles.heroAccentImage}
+          resizeMode="cover"
+        >
+          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
+        </ImageBackground>
+      </View>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -284,18 +296,18 @@ export default function NutritionScreen({ navigation }) {
               } catch (err) { console.warn('[Nutrition] refresh:', err?.message) }
               setRefreshing(false)
             }}
-            tintColor="#10B981"
-            colors={['#10B981']}
+            tintColor="#3B82F6"
+            colors={['#3B82F6']}
           />
         }
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.backBtn}>
-            <Text style={[styles.backArrow, { color: colors.text }]}>{'\u2190'}</Text>
+          <TouchableOpacity onPress={() => navigation?.goBack?.()} style={[styles.backBtn, { backgroundColor: colors.bgTer }]}>
+            <Feather name="arrow-left" size={20} color={colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Nutrition</Text>
-          <View style={{ width: 32 }} />
+          <View style={{ width: 38 }} />
         </View>
 
         {/* Tab Switcher */}
@@ -563,7 +575,7 @@ export default function NutritionScreen({ navigation }) {
                 </Text>
                 <View style={styles.macroSummaryBars}>
                   {[
-                    { label: 'Protein', value: estimatedTotal.protein, color: '#10B981', max: Math.max(estimatedTotal.protein, estimatedTotal.carbs, estimatedTotal.fats) },
+                    { label: 'Protein', value: estimatedTotal.protein, color: '#34D399', max: Math.max(estimatedTotal.protein, estimatedTotal.carbs, estimatedTotal.fats) },
                     { label: 'Carbs', value: estimatedTotal.carbs, color: '#4285F4', max: Math.max(estimatedTotal.protein, estimatedTotal.carbs, estimatedTotal.fats) },
                     { label: 'Fat', value: estimatedTotal.fats, color: '#FBBC05', max: Math.max(estimatedTotal.protein, estimatedTotal.carbs, estimatedTotal.fats) },
                   ].map(m => (
@@ -734,6 +746,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bg,
   },
+  heroAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    zIndex: 0,
+  },
+  heroAccentImage: {},
+  heroAccentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10,14,26,0.55)',
+  },
+  heroAccentOverlayLight: {
+    backgroundColor: 'rgba(247,245,242,0.45)',
+  },
   center: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -751,14 +779,11 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   backBtn: {
-    width: 32,
-    height: 32,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backArrow: {
-    fontSize: 22,
-    color: COLORS.text,
   },
   headerTitle: {
     fontSize: 18,
@@ -784,6 +809,11 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     backgroundColor: COLORS.bgTer,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tabText: {
     fontSize: 14,
@@ -858,6 +888,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     marginBottom: SPACING.xl,
     gap: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   macroRow: {
     gap: SPACING.sm,
@@ -1062,7 +1097,12 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.sm + 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   mealCardHeader: {
     flexDirection: 'row',

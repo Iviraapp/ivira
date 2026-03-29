@@ -90,7 +90,7 @@ export default function NotificationManager() {
           name: 'IVIRA',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#10B981',
+          lightColor: '#3B82F6',
         })
 
         await Notifications.setNotificationChannelAsync('announcements', {
