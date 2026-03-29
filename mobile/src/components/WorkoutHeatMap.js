@@ -34,7 +34,7 @@ function formatDate(d) {
 }
 
 export default function WorkoutHeatMap({ style }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { gymId, member } = useAuth()
   const [sessions, setSessions] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -132,7 +132,7 @@ export default function WorkoutHeatMap({ style }) {
   if (!gymId || !memberId) return null
 
   return (
-    <View style={[styles.card, { borderTopColor: ACCENT }, style]}>
+    <View style={[styles.card, card, { borderTopColor: ACCENT }, style]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.titleRow}>

@@ -12,16 +12,36 @@ const NAV = [
   { to: '/trainer/earnings', label: 'Earnings', icon: Wallet },
 ]
 
+/** Decode a JWT payload without verifying the signature (server verifies). */
+function decodeJWT(token) {
+  try {
+    const payload = token.split('.')[1]
+    const padded = payload.replace(/-/g, '+').replace(/_/g, '/').padEnd(
+      payload.length + (4 - payload.length % 4) % 4, '='
+    )
+    return JSON.parse(atob(padded))
+  } catch {
+    return null
+  }
+}
+
 export default function TrainerLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { theme } = useTheme()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [trainerInfo, setTrainerInfo] = useState({ name: '', role: '' })
   const isMobile = window.innerWidth < 768
 
   useEffect(() => {
     const token = localStorage.getItem('ivira_trainer_token')
-    if (!token) navigate('/trainer/login', { replace: true })
+    if (!token) { navigate('/trainer/login', { replace: true }); return }
+    const payload = decodeJWT(token)
+    if (payload) {
+      const name = payload.name || payload.staff_name || payload.email?.split('@')[0] || 'Trainer'
+      const role = payload.role || 'trainer'
+      setTrainerInfo({ name, role })
+    }
   }, [navigate, location.pathname])
 
   // Close sidebar on route change (mobile)
@@ -42,13 +62,13 @@ export default function TrainerLayout() {
               background: `linear-gradient(135deg, ${theme.brandAccent}, #3B6FD4)`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 700, fontSize: 16,
-            }}>G</div>
+            }}>{trainerInfo.name ? trainerInfo.name[0].toUpperCase() : 'T'}</div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: theme.text }}>
-                <span style={{ opacity: 0.4 }}>I</span>VIRA
+              <div style={{ fontSize: 14, fontWeight: 700, color: theme.text, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {trainerInfo.name || 'Trainer'}
               </div>
               <div style={{ fontSize: 10, fontWeight: 600, color: theme.brandAccent, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                TRAINER
+                {trainerInfo.role || 'TRAINER'}
               </div>
             </div>
           </div>
@@ -137,8 +157,15 @@ export default function TrainerLayout() {
               onClick={() => setSidebarOpen(true)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.text, padding: 4 }}
             ><Menu size={22} /></button>
-            <div style={{ fontSize: 16, fontWeight: 700, color: theme.text }}>
-              <span style={{ opacity: 0.4 }}>I</span>VIRA <span style={{ fontSize: 11, color: theme.brandAccent, fontWeight: 600 }}>TRAINER</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: theme.text }}>
+                {trainerInfo.name || <><span style={{ opacity: 0.4 }}>I</span>VIRA</>}
+              </div>
+              {trainerInfo.role && (
+                <div style={{ fontSize: 10, color: theme.brandAccent, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  {trainerInfo.role}
+                </div>
+              )}
             </div>
           </div>
         )}

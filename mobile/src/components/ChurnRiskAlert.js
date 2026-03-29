@@ -18,7 +18,7 @@ const NUDGE_MESSAGES = {
 }
 
 export default function ChurnRiskAlert({ style, onPress }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { gymId, member } = useAuth()
   const [nudge, setNudge] = useState(null)
 
@@ -38,7 +38,7 @@ export default function ChurnRiskAlert({ style, onPress }) {
 
   return (
     <TouchableOpacity
-      style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: nudge.color }, style]}
+      style={[styles.container, card, { borderTopWidth: 3, borderTopColor: nudge.color }, style]}
       activeOpacity={0.7}
       onPress={onPress}
     >

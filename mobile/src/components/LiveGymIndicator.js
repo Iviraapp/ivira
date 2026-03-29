@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 
 export default function LiveGymIndicator({ style }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { gymId } = useAuth()
   const [count, setCount] = useState(null)
   const pulse = useRef(new Animated.Value(1)).current
@@ -40,7 +40,7 @@ export default function LiveGymIndicator({ style }) {
   if (count == null || count === 0) return null
 
   return (
-    <View style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: '#22C55E' }, style]}>
+    <View style={[styles.container, card, { borderTopWidth: 3, borderTopColor: '#22C55E' }, style]}>
       <View style={styles.row}>
         <Animated.View style={[styles.liveDot, { transform: [{ scale: pulse }] }]} />
         <View style={styles.textWrap}>

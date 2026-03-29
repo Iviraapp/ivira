@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 
 export default function ContinueWorkoutCard({ style, onStartWorkout }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { gymId, member } = useAuth()
   const [lastWorkout, setLastWorkout] = useState(null)
 
@@ -33,7 +33,7 @@ export default function ContinueWorkoutCard({ style, onStartWorkout }) {
 
   return (
     <TouchableOpacity
-      style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: '#F97316' }, style]}
+      style={[styles.container, card, { borderTopWidth: 3, borderTopColor: '#F97316' }, style]}
       activeOpacity={0.7}
       onPress={onStartWorkout}
     >

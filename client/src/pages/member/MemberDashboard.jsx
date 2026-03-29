@@ -329,6 +329,108 @@ function UpcomingStrip({ onSeeAll, gymId }) {
   )
 }
 
+/* ────────── TODAY'S PLAN CARD ────────── */
+function TodaysPlanCard({ onWorkout }) {
+  const [plan, setPlan] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem('ivira_member_token')
+    if (!token) { setLoading(false); return }
+    api.get('/ai/workout-plan', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => {
+      const data = res.data
+      // Support { exercises: [...] } or { plan: { exercises: [...] } } or array
+      const exercises = data?.exercises || data?.plan?.exercises || (Array.isArray(data) ? data : null)
+      if (exercises && exercises.length > 0) {
+        setPlan(exercises.slice(0, 5))
+      }
+      setLoading(false)
+    }).catch(() => {
+      setLoading(false)
+    })
+  }, [])
+
+  if (loading) {
+    return (
+      <div style={{
+        background: M.card, borderRadius: 16, padding: '16px 20px',
+        border: `1px solid ${M.border}`,
+      }}>
+        <div style={{ height: 16, width: 120, borderRadius: 8, background: M.cardSec, marginBottom: 14, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{ height: 14, borderRadius: 8, background: M.cardSec, marginBottom: 10, width: `${70 + i * 8}%`, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        ))}
+        <div style={{ height: 38, borderRadius: 12, background: M.cardSec, marginTop: 14, animation: 'pulse 1.5s ease-in-out infinite' }} />
+      </div>
+    )
+  }
+
+  if (!plan) return null
+
+  return (
+    <div style={{
+      background: M.card, borderRadius: 16, padding: '16px 20px',
+      border: `1px solid ${M.accent}28`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: M.text, fontFamily: FONT }}>
+          Today's Plan ✨
+        </span>
+        <span style={{
+          fontSize: 10, fontWeight: 700, color: M.accent, letterSpacing: '0.06em',
+          textTransform: 'uppercase', background: M.accent + '15',
+          padding: '3px 8px', borderRadius: 20,
+        }}>AI</span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+        {plan.map((ex, i) => {
+          const name = ex.name || ex.exercise_name || ex.exercise || `Exercise ${i + 1}`
+          const sets = ex.sets ?? ex.set_count ?? '—'
+          const reps = ex.reps ?? ex.rep_count ?? ex.reps_per_set ?? '—'
+          return (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 14px', borderRadius: 12,
+              background: M.cardSec, border: `1px solid ${M.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: M.accent + '18',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <Dumbbell size={14} color={M.accent} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: M.text, fontFamily: FONT }}>{name}</span>
+              </div>
+              <span style={{
+                fontSize: 12, fontWeight: 700, color: M.textSec,
+                fontFamily: FONT_M, flexShrink: 0, marginLeft: 8,
+              }}>{sets} × {reps}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      <button
+        onClick={onWorkout}
+        style={{
+          width: '100%', padding: '11px 0', borderRadius: 12,
+          background: `linear-gradient(135deg, ${M.accent}, #9F67FF)`,
+          border: 'none', color: '#fff', fontSize: 14, fontWeight: 700,
+          cursor: 'pointer', fontFamily: FONT, letterSpacing: '0.01em',
+        }}
+      >
+        Start Workout
+      </button>
+    </div>
+  )
+}
+
 /* ────────── HORIZONTAL DATE SCROLLER ────────── */
 function DateScroller({ selectedDate, onSelect }) {
   const scrollRef = useRef(null)
@@ -1376,6 +1478,7 @@ function HomeTab({ member, gymId, onTabChange, onVira, onWorkout }) {
       <ActionHub onTabChange={onTabChange} onWorkout={onWorkout} />
       <GoalTracker goals={goals} />
       <UpcomingStrip onSeeAll={() => onTabChange('classes')} gymId={gymId} />
+      <TodaysPlanCard onWorkout={onWorkout} />
     </div>
   )
 }

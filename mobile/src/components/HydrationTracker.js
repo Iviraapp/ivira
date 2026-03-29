@@ -68,7 +68,7 @@ function WaterBottle({ glasses, goal }) {
 }
 
 export default function HydrationTracker({ style, glasses = 0, goal = 8, onAddGlass, lastGlassTime }) {
-  const { colors } = useTheme()
+  const { colors, card, isDark } = useTheme()
   const nudge = useMemo(() => getNudge(glasses, goal), [glasses, goal])
   const goalMet = glasses >= goal
 
@@ -81,16 +81,16 @@ export default function HydrationTracker({ style, glasses = 0, goal = 8, onAddGl
   }, [lastGlassTime])
 
   return (
-    <View style={[styles.card, { backgroundColor: ELITE_CARD.backgroundColor }, style]}>
+    <View style={[styles.card, card, style]}>
       {/* Aesthetic hero accent */}
-      <View style={[styles.heroAccent, { backgroundColor: '#0a2a3a' }]}>
+      <View style={[styles.heroAccent, { backgroundColor: isDark ? '#0a2a3a' : '#d4e8f0' }]}>
         <ImageBackground
           source={{ uri: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=600&q=50' }}
           style={StyleSheet.absoluteFill}
           imageStyle={styles.heroAccentImage}
           resizeMode="cover"
         >
-          <View style={styles.heroAccentOverlay} />
+          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
         </ImageBackground>
       </View>
       {/* Colored top accent */}
@@ -157,6 +157,9 @@ const styles = StyleSheet.create({
   heroAccentOverlay: {
     flex: 1,
     backgroundColor: 'rgba(10,14,26,0.55)',
+  },
+  heroAccentOverlayLight: {
+    backgroundColor: 'rgba(247,245,242,0.72)',
   },
   topAccent: {
     height: 3,

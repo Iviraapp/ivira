@@ -34,7 +34,7 @@ function formatChange(diff) {
 }
 
 export default function BodyCompositionTimeline({ style }) {
-  const { colors } = useTheme();
+  const { colors, card } = useTheme();
   const { gymId, memberId } = useAuth();
   const [entries, setEntries] = useState(null);
   const [loading, setLoading] = useState(true);

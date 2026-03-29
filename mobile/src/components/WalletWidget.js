@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 
 export default function WalletWidget({ style, onPress }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { gymId, member } = useAuth()
   const [wallet, setWallet] = useState(null)
 
@@ -33,7 +33,7 @@ export default function WalletWidget({ style, onPress }) {
 
   return (
     <TouchableOpacity
-      style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: '#F59E0B' }, style]}
+      style={[styles.container, card, { borderTopWidth: 3, borderTopColor: '#F59E0B' }, style]}
       activeOpacity={0.7}
       onPress={onPress}
     >

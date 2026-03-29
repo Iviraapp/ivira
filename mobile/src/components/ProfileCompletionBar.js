@@ -21,7 +21,7 @@ const PROFILE_FIELDS = [
 ]
 
 export default function ProfileCompletionBar({ style, onPress }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { member } = useAuth()
 
   if (!member) return null
@@ -43,7 +43,7 @@ export default function ProfileCompletionBar({ style, onPress }) {
 
   return (
     <TouchableOpacity
-      style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: COLORS.cyan }, style]}
+      style={[styles.container, card, { borderTopWidth: 3, borderTopColor: COLORS.cyan }, style]}
       activeOpacity={0.7}
       onPress={onPress}
     >

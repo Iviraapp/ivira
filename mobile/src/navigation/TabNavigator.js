@@ -47,6 +47,7 @@ import CityLeaderboardScreen from '../screens/CityLeaderboardScreen'
 import SubscriptionScreen from '../screens/SubscriptionScreen'
 import GymDiscoveryScreen from '../screens/GymDiscoveryScreen'
 import TrainerDashboardScreen from '../screens/TrainerDashboardScreen'
+import WorkoutHistoryScreen from '../screens/WorkoutHistoryScreen'
 
 // Try to load BlurView — verify native module is available (not just JS)
 let BlurView = null
@@ -80,6 +81,7 @@ function HomeStackNavigator() {
       <HomeStackNav.Screen name="NutritionDetail" component={NutritionDetailScreen} />
       <HomeStackNav.Screen name="MembershipActivation" component={MembershipActivationScreen} />
       <HomeStackNav.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
+      <HomeStackNav.Screen name="WorkoutHistory" component={WorkoutHistoryScreen} />
       <HomeStackNav.Screen name="MembershipRenewal" component={MembershipRenewalScreen} />
       <HomeStackNav.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
       <HomeStackNav.Screen name="Referral" component={ReferralScreen} />
@@ -150,6 +152,7 @@ function ProfileStackNavigator() {
       <ProfileStackNav.Screen name="Referral" component={ReferralScreen} />
       <ProfileStackNav.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
       <ProfileStackNav.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
+      <ProfileStackNav.Screen name="WorkoutHistory" component={WorkoutHistoryScreen} />
       <ProfileStackNav.Screen name="FoodScanner" component={FoodScannerScreen} />
       <ProfileStackNav.Screen name="Challenges" component={ChallengesScreen} />
       <ProfileStackNav.Screen name="Achievements" component={AchievementsScreen} />
@@ -344,7 +347,7 @@ function WebTabNavigator() {
   const [activeTab, setActiveTab] = useState('Home')
   const [webStack, setWebStack] = useState(null)
   const screens = { Home: HomeScreen, Health: HealthScreen, Pods: PodHomeScreen, Profile: ProfileScreen }
-  const stackScreens = { BarcodeScanner: BarcodeScannerScreen, Nutrition: NutritionScreen, History: HistoryScreen, ServiceDetail: ServiceDetailScreen, Invoices: InvoicesScreen, NutritionLog: NutritionLogScreen, FastingLog: FastingLogScreen, Progress: ProgressScreen, NutritionDetail: NutritionDetailScreen, ActionPlan: ActionPlanScreen, MembershipActivation: MembershipActivationScreen, NotificationSettings: NotificationSettingsScreen, ActivityDashboard: ActivityDashboardScreen, WorkoutTracker: WorkoutTrackerScreen, MembershipRenewal: MembershipRenewalScreen, RevenueDashboard: RevenueDashboardScreen, Referral: ReferralScreen, ProgressPhotos: ProgressPhotosScreen, FitnessScore: FitnessScoreScreen, FoodScanner: FoodScannerScreen, Recipes: RecipeScreen, Challenges: ChallengesScreen, Achievements: AchievementsScreen, SleepTracker: SleepTrackerScreen, DailyCommit: DailyCommitScreen, PodFeed: PodFeedScreen, PodDiscovery: PodDiscoveryScreen, PodStats: PodStatsScreen, CommunityHub: CommunityHubScreen }
+  const stackScreens = { BarcodeScanner: BarcodeScannerScreen, Nutrition: NutritionScreen, History: HistoryScreen, ServiceDetail: ServiceDetailScreen, Invoices: InvoicesScreen, NutritionLog: NutritionLogScreen, FastingLog: FastingLogScreen, Progress: ProgressScreen, NutritionDetail: NutritionDetailScreen, ActionPlan: ActionPlanScreen, MembershipActivation: MembershipActivationScreen, NotificationSettings: NotificationSettingsScreen, ActivityDashboard: ActivityDashboardScreen, WorkoutTracker: WorkoutTrackerScreen, WorkoutHistory: WorkoutHistoryScreen, MembershipRenewal: MembershipRenewalScreen, RevenueDashboard: RevenueDashboardScreen, Referral: ReferralScreen, ProgressPhotos: ProgressPhotosScreen, FitnessScore: FitnessScoreScreen, FoodScanner: FoodScannerScreen, Recipes: RecipeScreen, Challenges: ChallengesScreen, Achievements: AchievementsScreen, SleepTracker: SleepTrackerScreen, DailyCommit: DailyCommitScreen, PodFeed: PodFeedScreen, PodDiscovery: PodDiscoveryScreen, PodStats: PodStatsScreen, CommunityHub: CommunityHubScreen }
   const icons = { Home: 'home', Health: 'heart', Pods: 'shield', Profile: 'user' }
   const tabOrder = gymId ? ['Home', 'Health', 'Pods', 'Profile'] : ['Home', 'Health', 'Profile']
 

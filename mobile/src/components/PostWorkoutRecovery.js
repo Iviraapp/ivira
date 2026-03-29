@@ -21,7 +21,7 @@ const ACCENT = '#3B82F6'
 const TWO_HOURS = 120
 
 export default function PostWorkoutRecovery({ style }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { gymId, member } = useAuth()
   const [workout, setWorkout] = useState(null)
   const [elapsed, setElapsed] = useState(0)
@@ -59,7 +59,7 @@ export default function PostWorkoutRecovery({ style }) {
   const badge = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`
 
   return (
-    <View style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: ACCENT }, style]}>
+    <View style={[styles.container, card, { borderTopWidth: 3, borderTopColor: ACCENT }, style]}>
       <View style={styles.header}>
         <View style={[styles.iconWrap, { backgroundColor: 'rgba(59,130,246,0.12)' }]}>
           <Feather name="activity" size={16} color={ACCENT} />

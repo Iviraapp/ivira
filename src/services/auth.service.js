@@ -327,3 +327,95 @@ export async function updateGym(gymId, updates) {
   if (!gym) throw new NotFoundError('Gym');
   return gym;
 }
+
+// ── Staff / Trainer OTP Login ──────────────────────────────────────────────
+
+export async function requestStaffLoginOTP(email) {
+  if (!isValidEmail(email)) throw new ValidationError('Invalid email address');
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Staff must exist and have an email
+  const staff = await db('staff').whereRaw('LOWER(email) = ?', [normalizedEmail]).first();
+  if (!staff) throw new NotFoundError('Staff member not found with this email');
+  if (staff.status === 'terminated') throw new UnauthorizedError('Account is no longer active');
+
+  const otp = generateOTP(6);
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+  await db('otp_codes').insert({
+    email: normalizedEmail,
+    code: otp,
+    purpose: 'staff_login',
+    used: false,
+    expires_at: expiresAt,
+  });
+
+  const redisKey = `otp:staff:${normalizedEmail}`;
+  await redis.set(redisKey, otp, { EX: 300 });
+
+  if (config.email.enabled) {
+    await sendOTPEmail(normalizedEmail, otp, { name: staff.name });
+  } else {
+    console.log(`[DEV] Staff OTP for ${normalizedEmail}: ${otp}`);
+  }
+
+  return { message: 'OTP sent to your email', name: staff.name };
+}
+
+export async function verifyStaffLoginOTP(email, code) {
+  if (!isValidEmail(email)) throw new ValidationError('Invalid email address');
+  const normalizedEmail = email.toLowerCase().trim();
+  let valid = false;
+
+  // Try Redis first
+  const redisKey = `otp:staff:${normalizedEmail}`;
+  const cached = await redis.get(redisKey);
+  if (cached && cached === code) {
+    valid = true;
+    await redis.del(redisKey);
+  }
+
+  // Fallback to DB
+  if (!valid) {
+    const otpRecord = await db('otp_codes')
+      .where({ email: normalizedEmail, purpose: 'staff_login', used: false })
+      .where('expires_at', '>', new Date())
+      .where('code', code)
+      .first();
+    if (otpRecord) {
+      valid = true;
+      await db('otp_codes')
+        .where({ email: normalizedEmail, purpose: 'staff_login', used: false })
+        .update({ used: true });
+    }
+  }
+
+  if (!valid) throw new UnauthorizedError('Invalid or expired OTP');
+
+  const staff = await db('staff').whereRaw('LOWER(email) = ?', [normalizedEmail]).first();
+  if (!staff) throw new NotFoundError('Staff member');
+  if (staff.status === 'terminated') throw new UnauthorizedError('Account is no longer active');
+
+  const token = jwt.sign(
+    {
+      staffId: staff.id,
+      gymId: staff.gym_id,
+      name: staff.name,
+      email: normalizedEmail,
+      role: staff.role, // 'trainer', 'manager', 'front_desk', etc.
+    },
+    config.jwt.secret,
+    { expiresIn: '30d' }
+  );
+
+  return {
+    token,
+    staff: {
+      id: staff.id,
+      name: staff.name,
+      email: staff.email,
+      role: staff.role,
+      gymId: staff.gym_id,
+    },
+  };
+}

@@ -426,4 +426,14 @@ export default async function authRoutes(fastify) {
     const result = await authService.refreshToken(token);
     return result;
   });
+
+  // ── Staff / Trainer OTP Login ─────────────────────────────────────────────
+
+  fastify.post('/staff/login/otp/email', { schema: emailOtpRequestSchema, ...otpRateLimit }, async (request) => {
+    return authService.requestStaffLoginOTP(request.body.email);
+  });
+
+  fastify.post('/staff/login/verify/email', { schema: emailOtpVerifySchema, ...otpRateLimit }, async (request) => {
+    return authService.verifyStaffLoginOTP(request.body.email, request.body.otp);
+  });
 }

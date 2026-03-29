@@ -59,7 +59,7 @@ function generateInsights(avg, dailyCals, weightKg) {
 }
 
 export default function NutritionInsights({ style }) {
-  const { colors } = useTheme();
+  const { colors, card } = useTheme();
   const { user } = useAuth();
   const [data, setData] = useState(null);
 

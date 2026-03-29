@@ -37,7 +37,7 @@ function formatSleepHours(data) {
 }
 
 export default function MorningBriefing({ style, navigation }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { member, gymId } = useAuth()
   const { sleepData, steps } = useHealth()
   const [dismissed, setDismissed] = useState(false)
@@ -76,7 +76,7 @@ export default function MorningBriefing({ style, navigation }) {
   const workoutList = Array.isArray(workouts) ? workouts : []
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.bgSec || ELITE_CARD.backgroundColor }, style]}>
+    <View style={[styles.card, card, style]}>
       {/* Amber top accent */}
       <View style={styles.accentBar} />
 

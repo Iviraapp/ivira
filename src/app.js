@@ -51,6 +51,7 @@ import leadsRoutes from './routes/leads.routes.js';
 import sseRoutes from './routes/sse.js';
 import memberProfileRoutes from './routes/member-profile.routes.js';
 import trainerRoutes from './routes/trainer.routes.js';
+import assignedWorkoutsRoutes from './routes/assigned-workouts.routes.js';
 import kioskRoutes from './routes/kiosk.routes.js';
 import magicRoutes from './routes/magic.routes.js';
 import healthOsRoutes from './routes/health.routes.js';
@@ -170,6 +171,7 @@ export async function buildApp(opts = {}) {
   await fastify.register(sseRoutes, { prefix: '/api/v1' });
   await fastify.register(memberProfileRoutes, { prefix: '/api/v1' });
   await fastify.register(trainerRoutes, { prefix: '/api/v1' });
+  await fastify.register(assignedWorkoutsRoutes, { prefix: '/api/v1' });
   await fastify.register(healthOsRoutes, { prefix: '/api/v1' });
   await fastify.register(adAnalyticsRoutes, { prefix: '/api/v1' });
   await fastify.register(leaderboardRoutes, { prefix: '/api/v1' });

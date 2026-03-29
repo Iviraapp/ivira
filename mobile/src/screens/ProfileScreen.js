@@ -397,6 +397,43 @@ export default function ProfileScreen({ navigation }) {
     )
   }
 
+  const handleExportData = async () => {
+    if (!gymId) {
+      Alert.alert('Not Connected', 'Connect a gym to export your data.')
+      return
+    }
+    try {
+      await api.get(`/gyms/${gymId}/members/me/export`)
+      Alert.alert('Data Export', 'Your data has been emailed to you.')
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Failed to export data. Please try again.')
+    }
+  }
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This permanently deletes your account and all data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (gymId) {
+                await api.delete(`/gyms/${gymId}/members/me`)
+              }
+              await logout()
+            } catch (err) {
+              Alert.alert('Error', err.response?.data?.message || 'Failed to delete account. Please try again.')
+            }
+          },
+        },
+      ],
+    )
+  }
+
   const handleLogout = () => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -684,7 +721,9 @@ export default function ProfileScreen({ navigation }) {
               {[
                 { icon: 'credit-card', label: 'Membership', bg: '#3B82F6', onPress: () => navigation.navigate('MembershipRenewal') },
                 { icon: 'gift', label: 'Refer & Earn', bg: '#EC4899', onPress: () => navigation.navigate('Referral') },
-                { icon: 'download', label: 'Export Data', bg: '#06B6D4', onPress: () => navigation.navigate('NutritionDetail', { tab: 2 }) },
+                { icon: 'activity', label: 'Workouts', bg: '#10B981', onPress: () => navigation.navigate('WorkoutHistory') },
+                { icon: 'download', label: 'Export Data', bg: '#06B6D4', onPress: handleExportData },
+                { icon: 'trash-2', label: 'Delete Account', bg: '#EF4444', onPress: handleDeleteAccount },
               ].map(item => (
                 <TouchableOpacity key={item.label} style={styles.credMenuItem} onPress={item.onPress} activeOpacity={0.65}>
                   <View style={[styles.credMenuIcon, { backgroundColor: item.bg + (isDark ? '1A' : '20') }]}>

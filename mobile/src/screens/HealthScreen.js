@@ -1025,48 +1025,6 @@ export default function HealthScreen({ navigation }) {
         {/* Ad */}
         <AdBanner style={{ marginHorizontal: 4, marginBottom: 12 }} />
 
-        {/* Section C - Quick Meal Log */}
-        <View style={styles.mealSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Meal Log</Text>
-          <View style={styles.mealGrid}>
-            {MEAL_TYPES.map((type) => {
-              const logged = loggedMeals[type]
-              return (
-                <TouchableOpacity
-                  key={type}
-                  style={[styles.mealSlot, card]}
-                  onPress={() => handleMealSlot(type)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.mealSlotHeader}>
-                    <View style={[styles.mealIconContainer, { backgroundColor: colors.bgTer }, logged && styles.mealIconLogged]}>
-                      <Feather
-                        name={MEAL_ICONS[type]}
-                        size={20}
-                        color={logged ? COLORS.green : colors.textSec}
-                      />
-                    </View>
-                    <Text style={[styles.mealSlotLabel, { color: colors.text }]}>{MEAL_LABELS[type]}</Text>
-                  </View>
-                  {logged ? (
-                    <View style={styles.mealLoggedInfo}>
-                      <Text style={[styles.mealLoggedCal, { color: colors.text }]}>{logged.total_calories} cal</Text>
-                      <Text style={[styles.mealLoggedMacros, { color: colors.textTer }]}>
-                        P:{logged.total_protein}g  C:{logged.total_carbs}g  F:{logged.total_fats}g
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={styles.mealAddRow}>
-                      <Feather name="plus" size={14} color={COLORS.accent} />
-                      <Text style={styles.mealAddText}>Add Food</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )
-            })}
-          </View>
-        </View>
-
         <View style={{ height: SPACING.xxl + SPACING.xl }} />
       </ScrollView>
 

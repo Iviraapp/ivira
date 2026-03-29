@@ -55,7 +55,7 @@ const FEATURED_CATEGORIES = [
 ]
 
 export default function FeaturedExercises({ style, navigation }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { gymId, member } = useAuth()
   const [exercises, setExercises] = useState([])
   const [loading, setLoading] = useState(true)
@@ -184,7 +184,7 @@ export default function FeaturedExercises({ style, navigation }) {
           return (
             <TouchableOpacity
               key={exercise.id || idx}
-              style={[styles.card, ELITE_CARD, { borderTopWidth: 3, borderTopColor: '#F97316' }]}
+              style={[styles.card, card, { borderTopWidth: 3, borderTopColor: '#F97316' }]}
               activeOpacity={0.8}
               onPress={() => handlePress(exercise)}
             >

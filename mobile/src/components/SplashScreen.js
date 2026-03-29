@@ -67,25 +67,6 @@ export default function SplashScreen({ onFinish }) {
           alignItems: 'center',
         }}
       >
-        {/* Vitality Pulse Icon */}
-        {Svg && Path ? (
-          <View style={styles.pulseWrap}>
-            <Svg width={80} height={48} viewBox="0 0 120 72">
-              <Path
-                d="M8 38 L28 38 L42 18 L60 56 L78 10 L92 38 L112 38"
-                stroke="#3B82F6"
-                strokeWidth="7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              {SvgCircle && (
-                <SvgCircle cx="60" cy="56" r="3" fill="#3B82F6" opacity={0.5} />
-              )}
-            </Svg>
-          </View>
-        ) : null}
-
         {/* VIRA Emphasis Wordmark */}
         <View style={styles.wordmarkRow}>
           <Text style={[styles.logo, { opacity: 0.45 }]}>I</Text>

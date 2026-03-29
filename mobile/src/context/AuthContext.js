@@ -168,10 +168,17 @@ export function AuthProvider({ children }) {
   }, [gymInfo?.id])
 
   const logout = useCallback(async () => {
+    // Blacklist token server-side so it can't be reused even if intercepted
+    try {
+      await api.post('/auth/logout')
+    } catch (_) {
+      // Fails silently — offline or already expired, local clear still proceeds
+    }
     await stopGymGeofencing()
     await deleteItem('ivira_member_token')
     await deleteItem('ivira_gym_id')
     await deleteItem('ivira_member_data')
+    await deleteItem('ivira_biometric_enabled')
     setToken(null)
     setGymId(null)
     setMember(null)

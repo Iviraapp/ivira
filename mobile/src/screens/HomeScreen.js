@@ -325,7 +325,8 @@ export default function HomeScreen({ navigation, route }) {
     if (!gymId) return
     api.get(`/gyms/${gymId}/classes`)
       .then(res => {
-        const data = res.data || []
+        const raw = res.data
+        const data = Array.isArray(raw) ? raw : Array.isArray(raw?.classes) ? raw.classes : []
         setClasses(data)
         const map = {}
         data.forEach(cls => { map[cls.id] = cls.spots })
@@ -1045,7 +1046,7 @@ export default function HomeScreen({ navigation, route }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.classesStrip}
           >
-            {classes.map((cls) => {
+            {(Array.isArray(classes) ? classes : []).map((cls) => {
               const spots = classSpots[cls.id] ?? cls.spots
               const isBooked = bookedClasses[cls.id]
               const isBooking = bookingClassId === cls.id

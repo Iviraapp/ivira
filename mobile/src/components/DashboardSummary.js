@@ -67,7 +67,7 @@ export default function DashboardSummary({
   onPressWater,
   onPressFasting,
 }) {
-  const { colors } = useTheme()
+  const { colors, card, isDark } = useTheme()
 
   // Sleep
   const sleepHours = sleepData?.durationMinutes ? (sleepData.durationMinutes / 60).toFixed(1) : '—'
@@ -106,16 +106,16 @@ export default function DashboardSummary({
   const goalsPct = Math.round((goalsDone / goalsTotal) * 100)
 
   return (
-    <View style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: readiness.color }, style]}>
+    <View style={[styles.container, card, { borderTopWidth: 3, borderTopColor: readiness.color }, style]}>
       {/* Hero accent image */}
-      <View style={[styles.heroAccent, { backgroundColor: '#1a2a4a' }]}>
+      <View style={[styles.heroAccent, { backgroundColor: isDark ? '#1a2a4a' : '#d4dbe8' }]}>
         <ImageBackground
           source={{ uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=50' }}
           style={StyleSheet.absoluteFill}
           imageStyle={styles.heroAccentImage}
           resizeMode="cover"
         >
-          <View style={styles.heroAccentOverlay} />
+          <View style={[styles.heroAccentOverlay, !isDark && styles.heroAccentOverlayLight]} />
         </ImageBackground>
       </View>
       {/* Header */}
@@ -219,6 +219,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(10,14,26,0.55)',
   },
+  heroAccentOverlayLight: {
+    backgroundColor: 'rgba(247,245,242,0.72)',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -260,28 +263,33 @@ const styles = StyleSheet.create({
   },
   ringsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
+    alignItems: 'flex-start',
     marginBottom: SPACING.md,
+    paddingHorizontal: 4,
   },
   ringItem: {
     alignItems: 'center',
-    flex: 1,
+    width: RING_SIZE + 16,
   },
   ringValue: {
     fontSize: 13,
     fontWeight: '800',
     fontFamily: FONT.numBold,
     fontVariant: ['tabular-nums'],
+    textAlign: 'center',
   },
   ringLabel: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    marginTop: 4,
+    marginTop: 6,
+    textAlign: 'center',
   },
   ringUnit: {
     fontSize: 9,
     fontFamily: FONT.regular,
     marginTop: 1,
+    textAlign: 'center',
   },
   bottomRow: {
     flexDirection: 'row',

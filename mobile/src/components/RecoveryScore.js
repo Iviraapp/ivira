@@ -46,7 +46,7 @@ function getInsight(score, sleepHours, sleepQuality) {
 }
 
 export default function RecoveryScore({ style }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { sleepData } = useHealth()
 
   const { score, color, label, insight } = useMemo(() => {
@@ -80,7 +80,7 @@ export default function RecoveryScore({ style }) {
   const dashOffset = CIRCUMFERENCE * (1 - score / 100)
 
   return (
-    <View style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: color }, style]}>
+    <View style={[styles.container, card, { borderTopWidth: 3, borderTopColor: color }, style]}>
       <View style={styles.row}>
         {/* Score Ring */}
         {Svg && SvgCircle ? (

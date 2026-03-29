@@ -31,7 +31,7 @@ function getOverallGrade(steps, sleep, workouts) {
 }
 
 export default function WeeklyWellnessReport({ style }) {
-  const { colors } = useTheme()
+  const { colors, card } = useTheme()
   const { gymId, member } = useAuth()
   const { steps: todaySteps, sleepData } = useHealth()
   const [weekData, setWeekData] = useState(null)
@@ -85,7 +85,7 @@ export default function WeeklyWellnessReport({ style }) {
   if (!report) return null
 
   return (
-    <View style={[styles.container, ELITE_CARD, { borderTopWidth: 3, borderTopColor: report.color }, style]}>
+    <View style={[styles.container, card, { borderTopWidth: 3, borderTopColor: report.color }, style]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
