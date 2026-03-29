@@ -129,8 +129,18 @@ export default function PodHomeScreen({ navigation }) {
   const handleCheckIn = async () => {
     const podId = pod?.id || pod?._id
     if (!gymId || !podId) return
+    // Find today's commitment for current member
+    const myCommitment = commitments.find(c =>
+      (c.member_id === member?.id || c.memberId === member?.id) && c.status === 'pending'
+    )
+    if (!myCommitment) {
+      Alert.alert('No Commitment', 'Commit to a plan first before checking in.')
+      return
+    }
     try {
-      await api.post(`/gyms/${gymId}/pods/${podId}/checkin`)
+      await api.post(`/gyms/${gymId}/pods/${podId}/checkin`, {
+        commitmentId: myCommitment.id || myCommitment._id,
+      })
       Alert.alert('Checked In', 'Nice work. Your pod can see you showed up.')
       onRefresh()
     } catch (err) {
@@ -145,8 +155,8 @@ export default function PodHomeScreen({ navigation }) {
     setSubmitting(true)
     try {
       await api.post(`/gyms/${gymId}/pods/${podId}/commitments`, {
-        time: commitTime.trim(),
-        activity: commitActivity.trim(),
+        committedTime: commitTime.trim(),
+        commitmentText: commitActivity.trim(),
         date: formatToday(),
       })
       setCommitTime('')
