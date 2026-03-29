@@ -65,14 +65,13 @@ import { useTheme } from '../context/ThemeContext'
 import FastingTimer from '../components/FastingTimer'
 import AdBanner, { showInterstitialAd } from '../components/AdBanner'
 import { canAddToWallet, addMembershipToWallet } from '../lib/wallet'
-import { requestHealthPermissions, requestSleepPermissions, getTodaySteps, getLastNightSleep, syncStepsToBackend, syncSleepToBackend, isHealthConnectAvailable } from '../lib/healthKit'
+import { syncSleepToBackend } from '../lib/healthKit'
 import { useHealth } from '../context/HealthContext'
 import { requestAllPermissions } from '../lib/permissions'
 import DailyQuote from '../components/DailyQuote'
 import LiveGymIndicator from '../components/LiveGymIndicator'
 // WalletWidget moved to Profile screen
 import ProfileCompletionBar from '../components/ProfileCompletionBar'
-import RecoveryScore from '../components/RecoveryScore'
 import ContinueWorkoutCard from '../components/ContinueWorkoutCard'
 import WeeklyWellnessReport from '../components/WeeklyWellnessReport'
 import ChurnRiskAlert from '../components/ChurnRiskAlert'
@@ -789,7 +788,6 @@ export default function HomeScreen({ navigation, route }) {
               numberOfLines={3}
             >
               {aiInsightDisplayed}
-              <Text style={{ opacity: aiInsightDisplayed.length < aiInsight.length ? 1 : 0, color: colors.accent }}>|</Text>
             </Animated.Text>
 
             {/* Recovery tip — shown if available and they worked out recently */}
@@ -1509,8 +1507,7 @@ export default function HomeScreen({ navigation, route }) {
                   source: 'manual',
                 }
 
-                setSleepData(newSleep)
-                setSleepSource('manual')
+                // Sleep data will update via HealthContext on next sync
                 setSleepLogModalVisible(false)
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
 
