@@ -26,9 +26,24 @@ export function AuthProvider({ children }) {
     if (gymData?.id) identify(gymData.id, gymData?.user_role || 'owner')
   }, [])
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('ivira_token')
-    localStorage.removeItem('ivira_gym')
+  const logout = useCallback(async () => {
+    // Call backend to blacklist the token (best-effort)
+    try {
+      await api.post('/auth/logout')
+    } catch (_) {}
+
+    // Clear ALL IVIRA tokens and cached data
+    const keysToRemove = [
+      'ivira_token', 'ivira_gym',
+      'ivira_member_token',
+      'ivira_trainer_token',
+      'ivira_admin_token',
+      'ivira_cached_qr',
+      'ivira_todays_plan',
+      'ivira_todays_plan_date',
+      'ivira_biometric_enabled',
+    ]
+    keysToRemove.forEach(k => localStorage.removeItem(k))
     setToken(null)
     setGym(null)
   }, [])

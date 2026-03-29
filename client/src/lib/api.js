@@ -21,6 +21,11 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('ivira_token')
       localStorage.removeItem('ivira_gym')
+      localStorage.removeItem('ivira_member_token')
+      localStorage.removeItem('ivira_trainer_token')
+      localStorage.removeItem('ivira_admin_token')
+      localStorage.removeItem('ivira_cached_qr')
+      // Redirect to login if not already on a public/member/admin path
       if (!window.location.pathname.startsWith('/login') &&
           !window.location.pathname.startsWith('/checkin') &&
           !window.location.pathname.startsWith('/member') &&

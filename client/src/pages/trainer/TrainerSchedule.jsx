@@ -59,17 +59,15 @@ function AssignWorkoutSheet({ session, onClose, onDone, token, theme }) {
           })
         : []
 
-      await import('../../lib/api').then(({ default: apiModule }) =>
-        apiModule.post(`/trainer/clients/${session.member_id}/assigned-workouts`, {
-          title: form.title,
-          description: form.description || null,
-          exercises: exerciseList,
-          scheduled_date: form.scheduled_date || null,
-          notes: form.notes || null,
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      )
+      await api.post(`/trainer/clients/${session.member_id}/assigned-workouts`, {
+        title: form.title,
+        description: form.description || null,
+        exercises: exerciseList,
+        scheduled_date: form.scheduled_date || null,
+        notes: form.notes || null,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       setDone(true)
       setTimeout(onDone, 1500)
     } catch (err) {

@@ -322,4 +322,85 @@ export default async function gymRoutes(fastify) {
     reply.header('Content-Disposition', `attachment; filename="ivira-export-${gymId}-${Date.now()}.json"`)
     return reply.send(exportData)
   })
+
+  // Gym data deletion (GDPR / DPDPA) — soft delete + PII anonymisation
+  fastify.delete('/gyms/:gymId/data', { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] }, async (request, reply) => {
+    const { gymId } = request.params
+
+    // Anonymise member PII (name, email, phone) instead of hard delete
+    // This preserves financial records for legal/tax compliance
+    await db('members')
+      .where({ gym_id: gymId })
+      .update({
+        name: db.raw("'Deleted Member ' || LEFT(id::text, 8)"),
+        email: db.raw("'deleted_' || LEFT(id::text, 8) || '@deleted.invalid'"),
+        phone: db.raw("'0000000000'"),
+        updated_at: new Date(),
+      })
+
+    // Anonymise staff PII
+    await db('staff')
+      .where({ gym_id: gymId })
+      .update({
+        name: db.raw("'Deleted Staff ' || LEFT(id::text, 8)"),
+        email: db.raw("'deleted_' || LEFT(id::text, 8) || '@deleted.invalid'"),
+        phone: db.raw("'0000000000'"),
+        updated_at: new Date(),
+      })
+
+    // Mark gym as deleted
+    await db('gyms')
+      .where({ id: gymId })
+      .update({
+        status: 'deleted',
+        gym_name: 'Deleted Gym',
+        email: db.raw("'deleted_' || LEFT(id::text, 8) || '@deleted.invalid'"),
+        updated_at: new Date(),
+      })
+
+    return reply.send({
+      deleted: true,
+      message: 'All personal data has been anonymised. Financial records are retained for 7 years as required by law.',
+      anonymised_at: new Date().toISOString(),
+    })
+  })
+
+  // GET /gyms/:gymId/kiosk/status — check if kiosk has sent a heartbeat recently
+  fastify.get('/gyms/:gymId/kiosk/status', { preHandler: [fastify.verifyToken, fastify.verifyGymOwner] }, async (request, reply) => {
+    const { gymId } = request.params
+
+    // Check if any kiosk sent a heartbeat in the last 5 minutes
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+
+    let online = false
+    let lastSeen = null
+
+    try {
+      const lastHeartbeat = await db('kiosk_logs')
+        .where({ gym_id: gymId })
+        .where('created_at', '>=', fiveMinutesAgo)
+        .orderBy('created_at', 'desc')
+        .first()
+
+      if (lastHeartbeat) {
+        online = true
+        lastSeen = lastHeartbeat.created_at
+      } else {
+        // Fall back to checking any recent kiosk activity
+        const anyRecent = await db('kiosk_logs')
+          .where({ gym_id: gymId })
+          .orderBy('created_at', 'desc')
+          .first()
+        lastSeen = anyRecent?.created_at || null
+      }
+    } catch (_) {
+      // kiosk_logs table may not exist — return online=false gracefully
+    }
+
+    return reply.send({
+      online,
+      lastSeen,
+      gymId,
+    })
+  })
 }
