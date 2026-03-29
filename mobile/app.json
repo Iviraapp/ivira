@@ -20,21 +20,24 @@
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID for quick sign-in",
         "NSCameraUsageDescription": "Scan QR codes and barcodes at the gym",
-        "NSHealthShareUsageDescription": "IVIRA reads your step count and sleep data to track daily activity and rest",
+        "NSHealthShareUsageDescription": "IVIRA reads your step count, heart rate, and sleep data to track daily activity and recovery",
+        "NSHealthUpdateUsageDescription": "IVIRA writes workout and activity data to Apple Health",
         "NSMotionUsageDescription": "IVIRA uses motion data to count your steps throughout the day",
         "NSMicrophoneUsageDescription": "IVIRA uses the microphone during sleep tracking to detect snoring and disturbances. Audio is processed on-device only.",
         "NFCReaderUsageDescription": "Tap your phone on the NFC tag at the gym entrance to check in",
-        "NSLocationWhenInUseUsageDescription": "IVIRA uses your location to verify gym check-ins"
+        "NSLocationWhenInUseUsageDescription": "IVIRA uses your location to verify gym check-ins",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "IVIRA uses background location to detect when you arrive at the gym for automatic check-in",
+        "UIBackgroundModes": ["location", "audio", "processing", "fetch"]
       },
       "entitlements": {
         "com.apple.developer.healthkit": true,
-        "com.apple.developer.healthkit.background-delivery": false
+        "com.apple.developer.healthkit.background-delivery": true
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#10B981"
+        "backgroundColor": "#3B82F6"
       },
       "package": "com.ivira.member",
       "permissions": [
@@ -43,6 +46,8 @@
         "USE_FINGERPRINT",
         "VIBRATE",
         "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_SLEEP",
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT",
         "android.permission.CAMERA",
@@ -50,10 +55,13 @@
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.NFC",
         "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.BODY_SENSORS",
         "android.permission.HIGH_SAMPLING_RATE_SENSORS",
         "android.permission.FOREGROUND_SERVICE",
-        "android.permission.ACCESS_COARSE_LOCATION"
+        "android.permission.FOREGROUND_SERVICE_HEALTH",
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "plugins": [
@@ -63,7 +71,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#10B981"
+          "color": "#3B82F6"
         }
       ],
       "expo-font",

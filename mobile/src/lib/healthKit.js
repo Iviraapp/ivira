@@ -591,7 +591,8 @@ export async function getHRV() {
               return
             }
             resolve({
-              ms: Math.round(results[0].value * 1000), // Apple returns seconds, convert to ms
+              ms: Math.round(results[0].value * 1000), // Apple returns SDNN in seconds → ms
+              metric: 'sdnn', // iOS provides SDNN (standard deviation of NN intervals)
               source: 'apple_health',
             })
           }
@@ -614,6 +615,7 @@ export async function getHRV() {
       if (records.length === 0) return null
       return {
         ms: Math.round(records[records.length - 1].heartRateVariabilityMillis || 0),
+        metric: 'rmssd', // Android provides RMSSD (root mean square of successive differences)
         source: 'health_connect',
       }
     }
