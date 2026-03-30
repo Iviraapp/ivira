@@ -143,12 +143,24 @@ export default function NotificationManager() {
           return
         }
 
-        // Handle taps on remote push notifications
+        // Handle bedtime reminder tap → auto-start sleep tracking
         const data = response.notification?.request?.content?.data
+        if (data?.action === 'start_sleep_tracking') {
+          try {
+            const { startTracking: startSleep } = require('../lib/sleepEngine')
+            await startSleep({ enableAudio: true })
+            if (__DEV__) console.log('[Notifications] Sleep tracking auto-started from bedtime reminder')
+          } catch (err) {
+            if (__DEV__) console.warn('[Notifications] Failed to auto-start sleep:', err.message)
+          }
+          return
+        }
+
+        // Handle taps on remote push notifications
         if (data?.type === 'announcement') {
-          console.log('[Notifications] User tapped announcement:', data.title)
+          if (__DEV__) console.log('[Notifications] User tapped announcement:', data.title)
         } else if (data?.type === 'milestone') {
-          console.log('[Notifications] User tapped milestone:', data.title)
+          if (__DEV__) console.log('[Notifications] User tapped milestone:', data.title)
         }
       })
 

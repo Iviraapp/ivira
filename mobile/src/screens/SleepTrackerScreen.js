@@ -25,6 +25,7 @@ import SleepEngine, {
   SleepStage, STAGE_COLORS, STAGE_LABELS, AudioEvent,
   startTracking, stopTracking, isTracking as checkIsTracking,
   getLiveData, setSmartAlarm, subscribe, getSleepHistory,
+  setBedtimeReminder, getBedtimeReminder,
 } from '../lib/sleepEngine'
 
 // ── Extracted sub-components ────────────────────────────────────
@@ -610,6 +611,10 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, o
   const [useSmartAlarm, setUseSmartAlarm] = useState(false)
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [reportTags, setReportTags] = useState([])
+  const [bedtimeEnabled, setBedtimeEnabled] = useState(false)
+  const [bedtimeHour, setBedtimeHour] = useState(22)
+  const [bedtimeMin, setBedtimeMin] = useState(30)
+  const [showBedtimePicker, setShowBedtimePicker] = useState(false)
   const pulseAnim = useRef(new Animated.Value(1)).current
   const pulseAnim2 = useRef(new Animated.Value(0.6)).current
 
@@ -641,6 +646,25 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, o
       return () => { pulse.stop(); pulse2.stop() }
     }
   }, [tracking])
+
+  // Load bedtime reminder setting
+  useEffect(() => {
+    getBedtimeReminder().then(setting => {
+      setBedtimeEnabled(setting.enabled || false)
+      setBedtimeHour(setting.hour ?? 22)
+      setBedtimeMin(setting.minute ?? 30)
+    })
+  }, [])
+
+  const handleBedtimeToggle = async (enabled) => {
+    setBedtimeEnabled(enabled)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    if (enabled) {
+      await setBedtimeReminder(bedtimeHour, bedtimeMin)
+    } else {
+      await setBedtimeReminder(null)
+    }
+  }
 
   const handleStart = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
@@ -973,6 +997,38 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, o
         )}
       </View>
 
+      {/* Bedtime Reminder */}
+      <View style={[{ padding: SPACING.lg, marginBottom: SPACING.md }, card]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#8B5CF6' + '15', justifyContent: 'center', alignItems: 'center' }}>
+              <Feather name="moon" size={16} color="#8B5CF6" />
+            </View>
+            <View>
+              <Text style={{ fontSize: 15, color: colors.text, fontFamily: FONT.semibold }}>Bedtime Reminder</Text>
+              <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.regular }}>Daily notification to start tracking</Text>
+            </View>
+          </View>
+          <Switch
+            value={bedtimeEnabled}
+            onValueChange={handleBedtimeToggle}
+            trackColor={{ false: colors.border, true: '#8B5CF6' + '50' }}
+            thumbColor={bedtimeEnabled ? '#8B5CF6' : isDark ? '#555' : '#ccc'}
+          />
+        </View>
+        {bedtimeEnabled && (
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: SPACING.md, paddingVertical: SPACING.md, backgroundColor: isDark ? 'rgba(139,92,246,0.06)' : 'rgba(139,92,246,0.04)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#8B5CF6' + '20' }}
+            onPress={() => setShowBedtimePicker(true)}
+          >
+            <Text style={{ fontSize: 28, color: colors.text, fontFamily: FONT.numBold }}>
+              {formatTime12(bedtimeHour, bedtimeMin)}
+            </Text>
+            <Feather name="edit-3" size={14} color={colors.textTer} style={{ marginLeft: SPACING.sm }} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* Audio Monitoring */}
       <View style={[{ padding: SPACING.lg, marginBottom: SPACING.md }, card]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1032,6 +1088,20 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, o
         initialHour={alarmHour}
         initialMin={alarmMin}
         title="Set Wake-up Time"
+        colors={colors}
+        card={card}
+      />
+      <TimePickerModal
+        visible={showBedtimePicker}
+        onClose={() => setShowBedtimePicker(false)}
+        onSelect={async (h, m) => {
+          setBedtimeHour(h)
+          setBedtimeMin(m)
+          if (bedtimeEnabled) await setBedtimeReminder(h, m)
+        }}
+        initialHour={bedtimeHour}
+        initialMin={bedtimeMin}
+        title="Set Bedtime"
         colors={colors}
         card={card}
       />

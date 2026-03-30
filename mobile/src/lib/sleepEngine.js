@@ -877,6 +877,70 @@ function notifyListeners() {
   })
 }
 
+// ── Bedtime Reminder ──────────────────────────────────────────────
+const STORAGE_KEY_BEDTIME = 'ivira_bedtime_reminder'
+const BEDTIME_NOTIF_ID = 'bedtime-reminder'
+
+/**
+ * Set a daily bedtime reminder notification.
+ * @param {number|null} hour - Hour (0-23), or null to disable
+ * @param {number} minute - Minute (0-59)
+ */
+export async function setBedtimeReminder(hour, minute = 0) {
+  // Cancel any existing bedtime notification
+  try {
+    await Notifications.cancelScheduledNotificationAsync(BEDTIME_NOTIF_ID)
+  } catch (_) {}
+
+  if (hour == null) {
+    await AsyncStorage.removeItem(STORAGE_KEY_BEDTIME)
+    return { enabled: false }
+  }
+
+  // Ensure notification channel exists (Android)
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('bedtime-reminder', {
+      name: 'Bedtime Reminder',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'default',
+      vibrationPattern: [0, 100],
+    })
+  }
+
+  // Schedule daily repeating notification
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Time for bed',
+      body: 'Ready to sleep? Tap to start tracking your sleep.',
+      data: { action: 'start_sleep_tracking' },
+      sound: 'default',
+      ...(Platform.OS === 'android' && { channelId: 'bedtime-reminder' }),
+    },
+    trigger: {
+      type: 'daily',
+      hour,
+      minute,
+    },
+    identifier: BEDTIME_NOTIF_ID,
+  })
+
+  // Persist setting
+  await AsyncStorage.setItem(STORAGE_KEY_BEDTIME, JSON.stringify({ hour, minute, enabled: true }))
+  return { enabled: true, hour, minute }
+}
+
+/**
+ * Get current bedtime reminder setting.
+ */
+export async function getBedtimeReminder() {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY_BEDTIME)
+    return raw ? JSON.parse(raw) : { enabled: false, hour: 22, minute: 30 }
+  } catch {
+    return { enabled: false, hour: 22, minute: 30 }
+  }
+}
+
 // ── Exports ────────────────────────────────────────────────────────
 
 export default {
@@ -888,6 +952,8 @@ export default {
   subscribe,
   getSleepHistory,
   resumeSession,
+  setBedtimeReminder,
+  getBedtimeReminder,
   SleepStage,
   STAGE_COLORS,
   STAGE_LABELS,
