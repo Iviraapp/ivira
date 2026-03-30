@@ -181,6 +181,7 @@ export default function MembershipActivationScreen({ navigation }) {
   const [phone, setPhone] = useState(member?.phone || '')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [discoveryStep, setDiscoveryStep] = useState(0) // 0=what, 1=prefs, 2=contact
 
   // Animations
   const heroFade = useRef(new Animated.Value(0)).current
@@ -450,168 +451,104 @@ export default function MembershipActivationScreen({ navigation }) {
               Tell us what you're looking for and our concierge team will match you with the perfect facility and exclusive deals
             </Text>
 
-            {/* Progress indicator */}
+            {/* Step indicator */}
             <View style={styles.progressRow}>
               <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${(formProgress / totalSteps) * 100}%` }]} />
+                <View style={[styles.progressFill, { width: `${((discoveryStep + 1) / 3) * 100}%` }]} />
               </View>
-              <Text style={styles.progressText}>{formProgress}/{totalSteps}</Text>
+              <Text style={styles.progressText}>Step {discoveryStep + 1}/3</Text>
             </View>
 
-            {/* ── 1. What type of facility? ────────────────────────── */}
-            <FormSection number="1" title="What type of facility?" required />
-            <ChipGroup
-              items={FACILITY_TYPES}
-              selected={facilityTypes}
-              onToggle={toggleMulti(facilityTypes, setFacilityTypes)}
-            />
+            {/* ── STEP 1: What are you looking for? ────────────────── */}
+            {discoveryStep === 0 && (
+              <>
+                <FormSection number="1" title="What type of facility?" required />
+                <ChipGroup items={FACILITY_TYPES} selected={facilityTypes} onToggle={toggleMulti(facilityTypes, setFacilityTypes)} />
+                <FormSection number="2" title="Your fitness goals?" required />
+                <ChipGroup items={FITNESS_GOALS} selected={fitnessGoals} onToggle={toggleMulti(fitnessGoals, setFitnessGoals)} />
+                <TouchableOpacity
+                  style={[styles.primaryBtn, (facilityTypes.length === 0 || fitnessGoals.length === 0) && { opacity: 0.4 }]}
+                  onPress={() => { if (facilityTypes.length > 0 && fitnessGoals.length > 0) setDiscoveryStep(1) }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.primaryBtnText}>Next</Text>
+                  <Feather name="arrow-right" size={16} color="#FFF" style={{ marginLeft: 6 }} />
+                </TouchableOpacity>
+              </>
+            )}
 
-            {/* ── 2. What are your fitness goals? ──────────────────── */}
-            <FormSection number="2" title="What are your fitness goals?" required />
-            <ChipGroup
-              items={FITNESS_GOALS}
-              selected={fitnessGoals}
-              onToggle={toggleMulti(fitnessGoals, setFitnessGoals)}
-            />
-
-            {/* ── 3. Experience level ──────────────────────────────── */}
-            <FormSection number="3" title="Your experience level" />
-            <ChipGroup
-              items={EXPERIENCE_LEVELS}
-              selected={experience}
-              onToggle={(key) => setExperience(prev => prev === key ? null : key)}
-              multi={false}
-            />
-
-            {/* ── 4. Preferred workout times ───────────────────────── */}
-            <FormSection number="4" title="Preferred workout times" />
-            <ChipGroup
-              items={PREFERRED_TIMINGS}
-              selected={timings}
-              onToggle={toggleMulti(timings, setTimings)}
-            />
-
-            {/* ── 5. Monthly budget ────────────────────────────────── */}
-            <FormSection number="5" title="Monthly budget" />
-            <ChipGroup
-              items={BUDGET_RANGES}
-              selected={budget}
-              onToggle={(key) => setBudget(prev => prev === key ? null : key)}
-              multi={false}
-            />
-
-            {/* ── 6. Location ──────────────────────────────────────── */}
-            <FormSection number="6" title="Location" required />
-
-            <Text style={styles.fieldLabel}>City</Text>
-            <View style={styles.chipGrid}>
-              {CITIES.map(c => {
-                const isSelected = city === c
-                return (
-                  <TouchableOpacity
-                    key={c}
-                    style={[styles.chip, isSelected && styles.chipActive]}
-                    onPress={() => setCity(prev => prev === c ? null : c)}
-                    activeOpacity={0.7}
-                  >
-                    <Feather name="map-pin" size={13} color={isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.45)'} />
-                    <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>{c}</Text>
+            {/* ── STEP 2: Preferences ──────────────────────────────── */}
+            {discoveryStep === 1 && (
+              <>
+                <FormSection number="3" title="Experience level" />
+                <ChipGroup items={EXPERIENCE_LEVELS} selected={experience} onToggle={(key) => setExperience(prev => prev === key ? null : key)} multi={false} />
+                <FormSection number="4" title="Preferred times & budget" />
+                <ChipGroup items={PREFERRED_TIMINGS} selected={timings} onToggle={toggleMulti(timings, setTimings)} />
+                <ChipGroup items={BUDGET_RANGES} selected={budget} onToggle={(key) => setBudget(prev => prev === key ? null : key)} multi={false} />
+                <FormSection number="5" title="Location" required />
+                <View style={styles.chipGrid}>
+                  {CITIES.map(c => (
+                    <TouchableOpacity key={c} style={[styles.chip, city === c && styles.chipActive]} onPress={() => setCity(prev => prev === c ? null : c)} activeOpacity={0.7}>
+                      <Feather name="map-pin" size={13} color={city === c ? '#FFFFFF' : 'rgba(255,255,255,0.45)'} />
+                      <Text style={[styles.chipText, city === c && styles.chipTextActive]}>{c}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: SPACING.lg }}>
+                  <TouchableOpacity style={[styles.secondaryBtn, { flex: 1, borderColor: 'rgba(255,255,255,0.1)' }]} onPress={() => setDiscoveryStep(0)} activeOpacity={0.7}>
+                    <Feather name="arrow-left" size={16} color="rgba(255,255,255,0.5)" style={{ marginRight: 6 }} />
+                    <Text style={[styles.secondaryBtnText, { color: 'rgba(255,255,255,0.5)' }]}>Back</Text>
                   </TouchableOpacity>
-                )
-              })}
-            </View>
+                  <TouchableOpacity style={[styles.primaryBtn, { flex: 1 }, !city && { opacity: 0.4 }]} onPress={() => { if (city) setDiscoveryStep(2) }} activeOpacity={0.8}>
+                    <Text style={styles.primaryBtnText}>Next</Text>
+                    <Feather name="arrow-right" size={16} color="#FFF" style={{ marginLeft: 6 }} />
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
 
-            <Text style={styles.fieldLabel}>Preferred Area (optional)</Text>
-            <View style={styles.formInput}>
-              <Feather name="navigation" size={14} color="rgba(255,255,255,0.35)" />
-              <TextInput
-                style={styles.formInputText}
-                placeholder="e.g. Koramangala, HSR Layout..."
-                placeholderTextColor="rgba(255,255,255,0.25)"
-                value={area}
-                onChangeText={setArea}
-                autoCorrect={false}
-              />
-            </View>
-
-            {/* Divider */}
-            <View style={styles.discoveryDivider} />
-
-            {/* ── 7. Contact details ───────────────────────────────── */}
-            <View style={styles.contactHeader}>
-              <View style={styles.conciergeBadge}>
-                <Feather name="phone" size={10} color="#FFFFFF" />
-              </View>
-              <Text style={styles.contactHeaderText}>CONTACT DETAILS</Text>
-            </View>
-
-            <Text style={styles.fieldLabel}>Your name *</Text>
-            <View style={styles.formInput}>
-              <Feather name="user" size={14} color="rgba(255,255,255,0.35)" />
-              <TextInput
-                style={styles.formInputText}
-                placeholder="Full name"
-                placeholderTextColor="rgba(255,255,255,0.25)"
-                value={name}
-                onChangeText={setName}
-                autoCorrect={false}
-              />
-            </View>
-
-            <Text style={styles.fieldLabel}>Phone number *</Text>
-            <View style={styles.formInput}>
-              <Text style={styles.phonePrefix}>+91</Text>
-              <TextInput
-                style={styles.formInputText}
-                placeholder="9876543210"
-                placeholderTextColor="rgba(255,255,255,0.25)"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                maxLength={10}
-              />
-            </View>
-
-            <Text style={styles.fieldLabel}>Anything else? (optional)</Text>
-            <View style={[styles.formInput, { minHeight: 70, alignItems: 'flex-start', paddingTop: 12 }]}>
-              <Feather name="message-square" size={14} color="rgba(255,255,255,0.35)" style={{ marginTop: 2 }} />
-              <TextInput
-                style={[styles.formInputText, { minHeight: 50, textAlignVertical: 'top' }]}
-                placeholder="Specific requirements, injuries, preferences..."
-                placeholderTextColor="rgba(255,255,255,0.25)"
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                autoCorrect={false}
-              />
-            </View>
-
-            {/* Submit */}
-            <TouchableOpacity
-              style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
-              onPress={handleSubmitForm}
-              disabled={submitting}
-              activeOpacity={0.8}
-            >
-              {submitting ? (
-                <ActivityIndicator size="small" color={COLORS.accent} />
-              ) : (
-                <>
-                  <Feather name="send" size={18} color={COLORS.accent} style={{ marginRight: 10 }} />
-                  <Text style={styles.submitBtnText}>Submit & Get Matched</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            {/* Trust */}
-            <View style={styles.trustRow}>
-              <Feather name="shield" size={11} color="rgba(255,255,255,0.35)" />
-              <Text style={styles.trustText}>5,000+ partner gyms across India</Text>
-            </View>
-            <View style={[styles.trustRow, { marginTop: 4 }]}>
-              <Feather name="clock" size={11} color="rgba(255,255,255,0.35)" />
-              <Text style={styles.trustText}>Expect a call within 24 hours</Text>
-            </View>
+            {/* ── STEP 3: Contact & Submit ─────────────────────────── */}
+            {discoveryStep === 2 && (
+              <>
+                <View style={styles.contactHeader}>
+                  <View style={styles.conciergeBadge}><Feather name="phone" size={10} color="#FFFFFF" /></View>
+                  <Text style={styles.contactHeaderText}>CONTACT DETAILS</Text>
+                </View>
+                <Text style={styles.fieldLabel}>Your name *</Text>
+                <View style={styles.formInput}>
+                  <Feather name="user" size={14} color="rgba(255,255,255,0.35)" />
+                  <TextInput style={styles.formInputText} placeholder="Full name" placeholderTextColor="rgba(255,255,255,0.25)" value={name} onChangeText={setName} autoCorrect={false} />
+                </View>
+                <Text style={styles.fieldLabel}>Phone number *</Text>
+                <View style={styles.formInput}>
+                  <Text style={styles.phonePrefix}>+91</Text>
+                  <TextInput style={styles.formInputText} placeholder="9876543210" placeholderTextColor="rgba(255,255,255,0.25)" value={phone} onChangeText={setPhone} keyboardType="phone-pad" maxLength={10} />
+                </View>
+                <Text style={styles.fieldLabel}>Anything else? (optional)</Text>
+                <View style={[styles.formInput, { minHeight: 70, alignItems: 'flex-start', paddingTop: 12 }]}>
+                  <Feather name="message-square" size={14} color="rgba(255,255,255,0.35)" style={{ marginTop: 2 }} />
+                  <TextInput style={[styles.formInputText, { minHeight: 50, textAlignVertical: 'top' }]} placeholder="Specific requirements..." placeholderTextColor="rgba(255,255,255,0.25)" value={notes} onChangeText={setNotes} multiline autoCorrect={false} />
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: SPACING.lg }}>
+                  <TouchableOpacity style={[styles.secondaryBtn, { flex: 1, borderColor: 'rgba(255,255,255,0.1)' }]} onPress={() => setDiscoveryStep(1)} activeOpacity={0.7}>
+                    <Feather name="arrow-left" size={16} color="rgba(255,255,255,0.5)" style={{ marginRight: 6 }} />
+                    <Text style={[styles.secondaryBtnText, { color: 'rgba(255,255,255,0.5)' }]}>Back</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.submitBtn, { flex: 1 }, submitting && { opacity: 0.6 }]} onPress={handleSubmitForm} disabled={submitting} activeOpacity={0.8}>
+                    {submitting ? <ActivityIndicator size="small" color={COLORS.accent} /> : (
+                      <>
+                        <Feather name="send" size={16} color={COLORS.accent} style={{ marginRight: 8 }} />
+                        <Text style={styles.submitBtnText}>Submit</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.trustRow}>
+                  <Feather name="shield" size={11} color="rgba(255,255,255,0.35)" />
+                  <Text style={styles.trustText}>5,000+ partner gyms · Call within 24h</Text>
+                </View>
+              </>
+            )}
           </View>
         </Animated.View>
 
