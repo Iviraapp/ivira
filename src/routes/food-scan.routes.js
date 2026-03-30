@@ -24,7 +24,36 @@ IMPORTANT: Return ONLY valid JSON, no markdown, no explanation. Format:
 }`;
 
 async function analyzeWithVision(imageBase64) {
-  // Try OpenRouter first (access to vision models), then DeepSeek
+  // Try Gemini direct first (fastest, cheapest), then OpenRouter, then Anthropic
+  if (config.gemini?.enabled) {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.gemini.apiKey}`,
+      {
+        method: 'POST',
+        signal: AbortSignal.timeout(30000),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: FOOD_ANALYSIS_PROMPT },
+              { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
+            ],
+          }],
+          generationConfig: { maxOutputTokens: 1024 },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Gemini API error ${response.status}: ${err}`);
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  // OpenRouter fallback
   if (config.openrouter.enabled) {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',

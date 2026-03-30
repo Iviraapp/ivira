@@ -73,6 +73,11 @@ const config = {
     enabled: !!process.env.OPENROUTER_API_KEY,
   },
 
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY,
+    enabled: !!process.env.GEMINI_API_KEY,
+  },
+
   googlePlaces: {
     apiKey: process.env.GOOGLE_PLACES_API_KEY,
     enabled: !!process.env.GOOGLE_PLACES_API_KEY,
