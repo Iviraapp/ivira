@@ -62,23 +62,20 @@ import { getItem } from '../lib/storage'
 import { useTheme } from '../context/ThemeContext'
 // demo data imports removed — real API data used instead
 import FastingTimer from '../components/FastingTimer'
-import AdBanner, { showInterstitialAd } from '../components/AdBanner'
+// AdBanner removed from HomeScreen — kills premium feel
+let showInterstitialAd = () => {}
+try { showInterstitialAd = require('../components/AdBanner').showInterstitialAd } catch {}
 import { canAddToWallet, addMembershipToWallet } from '../lib/wallet'
 import { syncSleepToBackend } from '../lib/healthKit'
 import { useHealth } from '../context/HealthContext'
 import { requestAllPermissions } from '../lib/permissions'
 // DailyQuote removed
-import LiveGymIndicator from '../components/LiveGymIndicator'
-// WalletWidget moved to Profile screen
-import ProfileCompletionBar from '../components/ProfileCompletionBar'
-import ContinueWorkoutCard from '../components/ContinueWorkoutCard'
-import WeeklyWellnessReport from '../components/WeeklyWellnessReport'
-import ChurnRiskAlert from '../components/ChurnRiskAlert'
+// LiveGymIndicator, ProfileCompletionBar, ContinueWorkoutCard, WeeklyWellnessReport, ChurnRiskAlert removed from HomeScreen
+// ProfileCompletionBar → Profile screen, WeeklyWellnessReport → Health screen, WorkoutHeatMap → Activity dashboard
 import DashboardSummary from '../components/DashboardSummary'
-import MorningBriefing from '../components/MorningBriefing'
-import PostWorkoutRecovery from '../components/PostWorkoutRecovery'
+// MorningBriefing, PostWorkoutRecovery removed from HomeScreen — cluttered layout
 import HydrationTracker from '../components/HydrationTracker'
-import WorkoutHeatMap from '../components/WorkoutHeatMap'
+// WorkoutHeatMap moved to Activity dashboard
 // BodyCompositionTimeline, AccountabilityBuddy, NutritionInsights moved to Health tab
 // FeaturedExercises removed — wger data kept in WorkoutTracker only
 
@@ -133,7 +130,7 @@ export default function HomeScreen({ navigation, route }) {
   const [nutritionGoal, setNutritionGoal] = useState({ calories: 2000, protein: 120, carbs: 250, fats: 65 })
 
   // Health data from shared context (real-time sync across all screens)
-  const { steps: stepCount, stepSource, activeMinutes, sleepData, sleepSource, fetchSleep } = useHealth()
+  const { steps: stepCount, stepSource, activeMinutes, sleepData, sleepSource, fetchSleep, fetchSteps, refreshAll } = useHealth()
   const [activeSeconds, setActiveSeconds] = useState(0)
   const lastMilestoneRef = useRef(0)
   const healthSyncRef = useRef(null)
@@ -757,6 +754,7 @@ export default function HomeScreen({ navigation, route }) {
                   fetchNutrition(),
                   fetchAiWorkout(),
                   fetchSleep?.(),
+                  fetchSteps?.(),
                 ])
               } catch {}
               setRefreshing(false)
@@ -801,12 +799,6 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         </MotiView>
 
-        {/* Morning Briefing — shows before 11am */}
-        <MorningBriefing style={{ marginHorizontal: 0 }} navigation={navigation} />
-
-        {/* Post-Workout Recovery Timer */}
-        <PostWorkoutRecovery style={{ marginHorizontal: 0 }} />
-
         {/* Dashboard Summary — consolidated daily snapshot */}
         <MotiView
           from={{ opacity: 0, translateY: 50 }}
@@ -832,6 +824,74 @@ export default function HomeScreen({ navigation, route }) {
           onPressFasting={() => {}}
         />
         </MotiView>
+
+        {/* Feature Highlights — discoverable key features */}
+        <MotiView
+          from={{ opacity: 0, translateY: 50 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'spring', damping: 18, stiffness: 140, delay: 250 }}
+        >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.featureHighlightsRow}
+          >
+            {[
+              {
+                title: 'Scan Food',
+                desc: 'Scan any barcode to log nutrition instantly',
+                icon: 'maximize',
+                color: '#F97316',
+                onPress: () => navigation?.navigate?.('FoodScanner'),
+              },
+              {
+                title: 'Track Sleep',
+                desc: 'Detailed sleep analysis with smart alarm',
+                icon: 'moon',
+                color: '#8B5CF6',
+                onPress: () => navigation?.navigate?.('SleepTracker'),
+              },
+              {
+                title: 'Count Steps',
+                desc: 'Auto step counting all day',
+                icon: 'activity',
+                color: '#10B981',
+                onPress: () => navigation?.navigate?.('ActivityDashboard'),
+              },
+              {
+                title: 'Log Water',
+                desc: 'Stay hydrated with reminders',
+                icon: 'droplet',
+                color: '#3B82F6',
+                onPress: () => setWaterGlasses(prev => (prev || 0) + 1),
+              },
+            ].map((feature) => (
+              <TouchableOpacity
+                key={feature.title}
+                style={[styles.featureCard, { borderColor: feature.color + '26' }]}
+                activeOpacity={0.7}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  feature.onPress()
+                }}
+              >
+                <View style={[styles.featureIconCircle, { backgroundColor: feature.color + '1A' }]}>
+                  <Feather name={feature.icon} size={22} color={feature.color} />
+                </View>
+                <Text style={[styles.featureTitle, { color: colors.text }]}>{feature.title}</Text>
+                <Text style={[styles.featureDesc, { color: colors.textSec }]} numberOfLines={2}>{feature.desc}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </MotiView>
+
+        {/* Hydration — interactive, quick engagement */}
+        <HydrationTracker
+          style={{ marginHorizontal: 0 }}
+          glasses={waterGlasses || 0}
+          goal={8}
+          onAddGlass={() => setWaterGlasses(prev => (prev || 0) + 1)}
+        />
 
         {/* Smart Workout — AI Suggestion Card */}
         {!aiWorkoutDismissed && aiWorkout && (
@@ -987,38 +1047,6 @@ export default function HomeScreen({ navigation, route }) {
             })}
           </View>
         </View>
-
-        {/* Continue Workout — 1-tap resume */}
-        <ContinueWorkoutCard
-          style={{ marginHorizontal: 0 }}
-          onStartWorkout={() => navigation?.navigate?.('WorkoutTracker')}
-        />
-
-        {/* Hydration — interactive, quick engagement */}
-        <HydrationTracker
-          style={{ marginHorizontal: 0 }}
-          glasses={waterGlasses || 0}
-          goal={8}
-          onAddGlass={() => setWaterGlasses(prev => (prev || 0) + 1)}
-        />
-
-        {/* Profile Completion Nudge */}
-        <ProfileCompletionBar style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('Profile', { openEdit: true })} />
-
-        {/* Live Gym Activity */}
-        <LiveGymIndicator style={{ marginHorizontal: 0 }} />
-
-        {/* Ad — single placement */}
-        <AdBanner style={{ marginHorizontal: 4 }} />
-
-        {/* Churn Risk Nudge */}
-        <ChurnRiskAlert style={{ marginHorizontal: 0 }} onPress={() => navigation?.navigate?.('WorkoutTracker')} />
-
-        {/* Workout Consistency Heat Map */}
-        <WorkoutHeatMap style={{ marginHorizontal: 0 }} />
-
-        {/* Weekly Wellness Report */}
-        <WeeklyWellnessReport style={{ marginHorizontal: 0 }} />
 
         {/* Today's Classes Strip */}
         <View style={styles.classesSection}>
@@ -2850,6 +2878,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     fontFamily: FONT.semibold,
+  },
+
+  // Feature Highlights Row
+  featureHighlightsRow: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.lg,
+    gap: 12,
+  },
+  featureCard: {
+    width: 160,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(59,130,246,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(59,130,246,0.15)',
+    gap: 10,
+  },
+  featureIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+    letterSpacing: -0.3,
+  },
+  featureDesc: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    lineHeight: 17,
+    opacity: 0.8,
   },
 
   // AI Workout Suggestion Card

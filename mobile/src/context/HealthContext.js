@@ -63,7 +63,7 @@ export function HealthProvider({ children, gymId, memberId }) {
   // Manual step mode
   const [stepMode, setStepModeState] = useState('auto') // 'auto' | 'manual'
 
-  // Load saved preferences
+  // Load saved preferences and persisted steps
   useEffect(() => {
     const loadPrefs = async () => {
       try {
@@ -71,12 +71,23 @@ export function HealthProvider({ children, gymId, memberId }) {
         if (savedGoal) setStepGoalState(parseInt(savedGoal) || DEFAULT_STEP_GOAL)
         const savedMode = await getItem('ivira_step_mode')
         if (savedMode) setStepModeState(savedMode)
+
+        const today = localDateKey()
         if (savedMode === 'manual') {
-          const today = localDateKey()
           const manualSteps = await getItem(`ivira_manual_steps_${today}`)
           if (manualSteps) {
             setSteps(parseInt(manualSteps) || 0)
             setStepSource('manual')
+          }
+        } else {
+          // Load persisted auto-mode steps so we don't show 0 on restart
+          const savedSteps = await getItem(`ivira_steps_${today}`)
+          if (savedSteps) {
+            const parsed = parseInt(savedSteps) || 0
+            if (parsed > 0) {
+              setSteps(parsed)
+              lastMilestoneRef.current = Math.floor(parsed / 1000)
+            }
           }
         }
       } catch (err) { console.warn('[HealthCtx] loadPrefs:', err?.message) }
@@ -155,6 +166,9 @@ export function HealthProvider({ children, gymId, memberId }) {
         } else {
           lastMilestoneRef.current = newMilestone
         }
+        // Persist to storage so steps survive app restart
+        const today = localDateKey()
+        setItem(`ivira_steps_${today}`, String(safe)).catch(() => {})
         return safe
       })
       setStepSource(source)
@@ -168,7 +182,7 @@ export function HealthProvider({ children, gymId, memberId }) {
     // Try native health API first (Health Connect / HealthKit)
     try {
       const result = await getTodaySteps()
-      if (result.source) {
+      if (result.source && result.steps > 0) {
         updateSteps(result.steps, 'health')
         return // Success — don't fall through to pedometer (prevents double counting)
       }
@@ -230,6 +244,62 @@ export function HealthProvider({ children, gymId, memberId }) {
           }
         } catch (err) { console.warn('[HealthCtx] parse sleep log:', err?.message) }
       }
+
+      // Fallback: check sleep engine history (ivira_sleep_engine_history)
+      // The sleep engine writes to different storage keys than ivira_last_sleep_log
+      try {
+        const engineHistoryRaw = await getItem('ivira_sleep_engine_history')
+        if (engineHistoryRaw) {
+          const engineHistory = JSON.parse(engineHistoryRaw)
+          if (Array.isArray(engineHistory) && engineHistory.length > 0) {
+            const latest = engineHistory[0] // history is unshift'd, so newest is first
+            const logAge = Date.now() - new Date(latest.wakeTime || latest.endTime || latest.date).getTime()
+            if (logAge < 24 * 60 * 60 * 1000) {
+              // Convert score (0-100) to quality (1-5)
+              const quality = latest.score != null
+                ? Math.max(1, Math.min(5, Math.round(latest.score / 20)))
+                : 3
+              setSleepData({
+                bedtime: latest.bedtime || latest.startTime,
+                wakeTime: latest.wakeTime || latest.endTime,
+                durationMinutes: latest.totalMinutes || latest.durationMinutes || latest.sleepMinutes,
+                quality,
+                source: 'sleep_engine',
+                stages: latest.stageTimeline || latest.stages || null,
+                score: latest.score || null,
+                stageDurations: latest.stageDurations || null,
+                efficiency: latest.efficiency || null,
+                audioSummary: latest.audioSummary || null,
+              })
+              setSleepSource('sleep_engine')
+              return
+            }
+          }
+        }
+      } catch (err) { console.warn('[HealthCtx] parse sleep engine history:', err?.message) }
+
+      // Fallback: check active sleep session (ivira_sleep_session)
+      try {
+        const activeSessionRaw = await getItem('ivira_sleep_session')
+        if (activeSessionRaw) {
+          const session = JSON.parse(activeSessionRaw)
+          const sessionAge = Date.now() - new Date(session.startTime).getTime()
+          // If there's an active session less than 12 hours old, show in-progress sleep
+          if (sessionAge < 12 * 60 * 60 * 1000) {
+            const durationMinutes = Math.round(sessionAge / 60000)
+            setSleepData({
+              bedtime: session.startTime,
+              wakeTime: null,
+              durationMinutes,
+              quality: null, // still in progress
+              source: 'sleep_engine_active',
+              inProgress: true,
+            })
+            setSleepSource('sleep_engine_active')
+            return
+          }
+        }
+      } catch (err) { console.warn('[HealthCtx] parse active sleep session:', err?.message) }
 
       // Fallback: check backend for last sleep log
       if (gymId && memberId) {
