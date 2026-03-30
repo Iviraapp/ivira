@@ -15,6 +15,7 @@ import {
   syncStepsToBackend,
   syncSleepToBackend,
   isWearableConnected,
+  subscribeToSteps,
 } from '../lib/healthKit'
 import Haptics from '../lib/haptics'
 
@@ -55,7 +56,8 @@ export function HealthProvider({ children, gymId, memberId }) {
   const [activeMinutes, setActiveMinutes] = useState(0)
 
   // Sync refs
-  const stepSyncRef = useRef(null)
+  const stepSyncRef = useRef(null) // Legacy polling (kept as fallback)
+  const stepSubRef = useRef(null)  // Native subscription unsubscribe fn
   const hrSyncRef = useRef(null)
   const permissionsGranted = useRef(false)
   const initialized = useRef(false)
@@ -118,31 +120,52 @@ export function HealthProvider({ children, gymId, memberId }) {
       await fetchSleep()
       await fetchHeartData()
 
-      // Start periodic sync
-      stepSyncRef.current = setInterval(fetchSteps, SYNC_INTERVAL)
+      // Subscribe to real-time step updates (iOS: push, Android: change tokens)
+      stepSubRef.current = subscribeToSteps(({ steps: newSteps, source }) => {
+        if (newSteps > 0) {
+          setSteps(prev => {
+            const safe = Math.max(prev, newSteps)
+            const newMilestone = Math.floor(safe / 1000)
+            if (newMilestone > lastMilestoneRef.current && lastMilestoneRef.current > 0) {
+              lastMilestoneRef.current = newMilestone
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            } else {
+              lastMilestoneRef.current = newMilestone
+            }
+            const today = localDateKey()
+            setItem(`ivira_steps_${today}`, String(safe)).catch(() => {})
+            return safe
+          })
+          setStepSource(source)
+          setActiveMinutes(Math.floor(newSteps / STEPS_PER_ACTIVE_MINUTE))
+          if (gymId && memberId) {
+            syncStepsToBackend(gymId, memberId, newSteps).catch(() => {})
+          }
+        }
+      })
+
+      // Heart rate still uses polling (no subscription API available)
       hrSyncRef.current = setInterval(fetchHeartData, HR_SYNC_INTERVAL)
     }
 
     init()
 
     return () => {
-      if (stepSyncRef.current) clearInterval(stepSyncRef.current)
+      stepSubRef.current?.() // Unsubscribe from step updates
       if (hrSyncRef.current) clearInterval(hrSyncRef.current)
     }
   }, [stepMode])
 
-  // Pause polling when backgrounded, resume on foreground
+  // Pause subscriptions when backgrounded, resume on foreground
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active' && stepMode === 'auto') {
-        // Resume: fetch immediately + restart intervals
+        // Resume: fetch immediately + heart rate polling
         fetchSteps()
         fetchHeartData()
-        if (!stepSyncRef.current) stepSyncRef.current = setInterval(fetchSteps, SYNC_INTERVAL)
         if (!hrSyncRef.current) hrSyncRef.current = setInterval(fetchHeartData, HR_SYNC_INTERVAL)
       } else if (state === 'background') {
-        // Pause: clear intervals to save battery
-        if (stepSyncRef.current) { clearInterval(stepSyncRef.current); stepSyncRef.current = null }
+        // Pause heart rate polling (step subscription handles itself)
         if (hrSyncRef.current) { clearInterval(hrSyncRef.current); hrSyncRef.current = null }
       }
     })

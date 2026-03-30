@@ -1,6 +1,6 @@
 // HealthKit (iOS) / Health Connect (Android) integration
 // Uses platform-safe fallbacks and demo data when native APIs unavailable
-import { Platform } from 'react-native'
+import { Platform, NativeEventEmitter, NativeModules } from 'react-native'
 import Constants from 'expo-constants'
 import api from './api'
 import { enqueue } from './offlineQueue'
@@ -770,6 +770,146 @@ export async function isWearableConnected() {
   // Check if data is from the last 4 hours
   const age = Date.now() - new Date(hr.timestamp).getTime()
   return age < 4 * 60 * 60 * 1000
+}
+
+// ── Real-time Step Subscriptions ──────────────────────────────────
+// iOS: HKObserverQuery via react-native-health (true push, zero polling)
+// Android: Health Connect getChanges() with delta tokens (efficient polling)
+
+let _stepListeners = new Set()
+let _iosObserverSetup = false
+let _androidChangeToken = null
+
+/**
+ * Subscribe to real-time step updates.
+ * Callback receives { steps: number, source: string } on every change.
+ * Returns unsubscribe function.
+ */
+export function subscribeToSteps(callback) {
+  _stepListeners.add(callback)
+
+  // Setup platform-specific observer on first subscriber
+  if (_stepListeners.size === 1) {
+    if (Platform.OS === 'ios') _setupIOSObserver()
+    if (Platform.OS === 'android') _setupAndroidChangePolling()
+  }
+
+  return () => {
+    _stepListeners.delete(callback)
+    if (_stepListeners.size === 0) {
+      _teardownObservers()
+    }
+  }
+}
+
+function _notifyStepListeners(data) {
+  _stepListeners.forEach(cb => {
+    try { cb(data) } catch (_) {}
+  })
+}
+
+// ── iOS: HKObserverQuery (true push) ──────────────────────────────
+function _setupIOSObserver() {
+  if (_iosObserverSetup || !AppleHealthKit || Platform.OS !== 'ios') return
+
+  try {
+    const emitter = new NativeEventEmitter(NativeModules.AppleHealthKit)
+
+    // Listen for new step data pushed by HealthKit
+    _iosStepSub = emitter.addListener('healthKit:StepCount:new', async () => {
+      const result = await getTodaySteps()
+      if (result.steps > 0) {
+        _notifyStepListeners({ steps: result.steps, source: 'healthkit' })
+      }
+    })
+
+    _iosSetupSub = emitter.addListener('healthKit:StepCount:setup:success', () => {
+      if (__DEV__) console.log('[HealthKit] StepCount observer active')
+    })
+
+    _iosObserverSetup = true
+  } catch (err) {
+    if (__DEV__) console.warn('[HealthKit] iOS observer setup failed:', err.message)
+  }
+}
+
+let _iosStepSub = null
+let _iosSetupSub = null
+
+// ── Android: Change Token Polling (Google's recommended approach) ──
+let _androidPollTimer = null
+
+async function _setupAndroidChangePolling() {
+  if (!HealthConnect || Platform.OS !== 'android') return
+
+  try {
+    const ready = await ensureHealthConnectReady()
+    if (!ready) return
+
+    // Get initial change token
+    if (HealthConnect.getChanges) {
+      const initial = await HealthConnect.getChanges({ recordTypes: ['Steps'] })
+      _androidChangeToken = initial.nextChangesToken
+    }
+
+    // Poll for changes every 10 seconds using delta tokens
+    // Much more efficient than re-reading all records — only gets new data
+    _androidPollTimer = setInterval(async () => {
+      try {
+        if (!_androidChangeToken || !HealthConnect.getChanges) {
+          // Fallback: just re-read steps
+          const result = await getTodaySteps()
+          if (result.steps > 0) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
+          return
+        }
+
+        const changes = await HealthConnect.getChanges({
+          changesToken: _androidChangeToken,
+          recordTypes: ['Steps'],
+        })
+
+        _androidChangeToken = changes.nextChangesToken
+
+        if (changes.changesTokenExpired) {
+          // Token expired, get fresh one
+          const fresh = await HealthConnect.getChanges({ recordTypes: ['Steps'] })
+          _androidChangeToken = fresh.nextChangesToken
+        }
+
+        // If there are changes, fetch updated total
+        if (changes.upsertionChanges?.length > 0 || changes.deletionChanges?.length > 0) {
+          const result = await getTodaySteps()
+          if (result.steps > 0) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
+        }
+      } catch (err) {
+        // Fallback on error
+        if (__DEV__) console.warn('[HealthKit] Change polling error:', err.message)
+        const result = await getTodaySteps()
+        if (result.steps > 0) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
+      }
+    }, 10_000) // 10 second delta checks (lightweight — only asks "anything new?")
+  } catch (err) {
+    if (__DEV__) console.warn('[HealthKit] Android change polling setup failed:', err.message)
+    // Fall back to simple polling
+    _androidPollTimer = setInterval(async () => {
+      const result = await getTodaySteps()
+      if (result.steps > 0) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
+    }, 15_000)
+  }
+}
+
+function _teardownObservers() {
+  _iosStepSub?.remove?.()
+  _iosSetupSub?.remove?.()
+  _iosStepSub = null
+  _iosSetupSub = null
+  _iosObserverSetup = false
+
+  if (_androidPollTimer) {
+    clearInterval(_androidPollTimer)
+    _androidPollTimer = null
+  }
+  _androidChangeToken = null
 }
 
 export default {
