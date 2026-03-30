@@ -698,25 +698,46 @@ export default function HomeScreen({ navigation, route }) {
           <Text style={[styles.headerLogo, { color: colors.accent }]}>VIRA</Text>
         </View>
 
-        {/* Center: Streak Pill */}
-        {streak > 0 ? (
-          <View style={styles.streakPill}>
-            <Text style={styles.streakFlame}>🔥</Text>
-            <Text style={styles.streakPillText}>{streak} Day Streak</Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.streakPillEmpty, { borderColor: colors.border }]}
-            activeOpacity={0.7}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        {/* Center: Journey Pill — live step counter + streak */}
+        <TouchableOpacity
+          style={[
+            stepCount > 0 || streak > 0 ? styles.journeyPillActive : styles.streakPillEmpty,
+            stepCount > 0 || streak > 0
+              ? { borderColor: colors.accent + '30' }
+              : { borderColor: colors.border },
+          ]}
+          activeOpacity={0.7}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            if (stepCount > 0) {
+              navigation?.navigate?.('ActivityDashboard')
+            } else {
               setQrModalVisible(true)
-            }}
-          >
-            <Feather name="activity" size={13} color={colors.textTer} />
-            <Text style={[styles.streakPillEmptyText, { color: colors.textTer }]}>Start your journey</Text>
-          </TouchableOpacity>
-        )}
+            }
+          }}
+        >
+          {streak > 0 && <Text style={styles.streakFlame}>🔥</Text>}
+          {stepCount > 0 ? (
+            <>
+              <Feather name="navigation" size={12} color={colors.accent} />
+              <Text style={[styles.journeyStepText, { color: colors.accent }]}>
+                {stepCount >= 1000 ? `${(stepCount/1000).toFixed(1)}k` : stepCount} steps
+              </Text>
+              {streak > 0 && (
+                <Text style={[styles.journeyStreakDot, { color: colors.textTer }]}>
+                  · {streak}d
+                </Text>
+              )}
+            </>
+          ) : streak > 0 ? (
+            <Text style={styles.streakPillText}>{streak} Day Streak</Text>
+          ) : (
+            <>
+              <Feather name="activity" size={13} color={colors.textTer} />
+              <Text style={[styles.streakPillEmptyText, { color: colors.textTer }]}>Start your journey</Text>
+            </>
+          )}
+        </TouchableOpacity>
 
         {/* Right: Profile Avatar */}
         <TouchableOpacity
@@ -1923,6 +1944,26 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: COLORS.accent,
     letterSpacing: -1,
+  },
+  journeyPillActive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(59,130,246,0.08)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  journeyStepText: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: FONT.numBold,
+    fontVariant: ['tabular-nums'],
+  },
+  journeyStreakDot: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   streakPill: {
     flexDirection: 'row',
