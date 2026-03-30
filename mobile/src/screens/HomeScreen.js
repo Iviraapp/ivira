@@ -678,7 +678,7 @@ export default function HomeScreen({ navigation, route }) {
       title: 'QUICK ACTIONS',
       items: [
         { label: 'Workouts', icon: 'activity', bg: '#F97316', onPress: () => navigation?.navigate?.('WorkoutTracker') },
-        { label: 'Scan Food', icon: 'camera', bg: '#EA4335', onPress: () => navigation?.navigate?.('FoodScanner') },
+        { label: 'Scan Food', icon: 'maximize', bg: '#F97316', onPress: () => navigation?.navigate?.('BarcodeScanner') },
         { label: 'Classes', icon: 'calendar', bg: '#3B82F6', onPress: () => navigation?.navigate?.('Community', { screen: 'CommunityMain', params: { tab: 'community' } }) },
         { label: 'Sleep', icon: 'moon', bg: '#6366F1', onPress: () => navigation?.navigate?.('SleepTracker') },
       ],
