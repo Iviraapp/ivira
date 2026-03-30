@@ -210,7 +210,7 @@ export default function WorkoutHistoryScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    // backgroundColor set via inline style using theme colors
   },
   header: {
     flexDirection: 'row',
@@ -224,14 +224,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#141414',
+    // backgroundColor set via inline style using theme colors
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#ffffff',
+    // color set via inline style using theme colors
   },
   listContent: {
     paddingHorizontal: SPACING.md,
@@ -243,10 +243,10 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#141414',
+    // backgroundColor set via inline style using theme colors
     borderRadius: RADIUS.lg || 16,
     borderWidth: 1,
-    borderColor: '#1f1f1f',
+    // borderColor set via inline style using theme colors
     padding: SPACING.md,
     marginBottom: SPACING.sm,
   },
@@ -267,11 +267,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#ffffff',
+    // color set via inline style using theme colors
   },
   cardDate: {
     fontSize: 12,
-    color: '#888',
+    // color set via inline style using theme colors
     marginTop: 2,
   },
   statsRow: {
@@ -287,13 +287,13 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 11,
-    color: '#888',
+    // color set via inline style using theme colors
   },
   accentDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.accent,
     marginLeft: SPACING.sm,
   },
 
@@ -336,13 +336,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#ffffff',
+    // color set via inline style using theme colors
     marginBottom: SPACING.sm,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#888',
+    // color set via inline style using theme colors
     textAlign: 'center',
     lineHeight: 20,
   },

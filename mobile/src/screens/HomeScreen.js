@@ -62,9 +62,8 @@ import { getItem } from '../lib/storage'
 import { useTheme } from '../context/ThemeContext'
 // demo data imports removed — real API data used instead
 import FastingTimer from '../components/FastingTimer'
-// AdBanner removed from HomeScreen — kills premium feel
+// AdBanner removed — premium app, no ads
 let showInterstitialAd = () => {}
-try { showInterstitialAd = require('../components/AdBanner').showInterstitialAd } catch {}
 import { canAddToWallet, addMembershipToWallet } from '../lib/wallet'
 import { syncSleepToBackend } from '../lib/healthKit'
 import { useHealth } from '../context/HealthContext'

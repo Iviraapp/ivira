@@ -22,11 +22,11 @@ try {
   const svg = require('react-native-svg')
   Svg = svg.default || svg.Svg
   Circle = svg.Circle
-} catch (err) { console.warn('[Health] SVG load:', err?.message) }
+} catch (err) { if (__DEV__) console.warn('[Health] SVG load:', err?.message) }
 let Pedometer = null
 try {
   Pedometer = require('expo-sensors').Pedometer
-} catch (err) { console.warn('[Health] Pedometer load:', err?.message) }
+} catch (err) { if (__DEV__) console.warn('[Health] Pedometer load:', err?.message) }
 import Haptics from '../lib/haptics'
 import { COLORS, SPACING, RADIUS, FONT, METABOLIC, ELITE_CARD } from '../lib/theme'
 import api from '../lib/api'
@@ -49,7 +49,6 @@ import {
 import { useHealth } from '../context/HealthContext'
 import NutritionGoalSetup from '../components/NutritionGoalSetup'
 import WaterTracker from '../components/WaterTracker'
-import AdBanner from '../components/AdBanner'
 import { getItem, setItem } from '../lib/storage'
 import { getWeeklyInsight, getProgressiveInsights } from '../lib/aiCoach'
 
@@ -221,18 +220,18 @@ export default function HealthScreen({ navigation }) {
           useNativeDriver: true,
         }).start()
       }
-    }).catch(err => console.warn('[Health]', err?.message))
+    }).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
     return () => { cancelled = true }
   }, [insightFadeAnim, member, steps, daily, stepGoal])
 
   // Check if user has a custom nutrition goal
   useEffect(() => {
-    getItem('ivira_nutrition_profile').then(v => { if (v) setHasCustomGoal(true) }).catch(err => console.warn('[Health]', err?.message))
+    getItem('ivira_nutrition_profile').then(v => { if (v) setHasCustomGoal(true) }).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
     getItem('ivira_custom_nutrition_goal').then(stored => {
       if (stored) {
-        try { setGoal(JSON.parse(stored)) } catch (err) { console.warn('[Health] parse goal:', err?.message) }
+        try { setGoal(JSON.parse(stored)) } catch (err) { if (__DEV__) console.warn('[Health] parse goal:', err?.message) }
       }
-    }).catch(err => console.warn('[Health]', err?.message))
+    }).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
   }, [])
 
   // Load step goal from storage
@@ -242,7 +241,7 @@ export default function HealthScreen({ navigation }) {
         const num = parseInt(val, 10)
         if (STEP_GOAL_OPTIONS.includes(num)) setStepGoal(num)
       }
-    }).catch(err => console.warn('[Health]', err?.message))
+    }).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
   }, [])
 
   // Heart rate data — bridged from HealthContext (avoids duplicate API calls)
@@ -258,23 +257,23 @@ export default function HealthScreen({ navigation }) {
     const todayKey = `ivira_manual_steps_${new Date().toISOString().split('T')[0]}`
     getItem('ivira_step_mode').then(mode => {
       if (mode === 'manual') setStepMode('manual')
-    }).catch(err => console.warn('[Health]', err?.message))
+    }).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
     getItem(todayKey).then(val => {
       if (val) {
         try {
           const parsed = JSON.parse(val)
           setManualSteps(parsed.steps || 0)
           // Don't auto-restore timer — only starts when user explicitly starts a workout
-        } catch (err) { console.warn('[Health] parse manual steps:', err?.message) }
+        } catch (err) { if (__DEV__) console.warn('[Health] parse manual steps:', err?.message) }
       }
-    }).catch(err => console.warn('[Health]', err?.message))
+    }).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
   }, [])
 
   // Persist manual steps whenever they change
   useEffect(() => {
     if (stepMode === 'manual') {
       const todayKey = `ivira_manual_steps_${new Date().toISOString().split('T')[0]}`
-      setItem(todayKey, JSON.stringify({ steps: manualSteps, timerSeconds })).catch(err => console.warn('[Health]', err?.message))
+      setItem(todayKey, JSON.stringify({ steps: manualSteps, timerSeconds })).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
     }
   }, [manualSteps, timerSeconds, stepMode])
 
@@ -296,7 +295,7 @@ export default function HealthScreen({ navigation }) {
   // Switch mode handler
   const handleModeSwitch = useCallback(async (mode) => {
     setStepMode(mode)
-    await setItem('ivira_step_mode', mode).catch(err => console.warn('[Health]', err?.message))
+    await setItem('ivira_step_mode', mode).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     if (mode === 'manual') {
       // Stop auto-sync when switching to manual
@@ -319,7 +318,7 @@ export default function HealthScreen({ navigation }) {
             syncStepsToBackend(gymId, member.id, stepCount)
           }
         }
-      } catch (err) { console.warn('[Health] step tracking:', err?.message) }
+      } catch (err) { if (__DEV__) console.warn('[Health] step tracking:', err?.message) }
     }
   }, [gymId, member?.id])
 
@@ -346,7 +345,7 @@ export default function HealthScreen({ navigation }) {
     setStepGoal(newGoal)
     setShowStepGoalPicker(false)
     setGoalCelebrated(false) // Reset celebration for new goal
-    await setItem('ivira_step_goal', String(newGoal)).catch(err => console.warn('[Health]', err?.message))
+    await setItem('ivira_step_goal', String(newGoal)).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
   }, [])
 
@@ -397,7 +396,7 @@ export default function HealthScreen({ navigation }) {
       setDaily(dailyRes.data)
       setGoal(goalRes.data)
     } catch (err) {
-      console.warn('[Health] loadData:', err?.message)
+      if (__DEV__) console.warn('[Health] loadData:', err?.message)
       setDaily(DEFAULT_DAILY_NUTRITION)
       setGoal(DEFAULT_NUTRITION_GOAL)
     } finally {
@@ -424,7 +423,7 @@ export default function HealthScreen({ navigation }) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
       }
     } catch (err) {
-      console.warn('[Health] sync:', err?.message)
+      if (__DEV__) console.warn('[Health] sync:', err?.message)
       premiumAlert('Sync Failed', 'Could not sync health data. Please try again.')
     } finally {
       setSyncing(false)
@@ -434,10 +433,10 @@ export default function HealthScreen({ navigation }) {
   const handleGoalSave = useCallback(async (macroGoal) => {
     setGoal(macroGoal)
     setHasCustomGoal(true)
-    await setItem('ivira_custom_nutrition_goal', JSON.stringify(macroGoal)).catch(err => console.warn('[Health]', err?.message))
+    await setItem('ivira_custom_nutrition_goal', JSON.stringify(macroGoal)).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
     // Sync to backend if available
     if (gymId && member?.id) {
-      api.patch(`/gyms/${gymId}/members/${member.id}/nutrition/goal`, macroGoal).catch(err => console.warn('[Health]', err?.message))
+      api.patch(`/gyms/${gymId}/members/${member.id}/nutrition/goal`, macroGoal).catch(err => { if (__DEV__) console.warn('[Health]', err?.message) })
     }
   }, [gymId, member?.id])
 
@@ -518,7 +517,7 @@ export default function HealthScreen({ navigation }) {
                   loadData(false),
                   contextFetchSteps?.(),
                 ])
-              } catch (err) { console.warn('[Health] refresh:', err?.message) }
+              } catch (err) { if (__DEV__) console.warn('[Health] refresh:', err?.message) }
               setRefreshing(false)
             }}
             tintColor="#3B82F6"
@@ -1014,8 +1013,6 @@ export default function HealthScreen({ navigation }) {
         {/* Water Tracking */}
         <WaterTracker style={{ marginHorizontal: 4, marginBottom: 12 }} />
 
-        {/* Ad */}
-        <AdBanner style={{ marginHorizontal: 4, marginBottom: 12 }} />
 
         <View style={{ height: SPACING.xxl + SPACING.xl }} />
       </ScrollView>

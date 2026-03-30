@@ -212,7 +212,7 @@ export async function stopTracking() {
   if (Platform.OS === 'android') {
     try {
       await Notifications.dismissNotificationAsync('sleep-tracking-active')
-    } catch (err) { console.warn('[SleepEngine]', err?.message) }
+    } catch (err) { if (__DEV__) console.warn('[SleepEngine]', err?.message) }
   }
 
   _isTracking = false
@@ -302,7 +302,7 @@ export async function getSleepHistory() {
     const raw = await AsyncStorage.getItem(STORAGE_KEY_HISTORY)
     return raw ? JSON.parse(raw) : []
   } catch (err) {
-    console.warn('[SleepEngine]', err?.message)
+    if (__DEV__) console.warn('[SleepEngine]', err?.message)
     return []
   }
 }
@@ -326,7 +326,7 @@ export async function resumeSession() {
       enableAudio: session.enableAudio,
     })
   } catch (err) {
-    console.warn('[SleepEngine]', err?.message)
+    if (__DEV__) console.warn('[SleepEngine]', err?.message)
     return false
   }
 }
@@ -430,7 +430,7 @@ async function startAudioMonitoring() {
   try {
     const { granted } = await Audio.requestPermissionsAsync()
     if (!granted) {
-      console.warn('[SleepEngine] Microphone permission not granted')
+      if (__DEV__) console.warn('[SleepEngine] Microphone permission not granted')
       return
     }
 
@@ -448,7 +448,7 @@ async function startAudioMonitoring() {
     // First sample immediately
     await sampleAudio()
   } catch (err) {
-    console.warn('[SleepEngine] Audio monitoring failed:', err.message)
+    if (__DEV__) console.warn('[SleepEngine] Audio monitoring failed:', err.message)
     // Clean up audio mode on failure
     try {
       await Audio.setAudioModeAsync({
@@ -463,7 +463,7 @@ async function startAudioMonitoring() {
 async function sampleAudio() {
   // Stop retrying after MAX_AUDIO_RETRIES consecutive failures
   if (_audioRetryCount >= MAX_AUDIO_RETRIES) {
-    console.warn('[SleepEngine] Audio sampling disabled after', MAX_AUDIO_RETRIES, 'consecutive failures')
+    if (__DEV__) console.warn('[SleepEngine] Audio sampling disabled after', MAX_AUDIO_RETRIES, 'consecutive failures')
     if (_audioTimer) {
       clearInterval(_audioTimer)
       _audioTimer = null
@@ -508,7 +508,7 @@ async function sampleAudio() {
           meterReadings.push(status.metering)
         }
       } catch (meterErr) {
-        console.warn('[SleepEngine] Metering read error:', meterErr?.message)
+        if (__DEV__) console.warn('[SleepEngine] Metering read error:', meterErr?.message)
         break
       }
     }
@@ -526,7 +526,7 @@ async function sampleAudio() {
       try {
         const FileSystem = require('expo-file-system')
         await FileSystem.deleteAsync(recordingUri, { idempotent: true })
-      } catch (fsErr) { console.warn('[SleepEngine] File cleanup:', fsErr?.message) }
+      } catch (fsErr) { if (__DEV__) console.warn('[SleepEngine] File cleanup:', fsErr?.message) }
     }
 
     // Analyze metering pattern
@@ -566,7 +566,7 @@ async function sampleAudio() {
     }
   } catch (err) {
     _audioRetryCount++
-    console.warn('[SleepEngine] Audio sample error (attempt', _audioRetryCount + '/' + MAX_AUDIO_RETRIES + '):', err.message)
+    if (__DEV__) console.warn('[SleepEngine] Audio sample error (attempt', _audioRetryCount + '/' + MAX_AUDIO_RETRIES + '):', err.message)
 
     // Clean up the recording on error to prevent resource leaks
     if (recording) {
@@ -574,7 +574,7 @@ async function sampleAudio() {
         await recording.stopAndUnloadAsync()
       } catch (cleanupErr) {
         // Recording may already be stopped — ignore
-        console.warn('[SleepEngine] Recording cleanup:', cleanupErr?.message)
+        if (__DEV__) console.warn('[SleepEngine] Recording cleanup:', cleanupErr?.message)
       }
       recording = null
     }
@@ -585,7 +585,7 @@ async function stopAudioMonitoring() {
   if (_audioRecording) {
     try {
       await _audioRecording.stopAndUnloadAsync()
-    } catch (err) { console.warn('[SleepEngine]', err?.message) }
+    } catch (err) { if (__DEV__) console.warn('[SleepEngine]', err?.message) }
     _audioRecording = null
   }
 }
@@ -632,7 +632,7 @@ async function triggerSmartAlarm() {
       trigger: null, // Immediately
     })
   } catch (err) {
-    console.warn('[SleepEngine] Failed to trigger alarm notification:', err)
+    if (__DEV__) console.warn('[SleepEngine] Failed to trigger alarm notification:', err)
   }
 
   notifyListeners()
@@ -791,7 +791,7 @@ function calculateAdvancedSleepScore(data) {
 function notifyListeners() {
   const data = getLiveData()
   _listeners.forEach(cb => {
-    try { cb(data) } catch (err) { console.warn('[SleepEngine]', err?.message) }
+    try { cb(data) } catch (err) { if (__DEV__) console.warn('[SleepEngine]', err?.message) }
   })
 }
 

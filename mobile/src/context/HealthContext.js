@@ -19,7 +19,7 @@ import {
 import Haptics from '../lib/haptics'
 
 let Pedometer = null
-try { Pedometer = require('expo-sensors').Pedometer } catch (err) { console.warn('[HealthCtx] Pedometer load:', err?.message) }
+try { Pedometer = require('expo-sensors').Pedometer } catch (err) { if (__DEV__) console.warn('[HealthCtx] Pedometer load:', err?.message) }
 
 const HealthContext = createContext(null)
 
@@ -90,7 +90,7 @@ export function HealthProvider({ children, gymId, memberId }) {
             }
           }
         }
-      } catch (err) { console.warn('[HealthCtx] loadPrefs:', err?.message) }
+      } catch (err) { if (__DEV__) console.warn('[HealthCtx] loadPrefs:', err?.message) }
     }
     loadPrefs()
   }, [])
@@ -111,7 +111,7 @@ export function HealthProvider({ children, gymId, memberId }) {
           await requestExtendedPermissions()
           await requestSleepPermissions()
         }
-      } catch (err) { console.warn('[HealthCtx] permissions:', err?.message) }
+      } catch (err) { if (__DEV__) console.warn('[HealthCtx] permissions:', err?.message) }
 
       // Initial data fetch
       await fetchSteps()
@@ -175,7 +175,7 @@ export function HealthProvider({ children, gymId, memberId }) {
       setActiveMinutes(Math.floor(newSteps / STEPS_PER_ACTIVE_MINUTE))
 
       if (gymId && memberId && newSteps > 0) {
-        syncStepsToBackend(gymId, memberId, newSteps).catch(err => console.warn('[HealthCtx]', err?.message))
+        syncStepsToBackend(gymId, memberId, newSteps).catch(err => { if (__DEV__) console.warn('[HealthCtx]', err?.message) })
       }
     }
 
@@ -186,7 +186,7 @@ export function HealthProvider({ children, gymId, memberId }) {
         updateSteps(result.steps, 'health')
         return // Success — don't fall through to pedometer (prevents double counting)
       }
-    } catch (err) { console.warn('[HealthCtx] fetchSteps health:', err?.message) }
+    } catch (err) { if (__DEV__) console.warn('[HealthCtx] fetchSteps health:', err?.message) }
 
     // Fallback: Pedometer (only if health API returned no source)
     if (Pedometer) {
@@ -201,7 +201,7 @@ export function HealthProvider({ children, gymId, memberId }) {
           updateSteps(pedometerSteps || 0, 'pedometer')
           return
         }
-      } catch (err) { console.warn('[HealthCtx] fetchSteps pedometer:', err?.message) }
+      } catch (err) { if (__DEV__) console.warn('[HealthCtx] fetchSteps pedometer:', err?.message) }
     }
 
     // Neither available
@@ -217,7 +217,7 @@ export function HealthProvider({ children, gymId, memberId }) {
         setSleepData(nativeSleep)
         setSleepSource(nativeSleep.source)
         if (gymId && memberId) {
-          syncSleepToBackend(gymId, memberId, nativeSleep).catch(err => console.warn('[HealthCtx]', err?.message))
+          syncSleepToBackend(gymId, memberId, nativeSleep).catch(err => { if (__DEV__) console.warn('[HealthCtx]', err?.message) })
         }
         return
       }
@@ -242,7 +242,7 @@ export function HealthProvider({ children, gymId, memberId }) {
             setSleepSource('sleep_engine')
             return
           }
-        } catch (err) { console.warn('[HealthCtx] parse sleep log:', err?.message) }
+        } catch (err) { if (__DEV__) console.warn('[HealthCtx] parse sleep log:', err?.message) }
       }
 
       // Fallback: check sleep engine history (ivira_sleep_engine_history)
@@ -276,7 +276,7 @@ export function HealthProvider({ children, gymId, memberId }) {
             }
           }
         }
-      } catch (err) { console.warn('[HealthCtx] parse sleep engine history:', err?.message) }
+      } catch (err) { if (__DEV__) console.warn('[HealthCtx] parse sleep engine history:', err?.message) }
 
       // Fallback: check active sleep session (ivira_sleep_session)
       try {
@@ -299,7 +299,7 @@ export function HealthProvider({ children, gymId, memberId }) {
             return
           }
         }
-      } catch (err) { console.warn('[HealthCtx] parse active sleep session:', err?.message) }
+      } catch (err) { if (__DEV__) console.warn('[HealthCtx] parse active sleep session:', err?.message) }
 
       // Fallback: check backend for last sleep log
       if (gymId && memberId) {
@@ -321,13 +321,13 @@ export function HealthProvider({ children, gymId, memberId }) {
             setSleepSource('backend')
             return
           }
-        } catch (err) { console.warn('[HealthCtx] backend sleep:', err?.message) }
+        } catch (err) { if (__DEV__) console.warn('[HealthCtx] backend sleep:', err?.message) }
       }
 
       setSleepData(null)
       setSleepSource('unavailable')
     } catch (err) {
-      console.warn('[HealthCtx] fetchSleep:', err?.message)
+      if (__DEV__) console.warn('[HealthCtx] fetchSleep:', err?.message)
       setSleepData(null)
       setSleepSource('unavailable')
     }
@@ -346,7 +346,7 @@ export function HealthProvider({ children, gymId, memberId }) {
       if (rhr) setRestingHR(rhr)
       if (hrvData) setHrv(hrvData)
       setWearableConnected(wearable)
-    } catch (err) { console.warn('[HealthCtx] fetchHeartData:', err?.message) }
+    } catch (err) { if (__DEV__) console.warn('[HealthCtx] fetchHeartData:', err?.message) }
   }, [])
 
   // Manual step update
@@ -357,7 +357,7 @@ export function HealthProvider({ children, gymId, memberId }) {
     setActiveMinutes(Math.floor(count / 100))
     await setItem(`ivira_manual_steps_${today}`, String(count))
     if (gymId && memberId) {
-      syncStepsToBackend(gymId, memberId, count).catch(err => console.warn('[HealthCtx]', err?.message))
+      syncStepsToBackend(gymId, memberId, count).catch(err => { if (__DEV__) console.warn('[HealthCtx]', err?.message) })
     }
   }, [gymId, memberId])
 

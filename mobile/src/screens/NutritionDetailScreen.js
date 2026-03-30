@@ -10,7 +10,6 @@ import { Feather } from '@expo/vector-icons'
 import Svg, { Circle, G, Path, Line, Text as SvgText } from 'react-native-svg'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
-import AdBanner from '../components/AdBanner'
 import Haptics from '../lib/haptics'
 
 const { width: SW } = Dimensions.get('window')
@@ -276,7 +275,6 @@ export default function NutritionDetailScreen({ navigation, route }) {
               <Feather name="external-link" size={14} color={colors.accent} />
             </TouchableOpacity>
 
-            <AdBanner />
           </View>
         )}
 
@@ -323,7 +321,6 @@ export default function NutritionDetailScreen({ navigation, route }) {
               <CalStatCard icon="droplet" label="Water" value={`${data.water} glasses`} color="#4285F4" colors={colors} />
             </View>
 
-            <AdBanner />
           </View>
         )}
 
@@ -363,7 +360,6 @@ export default function NutritionDetailScreen({ navigation, route }) {
               <NutrientRow name="Iron (mg)" total={data.iron} goal={GOALS.iron} left={GOALS.iron - data.iron} color="#EA4335" colors={colors} />
             </View>
 
-            <AdBanner />
           </View>
         )}
 
@@ -423,7 +419,6 @@ export default function NutritionDetailScreen({ navigation, route }) {
               </View>
             ))}
 
-            <AdBanner />
           </View>
         )}
 

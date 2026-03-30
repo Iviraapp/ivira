@@ -4,9 +4,9 @@ import { getItem, setItem } from './storage'
 let Location = null
 let TaskManager = null
 let Notifications = null
-try { Location = require('expo-location') } catch (err) { console.warn('[Geofence] Location load:', err?.message) }
-try { TaskManager = require('expo-task-manager') } catch (err) { console.warn('[Geofence] TaskManager load:', err?.message) }
-try { Notifications = require('expo-notifications') } catch (err) { console.warn('[Geofence] Notifications load:', err?.message) }
+try { Location = require('expo-location') } catch (err) { if (__DEV__) console.warn('[Geofence] Location load:', err?.message) }
+try { TaskManager = require('expo-task-manager') } catch (err) { if (__DEV__) console.warn('[Geofence] TaskManager load:', err?.message) }
+try { Notifications = require('expo-notifications') } catch (err) { if (__DEV__) console.warn('[Geofence] Notifications load:', err?.message) }
 
 const GEOFENCE_TASK = 'IVIRA_GYM_GEOFENCE'
 const GEOFENCE_RADIUS = 200 // meters
@@ -17,7 +17,7 @@ const COOLDOWN_MS = 4 * 60 * 60 * 1000 // 4 hours between notifications
 if (TaskManager) {
   TaskManager.defineTask(GEOFENCE_TASK, async ({ data, error }) => {
     if (error) {
-      console.warn('[geofence] Task error:', error.message)
+      if (__DEV__) console.warn('[geofence] Task error:', error.message)
       return
     }
 
@@ -57,7 +57,7 @@ if (TaskManager) {
  */
 export async function startGymGeofencing(gymInfo) {
   if (!Location || !TaskManager) {
-    console.log('[geofence] Location or TaskManager not available')
+    if (__DEV__) console.log('[geofence] Location or TaskManager not available')
     return false
   }
 
@@ -65,7 +65,7 @@ export async function startGymGeofencing(gymInfo) {
   const lng = parseFloat(gymInfo?.longitude)
 
   if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-    console.log('[geofence] Gym has no coordinates, skipping geofencing')
+    if (__DEV__) console.log('[geofence] Gym has no coordinates, skipping geofencing')
     return false
   }
 
@@ -73,7 +73,7 @@ export async function startGymGeofencing(gymInfo) {
     // Request background location permission
     const { status: fgStatus } = await Location.requestForegroundPermissionsAsync()
     if (fgStatus !== 'granted') {
-      console.log('[geofence] Foreground location denied')
+      if (__DEV__) console.log('[geofence] Foreground location denied')
       return false
     }
 
@@ -81,7 +81,7 @@ export async function startGymGeofencing(gymInfo) {
     if (Platform.OS === 'ios') {
       const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync()
       if (bgStatus !== 'granted') {
-        console.log('[geofence] Background location denied (iOS)')
+        if (__DEV__) console.log('[geofence] Background location denied (iOS)')
         return false
       }
     }
@@ -90,7 +90,7 @@ export async function startGymGeofencing(gymInfo) {
     if (Platform.OS === 'android') {
       const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync()
       if (bgStatus !== 'granted') {
-        console.log('[geofence] Background location denied (Android)')
+        if (__DEV__) console.log('[geofence] Background location denied (Android)')
         // Still works with foreground on some devices, try anyway
       }
     }
@@ -116,7 +116,7 @@ export async function startGymGeofencing(gymInfo) {
     console.log(`[geofence] Monitoring gym at ${lat},${lng} (${GEOFENCE_RADIUS}m radius)`)
     return true
   } catch (err) {
-    console.warn('[geofence] Setup failed:', err?.message)
+    if (__DEV__) console.warn('[geofence] Setup failed:', err?.message)
     return false
   }
 }
@@ -132,10 +132,10 @@ export async function stopGymGeofencing() {
     const isRunning = await TaskManager.isTaskRegisteredAsync(GEOFENCE_TASK)
     if (isRunning) {
       await Location.stopGeofencingAsync(GEOFENCE_TASK)
-      console.log('[geofence] Stopped monitoring')
+      if (__DEV__) console.log('[geofence] Stopped monitoring')
     }
   } catch (err) {
-    console.warn('[geofence] Stop failed:', err?.message)
+    if (__DEV__) console.warn('[geofence] Stop failed:', err?.message)
   }
 }
 
@@ -147,7 +147,7 @@ export async function isGeofencingActive() {
   try {
     return await TaskManager.isTaskRegisteredAsync(GEOFENCE_TASK)
   } catch (err) {
-    console.warn('[Geofence] isGeofencingActive:', err?.message)
+    if (__DEV__) console.warn('[Geofence] isGeofencingActive:', err?.message)
     return false
   }
 }

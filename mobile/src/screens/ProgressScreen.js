@@ -10,7 +10,6 @@ import { Feather } from '@expo/vector-icons'
 import Svg, { Rect, Line, Text as SvgText, G } from 'react-native-svg'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
-import AdBanner from '../components/AdBanner'
 import Haptics from '../lib/haptics'
 
 const { width: SW } = Dimensions.get('window')
@@ -226,8 +225,6 @@ export default function ProgressScreen({ navigation }) {
       <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
         <BarChart data={data} goal={goal} unit={unit} color={barColor} colors={colors} />
       </View>
-
-      <AdBanner style={{ marginHorizontal: 16 }} />
 
       {/* Entries list */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>

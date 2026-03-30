@@ -721,7 +721,7 @@ export default function ProfileScreen({ navigation }) {
               {[
                 { icon: 'credit-card', label: 'Membership', bg: '#3B82F6', onPress: () => navigation.navigate('MembershipRenewal') },
                 { icon: 'gift', label: 'Refer & Earn', bg: '#EC4899', onPress: () => navigation.navigate('Referral') },
-                { icon: 'activity', label: 'Workouts', bg: '#10B981', onPress: () => navigation.navigate('WorkoutHistory') },
+                { icon: 'activity', label: 'Workouts', bg: '#3B82F6', onPress: () => navigation.navigate('WorkoutHistory') },
                 { icon: 'download', label: 'Export Data', bg: '#06B6D4', onPress: handleExportData },
                 { icon: 'trash-2', label: 'Delete Account', bg: '#EF4444', onPress: handleDeleteAccount },
               ].map(item => (

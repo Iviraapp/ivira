@@ -17,7 +17,6 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 import Haptics from '../lib/haptics'
-import AdBanner from '../components/AdBanner'
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -547,8 +546,6 @@ export default function NutritionLogScreen({ navigation }) {
           <>
             {/* Monthly Stats */}
             <MonthlyStatsCard daysData={daysData} colors={colors} card={card} />
-
-            <AdBanner style={{ marginBottom: 8 }} />
 
             {/* Weekly Summary */}
             <WeeklySummaryRow

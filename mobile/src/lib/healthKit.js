@@ -16,12 +16,12 @@ try {
   // iOS only — react-native-health is not installed for Android builds
   const iosModule = 'react-native-' + 'health'
   AppleHealthKit = require(iosModule).default
-} catch (err) { console.warn('[HealthKit] AppleHealthKit load:', err?.message) }
+} catch (err) { if (__DEV__) console.warn('[HealthKit] AppleHealthKit load:', err?.message) }
 
 let HealthConnect = null
 try {
   HealthConnect = require('react-native-health-connect')
-} catch (err) { console.warn('[HealthKit] HealthConnect load:', err?.message) }
+} catch (err) { if (__DEV__) console.warn('[HealthKit] HealthConnect load:', err?.message) }
 
 // ──────────────────────────────────────────────────────────────
 // Singleton Health Connect initializer.
@@ -43,7 +43,7 @@ function ensureHealthConnectReady() {
       _hcReady = !!result
       return _hcReady
     } catch (err) {
-      console.warn('[HealthKit] Health Connect initialize failed:', err.message)
+      if (__DEV__) console.warn('[HealthKit] Health Connect initialize failed:', err.message)
       _hcReady = false
       _hcInitPromise = null // Allow retry on next call
       return false
@@ -92,7 +92,7 @@ export async function getHealthStatus() {
  */
 export async function requestHealthPermissions() {
   if (isExpoGo || Platform.OS === 'web') {
-    console.warn('[HealthKit] Running in Expo Go or web — using demo data')
+    if (__DEV__) console.warn('[HealthKit] Running in Expo Go or web — using demo data')
     return true
   }
 
@@ -106,7 +106,7 @@ export async function requestHealthPermissions() {
         }
         AppleHealthKit.initHealthKit(permissions, (err) => {
           if (err) {
-            console.warn('[HealthKit] Permission denied:', err)
+            if (__DEV__) console.warn('[HealthKit] Permission denied:', err)
             resolve(false)
           } else {
             resolve(true)
@@ -118,7 +118,7 @@ export async function requestHealthPermissions() {
     if (Platform.OS === 'android' && HealthConnect) {
       const ready = await ensureHealthConnectReady()
       if (!ready) {
-        console.warn('[HealthKit] Health Connect not ready — app may not be installed')
+        if (__DEV__) console.warn('[HealthKit] Health Connect not ready — app may not be installed')
         return false
       }
 
@@ -126,20 +126,20 @@ export async function requestHealthPermissions() {
         const granted = await HealthConnect.requestPermission([
           { accessType: 'read', recordType: 'Steps' },
         ])
-        console.log('[HealthKit] Health Connect permissions granted:', granted.length)
+        if (__DEV__) console.log('[HealthKit] Health Connect permissions granted:', granted.length)
         return granted.length > 0
       } catch (permErr) {
-        console.warn('[HealthKit] Health Connect permission request failed:', permErr.message)
+        if (__DEV__) console.warn('[HealthKit] Health Connect permission request failed:', permErr.message)
         return false
       }
     }
 
     if (Platform.OS === 'android' && !HealthConnect) {
-      console.warn('[HealthKit] react-native-health-connect module not loaded')
+      if (__DEV__) console.warn('[HealthKit] react-native-health-connect module not loaded')
       return false
     }
   } catch (err) {
-    console.warn('[HealthKit] Native health module not available:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Native health module not available:', err.message)
     return false
   }
 
@@ -157,7 +157,7 @@ export async function isHealthConnectAvailable() {
     // SDK_AVAILABLE = 3, SDK_UNAVAILABLE = 1, SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED = 2
     return status === 3
   } catch (err) {
-    console.warn('[HealthKit] isHealthConnectAvailable:', err?.message)
+    if (__DEV__) console.warn('[HealthKit] isHealthConnectAvailable:', err?.message)
     return false
   }
 }
@@ -182,7 +182,7 @@ export async function getTodaySteps() {
           { date: startOfDay.toISOString(), includeManuallyAdded: true },
           (err, result) => {
             if (err || !result) {
-              console.warn('[HealthKit] Step query failed:', err)
+              if (__DEV__) console.warn('[HealthKit] Step query failed:', err)
               resolve({ steps: 0, source: null })
             } else {
               resolve({ steps: Math.round(result.value || 0), source: 'apple_health' })
@@ -195,7 +195,7 @@ export async function getTodaySteps() {
     if (Platform.OS === 'android' && HealthConnect) {
       const ready = await ensureHealthConnectReady()
       if (!ready) {
-        console.warn('[HealthKit] Health Connect not ready for step read')
+        if (__DEV__) console.warn('[HealthKit] Health Connect not ready for step read')
         return { steps: 0, source: null }
       }
 
@@ -218,11 +218,11 @@ export async function getTodaySteps() {
         }
       }
       const totalSteps = Array.from(windowMap.values()).reduce((sum, count) => sum + count, 0)
-      console.log('[HealthKit] Health Connect steps:', totalSteps, 'records:', records.length, 'deduped windows:', windowMap.size)
+      if (__DEV__) console.log('[HealthKit] Health Connect steps:', totalSteps, 'records:', records.length, 'deduped windows:', windowMap.size)
       return { steps: totalSteps, source: 'health_connect' }
     }
   } catch (err) {
-    console.warn('[HealthKit] Failed to fetch steps:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Failed to fetch steps:', err.message)
     return { steps: 0, source: null }
   }
 
@@ -247,14 +247,14 @@ export async function syncStepsToBackend(gymId, memberId, steps) {
     const status = res?.status || res?.response?.status
     if (status && status >= 400) {
       const errMsg = `Server returned ${status}`
-      console.warn('[HealthKit] syncStepsToBackend:', errMsg)
+      if (__DEV__) console.warn('[HealthKit] syncStepsToBackend:', errMsg)
       return { success: false, error: errMsg }
     }
     return { success: true }
   } catch (err) {
     const status = err?.response?.status
     const errMsg = err?.message || 'Unknown error'
-    console.warn('[HealthKit] Failed to sync steps:', errMsg)
+    if (__DEV__) console.warn('[HealthKit] Failed to sync steps:', errMsg)
 
     // Queue for offline retry on network/server errors
     const isRetryable = !status || status >= 500 || status === 408 || status === 429
@@ -263,7 +263,7 @@ export async function syncStepsToBackend(gymId, memberId, steps) {
         await enqueue('post', url, data)
         return { success: false, error: errMsg, queued: true }
       } catch (queueErr) {
-        console.warn('[HealthKit] Failed to queue steps:', queueErr?.message)
+        if (__DEV__) console.warn('[HealthKit] Failed to queue steps:', queueErr?.message)
       }
     }
     return { success: false, error: errMsg }
@@ -309,12 +309,12 @@ export async function requestSleepPermissions() {
         ])
         return granted.length > 0
       } catch (err) {
-        console.warn('[HealthKit] Sleep HC permission:', err?.message)
+        if (__DEV__) console.warn('[HealthKit] Sleep HC permission:', err?.message)
         return false
       }
     }
   } catch (err) {
-    console.warn('[HealthKit] Sleep permission failed:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Sleep permission failed:', err.message)
   }
   return false
 }
@@ -343,7 +343,7 @@ export async function getLastNightSleep() {
           },
           (err, results) => {
             if (err || !results || results.length === 0) {
-              console.warn('[HealthKit] Sleep query failed or empty:', err)
+              if (__DEV__) console.warn('[HealthKit] Sleep query failed or empty:', err)
               resolve(null)
               return
             }
@@ -426,7 +426,7 @@ export async function getLastNightSleep() {
       }
     }
   } catch (err) {
-    console.warn('[HealthKit] Failed to fetch sleep:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Failed to fetch sleep:', err.message)
   }
 
   return null
@@ -450,14 +450,14 @@ export async function syncSleepToBackend(gymId, memberId, sleepData) {
     const status = res?.status || res?.response?.status
     if (status && status >= 400) {
       const errMsg = `Server returned ${status}`
-      console.warn('[HealthKit] syncSleepToBackend:', errMsg)
+      if (__DEV__) console.warn('[HealthKit] syncSleepToBackend:', errMsg)
       return { success: false, error: errMsg }
     }
     return { success: true }
   } catch (err) {
     const status = err?.response?.status
     const errMsg = err?.message || 'Unknown error'
-    console.warn('[HealthKit] Failed to sync sleep:', errMsg)
+    if (__DEV__) console.warn('[HealthKit] Failed to sync sleep:', errMsg)
 
     // Queue for offline retry on network/server errors
     const isRetryable = !status || status >= 500 || status === 408 || status === 429
@@ -466,7 +466,7 @@ export async function syncSleepToBackend(gymId, memberId, sleepData) {
         await enqueue('post', url, data)
         return { success: false, error: errMsg, queued: true }
       } catch (queueErr) {
-        console.warn('[HealthKit] Failed to queue sleep:', queueErr?.message)
+        if (__DEV__) console.warn('[HealthKit] Failed to queue sleep:', queueErr?.message)
       }
     }
     return { success: false, error: errMsg }
@@ -520,12 +520,12 @@ export async function requestExtendedPermissions() {
         ])
         return granted.length > 0
       } catch (err) {
-        console.warn('[HealthKit] Extended HC permission:', err?.message)
+        if (__DEV__) console.warn('[HealthKit] Extended HC permission:', err?.message)
         return false
       }
     }
   } catch (err) {
-    console.warn('[HealthKit] Extended permission failed:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Extended permission failed:', err.message)
   }
   return false
 }
@@ -587,7 +587,7 @@ export async function getLatestHeartRate() {
       }
     }
   } catch (err) {
-    console.warn('[HealthKit] Failed to fetch heart rate:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Failed to fetch heart rate:', err.message)
   }
   return null
 }
@@ -642,7 +642,7 @@ export async function getRestingHeartRate() {
       }
     }
   } catch (err) {
-    console.warn('[HealthKit] Failed to fetch resting HR:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Failed to fetch resting HR:', err.message)
   }
   return null
 }
@@ -700,7 +700,7 @@ export async function getHRV() {
       }
     }
   } catch (err) {
-    console.warn('[HealthKit] Failed to fetch HRV:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Failed to fetch HRV:', err.message)
   }
   return null
 }
@@ -756,7 +756,7 @@ export async function getHeartRateSamples(hours = 24) {
       return samples
     }
   } catch (err) {
-    console.warn('[HealthKit] Failed to fetch HR samples:', err.message)
+    if (__DEV__) console.warn('[HealthKit] Failed to fetch HR samples:', err.message)
   }
   return []
 }
