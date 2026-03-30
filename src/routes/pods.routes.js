@@ -247,7 +247,7 @@ export default async function podRoutes(fastify) {
     try {
       const entry = await podsService.sendMessage({
         podId: request.params.podId,
-        memberId: request.user.memberId,
+        memberId: request.member.memberId,
         text: request.body.text,
         imageUrl: request.body.imageUrl,
       })
