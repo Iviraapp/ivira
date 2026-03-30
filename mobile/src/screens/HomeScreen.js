@@ -888,10 +888,17 @@ export default function HomeScreen({ navigation, route }) {
           >
             {[
               {
-                title: 'Scan Food',
-                desc: 'Scan any barcode to log nutrition instantly',
+                title: 'Scan Barcode',
+                desc: 'Scan product barcode for instant nutrition',
                 icon: 'maximize',
                 color: '#F97316',
+                onPress: () => navigation?.navigate?.('BarcodeScanner'),
+              },
+              {
+                title: 'AI Food Scan',
+                desc: 'Photo any meal for AI nutrition analysis',
+                icon: 'camera',
+                color: '#EF4444',
                 onPress: () => navigation?.navigate?.('FoodScanner'),
               },
               {
