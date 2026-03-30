@@ -715,15 +715,16 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.credMenuTitle, { color: colors.textTer }]}>ACCOUNT</Text>
+          <Text style={[styles.credMenuTitle, { color: colors.textTer }]}>QUICK ACCESS</Text>
           <View style={[styles.credMenuCard, card]}>
             <View style={styles.credMenuGrid}>
               {[
                 { icon: 'credit-card', label: 'Membership', bg: '#3B82F6', onPress: () => navigation.navigate('MembershipRenewal') },
-                { icon: 'gift', label: 'Refer & Earn', bg: '#EC4899', onPress: () => navigation.navigate('Referral') },
-                { icon: 'activity', label: 'Workouts', bg: '#3B82F6', onPress: () => navigation.navigate('WorkoutHistory') },
-                { icon: 'download', label: 'Export Data', bg: '#06B6D4', onPress: handleExportData },
-                { icon: 'trash-2', label: 'Delete Account', bg: '#EF4444', onPress: handleDeleteAccount },
+                { icon: 'activity', label: 'Workouts', bg: '#8B5CF6', onPress: () => navigation.navigate('WorkoutHistory') },
+                { icon: 'clock', label: 'Check-ins', bg: '#06B6D4', onPress: handleToggleCheckins },
+                { icon: 'calendar', label: 'Bookings', bg: '#F59E0B', onPress: handleToggleBookings },
+                { icon: 'image', label: 'Progress', bg: '#EC4899', onPress: handlePhotoUpload },
+                { icon: 'gift', label: 'Refer', bg: '#10B981', onPress: () => navigation.navigate('Referral') },
               ].map(item => (
                 <TouchableOpacity key={item.label} style={styles.credMenuItem} onPress={item.onPress} activeOpacity={0.65}>
                   <View style={[styles.credMenuIcon, { backgroundColor: item.bg + (isDark ? '1A' : '20') }]}>
@@ -923,113 +924,15 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Activity Section */}
+        {/* Data & Privacy */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textTer }]}>ACTIVITY</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textTer }]}>DATA & PRIVACY</Text>
           <View style={[styles.sectionCard, card]}>
-            {/* Check-in History (expandable) */}
-            <ActionRow
-              icon="clock"
-              label="Check-in History"
-              onPress={handleToggleCheckins}
-              expanded={checkinsExpanded}
-              colors={colors}
-            />
-            {checkinsExpanded && (
-              <View style={styles.expandedContent}>
-                {checkinsLoading ? (
-                  <View style={styles.expandedLoading}>
-                    <ActivityIndicator size="small" color={COLORS.accent} />
-                  </View>
-                ) : checkins.length === 0 ? (
-                  <Text style={[styles.expandedEmpty, { color: colors.textTer }]}>No recent check-ins</Text>
-                ) : (
-                  checkins.map((checkin, idx) => (
-                    <View key={checkin.id || idx}>
-                      {idx > 0 && <View style={[styles.expandedSeparator, { backgroundColor: colors.border }]} />}
-                      <View style={styles.checkinItem}>
-                        <View style={[styles.checkinIconWrap, { backgroundColor: colors.accentSoft }]}>
-                          <Feather
-                            name={CHECKIN_METHOD_ICONS[checkin.method] || 'check-circle'}
-                            size={16}
-                            color={COLORS.accent}
-                          />
-                        </View>
-                        <View style={styles.checkinInfo}>
-                          <Text style={[styles.checkinDate, { color: colors.text }]}>
-                            {formatDate(checkin.checked_in_at || checkin.created_at)}
-                          </Text>
-                          <Text style={[styles.checkinTime, { color: colors.textSec }]}>
-                            {formatTime(checkin.checked_in_at || checkin.created_at)}
-                          </Text>
-                        </View>
-                        <View style={[styles.checkinMethodBadge, { backgroundColor: colors.bgTer }]}>
-                          <Text style={[styles.checkinMethodText, { color: colors.textSec }]}>
-                            {CHECKIN_METHOD_LABELS[checkin.method] || checkin.method || 'Check-in'}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  ))
-                )}
-              </View>
-            )}
-
-            <View style={[styles.separator, { backgroundColor: colors.border }]} />
-
-            {/* My Bookings (expandable) */}
-            <ActionRow
-              icon="calendar"
-              label="My Bookings"
-              onPress={handleToggleBookings}
-              expanded={bookingsExpanded}
-              colors={colors}
-            />
-            {bookingsExpanded && (
-              <View style={styles.expandedContent}>
-                {bookingsLoading ? (
-                  <View style={styles.expandedLoading}>
-                    <ActivityIndicator size="small" color={COLORS.accent} />
-                  </View>
-                ) : bookings.length === 0 ? (
-                  <Text style={[styles.expandedEmpty, { color: colors.textTer }]}>No upcoming bookings</Text>
-                ) : (
-                  bookings.map((booking, idx) => (
-                    <View key={booking.id || idx}>
-                      {idx > 0 && <View style={[styles.expandedSeparator, { backgroundColor: colors.border }]} />}
-                      <View style={styles.bookingItem}>
-                        <View style={styles.bookingInfo}>
-                          <Text style={[styles.bookingClassName, { color: colors.text }]}>
-                            {booking.class_name || booking.name || 'Class'}
-                          </Text>
-                          <Text style={[styles.bookingDateTime, { color: colors.textSec }]}>
-                            {formatDate(booking.date || booking.start_time)} at{' '}
-                            {formatTime(booking.start_time || booking.date)}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          style={styles.cancelBookingBtn}
-                          onPress={() => handleCancelBooking(booking.id, booking.class_name || booking.name)}
-                          activeOpacity={0.7}
-                          disabled={cancellingBookingId === booking.id}
-                        >
-                          {cancellingBookingId === booking.id ? (
-                            <ActivityIndicator size="small" color={COLORS.red} />
-                          ) : (
-                            <Text style={styles.cancelBookingText}>Cancel</Text>
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ))
-                )}
-              </View>
-            )}
-
-            <View style={[styles.separator, { backgroundColor: colors.border }]} />
             <ActionRow icon="file-text" label="Invoices" onPress={handleInvoices} colors={colors} />
             <View style={[styles.separator, { backgroundColor: colors.border }]} />
-            <ActionRow icon="image" label="Transformation Photos" onPress={handlePhotoUpload} colors={colors} />
+            <ActionRow icon="download" label="Export My Data" onPress={handleExportData} colors={colors} />
+            <View style={[styles.separator, { backgroundColor: colors.border }]} />
+            <ActionRow icon="trash-2" label="Delete Account" onPress={handleDeleteAccount} color={COLORS.red} colors={colors} />
           </View>
         </View>
 
