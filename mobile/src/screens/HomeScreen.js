@@ -130,6 +130,27 @@ export default function HomeScreen({ navigation, route }) {
 
   // Health data from shared context (real-time sync across all screens)
   const { steps: stepCount, stepSource, activeMinutes, sleepData, sleepSource, fetchSleep, fetchSteps, refreshAll } = useHealth()
+
+  // Fasting state — read from storage to show in journey pill
+  const [fastingElapsed, setFastingElapsed] = useState(null)
+  useEffect(() => {
+    let timer = null
+    const checkFasting = async () => {
+      try {
+        const raw = await AsyncStorage.getItem('fasting_start_time')
+        if (raw) {
+          const startMs = parseInt(raw, 10)
+          if (!isNaN(startMs) && startMs > 0) {
+            const hours = Math.floor((Date.now() - startMs) / 3600000)
+            setFastingElapsed(hours > 0 ? hours : null)
+          } else { setFastingElapsed(null) }
+        } else { setFastingElapsed(null) }
+      } catch { setFastingElapsed(null) }
+    }
+    checkFasting()
+    timer = setInterval(checkFasting, 60000) // Update every minute
+    return () => clearInterval(timer)
+  }, [])
   const [activeSeconds, setActiveSeconds] = useState(0)
   const lastMilestoneRef = useRef(0)
   const healthSyncRef = useRef(null)
@@ -698,11 +719,11 @@ export default function HomeScreen({ navigation, route }) {
           <Text style={[styles.headerLogo, { color: colors.accent }]}>VIRA</Text>
         </View>
 
-        {/* Center: Journey Pill — live step counter + streak */}
+        {/* Center: Journey Pill — live step counter + fasting + streak */}
         <TouchableOpacity
           style={[
-            stepCount > 0 || streak > 0 ? styles.journeyPillActive : styles.streakPillEmpty,
-            stepCount > 0 || streak > 0
+            (stepCount > 0 || streak > 0 || fastingElapsed) ? styles.journeyPillActive : styles.streakPillEmpty,
+            (stepCount > 0 || streak > 0 || fastingElapsed)
               ? { borderColor: colors.accent + '30' }
               : { borderColor: colors.border },
           ]}
@@ -717,16 +738,25 @@ export default function HomeScreen({ navigation, route }) {
           }}
         >
           {streak > 0 && <Text style={styles.streakFlame}>🔥</Text>}
-          {stepCount > 0 ? (
+          {(stepCount > 0 || fastingElapsed) ? (
             <>
-              <Feather name="navigation" size={12} color={colors.accent} />
-              <Text style={[styles.journeyStepText, { color: colors.accent }]}>
-                {stepCount >= 1000 ? `${(stepCount/1000).toFixed(1)}k` : stepCount} steps
-              </Text>
+              {stepCount > 0 && (
+                <>
+                  <Feather name="navigation" size={12} color={colors.accent} />
+                  <Text style={[styles.journeyStepText, { color: colors.accent }]}>
+                    {stepCount >= 1000 ? `${(stepCount/1000).toFixed(1)}k` : stepCount}
+                  </Text>
+                </>
+              )}
+              {fastingElapsed && (
+                <>
+                  {stepCount > 0 && <Text style={[styles.journeyStreakDot, { color: colors.textTer }]}>·</Text>}
+                  <Feather name="clock" size={11} color="#8B5CF6" />
+                  <Text style={[styles.journeyStepText, { color: '#8B5CF6' }]}>{fastingElapsed}h</Text>
+                </>
+              )}
               {streak > 0 && (
-                <Text style={[styles.journeyStreakDot, { color: colors.textTer }]}>
-                  · {streak}d
-                </Text>
+                <Text style={[styles.journeyStreakDot, { color: colors.textTer }]}>· {streak}d</Text>
               )}
             </>
           ) : streak > 0 ? (
