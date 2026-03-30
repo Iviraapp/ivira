@@ -7,7 +7,7 @@
  * 3. Smart wake-up alarm (triggers during light sleep in a 30-min window)
  * 4. Sleep cycle classification (Awake → Light → Deep → REM)
  */
-import { Platform } from 'react-native'
+import { Platform, AppState } from 'react-native'
 import { Accelerometer } from 'expo-sensors'
 import { Audio } from 'expo-av'
 import * as Notifications from 'expo-notifications'
@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 // ── Constants ──────────────────────────────────────────────────────
 const ACCEL_INTERVAL_MS = 1000           // Sample accelerometer every 1s
 const EPOCH_DURATION_MS = 30 * 1000      // 30-second epochs for stage classification
-const AUDIO_SAMPLE_INTERVAL_MS = 60000   // Analyze audio every 60s
+const AUDIO_SAMPLE_INTERVAL_MS = Platform.OS === 'ios' ? 15000 : 60000 // iOS: 15s to keep audio session alive; Android: 60s
 const SMART_ALARM_WINDOW_MS = 30 * 60000 // 30-minute smart wake window
 
 const STORAGE_KEY_SESSION = 'ivira_sleep_session'
@@ -89,6 +89,85 @@ try {
   console.warn('[SleepEngine] Failed to define background task:', e.message)
 }
 
+// ── Session Recovery ──────────────────────────────────────────────
+// If Android kills the app during sleep tracking, this restores the session
+// when the app is reopened (e.g., user taps the notification).
+async function recoverSession() {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY_SESSION)
+    if (!raw) return false
+    const session = JSON.parse(raw)
+    if (!session.startTime) return false
+
+    // Only recover if session started within last 12 hours
+    const elapsed = Date.now() - new Date(session.startTime).getTime()
+    if (elapsed > 12 * 60 * 60 * 1000) {
+      await AsyncStorage.removeItem(STORAGE_KEY_SESSION)
+      return false
+    }
+
+    // Already tracking — skip
+    if (_isTracking) return false
+
+    if (__DEV__) console.warn('[SleepEngine] Recovering session from', session.startTime)
+
+    _isTracking = true
+    _sleepStartTime = new Date(session.startTime)
+    _alarmTime = session.alarmTime ? new Date(session.alarmTime) : null
+    _alarmTriggered = false
+    _accelBuffer = []
+    // Don't clear epoch history — we lost it, but we know elapsed time
+    // Generate estimated epochs for the gap period
+    const gapMs = elapsed
+    const gapEpochs = Math.floor(gapMs / EPOCH_DURATION_MS)
+    _epochHistory = []
+    for (let i = 0; i < gapEpochs; i++) {
+      const epochTime = new Date(session.startTime).getTime() + i * EPOCH_DURATION_MS
+      const cyclePos = (i * EPOCH_DURATION_MS) % CYCLE_DURATION_MS
+      // Estimate stage from cycle position (typical sleep architecture)
+      let stage = SleepStage.LIGHT
+      if (cyclePos < DEEP_SLEEP_PEAK_MS * 1.2) stage = SleepStage.DEEP
+      else if (cyclePos > REM_PEAK_MS * 0.9) stage = SleepStage.REM
+      // First 15 min is usually falling asleep
+      if (i < 30) stage = SleepStage.LIGHT
+      _epochHistory.push({ timestamp: epochTime, stage, motionEnergy: 0.01, estimated: true })
+    }
+    _audioEvents = []
+
+    // Restart sensors
+    Accelerometer.setUpdateInterval(ACCEL_INTERVAL_MS)
+    _accelSubscription = Accelerometer.addListener(({ x, y, z }) => {
+      _accelBuffer.push({
+        timestamp: Date.now(),
+        energy: Math.sqrt(x * x + y * y + z * z) - 1,
+      })
+    })
+    _epochTimer = setInterval(() => {
+      classifyEpoch()
+      checkSmartAlarm()
+      notifyListeners()
+    }, EPOCH_DURATION_MS)
+
+    if (session.enableAudio !== false) {
+      await startAudioMonitoring()
+    }
+
+    notifyListeners()
+    return true
+  } catch (err) {
+    if (__DEV__) console.warn('[SleepEngine] Recovery failed:', err.message)
+    return false
+  }
+}
+
+// Auto-recover on module load and when app returns to foreground
+recoverSession()
+AppState.addEventListener('change', (state) => {
+  if (state === 'active' && !_isTracking) {
+    recoverSession()
+  }
+})
+
 // ── State ──────────────────────────────────────────────────────────
 let _isTracking = false
 let _accelSubscription = null
@@ -149,7 +228,10 @@ export async function startTracking(options = {}) {
     await startAudioMonitoring()
   }
 
-  // 4. Show persistent notification to keep app alive in background (Android)
+  // 4. Keep app alive in background
+  // iOS: Audio session with staysActiveInBackground keeps the app running
+  // (already set in startAudioMonitoring via Audio.setAudioModeAsync)
+  // Android: Foreground service via persistent notification
   if (Platform.OS === 'android') {
     try {
       await Notifications.setNotificationChannelAsync('sleep-tracking', {
