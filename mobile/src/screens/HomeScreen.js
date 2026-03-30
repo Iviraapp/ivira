@@ -678,7 +678,6 @@ export default function HomeScreen({ navigation, route }) {
         { label: 'Achievements', icon: 'star', bg: '#F59E0B', onPress: () => navigation?.navigate?.('Achievements') },
         { label: 'Leaderboard', icon: 'bar-chart-2', bg: '#06B6D4', onPress: () => navigation?.navigate?.('CityLeaderboard') },
         { label: 'Find Gyms', icon: 'map-pin', bg: '#EF4444', onPress: () => navigation?.navigate?.('GymDiscovery') },
-        ...(gymId ? [{ label: 'Revenue', icon: 'dollar-sign', bg: '#34D399', onPress: () => navigation?.navigate?.('RevenueDashboard') }] : []),
       ],
     },
   ]
@@ -855,7 +854,7 @@ export default function HomeScreen({ navigation, route }) {
                 title: 'Count Steps',
                 desc: 'Auto step counting all day',
                 icon: 'activity',
-                color: '#10B981',
+                color: '#06B6D4',
                 onPress: () => navigation?.navigate?.('ActivityDashboard'),
               },
               {
