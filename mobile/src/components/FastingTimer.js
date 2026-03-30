@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Modal, TextInput, KeyboardAvoidingView, Platform, AppState } from 'react-native'
 // react-native-svg — fallback if native module not linked
 let Svg = null
 let Circle = null
@@ -262,6 +262,17 @@ export default function FastingTimer({ gymId, memberId, navigation }) {
     lastNotifPhase.current = null
     if (intervalRef.current) clearInterval(intervalRef.current)
   }, [isFasting, startTime])
+
+  // Recalculate elapsed time when app returns to foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && startTime) {
+        const elapsed = Date.now() - startTime.getTime()
+        setElapsedMs(elapsed)
+      }
+    })
+    return () => sub?.remove()
+  }, [startTime])
 
   const handleStartFast = useCallback(async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)

@@ -304,9 +304,11 @@ export default async function foodScanRoutes(fastify) {
       .returning('*');
 
     return reply.code(201).send({
+      result: {
+        items: analysis.items,
+        totals: analysis.totals,
+      },
       scan_id: scan.id,
-      detected_items: analysis.items,
-      totals: analysis.totals,
       message: 'Food detected successfully. Confirm to log to your diary.',
     });
   });

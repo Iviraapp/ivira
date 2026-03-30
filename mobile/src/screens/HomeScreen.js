@@ -53,6 +53,7 @@ try {
   Pedometer = require('expo-sensors').Pedometer
 } catch {}
 
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useFocusEffect } from '@react-navigation/native'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD, ELITE_GLOW, GLASS_CARD, ACTION_CARDS } from '../lib/theme'
 import { generateNonce, formatDate } from '../lib/utils'
@@ -631,6 +632,29 @@ export default function HomeScreen({ navigation, route }) {
 
   // --- Hydration state ---
   const [waterGlasses, setWaterGlasses] = useState(0)
+  const [lastWaterTime, setLastWaterTime] = useState(null)
+
+  // Load persisted water count (resets daily)
+  useEffect(() => {
+    const loadWater = async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0]
+        const saved = await AsyncStorage.getItem(`ivira_water_${today}`)
+        if (saved) setWaterGlasses(parseInt(saved, 10) || 0)
+        const lastTime = await AsyncStorage.getItem('ivira_water_last_time')
+        if (lastTime) setLastWaterTime(parseInt(lastTime, 10))
+      } catch {}
+    }
+    loadWater()
+  }, [])
+
+  // Persist water count on change
+  useEffect(() => {
+    if (waterGlasses > 0) {
+      const today = new Date().toISOString().split('T')[0]
+      AsyncStorage.setItem(`ivira_water_${today}`, String(waterGlasses)).catch(() => {})
+    }
+  }, [waterGlasses])
 
   // --- Nutrition calculations ---
   const caloriesConsumed = nutritionTotals?.calories || 0
@@ -947,7 +971,13 @@ export default function HomeScreen({ navigation, route }) {
           style={{ marginHorizontal: 0 }}
           glasses={waterGlasses || 0}
           goal={8}
-          onAddGlass={() => setWaterGlasses(prev => (prev || 0) + 1)}
+          lastGlassTime={lastWaterTime}
+          onAddGlass={() => {
+            setWaterGlasses(prev => (prev || 0) + 1)
+            const now = Date.now()
+            setLastWaterTime(now)
+            AsyncStorage.setItem('ivira_water_last_time', String(now)).catch(() => {})
+          }}
         />
 
         {/* Smart Workout — AI Suggestion Card */}

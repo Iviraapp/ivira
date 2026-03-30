@@ -61,7 +61,7 @@ export default async function workoutSessionRoutes(fastify) {
     const { gymId, memberId } = request.params;
     const { name, workout_type } = request.body || {};
     const session = await workoutSessionService.startSession(memberId, gymId, { name, workout_type });
-    return reply.code(201).send(session);
+    return reply.code(201).send({ session });
   });
 
   // POST /gyms/:gymId/members/:memberId/workout-sessions/:sessionId/sets - Add exercise sets

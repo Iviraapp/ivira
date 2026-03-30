@@ -11,7 +11,7 @@ export default async function nutritionRoutes(fastify) {
   });
 
   // AI meal estimation
-  fastify.post('/gyms/:gymId/nutrition/estimate', authHooks, async (request) => {
+  fastify.post('/gyms/:gymId/nutrition/estimate', memberAuth, async (request) => {
     const { input, source } = request.body || {};
     if (!input) {
       return fastify.httpErrors.badRequest('input is required');
