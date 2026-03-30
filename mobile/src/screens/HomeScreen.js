@@ -207,11 +207,11 @@ export default function HomeScreen({ navigation, route }) {
     }
   }, [route?.params?.nutritionLogged])
 
-  // Listen for NFC-first check-in trigger from center FAB
+  // Listen for check-in trigger from center FAB
   useEffect(() => {
     if (route?.params?.openNFC) {
       navigation?.setParams?.({ openNFC: false })
-      // Try NFC first, fall back to QR modal
+      // Try NFC silently, fall back to QR if unavailable
       if (Platform.OS !== 'web') {
         loadNfc()
         setNfcAvailable(!!NfcManager)
@@ -220,7 +220,7 @@ export default function HomeScreen({ navigation, route }) {
           return
         }
       }
-      // NFC unavailable — open QR modal instead
+      // NFC unavailable — open QR modal silently (no error)
       openQRModal()
     }
     if (route?.params?.openQR) {
@@ -423,7 +423,8 @@ export default function HomeScreen({ navigation, route }) {
   const handleNfcCheckIn = useCallback(async () => {
     loadNfc()
     if (!NfcManager || Platform.OS === 'web') {
-      premiumAlert('NFC Unavailable', 'NFC is not supported on this device.')
+      // Silently fall back to QR check-in
+      openQRModal()
       return
     }
     try {
@@ -432,7 +433,7 @@ export default function HomeScreen({ navigation, route }) {
         await NfcManager.start()
         const isSupported = await NfcManager.isSupported()
         if (!isSupported) {
-          premiumAlert('NFC Unavailable', 'This device does not support NFC.')
+          openQRModal()
           return
         }
         nfcInitialized.current = true
