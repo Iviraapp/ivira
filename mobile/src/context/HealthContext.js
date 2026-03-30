@@ -23,7 +23,7 @@ try { Pedometer = require('expo-sensors').Pedometer } catch (err) { if (__DEV__)
 
 const HealthContext = createContext(null)
 
-const SYNC_INTERVAL = 120_000 // 2 minutes for steps (was 30s — battery drain)
+const SYNC_INTERVAL = 15_000 // 15 seconds for near-real-time step updates
 const HR_SYNC_INTERVAL = 300_000 // 5 minutes for heart rate
 const DEFAULT_STEP_GOAL = 10000
 const STEPS_PER_ACTIVE_MINUTE = 115 // average walking cadence
