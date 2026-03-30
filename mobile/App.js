@@ -18,7 +18,6 @@ import AppNavigator from './src/navigation/AppNavigator'
 import NotificationManager from './src/components/NotificationManager'
 import { PremiumAlertOverlay } from './src/components/PremiumAlert'
 import ErrorBoundary from './src/components/ErrorBoundary'
-import { preloadInterstitialAd } from './src/components/AdBanner'
 import {
   useFonts,
   Inter_400Regular,
@@ -51,11 +50,6 @@ function HealthProviderBridge({ children }) {
 function ThemedApp() {
   const { colors, isDark } = useTheme()
 
-  // Preload interstitial ads on app start
-  useEffect(() => {
-    const cleanup = preloadInterstitialAd()
-    return cleanup
-  }, [])
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
