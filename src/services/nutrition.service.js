@@ -119,35 +119,54 @@ export async function parseIndianMeal(input) {
 // ---------------------------------------------------------------------------
 // AI-powered meal estimation via Anthropic API
 // ---------------------------------------------------------------------------
+const NUTRITION_SYSTEM_PROMPT = `You are a nutrition expert. Parse meal descriptions and return JSON with nutritional data. Use standard serving sizes. Return ONLY valid JSON, no extra text. Format: { "items": [{ "name": string, "quantity": number, "unit": string, "calories": number, "protein": number, "carbs": number, "fats": number, "fiber": number }], "total": { "calories": number, "protein": number, "carbs": number, "fats": number, "fiber": number } }`;
+
 export async function estimateWithAI(input) {
   if (!input || !input.trim()) {
     throw new ValidationError('Meal description is required');
   }
 
-  if (!config.anthropic?.apiKey) {
-    // Fallback to regex parser when no API key
-    return parseIndianMeal(input);
+  // Try Gemini first (we have the key), then Anthropic, then regex fallback
+  if (config.gemini?.enabled) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.gemini.apiKey}`,
+        {
+          method: 'POST',
+          signal: AbortSignal.timeout(15000),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `${NUTRITION_SYSTEM_PROMPT}\n\nParse this meal: "${input}"` }] }],
+            generationConfig: { maxOutputTokens: 1024 },
+          }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const jsonMatch = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      }
+    } catch { /* fall through */ }
   }
 
-  try {
-    const client = new Anthropic({ apiKey: config.anthropic.apiKey });
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: `You are a nutrition expert specializing in Indian cuisine. Parse meal descriptions (in English or Hinglish) and return JSON with nutritional data. Use standard Indian serving sizes (1 katori = ~150ml, 1 roti = ~30g). Return ONLY valid JSON, no extra text. Format: { "items": [{ "name": string, "quantity": number, "unit": string, "calories": number, "protein": number, "carbs": number, "fats": number, "fiber": number }], "total": { "calories": number, "protein": number, "carbs": number, "fats": number, "fiber": number } }`,
-      messages: [{ role: 'user', content: `Parse this meal: "${input}"` }],
-    });
-
-    const text = response.content[0].text;
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return parseIndianMeal(input);
-    }
-    return JSON.parse(jsonMatch[0]);
-  } catch {
-    // Fallback to regex parser on any AI error
-    return parseIndianMeal(input);
+  if (config.anthropic?.apiKey) {
+    try {
+      const client = new Anthropic({ apiKey: config.anthropic.apiKey });
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: NUTRITION_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: `Parse this meal: "${input}"` }],
+      });
+      const text = response.content[0].text;
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    } catch { /* fall through */ }
   }
+
+  // Fallback to regex parser
+  return parseIndianMeal(input);
 }
 
 // ---------------------------------------------------------------------------

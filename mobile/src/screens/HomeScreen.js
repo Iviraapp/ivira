@@ -75,6 +75,7 @@ import { requestAllPermissions } from '../lib/permissions'
 import DashboardSummary from '../components/DashboardSummary'
 // MorningBriefing, PostWorkoutRecovery removed from HomeScreen — cluttered layout
 import HydrationTracker from '../components/HydrationTracker'
+import QuickFoodChat from '../components/QuickFoodChat'
 // WorkoutHeatMap moved to Activity dashboard
 // BodyCompositionTimeline, AccountabilityBuddy, NutritionInsights moved to Health tab
 // FeaturedExercises removed — wger data kept in WorkoutTracker only
@@ -898,6 +899,19 @@ export default function HomeScreen({ navigation, route }) {
           onPressFasting={() => {}}
         />
         </MotiView>
+
+        {/* Quick Food Chat — Journable-style "type what you ate" */}
+        <QuickFoodChat
+          onLogged={() => {
+            setDailyGoalStatus(prev => ({ ...prev, loggedMeal: true }))
+            // Refetch nutrition totals
+            if (gymId && member?.id) {
+              api.get(`/gyms/${gymId}/members/${member.id}/nutrition/daily`).then(res => {
+                if (res.data) setNutritionTotals(res.data.totals || res.data)
+              }).catch(() => {})
+            }
+          }}
+        />
 
         {/* Feature Highlights — discoverable key features */}
         <MotiView
