@@ -169,6 +169,20 @@ function BiometricGate({ children }) {
 export default function AppNavigator() {
   const { token, member, loading } = useAuth()
   const { colors, isDark } = useTheme()
+
+  // Memoize nav theme — must be before any conditional returns (rules of hooks)
+  const navTheme = useMemo(() => ({
+    dark: isDark,
+    colors: {
+      primary: colors.text,
+      background: colors.bg,
+      card: colors.bgSec,
+      text: colors.text,
+      border: colors.border,
+      notification: colors.accent,
+    },
+  }), [isDark, colors.bg, colors.text, colors.bgSec, colors.border, colors.accent])
+
   const [showSplash, setShowSplash] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(null) // null = loading, true/false
   const [showProfileSetup, setShowProfileSetup] = useState(null) // null = loading, true/false
@@ -210,19 +224,6 @@ export default function AppNavigator() {
   if (Platform.OS === 'web') {
     return token ? <TabNavigator /> : <LoginScreen />
   }
-
-  // Memoize nav theme — new reference triggers React Navigation re-render on theme switch
-  const navTheme = useMemo(() => ({
-    dark: isDark,
-    colors: {
-      primary: colors.text,
-      background: colors.bg,
-      card: colors.bgSec,
-      text: colors.text,
-      border: colors.border,
-      notification: colors.accent,
-    },
-  }), [isDark, colors.bg, colors.text, colors.bgSec, colors.border, colors.accent])
 
   const content = (
     <NavigationContainer theme={navTheme}>
