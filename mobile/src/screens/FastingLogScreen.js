@@ -425,7 +425,8 @@ export default function FastingLogScreen({ navigation }) {
       const res = await api.get(`/gyms/${gymId}/members/${memberId}/health/fasting/history`, {
         params: { limit: 30 },
       })
-      setEntries(res.data?.data || res.data || [])
+      const raw = res.data?.data || res.data?.logs || res.data
+      setEntries(Array.isArray(raw) ? raw : [])
     } catch (err) {
       console.warn('Failed to fetch fasting history:', err.message)
       setEntries([])
