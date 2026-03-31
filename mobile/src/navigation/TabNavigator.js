@@ -70,8 +70,9 @@ const CommunityStackNav = createNativeStackNavigator()
 const ProfileStackNav = createNativeStackNavigator()
 
 function HomeStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <HomeStackNav.Navigator screenOptions={{ headerShown: false }}>
+    <HomeStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <HomeStackNav.Screen name="HomeMain" component={HomeScreen} />
       <HomeStackNav.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
       <HomeStackNav.Screen name="History" component={HistoryScreen} />
@@ -108,8 +109,9 @@ function HomeStackNavigator() {
 }
 
 function HealthStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <HealthStackNav.Navigator screenOptions={{ headerShown: false }}>
+    <HealthStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <HealthStackNav.Screen name="HealthMain" component={HealthScreen} />
       <HealthStackNav.Screen name="Nutrition" component={NutritionScreen} />
       <HealthStackNav.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
@@ -126,8 +128,9 @@ function HealthStackNavigator() {
 }
 
 function PodsStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <CommunityStackNav.Navigator screenOptions={{ headerShown: false }}>
+    <CommunityStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <CommunityStackNav.Screen name="PodsMain" component={PodHomeScreen} />
       <CommunityStackNav.Screen name="DailyCommit" component={DailyCommitScreen} />
       <CommunityStackNav.Screen name="PodFeed" component={PodFeedScreen} />
@@ -141,8 +144,9 @@ function PodsStackNavigator() {
 }
 
 function ProfileStackNavigator() {
+  const { colors } = useTheme()
   return (
-    <ProfileStackNav.Navigator screenOptions={{ headerShown: false }}>
+    <ProfileStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <ProfileStackNav.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStackNav.Screen name="Invoices" component={InvoicesScreen} />
       <ProfileStackNav.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
@@ -344,6 +348,7 @@ function FloatingTabBarWrapper({ state, descriptors, navigation }) {
 // Web fallback with manual tab switching
 function WebTabNavigator() {
   const { gymId, hasGym } = useAuth()
+  const { colors } = useTheme()
   const [activeTab, setActiveTab] = useState('Home')
   const [webStack, setWebStack] = useState(null)
   const screens = { Home: HomeScreen, Health: HealthScreen, Pods: PodHomeScreen, Profile: ProfileScreen }
@@ -377,7 +382,7 @@ function WebTabNavigator() {
   const fabIndex = Math.floor(tabOrder.length / 2)
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.bg }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ flex: 1 }}>
         <ActiveScreen navigation={navigation} />
       </View>
@@ -416,6 +421,7 @@ function WebTabNavigator() {
 
 function NativeTabNavigator() {
   const { gymId, hasGym } = useAuth()
+  const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const navigationRef = useRef(null)
 
@@ -447,6 +453,7 @@ function NativeTabNavigator() {
           if (!navigationRef.current) navigationRef.current = props.navigation
           return <FloatingTabBarWrapper {...props} />
         }}
+        sceneContainerStyle={{ backgroundColor: colors.bg }}
         screenOptions={{
           headerShown: false,
           tabBarShowLabel: false,

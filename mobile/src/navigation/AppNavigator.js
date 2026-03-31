@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useAuth } from '../context/AuthContext'
@@ -211,21 +211,22 @@ export default function AppNavigator() {
     return token ? <TabNavigator /> : <LoginScreen />
   }
 
+  // Memoize nav theme — new reference triggers React Navigation re-render on theme switch
+  const navTheme = useMemo(() => ({
+    dark: isDark,
+    colors: {
+      primary: colors.text,
+      background: colors.bg,
+      card: colors.bgSec,
+      text: colors.text,
+      border: colors.border,
+      notification: colors.accent,
+    },
+  }), [isDark, colors.bg, colors.text, colors.bgSec, colors.border, colors.accent])
+
   const content = (
-    <NavigationContainer
-      theme={{
-        dark: isDark,
-        colors: {
-          primary: colors.text,
-          background: colors.bg,
-          card: colors.bgSec,
-          text: colors.text,
-          border: colors.border,
-          notification: colors.accent,
-        },
-      }}
-    >
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <NavigationContainer theme={navTheme}>
+      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         {token ? (
           <Stack.Screen name="Main" component={TabNavigator} />
         ) : (
