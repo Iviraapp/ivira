@@ -21,6 +21,7 @@ const registerSchema = {
       country_code: { type: 'string', minLength: 2, maxLength: 2, default: 'IN' },
       timezone: { type: 'string' },
       currency: { type: 'string', minLength: 3, maxLength: 3, default: 'INR' },
+      payment_gateway: { type: 'string', enum: ['razorpay', 'stripe'], default: 'razorpay' },
     },
   },
 };

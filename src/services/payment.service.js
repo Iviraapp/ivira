@@ -76,6 +76,24 @@ export async function collectPayment(gymId, memberId, { planName, amountPaise, m
     .where({ id: memberId, gym_id: gymId })
     .update({ status: 'active', updated_at: new Date() });
 
+  // Determine payment gateway for this gym
+  const gateway = await getGymGateway(gymId);
+  const gym = await db('gyms').where({ id: gymId }).first();
+  const currency = gym?.currency || 'INR';
+
+  if (gateway === 'stripe') {
+    const { createPaymentIntent } = await import('./stripe.service.js');
+    const intent = await createPaymentIntent(gymId, memberId, amountPaise, currency);
+    const platformFeePaise = calculatePlatformFee(amountPaise);
+    const [payment] = await db('payments').insert({
+      membership_id: membership.id, gym_id: gymId, member_id: memberId,
+      amount_paise: amountPaise, currency, platform_fee_paise: platformFeePaise,
+      net_amount_paise: amountPaise - platformFeePaise,
+      stripe_payment_intent_id: intent.id, status: 'pending',
+    }).returning('*');
+    return { payment, membership, stripeClientSecret: intent.client_secret, gateway: 'stripe' };
+  }
+
   const rz = getRazorpay();
 
   if (rz) {
@@ -311,7 +329,7 @@ export async function getPayments(gymId, { page = 1, limit = 50, status, memberI
 }
 
 // Determine which payment gateway a gym should use
-export async function getGateway(gymId) {
+export async function getGymGateway(gymId) {
   const gym = await db('gyms').where('id', gymId).select('payment_gateway', 'country_code').first();
   if (!gym) return 'razorpay';
   if (gym.payment_gateway === 'stripe') return 'stripe';

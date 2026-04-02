@@ -142,15 +142,26 @@ export default async function paymentRoutes(fastify) {
   fastify.post('/webhooks/stripe', {
     config: { rawBody: true },
   }, async (request, reply) => {
-    const sig = request.headers['stripe-signature'];
-    if (!sig) return reply.code(400).send({ error: 'Missing stripe-signature' });
+    const signature = request.headers['stripe-signature'];
+    if (!signature) return reply.code(400).send({ error: 'Missing stripe-signature header' });
+
+    let event;
     try {
-      const { handleWebhook } = await import('../services/stripe.service.js');
-      const result = await handleWebhook(request.rawBody, sig);
-      return reply.send(result);
+      const { verifyStripeWebhook } = await import('../services/stripe.service.js');
+      event = verifyStripeWebhook(request.rawBody || JSON.stringify(request.body), signature);
     } catch (err) {
-      request.log.error(err, 'Stripe webhook error');
-      return reply.code(400).send({ error: err.message });
+      request.log.error(err, 'Stripe webhook signature verification failed');
+      return reply.code(400).send({ error: 'Invalid signature' });
     }
+
+    const { handleStripePaymentSucceeded, handleStripePaymentFailed } = await import('../services/stripe.service.js');
+
+    if (event.type === 'payment_intent.succeeded') {
+      await handleStripePaymentSucceeded(event);
+    } else if (event.type === 'payment_intent.payment_failed') {
+      await handleStripePaymentFailed(event);
+    }
+
+    return { received: true };
   });
 }
