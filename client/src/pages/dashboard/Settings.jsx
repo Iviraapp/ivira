@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext'
 import api from '../../lib/api'
 import { Building2, CreditCard, Globe, Bell, Monitor, Rows3, Rows4, MessageSquare, Send, Shield, Download, Trash2, AlertTriangle, Link2, Copy, RefreshCw, Share2, Check } from 'lucide-react'
 import { formatDate } from '../../lib/utils'
+import NFCTagManager from '../../components/dashboard/NFCTagManager'
 
 const CITIES = [
   { value: 'bengaluru', label: 'Bengaluru' },
@@ -25,6 +26,7 @@ const LANGUAGES = [
 const TABS = [
   { id: 'profile', label: 'Gym Profile' },
   { id: 'plans', label: 'Plans' },
+  { id: 'nfc', label: 'NFC & Access' },
   { id: 'language', label: 'Language' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'display', label: 'Display' },
@@ -175,7 +177,7 @@ function InviteCodeCard({ gymId, theme, sp }) {
 /* ---- Gym Profile Tab ---- */
 function GymProfileTab({ gymId, gym, updateGym, theme, sp }) {
   const toast = useToast()
-  const [form, setForm] = useState({ name: '', address: '', city: '', latitude: '', longitude: '' })
+  const [form, setForm] = useState({ name: '', address: '', city: '', latitude: '', longitude: '', gps_radius_meters: 150 })
 
   useEffect(() => {
     if (gym) {
@@ -185,6 +187,7 @@ function GymProfileTab({ gymId, gym, updateGym, theme, sp }) {
         city: gym.city || '',
         latitude: gym.latitude ?? '',
         longitude: gym.longitude ?? '',
+        gps_radius_meters: gym.gps_radius_meters || 150,
       })
     }
   }, [gym])
@@ -201,6 +204,7 @@ function GymProfileTab({ gymId, gym, updateGym, theme, sp }) {
       ...form,
       latitude: form.latitude ? parseFloat(form.latitude) : null,
       longitude: form.longitude ? parseFloat(form.longitude) : null,
+      gps_radius_meters: form.gps_radius_meters || 150,
     })
   }
 
@@ -258,6 +262,41 @@ function GymProfileTab({ gymId, gym, updateGym, theme, sp }) {
             <div>
               <label style={labelSty}>GPS Longitude</label>
               <input type="number" step="any" value={form.longitude} onChange={set('longitude')} style={inputSty} />
+            </div>
+          </div>
+          {/* GPS Check-in Radius */}
+          <div style={{ marginBottom: sp(18) }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: theme.textSec, marginBottom: 6, fontFamily: "'Inter', sans-serif" }}>
+              GPS Check-in Radius (metres)
+              <span style={{ fontSize: 11, color: theme.textTer, fontWeight: 400, marginLeft: 8 }}>
+                Default: 150m. Members must be within this distance to check in via GPS.
+              </span>
+            </label>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <input
+                type="number"
+                min={50}
+                max={500}
+                step={25}
+                value={form.gps_radius_meters || 150}
+                onChange={e => setForm(f => ({ ...f, gps_radius_meters: parseInt(e.target.value) || 150 }))}
+                style={{
+                  width: 120,
+                  padding: '10px 14px',
+                  background: theme.bgTer,
+                  border: `1px solid ${theme.borderStrong}`,
+                  borderRadius: 10,
+                  color: theme.text,
+                  fontSize: 14,
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
+              />
+              <span style={{ fontSize: 12, color: theme.textTer, fontFamily: "'Inter', sans-serif" }}>
+                {form.gps_radius_meters || 150}m — about the size of{' '}
+                {(form.gps_radius_meters || 150) <= 100 ? 'a small building' :
+                 (form.gps_radius_meters || 150) <= 200 ? 'a city block' :
+                 (form.gps_radius_meters || 150) <= 300 ? 'two city blocks' : 'a large complex'}
+              </span>
             </div>
           </div>
           <button type="submit" disabled={mutation.isPending} style={{
@@ -1078,6 +1117,13 @@ export default function Settings() {
 
         {activeTab === 'profile' && <GymProfileTab gymId={gymId} gym={gym} updateGym={updateGym} theme={theme} sp={sp} />}
         {activeTab === 'plans' && <PlansTab gymId={gymId} theme={theme} sp={sp} />}
+        {activeTab === 'nfc' && (
+          <div>
+            <InviteCodeCard gymId={gymId} theme={theme} sp={sp} />
+            <div style={{ height: 1, background: theme.border, margin: `${sp(24)}px 0` }} />
+            <NFCTagManager />
+          </div>
+        )}
         {activeTab === 'language' && <LanguageTab gymId={gymId} gym={gym} updateGym={updateGym} theme={theme} sp={sp} />}
         {activeTab === 'notifications' && <NotificationsTab gymId={gymId} theme={theme} sp={sp} />}
         {activeTab === 'display' && <DisplayTab theme={theme} sp={sp} density={density} setDensity={setDensity} />}

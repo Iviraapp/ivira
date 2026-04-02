@@ -404,34 +404,44 @@ export async function getPodFeed(podId, limit = 20, before = null, after = null)
   }))
 }
 
-export async function sendMessage({ podId, memberId, text, imageUrl }) {
+export async function sendMessage({ podId, memberId, text, imageUrl, type = 'message', data = {} }) {
   // Verify member is in the pod
   const membership = await db('pod_members')
     .where({ pod_id: podId, member_id: memberId, status: 'active' })
     .first()
   if (!membership) throw new Error('Not a member of this circle')
 
-  // Insert into pod_feed as type='message'
+  const feedData = {
+    text: text?.trim(),
+    ...(imageUrl ? { image_url: imageUrl } : {}),
+    ...data,
+  }
+
   const [entry] = await db('pod_feed')
     .insert({
       pod_id: podId,
       member_id: memberId,
-      type: 'message',
-      data: JSON.stringify({ text: text.trim(), ...(imageUrl ? { image_url: imageUrl } : {}) }),
+      type,
+      data: JSON.stringify(feedData),
     })
     .returning('*')
 
-  // Join member info
   const member = await db('members').where('id', memberId).select('name', 'photo_url').first()
 
   return {
     id: entry.id,
-    type: 'message',
+    pod_id: entry.pod_id,
     member_id: memberId,
     member_name: member?.name || 'Member',
     member_photo: member?.photo_url || null,
-    data: { text: text.trim(), ...(imageUrl ? { image_url: imageUrl } : {}) },
+    type: entry.type,
+    data: feedData,
     timestamp: entry.created_at,
+    text: feedData.text,
+    exercise: feedData.exercise || null,
+    reps: feedData.reps || null,
+    form_score: feedData.form_score || null,
+    ai_verified: feedData.ai_verified || (type === 'workout_analysis'),
   }
 }
 

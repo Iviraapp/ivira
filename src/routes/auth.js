@@ -436,4 +436,47 @@ export default async function authRoutes(fastify) {
   fastify.post('/staff/login/verify/email', { schema: emailOtpVerifySchema, ...otpRateLimit }, async (request) => {
     return authService.verifyStaffLoginOTP(request.body.email, request.body.otp);
   });
+
+  // ── Member phone OTP (gym-agnostic) ────────────────────────────────────
+  fastify.post('/auth/member/otp/request', {
+    ...otpRateLimit,
+    schema: { body: { type: 'object', required: ['phone'], properties: { phone: { type: 'string', minLength: 10, maxLength: 15 } } } },
+  }, async (request, reply) => {
+    const rawPhone = request.body.phone.trim().replace(/\D/g, '')
+    const member = await db('members')
+      .where(function () { this.where('phone', rawPhone).orWhere('phone', `+91${rawPhone}`).orWhere('phone', rawPhone.replace(/^91/, '')) })
+      .select('id', 'gym_id', 'name', 'email', 'phone').first()
+    if (!member) return reply.code(404).send({ error: 'MEMBER_NOT_FOUND', message: 'No account found for this phone number.' })
+    const otp = String(Math.floor(100000 + Math.random() * 900000))
+    await redis.set(`member_otp:${rawPhone}`, JSON.stringify({ otp, memberId: member.id, gymId: member.gym_id }), { EX: 300 })
+    if (process.env.NODE_ENV !== 'production') request.log.info({ phone: rawPhone, otp }, 'Member OTP (dev)')
+    const gym = member.gym_id ? await db('gyms').where('id', member.gym_id).select('gym_name', 'city').first() : null
+    return { success: true, message: 'OTP sent', gymHint: gym ? { gymName: gym.gym_name, city: gym.city } : null }
+  })
+
+  fastify.post('/auth/member/otp/verify', {
+    ...otpRateLimit,
+    schema: { body: { type: 'object', required: ['phone', 'otp'], properties: { phone: { type: 'string' }, otp: { type: 'string', minLength: 4, maxLength: 6 } } } },
+  }, async (request, reply) => {
+    const rawPhone = request.body.phone.trim().replace(/\D/g, '')
+    const stored = await redis.get(`member_otp:${rawPhone}`)
+    if (!stored) return reply.code(401).send({ error: 'OTP_EXPIRED', message: 'OTP expired. Request a new one.' })
+    const { otp, memberId, gymId } = JSON.parse(stored)
+    if (request.body.otp !== otp) return reply.code(401).send({ error: 'INVALID_OTP', message: 'Incorrect OTP.' })
+    await redis.del(`member_otp:${rawPhone}`)
+    const member = await db('members').where('id', memberId).first()
+    if (!member) return reply.code(404).send({ error: 'Member not found' })
+    const token = jwt.sign({ memberId, gymId, email: member.email, role: 'member' }, config.jwt.secret, { expiresIn: '7d' })
+    return { token, memberId, gymId, member }
+  })
+
+  fastify.get('/auth/member/gym-by-phone', {
+    schema: { querystring: { type: 'object', required: ['phone'], properties: { phone: { type: 'string' } } } },
+  }, async (request, reply) => {
+    const rawPhone = request.query.phone.trim().replace(/\D/g, '')
+    const member = await db('members').where(function () { this.where('phone', rawPhone).orWhere('phone', `+91${rawPhone}`) }).select('gym_id').first()
+    if (!member?.gym_id) return reply.code(404).send({ error: 'Not found' })
+    const gym = await db('gyms').where('id', member.gym_id).select('id', 'gym_name', 'city', 'logo_url').first()
+    return { gym_id: gym.id, gym_name: gym.gym_name, city: gym.city, logo_url: gym.logo_url }
+  })
 }
