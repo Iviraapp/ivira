@@ -261,35 +261,52 @@ export default async function healthOsRoutes(fastify) {
 
   // --- Member Photos ---
 
-  // POST /gyms/:gymId/members/:memberId/photos — Upload a photo (base64 for now)
+  // POST /gyms/:gymId/members/:memberId/photos — Upload photo (Vercel Blob in prod, base64 in dev)
   fastify.post('/gyms/:gymId/members/:memberId/photos', authHooks, async (request, reply) => {
     const { gymId, memberId } = request.params;
-    const { image, type, taken_at } = request.body || {};
+    const { photo, image, type, taken_at } = request.body || {};
+    const base64Input = photo || image;
 
-    if (!image) return reply.code(400).send({ error: 'image (base64) is required' });
+    if (!base64Input) return reply.code(400).send({ error: 'photo (base64) is required' });
 
     const photoType = type || 'progress';
     if (!['progress', 'profile'].includes(photoType)) {
       return reply.code(400).send({ error: 'type must be "progress" or "profile"' });
     }
 
-    // Verify member exists
     const member = await db('members').where({ id: memberId, gym_id: gymId }).first();
     if (!member) return reply.code(404).send({ error: 'Member not found' });
 
-    // Store base64 as data URL (production would upload to S3/cloud storage)
-    const url = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`;
+    const rawBase64 = base64Input.replace(/^data:image\/[a-z]+;base64,/, '');
+    const estimatedBytes = Math.ceil(rawBase64.length * 0.75);
+    if (estimatedBytes > 5 * 1024 * 1024) {
+      return reply.code(413).send({ error: 'Photo too large (max 5MB)' });
+    }
 
-    const [photo] = await db('member_photos').insert({
-      gym_id: gymId,
-      member_id: memberId,
-      type: photoType,
-      url,
+    let url;
+    if (config.blob?.enabled) {
+      try {
+        const { put } = await import('@vercel/blob');
+        const buffer = Buffer.from(rawBase64, 'base64');
+        const blob = await put(`progress/${gymId}/${memberId}/${Date.now()}.jpg`, buffer, {
+          access: 'public', token: config.blob.token, contentType: 'image/jpeg', addRandomSuffix: false,
+        });
+        url = blob.url;
+      } catch (err) {
+        request.log.error(err, 'Blob upload failed');
+        return reply.code(502).send({ error: 'Photo storage unavailable.' });
+      }
+    } else {
+      url = `data:image/jpeg;base64,${rawBase64}`;
+    }
+
+    const [photo_record] = await db('member_photos').insert({
+      gym_id: gymId, member_id: memberId, type: photoType, url,
       taken_at: taken_at || new Date(),
-      metadata: JSON.stringify({ source: 'api', uploaded_at: new Date().toISOString() }),
+      metadata: JSON.stringify({ source: 'mobile', uploaded_at: new Date().toISOString(), storage: config.blob?.enabled ? 'vercel_blob' : 'base64_dev' }),
     }).returning('*');
 
-    return reply.code(201).send({ photo });
+    return reply.code(201).send({ photo: photo_record });
   });
 
   // GET /gyms/:gymId/members/:memberId/photos — List all photos for a member
