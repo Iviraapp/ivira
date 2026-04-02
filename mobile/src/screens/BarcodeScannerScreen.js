@@ -10,8 +10,10 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import Haptics from '../lib/haptics'
 import { COLORS, SPACING, RADIUS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
@@ -19,6 +21,9 @@ import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { waterfallLookup, searchByText } from '../utils/foodApi'
 import { premiumAlert } from '../components/PremiumAlert'
+
+const RECENT_FOODS_KEY = 'ivira_recent_foods'
+const MAX_RECENT_FOODS = 20
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const SCAN_FRAME_SIZE = SCREEN_WIDTH * 0.7
@@ -29,6 +34,30 @@ try {
   const cam = require('expo-camera')
   CameraView = cam.CameraView || cam.Camera
 } catch {}
+
+// --- Helper: save a food to recent foods list ---
+async function saveToRecentFoods(foodEntry) {
+  try {
+    const raw = await AsyncStorage.getItem(RECENT_FOODS_KEY)
+    let list = raw ? JSON.parse(raw) : []
+    // Remove duplicate by barcode or name
+    list = list.filter(f =>
+      foodEntry.barcode ? f.barcode !== foodEntry.barcode : f.name !== foodEntry.name
+    )
+    list.unshift({ ...foodEntry, logged_at: new Date().toISOString() })
+    if (list.length > MAX_RECENT_FOODS) list = list.slice(0, MAX_RECENT_FOODS)
+    await AsyncStorage.setItem(RECENT_FOODS_KEY, JSON.stringify(list))
+  } catch {}
+}
+
+async function loadRecentFoods() {
+  try {
+    const raw = await AsyncStorage.getItem(RECENT_FOODS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
 
 export default function BarcodeScannerScreen({ navigation, route }) {
   const { gymId, member } = useAuth()
@@ -44,13 +73,29 @@ export default function BarcodeScannerScreen({ navigation, route }) {
   const [quickAdd, setQuickAdd] = useState({ calories: '', protein: '', carbs: '', fats: '' })
   const [flashOn, setFlashOn] = useState(false)
   const [servingGrams, setServingGrams] = useState('100')
+  const [servingCount, setServingCount] = useState('1')
   const [logging, setLogging] = useState(false)
   const [mealType, setMealType] = useState(route?.params?.mealType || 'snack')
   const [showManualFallback, setShowManualFallback] = useState(false)
   const [notFoundBarcode, setNotFoundBarcode] = useState('')
   const [manualEntry, setManualEntry] = useState({ name: '', calories: '', protein: '', carbs: '', fats: '' })
 
+  // Recent Foods state
+  const [recentFoods, setRecentFoods] = useState([])
+
+  // Multi-Scan session state
+  const [sessionItems, setSessionItems] = useState([])
+  const [sessionCalories, setSessionCalories] = useState(0)
+  const [showSuccessToast, setShowSuccessToast] = useState(false)
+  const [successToastName, setSuccessToastName] = useState('')
+  const toastTimeout = useRef(null)
+
   const cameraRef = useRef(null)
+
+  // Load recent foods on mount
+  useEffect(() => {
+    loadRecentFoods().then(setRecentFoods)
+  }, [])
 
   // Request camera permission
   useEffect(() => {
@@ -69,6 +114,30 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     })()
   }, [])
 
+  // Show a brief success toast
+  const showToast = useCallback((name) => {
+    setSuccessToastName(name)
+    setShowSuccessToast(true)
+    if (toastTimeout.current) clearTimeout(toastTimeout.current)
+    toastTimeout.current = setTimeout(() => setShowSuccessToast(false), 2000)
+  }, [])
+
+  // Handle "Done" - navigate back with session totals
+  const handleDone = useCallback(() => {
+    const totalNutrition = sessionItems.reduce(
+      (acc, item) => ({
+        calories: acc.calories + item.calories,
+        protein: acc.protein + item.protein,
+        carbs: acc.carbs + item.carbs,
+        fats: acc.fats + item.fats,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fats: 0 }
+    )
+    navigation?.navigate?.('HomeMain', {
+      nutritionLogged: totalNutrition,
+    })
+  }, [sessionItems, navigation])
+
   // Handle barcode scanned
   const handleBarCodeScanned = useCallback(async ({ data }) => {
     if (scanned) return
@@ -77,7 +146,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     await lookupBarcode(data)
   }, [scanned])
 
-  // Waterfall barcode lookup: OpenFoodFacts → Nutritionix → FatSecret → Manual
+  // Waterfall barcode lookup: OpenFoodFacts -> Nutritionix -> FatSecret -> Manual
   const lookupBarcode = async (rawBarcode) => {
     setSearching(true)
     try {
@@ -86,7 +155,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
         setProduct(result)
         setShowResult(true)
       } else {
-        // All APIs exhausted — surface the manual entry sheet
+        // All APIs exhausted - surface the manual entry sheet
         setNotFoundBarcode(rawBarcode)
         setShowManualFallback(true)
         setScanned(false)
@@ -119,19 +188,40 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     }
   }, [searchText])
 
-  // Compute scaled macros based on serving size
+  // Handle tapping a recent food - pre-fill the product result sheet
+  const handleRecentFoodTap = useCallback((food) => {
+    setProduct({
+      name: food.name,
+      brand: food.brand || '',
+      barcode: food.barcode || '',
+      per100g: {
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fats: food.fats,
+      },
+      source: 'recent',
+    })
+    setServingGrams('100')
+    setServingCount('1')
+    setShowResult(true)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }, [])
+
+  // Compute scaled macros based on serving size and serving count
   const getScaledMacros = useCallback(() => {
     if (!product?.per100g) return { calories: 0, protein: 0, carbs: 0, fats: 0 }
     const factor = (parseFloat(servingGrams) || 100) / 100
+    const count = parseFloat(servingCount) || 1
     return {
-      calories: Math.round(product.per100g.calories * factor),
-      protein: Math.round(product.per100g.protein * factor * 10) / 10,
-      carbs: Math.round(product.per100g.carbs * factor * 10) / 10,
-      fats: Math.round(product.per100g.fats * factor * 10) / 10,
+      calories: Math.round(product.per100g.calories * factor * count),
+      protein: Math.round(product.per100g.protein * factor * count * 10) / 10,
+      carbs: Math.round(product.per100g.carbs * factor * count * 10) / 10,
+      fats: Math.round(product.per100g.fats * factor * count * 10) / 10,
     }
-  }, [product, servingGrams])
+  }, [product, servingGrams, servingCount])
 
-  // Log food to API
+  // Log food to API (Multi-Scan: stays on scanner after logging)
   const handleLogFood = useCallback(async () => {
     const scaled = getScaledMacros()
     setLogging(true)
@@ -153,30 +243,45 @@ export default function BarcodeScannerScreen({ navigation, route }) {
           source: 'barcode',
         })
       }
+
+      // Save to recent foods
+      await saveToRecentFoods({
+        name: product?.name || 'Scanned Food',
+        brand: product?.brand || '',
+        barcode: product?.barcode || '',
+        calories: product?.per100g?.calories || scaled.calories,
+        protein: product?.per100g?.protein || scaled.protein,
+        carbs: product?.per100g?.carbs || scaled.carbs,
+        fats: product?.per100g?.fats || scaled.fats,
+        serving_size: servingGrams,
+      })
+      // Refresh recent foods list
+      loadRecentFoods().then(setRecentFoods)
+
+      // Update multi-scan session totals
+      setSessionItems(prev => [...prev, {
+        name: product?.name || 'Scanned Food',
+        calories: scaled.calories,
+        protein: scaled.protein,
+        carbs: scaled.carbs,
+        fats: scaled.fats,
+      }])
+      setSessionCalories(prev => prev + scaled.calories)
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setShowResult(false)
       setScanned(false)
       setProduct(null)
-      // Navigate back with logged item so HomeScreen can update Today's Fuel
-      premiumAlert('Logged', `${product?.name} added to ${mealType}`, [
-        { text: 'OK', onPress: () => {
-          // Pass logged nutrition back so HomeScreen updates instantly
-          navigation?.navigate?.('HomeMain', {
-            nutritionLogged: {
-              calories: scaled.calories,
-              protein: scaled.protein,
-              carbs: scaled.carbs,
-              fats: scaled.fats,
-            },
-          })
-        }},
-      ])
+      setServingCount('1')
+
+      // Show success toast instead of navigating away
+      showToast(product?.name || 'Food')
     } catch (err) {
       premiumAlert('Log Failed', err.response?.data?.message || 'Could not save food. Try again.')
     } finally {
       setLogging(false)
     }
-  }, [product, servingGrams, mealType, gymId, member?.id, getScaledMacros, navigation])
+  }, [product, servingGrams, servingCount, mealType, gymId, member?.id, getScaledMacros, showToast])
 
   // Quick add manual entry
   const handleQuickAddSave = useCallback(async () => {
@@ -200,25 +305,30 @@ export default function BarcodeScannerScreen({ navigation, route }) {
           source: 'manual',
         })
       }
+
+      // Update multi-scan session totals
+      setSessionItems(prev => [...prev, { name: 'Quick Add', calories: cal, protein: prot, carbs: carb, fats: fat }])
+      setSessionCalories(prev => prev + cal)
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setShowQuickAdd(false)
-      premiumAlert('Logged', 'Quick entry saved', [
-        { text: 'OK', onPress: () => {
-          navigation?.navigate?.('HomeMain', {
-            nutritionLogged: { calories: cal, protein: prot, carbs: carb, fats: fat },
-          })
-        }},
-      ])
+      setQuickAdd({ calories: '', protein: '', carbs: '', fats: '' })
+      showToast('Quick Add')
     } catch (err) {
       premiumAlert('Save Failed', err.response?.data?.message || 'Could not save entry.')
     } finally {
       setLogging(false)
     }
-  }, [quickAdd, mealType, gymId, member?.id, navigation])
+  }, [quickAdd, mealType, gymId, member?.id, showToast])
 
   const handleClose = useCallback(() => {
-    navigation?.goBack?.()
-  }, [navigation])
+    // If items were logged in this session, pass totals back
+    if (sessionItems.length > 0) {
+      handleDone()
+    } else {
+      navigation?.goBack?.()
+    }
+  }, [navigation, sessionItems, handleDone])
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -260,13 +370,23 @@ export default function BarcodeScannerScreen({ navigation, route }) {
 
           <Text style={styles.topTitle}>Scan Barcode</Text>
 
-          <TouchableOpacity
-            style={styles.flashBtn}
-            onPress={() => setFlashOn(!flashOn)}
-            activeOpacity={0.7}
-          >
-            <Feather name={flashOn ? 'zap' : 'zap-off'} size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+          {sessionItems.length > 0 ? (
+            <TouchableOpacity
+              style={styles.doneBtn}
+              onPress={handleDone}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.doneBtnText}>Done</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.flashBtn}
+              onPress={() => setFlashOn(!flashOn)}
+              activeOpacity={0.7}
+            >
+              <Feather name={flashOn ? 'zap' : 'zap-off'} size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Search bar */}
@@ -323,8 +443,55 @@ export default function BarcodeScannerScreen({ navigation, route }) {
           </View>
         )}
 
+        {/* Recent Foods section - shown when not actively scanning */}
+        {!scanned && !searching && recentFoods.length > 0 && (
+          <View style={styles.recentSection}>
+            <View style={styles.recentHeader}>
+              <Feather name="clock" size={14} color="rgba(255,255,255,0.6)" />
+              <Text style={styles.recentHeaderText}>RECENT</Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentScroll}
+            >
+              {recentFoods.map((food, index) => (
+                <TouchableOpacity
+                  key={`${food.barcode || food.name}-${index}`}
+                  style={[styles.recentCard, { backgroundColor: isDark ? 'rgba(18,18,18,0.85)' : 'rgba(255,255,255,0.85)' }]}
+                  onPress={() => handleRecentFoodTap(food)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.recentCardName, { color: colors.text }]} numberOfLines={1}>
+                    {food.name}
+                  </Text>
+                  <Text style={[styles.recentCardCal, { color: COLORS.accent }]}>
+                    {food.calories} cal
+                  </Text>
+                  <Text style={[styles.recentCardProtein, { color: colors.textTer }]}>
+                    {food.protein}g protein
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Bottom actions */}
         <View style={styles.bottomBar}>
+          {/* Multi-scan running total */}
+          {sessionItems.length > 0 && (
+            <View style={[styles.sessionTotalBar, { backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)', borderColor: COLORS.accent }]}>
+              <Feather name="check-circle" size={16} color={COLORS.accent} />
+              <Text style={[styles.sessionTotalText, { color: colors.text }]}>
+                {sessionItems.length} item{sessionItems.length !== 1 ? 's' : ''} logged
+              </Text>
+              <Text style={[styles.sessionTotalCal, { color: COLORS.accent }]}>
+                {sessionCalories} cal
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity
             style={[styles.quickAddBtn, { backgroundColor: colors.accentSoft }]}
             onPress={() => setShowQuickAdd(true)}
@@ -344,8 +511,30 @@ export default function BarcodeScannerScreen({ navigation, route }) {
               <Text style={[styles.rescanBtnText, { color: colors.text }]}>Scan Again</Text>
             </TouchableOpacity>
           )}
+
+          {/* Done button when items have been logged */}
+          {sessionItems.length > 0 && (
+            <TouchableOpacity
+              style={styles.doneBtnBottom}
+              onPress={handleDone}
+              activeOpacity={0.7}
+            >
+              <Feather name="check" size={18} color="#FFFFFF" style={{ marginRight: SPACING.sm }} />
+              <Text style={styles.doneBtnBottomText}>Done</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
+
+      {/* Success toast */}
+      {showSuccessToast && (
+        <View style={styles.successToast} pointerEvents="none">
+          <View style={styles.successToastInner}>
+            <Feather name="check-circle" size={20} color={COLORS.green} />
+            <Text style={styles.successToastText}>{successToastName} logged</Text>
+          </View>
+        </View>
+      )}
 
       {/* Loading indicator */}
       {searching && (
@@ -375,7 +564,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
                       {product.source && (
                         <View style={[styles.sourceBadge, { backgroundColor: colors.accentSoft }]}>
                           <Text style={styles.sourceBadgeText}>
-                            {product.source === 'openfoodfacts' ? 'OFF' : product.source === 'usda' ? 'USDA' : 'FS'}
+                            {product.source === 'openfoodfacts' ? 'OFF' : product.source === 'usda' ? 'USDA' : product.source === 'recent' ? 'RECENT' : 'FS'}
                           </Text>
                         </View>
                       )}
@@ -412,6 +601,43 @@ export default function BarcodeScannerScreen({ navigation, route }) {
                           <Text style={[styles.presetChipText, { color: colors.textTer }, servingGrams === g && styles.presetChipTextActive]}>{g}g</Text>
                         </TouchableOpacity>
                       ))}
+                    </View>
+
+                    {/* Number of servings */}
+                    <View style={styles.servingRow}>
+                      <Text style={[styles.servingLabel, { color: colors.textSec }]}>Servings</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+                        {['0.5', '1', '1.5', '2'].map(s => (
+                          <TouchableOpacity
+                            key={s}
+                            style={[
+                              styles.servingCountChip,
+                              { backgroundColor: colors.bgTer },
+                              servingCount === s && { borderColor: COLORS.accent, backgroundColor: colors.accentSoft },
+                            ]}
+                            onPress={() => {
+                              setServingCount(s)
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={[styles.servingCountChipText, { color: colors.textTer }, servingCount === s && { color: COLORS.accent }]}>{s}</Text>
+                          </TouchableOpacity>
+                        ))}
+                        <View style={[styles.servingInputWrap, { backgroundColor: colors.bgTer, borderColor: colors.border, width: 60 }]}>
+                          <TextInput
+                            style={[styles.servingInput, { color: colors.text }]}
+                            value={servingCount}
+                            onChangeText={(v) => {
+                              setServingCount(v)
+                              Haptics.selectionAsync()
+                            }}
+                            keyboardType="decimal-pad"
+                            maxLength={4}
+                            selectTextOnFocus
+                          />
+                        </View>
+                      </View>
                     </View>
 
                     <View style={styles.nutrientGrid}>
@@ -562,16 +788,29 @@ export default function BarcodeScannerScreen({ navigation, route }) {
                       source: 'manual_barcode_fallback',
                     })
                   }
+
+                  // Save to recent foods
+                  await saveToRecentFoods({
+                    name: manualEntry.name || 'Manual Entry',
+                    brand: '',
+                    barcode: notFoundBarcode,
+                    calories: cal,
+                    protein: prot,
+                    carbs: carb,
+                    fats: fat,
+                    serving_size: '100',
+                  })
+                  loadRecentFoods().then(setRecentFoods)
+
+                  // Update multi-scan session
+                  setSessionItems(prev => [...prev, { name: manualEntry.name || 'Manual Entry', calories: cal, protein: prot, carbs: carb, fats: fat }])
+                  setSessionCalories(prev => prev + cal)
+
                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
                   setShowManualFallback(false)
+                  const entryName = manualEntry.name || 'Entry'
                   setManualEntry({ name: '', calories: '', protein: '', carbs: '', fats: '' })
-                  premiumAlert('Logged', `${manualEntry.name || 'Entry'} added to ${mealType}`, [
-                    { text: 'OK', onPress: () => {
-                      navigation?.navigate?.('HomeMain', {
-                        nutritionLogged: { calories: cal, protein: prot, carbs: carb, fats: fat },
-                      })
-                    }},
-                  ])
+                  showToast(entryName)
                 } catch (err) {
                   premiumAlert('Save Failed', err.response?.data?.message || 'Could not save entry.')
                 } finally {
@@ -769,6 +1008,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // Done button (top-right)
+  doneBtn: {
+    height: 48,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
   // Search
   searchContainer: {
     paddingHorizontal: SPACING.lg,
@@ -858,6 +1112,69 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  // Recent Foods section
+  recentSection: {
+    paddingBottom: SPACING.sm,
+  },
+  recentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.sm,
+  },
+  recentHeaderText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 1,
+  },
+  recentScroll: {
+    paddingHorizontal: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  recentCard: {
+    width: 120,
+    borderRadius: RADIUS.md,
+    padding: SPACING.sm,
+    marginRight: SPACING.sm,
+  },
+  recentCardName: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  recentCardCal: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 1,
+  },
+  recentCardProtein: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+
+  // Multi-scan session total bar
+  sessionTotalBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.sm + 2,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
+  },
+  sessionTotalText: {
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+  },
+  sessionTotalCal: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
   // Bottom bar
   bottomBar: {
     paddingHorizontal: SPACING.lg,
@@ -891,6 +1208,46 @@ const styles = StyleSheet.create({
   rescanBtnText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+
+  // Done button (bottom)
+  doneBtnBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.accent,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.lg,
+    minHeight: 52,
+  },
+  doneBtnBottomText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  // Success toast
+  successToast: {
+    position: 'absolute',
+    top: SPACING.xxl + SPACING.lg + 60,
+    left: SPACING.lg,
+    right: SPACING.lg,
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  successToastInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    paddingVertical: SPACING.sm + 2,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.lg,
+  },
+  successToastText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 
   // Loading overlay
@@ -1037,6 +1394,19 @@ const styles = StyleSheet.create({
   },
   presetChipTextActive: {
     color: COLORS.accent,
+  },
+  servingCountChip: {
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    minWidth: 36,
+    alignItems: 'center',
+  },
+  servingCountChipText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   mealTypeRow: {
     flexDirection: 'row',

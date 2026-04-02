@@ -1,9 +1,9 @@
 // QuickFoodChat — Journable-style chat food logger
-// "Type what you ate" → AI parses → instant nutrition log
-import React, { useState, useRef, useCallback } from 'react'
+// "Type what you ate" → AI parses → confirm → log
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Animated,
-  ActivityIndicator, Platform, KeyboardAvoidingView,
+  ActivityIndicator, Platform, KeyboardAvoidingView, ScrollView,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
@@ -12,6 +12,10 @@ import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 import Haptics from '../lib/haptics'
 import { premiumAlert } from './PremiumAlert'
+
+// Try to import voice recognition (optional dependency)
+let Voice = null
+try { Voice = require('@react-native-voice/voice').default } catch {}
 
 const MEAL_TYPES = [
   { key: 'breakfast', label: 'Breakfast', icon: 'sunrise' },
@@ -30,6 +34,53 @@ export default function QuickFoodChat({ style, onLogged }) {
   const [expanded, setExpanded] = useState(false)
   const slideAnim = useRef(new Animated.Value(0)).current
 
+  // Confirmation state
+  const [pendingItems, setPendingItems] = useState(null) // items awaiting confirmation
+  const [pendingRawInput, setPendingRawInput] = useState('')
+  const [confirmLoading, setConfirmLoading] = useState(false)
+
+  // Voice state
+  const [isListening, setIsListening] = useState(false)
+  const pulseAnim = useRef(new Animated.Value(1)).current
+  const hasVoice = Voice !== null
+
+  // Set up voice listeners
+  useEffect(() => {
+    if (!Voice) return
+
+    const onResults = (e) => {
+      const text = e?.value?.[0]
+      if (text) setInput(text)
+      setIsListening(false)
+    }
+    const onError = () => {
+      setIsListening(false)
+    }
+
+    Voice.onSpeechResults = onResults
+    Voice.onSpeechError = onError
+
+    return () => {
+      Voice.destroy?.().then(Voice.removeAllListeners?.())
+    }
+  }, [])
+
+  // Pulse animation for mic
+  useEffect(() => {
+    if (isListening) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.25, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        ])
+      )
+      pulse.start()
+      return () => pulse.stop()
+    } else {
+      pulseAnim.setValue(1)
+    }
+  }, [isListening])
+
   function getDefaultMealType() {
     const h = new Date().getHours()
     if (h < 11) return 'breakfast'
@@ -37,6 +88,25 @@ export default function QuickFoodChat({ style, onLogged }) {
     if (h < 20) return 'dinner'
     return 'snack'
   }
+
+  const startListening = useCallback(async () => {
+    if (!Voice) return
+    try {
+      await Voice.start('en-US')
+      setIsListening(true)
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    } catch (err) {
+      premiumAlert('Voice Error', 'Could not start voice recognition. Please type your food instead.')
+    }
+  }, [])
+
+  const stopListening = useCallback(async () => {
+    if (!Voice) return
+    try {
+      await Voice.stop()
+    } catch {}
+    setIsListening(false)
+  }, [])
 
   const handleSend = useCallback(async () => {
     const text = input.trim()
@@ -58,7 +128,6 @@ export default function QuickFoodChat({ style, onLogged }) {
 
       const data = estimate.data
       const items = data.items || []
-      const total = data.total || {}
 
       if (items.length === 0) {
         premiumAlert('Could not parse', `Couldn't identify food in "${text}". Try being more specific.`)
@@ -66,46 +135,97 @@ export default function QuickFoodChat({ style, onLogged }) {
         return
       }
 
-      // Step 2: Auto-log to nutrition diary
+      // Step 2: Show confirmation card instead of auto-logging
+      const parsed = items.map((i, idx) => ({
+        _key: idx,
+        name: i.name,
+        quantity: i.quantity || 1,
+        unit: i.unit || 'serving',
+        calories: i.calories || 0,
+        protein: i.protein || 0,
+        carbs: i.carbs || 0,
+        fats: i.fats || i.fat || 0,
+      }))
+
+      setPendingItems(parsed)
+      setPendingRawInput(text)
+      setInput('')
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to parse meal'
+      premiumAlert('Parse Failed', msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [input, gymId, member?.id, mealType, onLogged])
+
+  const handleConfirmLog = useCallback(async () => {
+    if (!pendingItems?.length || !gymId || !member?.id) return
+
+    setConfirmLoading(true)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+
+    try {
       await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
         mealType,
-        rawInput: text,
-        items: items.map(i => ({
+        rawInput: pendingRawInput,
+        items: pendingItems.map(i => ({
           name: i.name,
-          qty: i.quantity || 1,
-          unit: i.unit || 'serving',
-          calories: i.calories || 0,
-          protein: i.protein || 0,
-          carbs: i.carbs || 0,
-          fats: i.fats || i.fat || 0,
+          qty: i.quantity,
+          unit: i.unit,
+          calories: i.calories,
+          protein: i.protein,
+          carbs: i.carbs,
+          fats: i.fats,
         })),
         source: 'chat',
       })
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
-      // Show result briefly
+      const totalCals = pendingItems.reduce((s, i) => s + (i.calories * i.quantity), 0)
+      const totalProt = pendingItems.reduce((s, i) => s + (i.protein * i.quantity), 0)
+
       setResult({
-        text,
-        items,
-        total: {
-          calories: total.calories || items.reduce((s, i) => s + (i.calories || 0), 0),
-          protein: total.protein || items.reduce((s, i) => s + (i.protein || 0), 0),
-        },
+        text: pendingRawInput,
+        items: pendingItems,
+        total: { calories: totalCals, protein: totalProt },
       })
-      setInput('')
 
-      // Auto-dismiss result after 4s
+      setPendingItems(null)
+      setPendingRawInput('')
+
       setTimeout(() => setResult(null), 4000)
-
       onLogged?.()
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Failed to log meal'
       premiumAlert('Log Failed', msg)
     } finally {
-      setLoading(false)
+      setConfirmLoading(false)
     }
-  }, [input, gymId, member?.id, mealType, onLogged])
+  }, [pendingItems, pendingRawInput, gymId, member?.id, mealType, onLogged])
+
+  const handleCancelConfirm = useCallback(() => {
+    setPendingItems(null)
+    setPendingRawInput('')
+    Haptics.selectionAsync()
+  }, [])
+
+  const removeItem = useCallback((key) => {
+    setPendingItems(prev => {
+      const next = prev.filter(i => i._key !== key)
+      if (next.length === 0) {
+        setPendingRawInput('')
+        return null
+      }
+      return next
+    })
+    Haptics.selectionAsync()
+  }, [])
+
+  const updateItemQty = useCallback((key, qty) => {
+    const num = parseFloat(qty) || 0
+    setPendingItems(prev => prev.map(i => i._key === key ? { ...i, quantity: num } : i))
+  }, [])
 
   const toggleExpand = () => {
     const toValue = expanded ? 0 : 1
@@ -156,19 +276,37 @@ export default function QuickFoodChat({ style, onLogged }) {
             ))}
           </View>
 
-          {/* Input + send */}
+          {/* Input + mic + send */}
           <View style={[styles.inputRow, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
             <TextInput
               style={[styles.input, { color: colors.text }]}
-              placeholder='e.g. "2 roti, dal, coffee with milk"'
+              placeholder={isListening ? 'Listening...' : 'e.g. "2 roti, dal, coffee with milk"'}
               placeholderTextColor={colors.textTer}
               value={input}
               onChangeText={setInput}
               onSubmitEditing={handleSend}
               returnKeyType="send"
               multiline={false}
-              editable={!loading}
+              editable={!loading && !isListening}
             />
+
+            {/* Mic button (only if Voice is available) */}
+            {hasVoice && (
+              <Animated.View style={{ transform: [{ scale: isListening ? pulseAnim : 1 }] }}>
+                <TouchableOpacity
+                  style={[
+                    styles.micBtn,
+                    { backgroundColor: isListening ? '#EF4444' : colors.bgHover },
+                  ]}
+                  onPress={isListening ? stopListening : startListening}
+                  disabled={loading}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="mic" size={16} color={isListening ? '#FFF' : colors.textSec} />
+                </TouchableOpacity>
+              </Animated.View>
+            )}
+
             <TouchableOpacity
               style={[styles.sendBtn, { backgroundColor: input.trim() ? '#F97316' : colors.bgHover }]}
               onPress={handleSend}
@@ -182,6 +320,82 @@ export default function QuickFoodChat({ style, onLogged }) {
               )}
             </TouchableOpacity>
           </View>
+
+          {/* Confirmation card */}
+          {pendingItems && (
+            <View style={[styles.confirmCard, { backgroundColor: isDark ? colors.bgSec : '#FFFBF5', borderColor: 'rgba(249,115,22,0.2)' }]}>
+              <View style={styles.confirmHeader}>
+                <Feather name="clipboard" size={14} color="#F97316" />
+                <Text style={[styles.confirmTitle, { color: colors.text }]}>Review before logging</Text>
+              </View>
+
+              {pendingItems.map(item => (
+                <View key={item._key} style={[styles.confirmItem, { borderColor: colors.border }]}>
+                  <View style={styles.confirmItemInfo}>
+                    <Text style={[styles.confirmItemName, { color: colors.text }]} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    <Text style={[styles.confirmItemMacros, { color: colors.textSec }]}>
+                      {item.calories} cal  ·  {item.protein}g protein
+                    </Text>
+                  </View>
+
+                  <View style={styles.confirmItemActions}>
+                    <View style={[styles.qtyBox, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
+                      <TextInput
+                        style={[styles.qtyInput, { color: colors.text }]}
+                        value={String(item.quantity)}
+                        onChangeText={(v) => updateItemQty(item._key, v)}
+                        keyboardType="decimal-pad"
+                        selectTextOnFocus
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={styles.removeBtn}
+                      onPress={() => removeItem(item._key)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Feather name="x" size={16} color={colors.textTer} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+
+              {/* Totals row */}
+              <View style={[styles.confirmTotals, { borderColor: colors.border }]}>
+                <Text style={[styles.confirmTotalLabel, { color: colors.textSec }]}>Total</Text>
+                <Text style={[styles.confirmTotalValue, { color: colors.text }]}>
+                  {pendingItems.reduce((s, i) => s + Math.round(i.calories * i.quantity), 0)} cal  ·  {pendingItems.reduce((s, i) => s + Math.round(i.protein * i.quantity), 0)}g protein
+                </Text>
+              </View>
+
+              {/* Action buttons */}
+              <View style={styles.confirmBtns}>
+                <TouchableOpacity
+                  style={[styles.confirmCancelBtn, { borderColor: colors.border }]}
+                  onPress={handleCancelConfirm}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.confirmCancelText, { color: colors.textSec }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.confirmLogBtn, { backgroundColor: '#F97316' }]}
+                  onPress={handleConfirmLog}
+                  disabled={confirmLoading}
+                  activeOpacity={0.7}
+                >
+                  {confirmLoading ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <>
+                      <Feather name="check" size={16} color="#FFF" />
+                      <Text style={styles.confirmLogText}>Edit & Log</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {/* Result toast */}
           {result && (
@@ -282,6 +496,13 @@ const styles = StyleSheet.create({
     fontFamily: FONT.regular,
     paddingVertical: Platform.OS === 'ios' ? 10 : 8,
   },
+  micBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sendBtn: {
     width: 36,
     height: 36,
@@ -289,6 +510,116 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Confirmation card
+  confirmCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    gap: 10,
+  },
+  confirmHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  confirmTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+  },
+  confirmItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  confirmItemInfo: {
+    flex: 1,
+    gap: 2,
+    marginRight: 10,
+  },
+  confirmItemName: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: FONT.semibold,
+  },
+  confirmItemMacros: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+  },
+  confirmItemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  qtyBox: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    minWidth: 44,
+  },
+  qtyInput: {
+    fontSize: 14,
+    fontFamily: FONT.semibold,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingVertical: Platform.OS === 'ios' ? 6 : 4,
+  },
+  removeBtn: {
+    padding: 4,
+  },
+  confirmTotals: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    borderTopWidth: 1,
+  },
+  confirmTotalLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: FONT.semibold,
+  },
+  confirmTotalValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+  },
+  confirmBtns: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  confirmCancelBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  confirmCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: FONT.semibold,
+  },
+  confirmLogBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  confirmLogText: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+    color: '#FFF',
+  },
+  // Result toast
   resultCard: {
     flexDirection: 'row',
     alignItems: 'center',

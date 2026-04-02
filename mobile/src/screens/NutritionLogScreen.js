@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  FlatList,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -12,9 +13,11 @@ import {
   UIManager,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import { premiumAlert } from '../components/PremiumAlert'
 import api from '../lib/api'
 import Haptics from '../lib/haptics'
 
@@ -170,6 +173,54 @@ function MealTypeBadge({ type, colors }) {
   )
 }
 
+const SAVED_MEALS_KEY = 'ivira_saved_meals'
+const MAX_SAVED_MEALS = 15
+
+function SavedMealsSection({ savedMeals, onLogMeal, colors, card }) {
+  if (!savedMeals || savedMeals.length === 0) return null
+
+  const renderCard = ({ item }) => (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => onLogMeal(item)}
+      style={[styles.savedMealCard, card, { borderTopWidth: 3, borderTopColor: COLORS.accent }]}
+    >
+      <View style={styles.savedMealHeader}>
+        <Feather name="bookmark" size={14} color={COLORS.accent} />
+        <Text style={[styles.savedMealName, { color: colors.text }]} numberOfLines={1}>
+          {item.name}
+        </Text>
+      </View>
+      <Text style={[styles.savedMealCal, { color: colors.accent }]}>
+        {item.totalCalories} kcal
+      </Text>
+      <View style={styles.savedMealMeta}>
+        <Text style={[styles.savedMealMetaText, { color: '#34A853' }]}>
+          P {item.totalProtein}g
+        </Text>
+        <Text style={[styles.savedMealMetaDot, { color: colors.border }]}> · </Text>
+        <Text style={[styles.savedMealMetaText, { color: colors.textTer }]}>
+          {item.items.length} items
+        </Text>
+      </View>
+    </TouchableOpacity>
+  )
+
+  return (
+    <View style={styles.savedMealsSection}>
+      <Text style={[styles.savedMealsSectionTitle, { color: colors.textSec }]}>SAVED MEALS</Text>
+      <FlatList
+        horizontal
+        data={savedMeals}
+        keyExtractor={(item) => item.id}
+        renderItem={renderCard}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.savedMealsList}
+      />
+    </View>
+  )
+}
+
 // MACRO_TARGETS removed — now passed via goals prop from API
 
 function MacroProgressBar({ label, value, target, color, unit, colors }) {
@@ -276,7 +327,7 @@ function DailySummarySection({ dayData, colors, goals }) {
   )
 }
 
-function ExpandedMeals({ dayData, colors, goals }) {
+function ExpandedMeals({ dayData, colors, goals, onSaveMeal }) {
   return (
     <View style={styles.expandedContainer}>
       {/* Daily summary at top */}
@@ -288,7 +339,19 @@ function ExpandedMeals({ dayData, colors, goals }) {
         <View key={mi} style={[styles.mealSection, { borderColor: colors.border }]}>
           <View style={styles.mealHeader}>
             <MealTypeBadge type={meal.type} colors={colors} />
-            <Text style={[styles.mealTime, { color: colors.textTer }]}>{meal.time}</Text>
+            <View style={styles.mealHeaderRight}>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  onSaveMeal && onSaveMeal(meal)
+                }}
+                style={[styles.saveMealBtn, { backgroundColor: colors.accentSoft }]}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Feather name="bookmark" size={14} color={colors.accent} />
+              </TouchableOpacity>
+              <Text style={[styles.mealTime, { color: colors.textTer }]}>{meal.time}</Text>
+            </View>
           </View>
           {meal.items.map((item, ii) => (
             <View key={ii} style={styles.mealItemRow}>
@@ -328,7 +391,7 @@ function ExpandedMeals({ dayData, colors, goals }) {
   )
 }
 
-function DayCard({ dayData, isExpanded, onToggle, colors, card, goals }) {
+function DayCard({ dayData, isExpanded, onToggle, colors, card, goals, onSaveMeal }) {
   const date = new Date(dayData.date + 'T00:00:00')
   const dayName = DAY_NAMES[date.getDay()]
   const monthName = SHORT_MONTHS[date.getMonth()]
@@ -395,7 +458,7 @@ function DayCard({ dayData, isExpanded, onToggle, colors, card, goals }) {
         </View>
 
         {/* Expanded meals */}
-        {isExpanded && <ExpandedMeals dayData={dayData} colors={colors} goals={goals} />}
+        {isExpanded && <ExpandedMeals dayData={dayData} colors={colors} goals={goals} onSaveMeal={onSaveMeal} />}
       </View>
     </TouchableOpacity>
   )
@@ -415,6 +478,114 @@ export default function NutritionLogScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false)
   const [expandedDay, setExpandedDay] = useState(null)
   const [goals, setGoals] = useState(DEFAULT_GOALS)
+  const [savedMeals, setSavedMeals] = useState([])
+
+  // Load saved meals from AsyncStorage on mount
+  useEffect(() => {
+    const loadSavedMeals = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(SAVED_MEALS_KEY)
+        if (stored) setSavedMeals(JSON.parse(stored))
+      } catch (err) {
+        console.warn('[NutritionLog] Failed to load saved meals:', err?.message)
+      }
+    }
+    loadSavedMeals()
+  }, [])
+
+  const saveMeal = useCallback(async (name, items) => {
+    const totalCalories = items.reduce((s, i) => s + (i.calories || 0), 0)
+    const totalProtein = items.reduce((s, i) => s + (i.protein || 0), 0)
+    const newMeal = {
+      id: Date.now().toString(),
+      name,
+      items: items.map(i => ({
+        name: i.name,
+        qty: i.qty || i.quantity || 1,
+        unit: i.unit || 'serving',
+        calories: i.calories || 0,
+        protein: i.protein || 0,
+        carbs: i.carbs || 0,
+        fats: i.fats || i.fat || 0,
+      })),
+      totalCalories,
+      totalProtein,
+      createdAt: new Date().toISOString(),
+    }
+    const updated = [newMeal, ...savedMeals].slice(0, MAX_SAVED_MEALS)
+    setSavedMeals(updated)
+    try {
+      await AsyncStorage.setItem(SAVED_MEALS_KEY, JSON.stringify(updated))
+    } catch (err) {
+      console.warn('[NutritionLog] Failed to save meal:', err?.message)
+    }
+  }, [savedMeals])
+
+  const handleSaveMealFromExpanded = useCallback((meal) => {
+    const defaultName = meal.type
+      ? meal.type.charAt(0).toUpperCase() + meal.type.slice(1)
+      : 'My Meal'
+    premiumAlert(
+      'Save This Meal',
+      `Save these ${meal.items.length} items as a meal template?\n\nEnter a name (e.g. "${defaultName} combo"):`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Save',
+          onPress: () => {
+            const mealName = defaultName + ' combo'
+            saveMeal(mealName, meal.items)
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+            premiumAlert('Meal Saved', `"${mealName}" has been saved. You can re-log it with one tap.`)
+          },
+        },
+      ],
+    )
+  }, [saveMeal])
+
+  const logSavedMeal = useCallback(async (meal) => {
+    const gId = gymId || gymInfo?.id
+    const mId = member?.id
+    if (!gId || !mId) {
+      premiumAlert('Error', 'Please log in to log meals.')
+      return
+    }
+    premiumAlert(
+      `Log ${meal.name}?`,
+      `${meal.totalCalories} cal · ${meal.items.length} items`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log Now',
+          onPress: async () => {
+            try {
+              await api.post(`/gyms/${gId}/members/${mId}/nutrition/log`, {
+                mealType: 'snack',
+                rawInput: meal.name,
+                items: meal.items.map(i => ({
+                  name: i.name,
+                  qty: i.qty || 1,
+                  unit: i.unit || 'serving',
+                  calories: i.calories || 0,
+                  protein: i.protein || 0,
+                  carbs: i.carbs || 0,
+                  fats: i.fats || 0,
+                })),
+                source: 'saved_meal',
+              })
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+              premiumAlert('Logged', `"${meal.name}" has been added to your nutrition log.`)
+              // Refresh current month data
+              loadMonth(currentMonth.year, currentMonth.month)
+            } catch (err) {
+              console.warn('[NutritionLog] Failed to log saved meal:', err?.message)
+              premiumAlert('Failed to Log', 'Could not log this meal. Please try again.')
+            }
+          },
+        },
+      ],
+    )
+  }, [gymId, gymInfo?.id, member?.id, loadMonth, currentMonth])
 
   // Fetch nutrition goals from API
   useEffect(() => {
@@ -576,6 +747,14 @@ export default function NutritionLogScreen({ navigation }) {
           </View>
         ) : (
           <>
+            {/* Saved Meals */}
+            <SavedMealsSection
+              savedMeals={savedMeals}
+              onLogMeal={logSavedMeal}
+              colors={colors}
+              card={card}
+            />
+
             {/* Monthly Stats */}
             <MonthlyStatsCard daysData={daysData} colors={colors} card={card} />
 
@@ -624,6 +803,7 @@ export default function NutritionLogScreen({ navigation }) {
                   colors={colors}
                   card={card}
                   goals={goals}
+                  onSaveMeal={handleSaveMealFromExpanded}
                 />
               ))
             )}
@@ -1082,6 +1262,69 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT.numBold,
     fontVariant: ['tabular-nums'],
+  },
+
+  // Saved Meals section
+  savedMealsSection: {
+    marginBottom: SPACING.md,
+  },
+  savedMealsSectionTitle: {
+    fontSize: 12,
+    fontFamily: FONT.semibold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: SPACING.sm,
+  },
+  savedMealsList: {
+    gap: SPACING.sm,
+  },
+  savedMealCard: {
+    ...ELITE_CARD,
+    width: 150,
+    padding: SPACING.sm,
+  },
+  savedMealHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  savedMealName: {
+    fontSize: 13,
+    fontFamily: FONT.semibold,
+    flex: 1,
+  },
+  savedMealCal: {
+    fontSize: 16,
+    fontFamily: FONT.numBold,
+    fontVariant: ['tabular-nums'],
+    marginBottom: 4,
+  },
+  savedMealMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  savedMealMetaText: {
+    fontSize: 11,
+    fontFamily: FONT.numMedium,
+    fontVariant: ['tabular-nums'],
+  },
+  savedMealMetaDot: {
+    fontSize: 11,
+  },
+
+  // Save meal button in expanded view
+  saveMealBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mealHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
   },
 
   // Empty state

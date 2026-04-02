@@ -55,6 +55,7 @@ export default function FoodScannerScreen({ navigation, route }) {
   const [history, setHistory] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [selectedItems, setSelectedItems] = useState({}) // { index: true/false }
+  const [itemServings, setItemServings] = useState({}) // { index: '1' }
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -141,6 +142,7 @@ export default function FoodScannerScreen({ navigation, route }) {
         setImageBase64(asset.base64)
         setScanResult(null)
         setSelectedItems({})
+        setItemServings({})
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       }
     } catch (err) {
@@ -174,6 +176,7 @@ export default function FoodScannerScreen({ navigation, route }) {
         setImageBase64(asset.base64)
         setScanResult(null)
         setSelectedItems({})
+        setItemServings({})
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       }
     } catch (err) {
@@ -346,7 +349,9 @@ export default function FoodScannerScreen({ navigation, route }) {
   // Log selected items to nutrition diary
   const logSelectedItems = useCallback(async () => {
     if (!scanResult) return
-    const itemsToLog = scanResult.items.filter((_, i) => selectedItems[i])
+    const itemsToLog = scanResult.items
+      .map((item, i) => ({ item, index: i }))
+      .filter(({ index }) => selectedItems[index])
     if (itemsToLog.length === 0) {
       premiumAlert('No Items Selected', 'Please select at least one food item to log.')
       return
@@ -356,24 +361,29 @@ export default function FoodScannerScreen({ navigation, route }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
     try {
-      const totalCals = itemsToLog.reduce((s, i) => s + i.calories, 0)
-      const totalProtein = itemsToLog.reduce((s, i) => s + i.protein, 0)
-      const totalCarbs = itemsToLog.reduce((s, i) => s + i.carbs, 0)
-      const totalFat = itemsToLog.reduce((s, i) => s + i.fat, 0)
+      // Build items with serving multipliers applied
+      const multipliedItems = itemsToLog.map(({ item, index }) => {
+        const mult = parseFloat(itemServings[index]) || 1
+        return {
+          name: item.name,
+          qty: mult,
+          unit: 'serving',
+          calories: Math.round(item.calories * mult),
+          protein: Math.round(item.protein * mult * 10) / 10,
+          carbs: Math.round(item.carbs * mult * 10) / 10,
+          fats: Math.round(item.fat * mult * 10) / 10,
+        }
+      })
+      const totalCals = multipliedItems.reduce((s, i) => s + i.calories, 0)
+      const totalProtein = multipliedItems.reduce((s, i) => s + i.protein, 0)
+      const totalCarbs = multipliedItems.reduce((s, i) => s + i.carbs, 0)
+      const totalFat = multipliedItems.reduce((s, i) => s + i.fats, 0)
 
       if (gymId && member?.id) {
         await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
           mealType,
-          rawInput: itemsToLog.map(i => i.name).join(', '),
-          items: itemsToLog.map(item => ({
-            name: item.name,
-            qty: 1,
-            unit: 'serving',
-            calories: item.calories,
-            protein: item.protein,
-            carbs: item.carbs,
-            fats: item.fat,
-          })),
+          rawInput: multipliedItems.map(i => i.name).join(', '),
+          items: multipliedItems,
           source: 'food_scanner',
           image_uri: imageUri,
         })
@@ -402,7 +412,7 @@ export default function FoodScannerScreen({ navigation, route }) {
     } finally {
       setLogging(false)
     }
-  }, [scanResult, selectedItems, mealType, gymId, member, imageUri, navigation])
+  }, [scanResult, selectedItems, itemServings, mealType, gymId, member, imageUri, navigation])
 
   // Reset scanner
   const resetScanner = useCallback(() => {
@@ -410,18 +420,20 @@ export default function FoodScannerScreen({ navigation, route }) {
     setImageBase64(null)
     setScanResult(null)
     setSelectedItems({})
+    setItemServings({})
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }, [])
 
-  // Compute totals for selected items
+  // Compute totals for selected items (with serving multipliers)
   const selectedTotals = scanResult
     ? scanResult.items.reduce(
         (acc, item, i) => {
           if (selectedItems[i]) {
-            acc.calories += item.calories
-            acc.protein += item.protein
-            acc.carbs += item.carbs
-            acc.fat += item.fat
+            const mult = parseFloat(itemServings[i]) || 1
+            acc.calories += Math.round(item.calories * mult)
+            acc.protein += item.protein * mult
+            acc.carbs += item.carbs * mult
+            acc.fat += item.fat * mult
             acc.count += 1
           }
           return acc
@@ -687,6 +699,11 @@ export default function FoodScannerScreen({ navigation, route }) {
                     selected={!!selectedItems[index]}
                     onToggle={() => toggleItemSelection(index)}
                     onEdit={() => openEditModal(index)}
+                    servingCount={itemServings[index] || '1'}
+                    onServingChange={(val) => {
+                      setItemServings(prev => ({ ...prev, [index]: val }))
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    }}
                     colors={colors}
                     card={card}
                   />
@@ -913,9 +930,14 @@ export default function FoodScannerScreen({ navigation, route }) {
 
 // ----- Sub-components -----
 
-function FoodItemCard({ item, index, selected, onToggle, onEdit, colors, card }) {
+function FoodItemCard({ item, index, selected, onToggle, onEdit, servingCount, onServingChange, colors, card }) {
   const confidencePct = Math.round((item.confidence || 0) * 100)
   const confidenceColor = confidencePct >= 85 ? colors.green : confidencePct >= 65 ? colors.amber : colors.red
+  const mult = parseFloat(servingCount) || 1
+  const displayCal = Math.round(item.calories * mult)
+  const displayProtein = Math.round(item.protein * mult * 10) / 10
+  const displayCarbs = Math.round(item.carbs * mult * 10) / 10
+  const displayFat = Math.round(item.fat * mult * 10) / 10
 
   return (
     <TouchableOpacity
@@ -964,22 +986,54 @@ function FoodItemCard({ item, index, selected, onToggle, onEdit, colors, card })
         </TouchableOpacity>
       </View>
 
+      {/* Serving quantity row */}
+      <View style={styles.servingQtyRow}>
+        <Text style={[styles.servingQtyLabel, { color: colors.textTer }]}>Qty</Text>
+        {['0.5', '1', '2'].map(s => (
+          <TouchableOpacity
+            key={s}
+            style={[
+              styles.servingQtyChip,
+              { backgroundColor: colors.bgTer },
+              servingCount === s && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+            ]}
+            onPress={(e) => {
+              e.stopPropagation && e.stopPropagation()
+              onServingChange(s)
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.servingQtyChipText, { color: colors.textTer }, servingCount === s && { color: colors.accent }]}>{s}</Text>
+          </TouchableOpacity>
+        ))}
+        <View style={[styles.servingQtyInput, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
+          <TextInput
+            style={[styles.servingQtyInputText, { color: colors.text }]}
+            value={servingCount}
+            onChangeText={onServingChange}
+            keyboardType="decimal-pad"
+            maxLength={4}
+            selectTextOnFocus
+          />
+        </View>
+      </View>
+
       {/* Macros row */}
       <View style={styles.foodItemMacros}>
         <View style={[styles.macroTag, { backgroundColor: colors.accentSoft }]}>
-          <Text style={[styles.macroTagValue, { color: colors.accent }]}>{item.calories}</Text>
+          <Text style={[styles.macroTagValue, { color: colors.accent }]}>{displayCal}</Text>
           <Text style={[styles.macroTagUnit, { color: colors.accent }]}>kcal</Text>
         </View>
         <View style={[styles.macroTag, { backgroundColor: '#34A85312' }]}>
-          <Text style={[styles.macroTagValue, { color: '#34A853' }]}>{item.protein}</Text>
+          <Text style={[styles.macroTagValue, { color: '#34A853' }]}>{displayProtein}</Text>
           <Text style={[styles.macroTagUnit, { color: '#34A853' }]}>g P</Text>
         </View>
         <View style={[styles.macroTag, { backgroundColor: '#F9731612' }]}>
-          <Text style={[styles.macroTagValue, { color: '#F97316' }]}>{item.carbs}</Text>
+          <Text style={[styles.macroTagValue, { color: '#F97316' }]}>{displayCarbs}</Text>
           <Text style={[styles.macroTagUnit, { color: '#F97316' }]}>g C</Text>
         </View>
         <View style={[styles.macroTag, { backgroundColor: '#FBBC0512' }]}>
-          <Text style={[styles.macroTagValue, { color: '#FBBC05' }]}>{item.fat}</Text>
+          <Text style={[styles.macroTagValue, { color: '#FBBC05' }]}>{displayFat}</Text>
           <Text style={[styles.macroTagUnit, { color: '#FBBC05' }]}>g F</Text>
         </View>
       </View>
@@ -1406,6 +1460,43 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  servingQtyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 36,
+    marginBottom: 6,
+  },
+  servingQtyLabel: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    marginRight: 2,
+  },
+  servingQtyChip: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  servingQtyChipText: {
+    fontSize: 12,
+    fontFamily: FONT.semibold,
+  },
+  servingQtyInput: {
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    width: 44,
+    height: 26,
+    paddingHorizontal: 4,
+    justifyContent: 'center',
+  },
+  servingQtyInputText: {
+    fontSize: 12,
+    fontFamily: FONT.semibold,
+    textAlign: 'center',
+    paddingVertical: 0,
   },
   foodItemMacros: {
     flexDirection: 'row',
