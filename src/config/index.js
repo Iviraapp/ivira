@@ -74,13 +74,13 @@ const config = {
   },
 
   gemini: {
-    apiKey: process.env.GEMINI_API_KEY,
-    enabled: !!process.env.GEMINI_API_KEY,
+    apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
+    enabled: !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
   },
 
   googlePlaces: {
-    apiKey: process.env.GOOGLE_PLACES_API_KEY,
-    enabled: !!process.env.GOOGLE_PLACES_API_KEY,
+    apiKey: process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_API_KEY,
+    enabled: !!(process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_API_KEY),
   },
 
   blob: {
