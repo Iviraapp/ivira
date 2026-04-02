@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0E1A"
+      "backgroundColor": "#07080F"
     },
     "assetBundlePatterns": [
       "assets/*"
@@ -37,7 +37,12 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0A0E1A"
+        "backgroundColor": "#07080F"
+      },
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#07080F"
       },
       "package": "com.ivira.member",
       "permissions": [
@@ -93,7 +98,17 @@
           "locationAlwaysAndWhenInUsePermission": "IVIRA uses your location to verify gym check-ins"
         }
       ],
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "backgroundColor": "#07080F",
+          "dark": {
+            "image": "./assets/splash.png",
+            "backgroundColor": "#07080F"
+          }
+        }
+      ],
       "@sentry/react-native"
     ],
     "extra": {
