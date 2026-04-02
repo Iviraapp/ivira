@@ -212,7 +212,7 @@ export default function CheckInScreen({ navigation }) {
 
         <View style={s.methods}>
           <MethodButton
-            icon="rss"
+            icon="smartphone"
             label={nfcScanning ? 'Hold near reader...' : 'NFC Tap'}
             sub="Instant tap-and-go"
             active={nfcAvailable}
@@ -339,10 +339,10 @@ const s = StyleSheet.create({
 
   // Methods
   methods: { gap: 10, marginBottom: 20 },
-  methodBtn: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: RADIUS.lg, borderWidth: 0.5 },
+  methodBtn: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 14, borderRadius: RADIUS.lg, borderWidth: 0.5 },
   methodIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  methodLabel: { fontSize: 14, fontFamily: FONT.semibold },
-  methodSub: { fontSize: 12, fontFamily: FONT.regular, marginTop: 1 },
+  methodLabel: { fontSize: 14, fontFamily: FONT.semibold, lineHeight: 20 },
+  methodSub: { fontSize: 12, fontFamily: FONT.regular, marginTop: 2, lineHeight: 16 },
 
   // Membership
   membershipCard: { borderRadius: RADIUS.xl, borderWidth: 1, overflow: 'hidden' },
@@ -353,7 +353,7 @@ const s = StyleSheet.create({
   statusText: { fontSize: 12, fontFamily: FONT.bold },
   statsStrip: { flexDirection: 'row', borderTopWidth: 0.5 },
   statCell: { flex: 1, alignItems: 'center', paddingVertical: 14 },
-  statVal: { fontSize: 20, fontFamily: 'Inter_800ExtraBold', letterSpacing: -0.5 },
+  statVal: { fontSize: 20, fontFamily: FONT.numExtraBold, letterSpacing: -0.5 },
   statKey: { fontSize: 10, fontFamily: FONT.medium, marginTop: 2 },
   stripDivider: { width: 0.5, height: '60%', alignSelf: 'center' },
 
