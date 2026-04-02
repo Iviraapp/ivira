@@ -214,7 +214,7 @@ function FeedCard({ item, colors, card, gymId, member }) {
             <View style={styles.cardTextWrap}>
               <Text style={[styles.cardTitle, { color: colors.text }]}>
                 <Text style={styles.boldName}>{item.member_name}</Text>
-                {' joined the squad'}
+                {' joined the circle'}
               </Text>
               <Text style={[styles.timeText, { color: colors.textTer }]}>
                 {timeAgo(item.timestamp)}
@@ -418,9 +418,9 @@ export default function PodFeedScreen({ navigation, route }) {
 
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
-            {podName || 'Squad'}
+            {podName || 'Circle'}
           </Text>
-          <Text style={[styles.headerSub, { color: colors.textSec }]}>Squad Chat</Text>
+          <Text style={[styles.headerSub, { color: colors.textSec }]}>Circle Chat</Text>
         </View>
 
         {healthScore !== null && (
@@ -474,7 +474,7 @@ export default function PodFeedScreen({ navigation, route }) {
       <View style={[styles.chatBar, { backgroundColor: colors.bgSec, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 8) }]}>
         <TextInput
           style={[styles.chatInput, { backgroundColor: colors.bgTer, color: colors.text }]}
-          placeholder="Message your squad..."
+          placeholder="Message your circle..."
           placeholderTextColor={colors.textTer}
           value={messageText}
           onChangeText={setMessageText}

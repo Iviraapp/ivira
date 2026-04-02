@@ -85,7 +85,7 @@ export default function PodHomeScreen({ navigation }) {
         setPod(null)
         setCommitments([])
       } else {
-        setError('Could not load squad data')
+        setError('Could not load circle data')
       }
     }
   }, [gymId, memberId])
@@ -142,7 +142,7 @@ export default function PodHomeScreen({ navigation }) {
       await api.post(`/gyms/${gymId}/pods/${podId}/checkin`, {
         commitmentId: myCommitment.id || myCommitment._id,
       })
-      premiumAlert('Checked In', 'Nice work. Your squad can see you showed up.')
+      premiumAlert('Checked In', 'Nice work. Your circle can see you showed up.')
       onRefresh()
     } catch (err) {
       premiumAlert('Check-In Failed', err.response?.data?.message || 'Try again.')
@@ -190,7 +190,7 @@ export default function PodHomeScreen({ navigation }) {
     return (
       <View style={[styles.center, { backgroundColor: colors.bg }]}>
         <ActivityIndicator size="large" color={POD_PURPLE} />
-        <Text style={[styles.loadingText, { color: colors.textSec }]}>Loading your squad...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSec }]}>Loading your circle...</Text>
       </View>
     )
   }
@@ -219,16 +219,16 @@ export default function PodHomeScreen({ navigation }) {
         {matchSuccess && (
           <View style={styles.celebrationBanner}>
             <Feather name="check-circle" size={20} color="#fff" />
-            <Text style={styles.celebrationText}>You're in! Welcome to your squad.</Text>
+            <Text style={styles.celebrationText}>You're in! Welcome to your circle.</Text>
           </View>
         )}
 
         <View style={[styles.emptyCard, card, { borderTopWidth: 3, borderTopColor: POD_PURPLE }]}>
           <View style={styles.emptyIconWrap}>
-            <Feather name="shield" size={56} color={POD_PURPLE} />
+            <Feather name="users" size={56} color={POD_PURPLE} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>
-            Join an Accountability Squad
+            Join an Accountability Circle
           </Text>
           <Text style={[styles.emptyDesc, { color: colors.textSec }]}>
             Get matched with 3-5 people who share your goals. Stay consistent together.
@@ -256,13 +256,13 @@ export default function PodHomeScreen({ navigation }) {
             activeOpacity={0.8}
           >
             <Feather name="search" size={16} color={POD_PURPLE} style={{ marginRight: 8 }} />
-            <Text style={[styles.secondaryBtnText, { color: POD_PURPLE }]}>Browse Squads</Text>
+            <Text style={[styles.secondaryBtnText, { color: POD_PURPLE }]}>Browse Circles</Text>
           </TouchableOpacity>
         </View>
 
         {/* Benefit pills */}
         <View style={styles.benefitsRow}>
-          {['Social pressure works', '3-5 members per squad', 'Daily commitments'].map((txt) => (
+          {['Social pressure works', '3-5 members per circle', 'Daily commitments'].map((txt) => (
             <View key={txt} style={[styles.benefitPill, { backgroundColor: 'rgba(139,92,246,0.12)' }]}>
               <Text style={[styles.benefitText, { color: POD_PURPLE }]}>{txt}</Text>
             </View>
@@ -284,7 +284,7 @@ export default function PodHomeScreen({ navigation }) {
         <View style={styles.headerTop}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.podName, { color: colors.text }]}>
-              {pod.name || 'My Squad'}
+              {pod.name || 'My Circle'}
             </Text>
             <View style={styles.tierRow}>
               <View style={[styles.tierBadge, { backgroundColor: `${tierColor}20` }]}>
@@ -445,7 +445,7 @@ export default function PodHomeScreen({ navigation }) {
           activeOpacity={0.8}
         >
           <Feather name="message-circle" size={18} color={colors.text} />
-          <Text style={[styles.actionBtnText, { color: colors.text }]}>Squad Feed</Text>
+          <Text style={[styles.actionBtnText, { color: colors.text }]}>Circle Feed</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, { backgroundColor: colors.bgTer }]}
@@ -466,7 +466,7 @@ export default function PodHomeScreen({ navigation }) {
         <View style={styles.streakMeta}>
           <View style={styles.streakMetaItem}>
             <Text style={[styles.streakMetaValue, { color: colors.text }]}>{podAvgStreak}</Text>
-            <Text style={[styles.streakMetaLabel, { color: colors.textTer }]}>squad avg</Text>
+            <Text style={[styles.streakMetaLabel, { color: colors.textTer }]}>circle avg</Text>
           </View>
           <View style={[styles.streakDivider, { backgroundColor: colors.border }]} />
           <View style={styles.streakMetaItem}>

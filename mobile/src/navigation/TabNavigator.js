@@ -127,11 +127,11 @@ function HealthStackNavigator() {
   )
 }
 
-function PodsStackNavigator() {
+function CirclesStackNavigator() {
   const { colors } = useTheme()
   return (
     <CommunityStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-      <CommunityStackNav.Screen name="PodsMain" component={PodHomeScreen} />
+      <CommunityStackNav.Screen name="CirclesMain" component={PodHomeScreen} />
       <CommunityStackNav.Screen name="DailyCommit" component={DailyCommitScreen} />
       <CommunityStackNav.Screen name="PodFeed" component={PodFeedScreen} />
       <CommunityStackNav.Screen name="PodDiscovery" component={PodDiscoveryScreen} />
@@ -269,7 +269,7 @@ function AICoachButton() {
 
 // ── Floating blurred tab bar — NO center Action tab ──────────────────
 function FloatingTabBar({ state, descriptors, navigation }) {
-  const icons = { Home: 'home', Health: 'heart', Pods: 'shield', Profile: 'user' }
+  const icons = { Home: 'home', Health: 'heart', Circle: 'users', Profile: 'user' }
   const { isDark, colors } = useTheme()
 
   const handleTabPress = (route, isFocused, index) => {
@@ -351,10 +351,10 @@ function WebTabNavigator() {
   const { colors } = useTheme()
   const [activeTab, setActiveTab] = useState('Home')
   const [webStack, setWebStack] = useState(null)
-  const screens = { Home: HomeScreen, Health: HealthScreen, Pods: PodHomeScreen, Profile: ProfileScreen }
+  const screens = { Home: HomeScreen, Health: HealthScreen, Circle: PodHomeScreen, Profile: ProfileScreen }
   const stackScreens = { BarcodeScanner: BarcodeScannerScreen, Nutrition: NutritionScreen, History: HistoryScreen, ServiceDetail: ServiceDetailScreen, Invoices: InvoicesScreen, NutritionLog: NutritionLogScreen, FastingLog: FastingLogScreen, Progress: ProgressScreen, NutritionDetail: NutritionDetailScreen, ActionPlan: ActionPlanScreen, MembershipActivation: MembershipActivationScreen, NotificationSettings: NotificationSettingsScreen, ActivityDashboard: ActivityDashboardScreen, WorkoutTracker: WorkoutTrackerScreen, WorkoutHistory: WorkoutHistoryScreen, MembershipRenewal: MembershipRenewalScreen, RevenueDashboard: RevenueDashboardScreen, Referral: ReferralScreen, ProgressPhotos: ProgressPhotosScreen, FitnessScore: FitnessScoreScreen, FoodScanner: FoodScannerScreen, Recipes: RecipeScreen, Challenges: ChallengesScreen, Achievements: AchievementsScreen, SleepTracker: SleepTrackerScreen, DailyCommit: DailyCommitScreen, PodFeed: PodFeedScreen, PodDiscovery: PodDiscoveryScreen, PodStats: PodStatsScreen, CommunityHub: CommunityHubScreen }
-  const icons = { Home: 'home', Health: 'heart', Pods: 'shield', Profile: 'user' }
-  const tabOrder = gymId ? ['Home', 'Health', 'Pods', 'Profile'] : ['Home', 'Health', 'Profile']
+  const icons = { Home: 'home', Health: 'heart', Circle: 'users', Profile: 'user' }
+  const tabOrder = gymId ? ['Home', 'Health', 'Circle', 'Profile'] : ['Home', 'Health', 'Profile']
 
   const ActiveScreen = webStack && stackScreens[webStack] ? stackScreens[webStack] : screens[activeTab]
   const navigation = {
@@ -462,7 +462,7 @@ function NativeTabNavigator() {
       >
         <Tab.Screen name="Home" component={HomeStackNavigator} />
         <Tab.Screen name="Health" component={HealthStackNavigator} />
-        <Tab.Screen name="Pods" component={PodsStackNavigator} />
+        <Tab.Screen name="Circle" component={CirclesStackNavigator} />
         <Tab.Screen name="Profile" component={ProfileStackNavigator} />
       </Tab.Navigator>
 

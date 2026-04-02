@@ -85,7 +85,7 @@ export default async function podRoutes(fastify) {
     try {
       const pod = await podsService.getPodWithMembers(request.params.podId)
       if (!pod) {
-        return reply.code(404).send({ error: 'Pod not found' })
+        return reply.code(404).send({ error: 'Circle not found' })
       }
       const health = await podsService.calculatePodHealth(request.params.podId)
       return { pod, health }
@@ -289,7 +289,7 @@ export default async function podRoutes(fastify) {
       })
       // Fire-and-forget: send nudge push
       const pod = await podsService.getPodWithMembers(request.params.podId)
-      podNotifications.notifyPodNudge(request.body.toMemberId, nudge.from_name, pod?.name || 'your pod').catch(() => {})
+      podNotifications.notifyPodNudge(request.body.toMemberId, nudge.from_name, pod?.name || 'your circle').catch(() => {})
       return reply.code(201).send({ nudge })
     } catch (err) {
       return reply.code(err.statusCode || 500).send({ error: err.message })

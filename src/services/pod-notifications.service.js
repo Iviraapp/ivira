@@ -57,8 +57,8 @@ export async function notifyPodCommitmentReminder(memberId, podName, timePrefere
   if (!token) return { sent: 0 }
 
   return pushService.sendToMember(token.gym_id, memberId, {
-    title: 'Pod Reminder',
-    body: `Time to commit! Your ${podName} pod is waiting for today's plan.`,
+    title: 'Circle Reminder',
+    body: `Time to commit! Your ${podName} circle is waiting for today's plan.`,
     data: { category: 'pod_reminder', timePreference: timePreference || '' },
   })
 }
@@ -84,7 +84,7 @@ export async function notifyPodLateAlert(podId, lateMemberName) {
 
   const memberIds = recipients.map((r) => r.member_id)
   return pushService.sendBulk(gymId, memberIds, {
-    title: 'Pod Check-In Alert',
+    title: 'Circle Check-In Alert',
     body: `${lateMemberName} hasn't checked in yet. Send them a nudge!`,
     data: { category: 'pod_late', podId },
   })
@@ -104,7 +104,7 @@ export async function notifyPodNudge(toMemberId, fromMemberName, podName) {
 
   return pushService.sendToMember(token.gym_id, toMemberId, {
     title: 'You Got Nudged!',
-    body: `${fromMemberName} nudged you in ${podName}! Time to check in.`,
+    body: `${fromMemberName} nudged you in ${podName}. Time to check in!`,
     data: { category: 'pod_nudge', podName },
   })
 }
@@ -130,7 +130,7 @@ export async function notifyPodCheckin(podId, memberName, streakCount) {
 
   const memberIds = recipients.map((r) => r.member_id)
   return pushService.sendBulk(gymId, memberIds, {
-    title: 'Pod Check-In',
+    title: 'Circle Check-In',
     body: `${memberName} just checked in! (${streakCount} day streak)`,
     data: { category: 'pod_checkin', podId, streakCount: String(streakCount) },
   })
@@ -170,8 +170,8 @@ export async function notifyPodHealthUpdate(podId, healthScore, tier) {
 
   const memberIds = recipients.map((r) => r.member_id)
   return pushService.sendBulk(gymId, memberIds, {
-    title: 'Weekly Pod Health',
-    body: `Your pod scored ${healthScore}% this week — ${tier} tier!`,
+    title: 'Weekly Circle Health',
+    body: `Your circle scored ${healthScore}% this week — ${tier} tier!`,
     data: { category: 'pod_health', podId, healthScore: String(healthScore), tier },
   })
 }

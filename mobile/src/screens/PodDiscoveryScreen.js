@@ -224,7 +224,7 @@ export default function PodDiscoveryScreen({ navigation, route }) {
           <View style={{ flex: 1 }}>
             <Text style={[s.matchTitle, { color: colors.text }]}>Quick Match</Text>
             <Text style={[s.matchDesc, { color: colors.textSec }]}>
-              We'll find the perfect squad for you based on your profile
+              We'll find the perfect circle for you based on your profile
             </Text>
           </View>
         </View>
@@ -252,11 +252,11 @@ export default function PodDiscoveryScreen({ navigation, route }) {
   const EmptyState = () => (
     <View style={s.empty}>
       <Feather name="search" size={40} color={colors.textTer} />
-      <Text style={[s.emptyTitle, { color: colors.text }]}>No squads found matching your filters</Text>
-      <Text style={[s.emptyDesc, { color: colors.textSec }]}>Try different filters or create your own squad</Text>
+      <Text style={[s.emptyTitle, { color: colors.text }]}>No circles found matching your filters</Text>
+      <Text style={[s.emptyDesc, { color: colors.textSec }]}>Try different filters or create your own circle</Text>
       <TouchableOpacity style={[s.createBtnLg, { backgroundColor: colors.accent }]} onPress={() => setShowCreate(true)} activeOpacity={0.7}>
         <Feather name="plus" size={16} color="#FFFFFF" />
-        <Text style={s.createBtnLgText}>Create Squad</Text>
+        <Text style={s.createBtnLgText}>Create Circle</Text>
       </TouchableOpacity>
     </View>
   )
@@ -304,7 +304,7 @@ export default function PodDiscoveryScreen({ navigation, route }) {
           <Feather name="arrow-left" size={22} color={colors.text} />
         </TouchableOpacity>
         <View>
-          <Text style={[s.title, { color: colors.text }]}>Find a Squad</Text>
+          <Text style={[s.title, { color: colors.text }]}>Find a Circle</Text>
           <Text style={[s.subtitle, { color: colors.textSec }]}>Join a group that matches your goals</Text>
         </View>
       </View>
@@ -331,13 +331,13 @@ export default function PodDiscoveryScreen({ navigation, route }) {
         <View style={s.modalOverlay}>
           <View style={[s.modalContent, { backgroundColor: colors.bgSec }]}>
             <View style={s.modalHeader}>
-              <Text style={[s.modalTitle, { color: colors.text }]}>Create a Squad</Text>
+              <Text style={[s.modalTitle, { color: colors.text }]}>Create a Circle</Text>
               <TouchableOpacity onPress={() => setShowCreate(false)} activeOpacity={0.7}>
                 <Feather name="x" size={22} color={colors.textSec} />
               </TouchableOpacity>
             </View>
 
-            <Text style={[s.inputLabel, { color: colors.textSec }]}>Squad Name</Text>
+            <Text style={[s.inputLabel, { color: colors.textSec }]}>Circle Name</Text>
             <TextInput
               style={[s.input, { color: colors.text, backgroundColor: 'rgba(148,163,184,0.08)', borderColor: colors.border }]}
               value={newPod.name}
@@ -365,7 +365,7 @@ export default function PodDiscoveryScreen({ navigation, route }) {
               {creating ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={s.createSubmitText}>Create Squad</Text>
+                <Text style={s.createSubmitText}>Create Circle</Text>
               )}
             </TouchableOpacity>
           </View>

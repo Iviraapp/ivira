@@ -40,12 +40,12 @@ export async function joinPod({ podId, memberId, role = 'member' }) {
       .where({ pod_id: podId, member_id: memberId })
       .first()
     if (existing) {
-      throw Object.assign(new Error('Already a member of this pod'), { statusCode: 409 })
+      throw Object.assign(new Error('Already a member of this circle'), { statusCode: 409 })
     }
 
     const memberCount = await trx('pod_members').where('pod_id', podId).count('* as count').first()
     if (parseInt(memberCount.count) >= 5) {
-      throw Object.assign(new Error('Pod is full (max 5 members)'), { statusCode: 400 })
+      throw Object.assign(new Error('Circle is full (max 5 members)'), { statusCode: 400 })
     }
 
     const [membership] = await trx('pod_members')
@@ -73,7 +73,7 @@ export async function leavePod({ podId, memberId }) {
     .where({ pod_id: podId, member_id: memberId })
     .del()
   if (!deleted) {
-    throw Object.assign(new Error('Not a member of this pod'), { statusCode: 404 })
+    throw Object.assign(new Error('Not a member of this circle'), { statusCode: 404 })
   }
 
   const remaining = await db('pod_members').where('pod_id', podId).count('* as count').first()
@@ -145,7 +145,7 @@ export async function autoMatchMember({ gymId, memberId, goalType, intensity, ti
     return { pod: bestPod, membership, created: false }
   }
 
-  const podName = `${goalType || 'General'} ${intensity || 'Mixed'} Pod`
+  const podName = `${goalType || 'General'} ${intensity || 'Mixed'} Circle`
   const pod = await createPod({ gymId, name: podName, goalType, intensity, timePreference, timezone })
   const membership = await joinPod({ podId: pod.id, memberId, role: 'leader' })
   return { pod, membership, created: true }
@@ -409,7 +409,7 @@ export async function sendMessage({ podId, memberId, text, imageUrl }) {
   const membership = await db('pod_members')
     .where({ pod_id: podId, member_id: memberId, status: 'active' })
     .first()
-  if (!membership) throw new Error('Not a member of this pod')
+  if (!membership) throw new Error('Not a member of this circle')
 
   // Insert into pod_feed as type='message'
   const [entry] = await db('pod_feed')
@@ -510,7 +510,7 @@ export async function sendNudge({ fromMemberId, toMemberId, podId }) {
     .count('* as count')
     .first()
   if (parseInt(bothInPod.count) !== 2) {
-    throw Object.assign(new Error('Both members must be in the same pod'), { statusCode: 400 })
+    throw Object.assign(new Error('Both members must be in the same circle'), { statusCode: 400 })
   }
 
   const [nudge] = await db('pod_nudges')
