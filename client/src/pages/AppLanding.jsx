@@ -274,7 +274,7 @@ export default function AppLanding() {
         </motion.div>
 
         <p style={{ fontSize: 13, color: t.textSec, marginTop: 16, letterSpacing: '0.5px' }}>
-          Used by members at gyms in Hyderabad, Chennai, Bengaluru & Mumbai
+          Used by members at gyms across India, UAE, USA, UK & Australia
         </p>
 
         {/* Store badges */}

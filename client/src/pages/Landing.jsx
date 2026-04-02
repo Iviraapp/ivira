@@ -1217,8 +1217,8 @@ export default function Landing() {
           fontFamily: FONT_NAV, fontSize: 13, fontWeight: 600,
           letterSpacing: '0.06em', color: t.textSec, lineHeight: 1.6,
         }}>
-          <span style={{ color: ACCENT, fontWeight: 700 }}>Built for India</span>
-          {' '}&mdash; GST invoicing &middot; UPI + Razorpay &middot; WhatsApp reminders &middot; Hindi/Telugu/Tamil/Kannada
+          <span style={{ color: ACCENT, fontWeight: 700 }}>Trusted worldwide</span>
+          {' '}&mdash; India &middot; USA &middot; UAE &middot; UK &middot; Australia &mdash; Multi-currency billing &middot; UPI, Stripe &amp; Razorpay &middot; WhatsApp &amp; SMS &middot; 10+ languages
         </span>
       </div>
 
@@ -1232,9 +1232,9 @@ export default function Landing() {
             gap: 20,
           }}>
             {[
-              { quote: 'IVIRA replaced 4 tools we were paying for. Check-ins, payments, WhatsApp — everything in one place.', name: 'Rajesh K.', gym: 'PowerFit Gym', city: 'Hyderabad', members: '120+ members' },
-              { quote: 'My members actually use the app daily. Sleep tracking and the AI coach keep them engaged between sessions.', name: 'Priya M.', gym: 'FitZone Studio', city: 'Chennai', members: '85+ members' },
-              { quote: 'Set up took 10 minutes. The QR check-in alone saved us 2 hours of front desk work every day.', name: 'Arjun S.', gym: 'Iron Temple', city: 'Bengaluru', members: '200+ members' },
+              { quote: 'IVIRA replaced 4 tools we were paying for. Check-ins, payments, WhatsApp — everything in one place.', name: 'Rajesh K.', gym: 'PowerFit Gym', city: 'Hyderabad, India', members: '120+ members' },
+              { quote: 'We switched from Mindbody and saved 60% on software costs. The member app engagement is unreal.', name: 'Sarah T.', gym: 'Peak Performance', city: 'Dubai, UAE', members: '150+ members' },
+              { quote: 'Set up took 10 minutes. The QR check-in alone saved us 2 hours of front desk work every day.', name: 'Arjun S.', gym: 'Iron Temple', city: 'Bengaluru, India', members: '200+ members' },
             ].map((t2, i) => (
               <motion.div key={i} custom={i} variants={fadeUp}
                 initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
