@@ -181,37 +181,72 @@ Response format:
   "weekly_notes": "string"
 }`;
 
-async function callAI({ systemPrompt, messages, maxTokens = 512, useDeepSeek, useAnthropic, request, reply }) {
+async function callAI({ systemPrompt, messages, maxTokens = 512, request, reply }) {
   let text;
 
-  if (useDeepSeek) {
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      signal: AbortSignal.timeout(30000),
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.deepseek.apiKey}` },
-      body: JSON.stringify({ model: 'deepseek-chat', max_tokens: maxTokens, messages: [{ role: 'system', content: systemPrompt }, ...messages] }),
-    });
-    if (!response.ok) {
-      const err = await response.text();
-      request.log.error({ status: response.status, err }, 'DeepSeek API error');
-      return reply.code(502).send({ error: 'AI_ERROR', message: 'Vira AI is temporarily unavailable.' });
+  // Primary: DeepSeek Chat
+  if (config.deepseek.enabled) {
+    try {
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        signal: AbortSignal.timeout(30000),
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.deepseek.apiKey}` },
+        body: JSON.stringify({ model: 'deepseek-chat', max_tokens: maxTokens, messages: [{ role: 'system', content: systemPrompt }, ...messages] }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        text = data.choices?.[0]?.message?.content || '';
+        if (text) return text;
+      }
+      request.log.warn({ status: response.status }, 'DeepSeek failed, falling back to Gemini');
+    } catch (err) {
+      request.log.warn({ err: err.message }, 'DeepSeek error, falling back to Gemini');
     }
-    const data = await response.json();
-    text = data.choices?.[0]?.message?.content || '';
-  } else {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      signal: AbortSignal.timeout(30000),
-      headers: { 'Content-Type': 'application/json', 'x-api-key': config.anthropic.apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens, system: systemPrompt, messages }),
-    });
-    if (!response.ok) {
-      const err = await response.text();
-      request.log.error({ status: response.status, err }, 'Anthropic API error');
-      return reply.code(502).send({ error: 'AI_ERROR', message: 'Vira AI is temporarily unavailable.' });
+  }
+
+  // Fallback: Gemini 2.0 Flash
+  if (config.gemini.enabled) {
+    try {
+      const geminiMessages = [{ role: 'user', parts: [{ text: systemPrompt + '\n\n' + messages.map(m => `${m.role}: ${m.content}`).join('\n') }] }];
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.gemini.apiKey}`,
+        {
+          method: 'POST',
+          signal: AbortSignal.timeout(30000),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: geminiMessages, generationConfig: { maxOutputTokens: maxTokens } }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (text) return text;
+      }
+      request.log.warn({ status: response.status }, 'Gemini also failed');
+    } catch (err) {
+      request.log.warn({ err: err.message }, 'Gemini error');
     }
-    const data = await response.json();
-    text = data.content?.[0]?.text || '';
+  }
+
+  // Fallback: Anthropic (if configured)
+  if (config.anthropic.enabled) {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        signal: AbortSignal.timeout(30000),
+        headers: { 'Content-Type': 'application/json', 'x-api-key': config.anthropic.apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens, system: systemPrompt, messages }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        text = data.content?.[0]?.text || '';
+        if (text) return text;
+      }
+    } catch {}
+  }
+
+  if (!text) {
+    return reply.code(502).send({ error: 'AI_ERROR', message: 'Vira AI is temporarily unavailable.' });
   }
   return text;
 }
@@ -227,9 +262,7 @@ export default async function aiCoachRoutes(fastify) {
   }, async (request, reply) => {
     const { message, history = [], context = {} } = request.body;
 
-    const useDeepSeek = config.deepseek.enabled;
-    const useAnthropic = config.anthropic.enabled;
-    if (!useDeepSeek && !useAnthropic) {
+    if (!config.deepseek.enabled && !config.gemini.enabled && !config.anthropic.enabled) {
       return reply.code(503).send({ error: 'AI_NOT_CONFIGURED', message: 'Vira AI is not available.' });
     }
 
@@ -246,7 +279,7 @@ export default async function aiCoachRoutes(fastify) {
     messages.push({ role: 'user', content: message });
 
     try {
-      const text = await callAI({ systemPrompt, messages, maxTokens: 512, useDeepSeek, useAnthropic, request, reply });
+      const text = await callAI({ systemPrompt, messages, maxTokens: 512, request, reply });
       if (typeof text !== 'string') return; // reply already sent in callAI
       return { reply: text };
     } catch (err) {
@@ -275,7 +308,7 @@ export default async function aiCoachRoutes(fastify) {
     const userMessage = `Create a ${days_per_week}-day weekly workout plan: Goal: ${goal.replace(/_/g, ' ')}, Experience: ${experience_level}, Equipment: ${equipmentList}, Focus: ${focusList}. Return as JSON.`;
 
     try {
-      const text = await callAI({ systemPrompt: WORKOUT_PLAN_PROMPT, messages: [{ role: 'user', content: userMessage }], maxTokens: 4096, useDeepSeek, useAnthropic, request, reply });
+      const text = await callAI({ systemPrompt: WORKOUT_PLAN_PROMPT, messages: [{ role: 'user', content: userMessage }], maxTokens: 4096, request, reply });
       if (typeof text !== 'string') return;
       const jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
       const plan = JSON.parse(jsonStr);
