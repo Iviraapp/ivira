@@ -32,6 +32,13 @@ const config = {
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
   },
 
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    enabled: !!process.env.STRIPE_SECRET_KEY,
+  },
+
   wati: {
     apiUrl: process.env.WATI_API_URL,
     apiToken: process.env.WATI_API_TOKEN,

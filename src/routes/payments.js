@@ -137,4 +137,20 @@ export default async function paymentRoutes(fastify) {
 
     return { status: 'ok' };
   });
+
+  // Stripe webhook (no auth - verified by signature)
+  fastify.post('/webhooks/stripe', {
+    config: { rawBody: true },
+  }, async (request, reply) => {
+    const sig = request.headers['stripe-signature'];
+    if (!sig) return reply.code(400).send({ error: 'Missing stripe-signature' });
+    try {
+      const { handleWebhook } = await import('../services/stripe.service.js');
+      const result = await handleWebhook(request.rawBody, sig);
+      return reply.send(result);
+    } catch (err) {
+      request.log.error(err, 'Stripe webhook error');
+      return reply.code(400).send({ error: err.message });
+    }
+  });
 }

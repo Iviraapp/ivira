@@ -7,7 +7,7 @@ import { normalizePhone, generateOTP, isValidEmail } from '../utils/validators.j
 import { sendOTPEmail } from './email.service.js';
 import { geocodeAddress } from './geocoding.service.js';
 
-export async function registerGym({ ownerName, ownerPhone, ownerEmail, gymName, city, address, latitude, longitude }) {
+export async function registerGym({ ownerName, ownerPhone, ownerEmail, gymName, city, address, latitude, longitude, country_code, timezone, currency }) {
   const phone = normalizePhone(ownerPhone);
   const email = ownerEmail.toLowerCase().trim();
 
@@ -45,6 +45,10 @@ export async function registerGym({ ownerName, ownerPhone, ownerEmail, gymName, 
       address,
       latitude: resolvedLat ?? null,
       longitude: resolvedLng ?? null,
+      country_code: country_code || 'IN',
+      timezone: timezone || (country_code === 'IN' || !country_code ? 'Asia/Kolkata' : undefined),
+      currency: currency || 'INR',
+      payment_gateway: (!country_code || country_code === 'IN') ? 'razorpay' : 'stripe',
       status: 'trial',
       trial_ends_at: trialEndsAt,
     })

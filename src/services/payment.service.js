@@ -310,6 +310,15 @@ export async function getPayments(gymId, { page = 1, limit = 50, status, memberI
   return { payments, total: parseInt(count, 10), page, limit };
 }
 
+// Determine which payment gateway a gym should use
+export async function getGateway(gymId) {
+  const gym = await db('gyms').where('id', gymId).select('payment_gateway', 'country_code').first();
+  if (!gym) return 'razorpay';
+  if (gym.payment_gateway === 'stripe') return 'stripe';
+  if (['US', 'AE', 'GB', 'AU', 'CA', 'SG'].includes(gym.country_code)) return 'stripe';
+  return 'razorpay';
+}
+
 // Dashboard stats
 export async function getTodayRevenue(gymId) {
   const result = await db('payments')

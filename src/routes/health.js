@@ -43,6 +43,7 @@ export default async function healthRoutes(fastify) {
     checks.blob      = config.blob?.enabled        ? 'configured' : 'missing BLOB_READ_WRITE_TOKEN (photos use DB fallback)';
     checks.sentry    = process.env.SENTRY_DSN      ? 'configured' : 'missing SENTRY_DSN';
     checks.wati      = config.wati?.apiToken       ? 'configured' : 'missing WATI_API_TOKEN (WhatsApp disabled)';
+    checks.stripe    = config.stripe?.enabled       ? 'configured' : 'missing STRIPE_SECRET_KEY (required for US/UAE/UK/AU gyms)';
 
     const critical = ['database', 'redis'];
     const hasErrors = critical.some(k => checks[k].startsWith('ERROR'));
