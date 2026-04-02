@@ -48,6 +48,7 @@ import SubscriptionScreen from '../screens/SubscriptionScreen'
 import GymDiscoveryScreen from '../screens/GymDiscoveryScreen'
 import TrainerDashboardScreen from '../screens/TrainerDashboardScreen'
 import WorkoutHistoryScreen from '../screens/WorkoutHistoryScreen'
+import WorkoutAnalyzerScreen from '../screens/WorkoutAnalyzerScreen'
 
 // Try to load BlurView — verify native module is available (not just JS)
 let BlurView = null
@@ -139,6 +140,7 @@ function CirclesStackNavigator() {
       <CommunityStackNav.Screen name="CommunityHub" component={CommunityHubScreen} />
       <CommunityStackNav.Screen name="ServiceDetail" component={ServiceDetailScreen} />
       <CommunityStackNav.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
+      <CommunityStackNav.Screen name="WorkoutAnalyzer" component={WorkoutAnalyzerScreen} />
     </CommunityStackNav.Navigator>
   )
 }

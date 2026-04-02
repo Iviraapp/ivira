@@ -457,6 +457,22 @@ export default function PodHomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      {/* Form Check */}
+      <TouchableOpacity
+        style={[styles.formCheckCard, card, { borderTopWidth: 3, borderTopColor: POD_PURPLE }]}
+        onPress={() => navigation.navigate('WorkoutAnalyzer', { podId, podName: pod?.name, gymId, memberId: member?.id })}
+        activeOpacity={0.8}
+      >
+        <View style={[styles.formCheckIcon, { backgroundColor: `${POD_PURPLE}18` }]}>
+          <Feather name="video" size={22} color={POD_PURPLE} />
+        </View>
+        <View style={styles.formCheckInfo}>
+          <Text style={[styles.formCheckTitle, { color: colors.text }]}>Form Check</Text>
+          <Text style={[styles.formCheckSub, { color: colors.textSec }]}>AI analyzes your workout form</Text>
+        </View>
+        <Feather name="chevron-right" size={20} color={colors.textTer} />
+      </TouchableOpacity>
+
       {/* Streak Display */}
       <View style={[styles.streakCard, card, { borderTopWidth: 3, borderTopColor: POD_AMBER }]}>
         <View style={styles.streakMain}>
@@ -832,6 +848,34 @@ const styles = StyleSheet.create({
     fontFamily: FONT.semibold,
     fontSize: 13,
     color: '#fff',
+  },
+
+  // === Form Check ===
+  formCheckCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  formCheckIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  formCheckInfo: {
+    flex: 1,
+  },
+  formCheckTitle: {
+    fontFamily: FONT.semibold,
+    fontSize: 15,
+  },
+  formCheckSub: {
+    fontFamily: FONT.regular,
+    fontSize: 13,
+    marginTop: 2,
   },
 
   // === Streak ===
