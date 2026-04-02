@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken';
+import config from '../config/index.js';
 import db from '../config/database.js';
 
 // ─── Shared Styles & Layout ────────────────────────────────────────────────────
@@ -136,6 +138,23 @@ function renderPage(title, bodyContent, activePage) {
 
 export default async function adminDashboardRoutes(fastify) {
 
+  // Auth middleware for super admin routes (matches superadmin.js pattern)
+  async function verifySuperAdmin(request, reply) {
+    const token = request.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      reply.code(401).send({ error: 'Unauthorized' });
+      return reply;
+    }
+    try {
+      const decoded = jwt.verify(token, config.jwt.secret);
+      if (decoded.role !== 'super_admin') throw new Error();
+      request.admin = decoded;
+    } catch {
+      reply.code(401).send({ error: 'Invalid token' });
+      return reply;
+    }
+  }
+
   // ── 1. Login Page ──────────────────────────────────────────────────────────
 
   fastify.get('/admin', async (_req, reply) => {
@@ -215,9 +234,7 @@ export default async function adminDashboardRoutes(fastify) {
   });
 
   // Internal API: extra stats for the dashboard
-  fastify.get('/api/v1/super/admin-extra-stats', async (request, reply) => {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    if (!token) return reply.code(401).send({ error: 'Unauthorized' });
+  fastify.get('/api/v1/super/admin-extra-stats', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
     try {
       const [pods, dau, podMembers] = await Promise.all([
         db('pods').where('is_active', true).count('* as count').first(),
@@ -285,9 +302,7 @@ export default async function adminDashboardRoutes(fastify) {
   });
 
   // Internal API: members list
-  fastify.get('/api/v1/super/admin-members', async (request, reply) => {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    if (!token) return reply.code(401).send({ error: 'Unauthorized' });
+  fastify.get('/api/v1/super/admin-members', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
     const { page = 1, limit = 20, search = '' } = request.query;
     const offset = (Math.max(1, Number(page)) - 1) * Number(limit);
     try {
@@ -366,9 +381,7 @@ export default async function adminDashboardRoutes(fastify) {
   });
 
   // Internal API: pods list
-  fastify.get('/api/v1/super/admin-pods', async (request, reply) => {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    if (!token) return reply.code(401).send({ error: 'Unauthorized' });
+  fastify.get('/api/v1/super/admin-pods', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
     const { search = '', goal = '', tier = '' } = request.query;
     try {
       let query = db('pods as p')
@@ -486,9 +499,7 @@ export default async function adminDashboardRoutes(fastify) {
   });
 
   // Internal API: send notification (stores log)
-  fastify.post('/api/v1/super/admin-notify', async (request, reply) => {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    if (!token) return reply.code(401).send({ error: 'Unauthorized' });
+  fastify.post('/api/v1/super/admin-notify', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
     const { target, title, body, gymId, podId, email } = request.body || {};
     if (!title || !body) return reply.code(400).send({ error: 'Title and body required' });
     try {
@@ -524,9 +535,7 @@ export default async function adminDashboardRoutes(fastify) {
   });
 
   // Internal API: notification log
-  fastify.get('/api/v1/super/admin-notify-log', async (request, reply) => {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    if (!token) return reply.code(401).send({ error: 'Unauthorized' });
+  fastify.get('/api/v1/super/admin-notify-log', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
     try {
       const exists = await db.schema.hasTable('admin_notification_log');
       if (!exists) return { notifications: [] };
@@ -587,9 +596,7 @@ export default async function adminDashboardRoutes(fastify) {
   });
 
   // Internal API: updates CRUD
-  fastify.get('/api/v1/super/admin-updates', async (request, reply) => {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    if (!token) return reply.code(401).send({ error: 'Unauthorized' });
+  fastify.get('/api/v1/super/admin-updates', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
     try {
       const exists = await db.schema.hasTable('admin_ota_updates');
       if (!exists) return { updates: [] };
@@ -601,9 +608,7 @@ export default async function adminDashboardRoutes(fastify) {
     }
   });
 
-  fastify.post('/api/v1/super/admin-updates', async (request, reply) => {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    if (!token) return reply.code(401).send({ error: 'Unauthorized' });
+  fastify.post('/api/v1/super/admin-updates', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
     const { version, platform, changelog } = request.body || {};
     if (!version || !changelog) return reply.code(400).send({ error: 'Version and changelog required' });
     try {

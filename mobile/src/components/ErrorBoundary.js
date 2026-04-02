@@ -1,12 +1,6 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-
-const BRAND = {
-  primary: '#3B82F6',
-  darkBg: '#0A0E1A',
-  white: '#FFFFFF',
-  muted: '#8892A4',
-}
+import { COLORS, RADIUS, FONT } from '../lib/theme'
 
 export default class ErrorBoundary extends React.Component {
   state = { hasError: false }
@@ -46,7 +40,7 @@ export default class ErrorBoundary extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BRAND.darkBg,
+    backgroundColor: COLORS.bg,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
@@ -54,7 +48,7 @@ const styles = StyleSheet.create({
   icon: {
     fontSize: 48,
     fontWeight: '900',
-    color: BRAND.primary,
+    color: COLORS.accent,
     marginBottom: 16,
     width: 72,
     height: 72,
@@ -62,31 +56,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderRadius: 36,
     borderWidth: 3,
-    borderColor: BRAND.primary,
+    borderColor: COLORS.accent,
     overflow: 'hidden',
   },
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: BRAND.white,
+    color: COLORS.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: BRAND.muted,
+    color: COLORS.textSec,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
   },
   button: {
-    backgroundColor: BRAND.primary,
+    backgroundColor: COLORS.accent,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
   },
   buttonText: {
-    color: BRAND.white,
+    color: COLORS.text,
     fontSize: 16,
     fontWeight: '700',
   },

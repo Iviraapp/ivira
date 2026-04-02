@@ -15,7 +15,7 @@ import {
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
+import { COLORS, SPACING, RADIUS, FONT, STATUS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
@@ -37,9 +37,9 @@ const CATEGORIES = [
 
 // ─── Difficulty Config ───────────────────────────────────────
 const DIFFICULTY = {
-  Easy:   { color: '#34A853', label: 'Easy' },
-  Medium: { color: '#FBBC05', label: 'Medium' },
-  Hard:   { color: '#EA4335', label: 'Hard' },
+  Easy:   { color: COLORS.green, label: 'Easy' },
+  Medium: { color: COLORS.amber, label: 'Medium' },
+  Hard:   { color: COLORS.red, label: 'Hard' },
 }
 
 // ─── Card Backgrounds (gradient-like solid colors) ───────────
@@ -504,7 +504,7 @@ function RecipeCard({ recipe, index, onPress, isFavorite, onToggleFavorite, colo
           <Feather
             name={isFavorite ? 'heart' : 'heart'}
             size={16}
-            color={isFavorite ? '#EA4335' : colors.textTer}
+            color={isFavorite ? COLORS.red : colors.textTer}
           />
           {isFavorite && <View style={styles.favDot} />}
         </TouchableOpacity>
@@ -566,7 +566,7 @@ function RecipeDetailModal({ recipe, visible, onClose, isFavorite, onToggleFavor
     { label: 'Protein',   value: `${recipe.protein}`,   unit: 'g',    color: colors.green },
     { label: 'Carbs',     value: `${recipe.carbs}`,     unit: 'g',    color: COLORS.accent },
     { label: 'Fat',       value: `${recipe.fat}`,       unit: 'g',    color: colors.red },
-    { label: 'Fiber',     value: `${recipe.fiber}`,     unit: 'g',    color: '#8B5CF6' },
+    { label: 'Fiber',     value: `${recipe.fiber}`,     unit: 'g',    color: COLORS.cyan },
   ]
 
   return (
@@ -581,7 +581,7 @@ function RecipeDetailModal({ recipe, visible, onClose, isFavorite, onToggleFavor
           </TouchableOpacity>
           <Text style={[styles.modalHeaderTitle, { color: colors.text }]} numberOfLines={1}>Recipe</Text>
           <TouchableOpacity onPress={onToggleFavorite} style={styles.modalFavBtn}>
-            <Feather name="heart" size={20} color={isFavorite ? '#EA4335' : colors.textTer} />
+            <Feather name="heart" size={20} color={isFavorite ? COLORS.red : colors.textTer} />
           </TouchableOpacity>
         </View>
 
@@ -591,7 +591,7 @@ function RecipeDetailModal({ recipe, visible, onClose, isFavorite, onToggleFavor
           showsVerticalScrollIndicator={false}
         >
           {/* Hero */}
-          <View style={[styles.heroSection, { backgroundColor: isDark ? '#1A1A2E' : '#F5F0FF' }]}>
+          <View style={[styles.heroSection, { backgroundColor: colors.bgSec }]}>
             <Text style={styles.heroEmoji}>{recipe.emoji}</Text>
             <Text style={[styles.heroName, { color: colors.text }]}>{recipe.name}</Text>
 
@@ -916,7 +916,7 @@ export default function RecipeScreen() {
                 <Text
                   style={[
                     styles.filterLabel,
-                    { color: active ? '#FFFFFF' : colors.textSec },
+                    { color: active ? COLORS.text : colors.textSec },
                   ]}
                 >
                   {cat.label}
@@ -1084,13 +1084,13 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#EA4335',
+    backgroundColor: COLORS.red,
   },
   emojiWrap: {
     width: 48,
     height: 48,
     borderRadius: RADIUS.md,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: COLORS.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.sm,
@@ -1343,7 +1343,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   stepNumberText: {
-    color: '#FFFFFF',
+    color: COLORS.text,
     fontSize: 13,
     fontFamily: FONT.numBold,
   },

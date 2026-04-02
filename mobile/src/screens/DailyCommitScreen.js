@@ -252,10 +252,10 @@ export default function DailyCommitScreen({ navigation, route }) {
             activeOpacity={0.8}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={COLORS.text} />
             ) : (
               <>
-                <Feather name="zap" size={20} color="#fff" />
+                <Feather name="zap" size={20} color={COLORS.text} />
                 <Text style={styles.commitBtnText}>COMMIT</Text>
               </>
             )}
@@ -326,10 +326,10 @@ export default function DailyCommitScreen({ navigation, route }) {
             activeOpacity={0.8}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={COLORS.text} />
             ) : (
               <>
-                <Feather name="check" size={22} color="#fff" />
+                <Feather name="check" size={22} color={COLORS.text} />
                 <Text style={styles.checkInBtnText}>CHECK IN</Text>
               </>
             )}
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.lg,
     gap: 10,
   },
-  commitBtnText: { color: '#fff', fontSize: 17, fontFamily: FONT.bold, letterSpacing: 1.5 },
+  commitBtnText: { color: COLORS.text, fontSize: 17, fontFamily: FONT.bold, letterSpacing: 1.5 },
   btnDisabled: { opacity: 0.4 },
 
   notifyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, gap: 6 },
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
     gap: 10,
   },
-  checkInBtnText: { color: '#fff', fontSize: 18, fontFamily: FONT.bold, letterSpacing: 1.5 },
+  checkInBtnText: { color: COLORS.text, fontSize: 18, fontFamily: FONT.bold, letterSpacing: 1.5 },
 
   // Checked in / Done
   doneIcon: { marginTop: SPACING.xxl, marginBottom: SPACING.md },
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
 
   podProgressCard: { padding: SPACING.md, width: '100%', marginBottom: SPACING.lg },
   podProgressText: { fontSize: 15, marginBottom: 10 },
-  progressBar: { height: 8, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' },
+  progressBar: { height: 8, backgroundColor: COLORS.border, borderRadius: 4, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: COLORS.green, borderRadius: 4 },
 
   feedBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, paddingHorizontal: 24, borderRadius: RADIUS.full, borderWidth: 1.5, borderColor: COLORS.accent },

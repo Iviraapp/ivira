@@ -1,5 +1,57 @@
 import config from '../config/index.js';
 
+// ─── Per-IP rate limiting for AI endpoints ───────────────────────────────────
+const AI_RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const AI_RATE_LIMIT_DEFAULT = 20;       // unauthenticated
+const AI_RATE_LIMIT_AUTH = 40;          // authenticated users get higher limit
+const aiRateMap = new Map();
+
+function checkAiRateLimit(request, reply) {
+  const ip = request.ip;
+  const now = Date.now();
+  const isAuthenticated = !!request.user;
+  const maxRequests = isAuthenticated ? AI_RATE_LIMIT_AUTH : AI_RATE_LIMIT_DEFAULT;
+
+  let entry = aiRateMap.get(ip);
+  if (!entry || now - entry.windowStart > AI_RATE_LIMIT_WINDOW_MS) {
+    entry = { windowStart: now, count: 0 };
+    aiRateMap.set(ip, entry);
+  }
+  entry.count++;
+
+  if (entry.count > maxRequests) {
+    reply.code(429).send({
+      error: 'RATE_LIMIT',
+      message: `Too many AI requests. Max ${maxRequests}/minute. Please slow down.`,
+    });
+    return false;
+  }
+  return true;
+}
+
+// Periodically clean stale entries (every 5 minutes)
+setInterval(() => {
+  const cutoff = Date.now() - AI_RATE_LIMIT_WINDOW_MS * 2;
+  for (const [ip, entry] of aiRateMap) {
+    if (entry.windowStart < cutoff) aiRateMap.delete(ip);
+  }
+}, 300_000).unref();
+
+// Optional auth: try to decode token but don't reject if missing/invalid
+async function optionalAuth(request) {
+  try {
+    const authHeader = request.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      const jwt = (await import('jsonwebtoken')).default;
+      const decoded = jwt.verify(authHeader.slice(7), config.jwt.secret);
+      request.user = decoded;
+    }
+  } catch {
+    // Token invalid or missing — proceed unauthenticated
+    request.user = null;
+  }
+}
+
 const SYSTEM_PROMPT = `You are Vira AI — a certified fitness, health, and wellness assistant embedded in a gym management app used across India.
 
 ROLE & SCOPE:
@@ -115,7 +167,11 @@ RESPONSE FORMAT:
 export default async function aiCoachRoutes(fastify) {
   fastify.post('/ai/coach', {
     schema: messageSchema,
-    preHandler: [fastify.verifyToken],
+    preHandler: [
+      async (request, reply) => { await optionalAuth(request); },
+      async (request, reply) => { if (!checkAiRateLimit(request, reply)) return; },
+      fastify.verifyToken,
+    ],
   }, async (request, reply) => {
     const { message, history = [] } = request.body;
 
@@ -214,7 +270,11 @@ export default async function aiCoachRoutes(fastify) {
   // POST /ai/workout-plan - Generate a weekly workout plan using Claude
   fastify.post('/ai/workout-plan', {
     schema: workoutPlanSchema,
-    preHandler: [fastify.verifyToken],
+    preHandler: [
+      async (request, reply) => { await optionalAuth(request); },
+      async (request, reply) => { if (!checkAiRateLimit(request, reply)) return; },
+      fastify.verifyToken,
+    ],
   }, async (request, reply) => {
     const { goal, experience_level, days_per_week, equipment_available, focus_areas } = request.body;
 

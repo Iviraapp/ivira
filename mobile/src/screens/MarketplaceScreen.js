@@ -13,7 +13,7 @@ import {
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { premiumAlert } from '../components/PremiumAlert'
-import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
+import { COLORS, SPACING, RADIUS, FONT, ELITE_CARD, ELITE_CARD_LIGHT, CARD_ACCENTS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { formatPaise } from '../lib/utils'
 import Haptics from '../lib/haptics'
@@ -21,6 +21,13 @@ import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 
 const FILTERS = ['All', 'Trainer', 'Dietitian', 'Physio', 'Classes']
+
+const CATEGORY_ACCENTS = {
+  Trainer: '#3B82F6',
+  Dietitian: '#22C55E',
+  Physio: '#8B5CF6',
+  Classes: '#F59E0B',
+}
 
 const INTENSITY_COLORS = {
   High: { bg: '#EF444418', text: '#EF4444', label: 'HIGH' },
@@ -195,6 +202,68 @@ function ProfessionalCard({ item, onPress, colors, isDark }) {
   )
 }
 
+function ServiceCard({ item, onPress, colors, isDark, index }) {
+  const accentColor = CATEGORY_ACCENTS[item.category] || CARD_ACCENTS[index % CARD_ACCENTS.length]
+
+  const renderStars = (rating) => {
+    const full = Math.floor(rating)
+    const stars = []
+    for (let i = 0; i < 5; i++) {
+      stars.push(
+        <Feather
+          key={i}
+          name="star"
+          size={12}
+          color={i < full ? COLORS.amber : colors.textTer}
+          style={{ marginRight: 2 }}
+        />
+      )
+    }
+    return stars
+  }
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.serviceCard,
+        isDark ? ELITE_CARD : ELITE_CARD_LIGHT,
+        { borderTopWidth: 3, borderTopColor: accentColor },
+      ]}
+      activeOpacity={0.7}
+      onPress={onPress}
+    >
+      <View style={styles.serviceCardHeader}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.serviceCardName, { color: colors.text }]} numberOfLines={1}>
+            {item.serviceName}
+          </Text>
+          <View style={styles.serviceProviderRow}>
+            <Feather name="user" size={12} color={colors.textSec} />
+            <Text style={[styles.serviceProviderText, { color: colors.textSec }]} numberOfLines={1}>
+              {item.providerName}
+            </Text>
+          </View>
+        </View>
+        <View style={[styles.serviceCategoryBadge, { backgroundColor: accentColor + '18' }]}>
+          <Text style={[styles.serviceCategoryText, { color: accentColor }]}>{item.category}</Text>
+        </View>
+      </View>
+
+      <View style={[styles.serviceCardFooter, { borderTopColor: colors.border }]}>
+        <View style={styles.serviceRatingRow}>
+          {renderStars(item.rating || 0)}
+          <Text style={[styles.serviceRatingText, { color: colors.textSec }]}>
+            {item.rating?.toFixed(1) || '0.0'}
+          </Text>
+        </View>
+        <Text style={[styles.servicePriceText, { color: COLORS.accent }]}>
+          {formatPaise(item.price)}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  )
+}
+
 export default function MarketplaceScreen({ navigation, embedded = false }) {
   const { gymId, member } = useAuth()
   const { colors, isDark } = useTheme()
@@ -302,6 +371,41 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
     Haptics.selectionAsync()
   }, [fetchSessions])
 
+  const serviceItems = useMemo(() => {
+    if (!showProfessionals) return []
+    const items = []
+    filteredProfessionals.forEach((pro) => {
+      if (pro.services?.length) {
+        pro.services.forEach((svc) => {
+          items.push({
+            id: `${pro.id}-${svc.id || svc.name}`,
+            serviceName: svc.name || 'Service',
+            providerName: pro.name,
+            price: svc.price_paise,
+            rating: pro.rating || 0,
+            category: pro.type
+              ? pro.type.charAt(0).toUpperCase() + pro.type.slice(1).toLowerCase()
+              : 'Trainer',
+            professional: pro,
+          })
+        })
+      } else {
+        items.push({
+          id: String(pro.id),
+          serviceName: pro.specialties?.[0] || 'Consultation',
+          providerName: pro.name,
+          price: 0,
+          rating: pro.rating || 0,
+          category: pro.type
+            ? pro.type.charAt(0).toUpperCase() + pro.type.slice(1).toLowerCase()
+            : 'Trainer',
+          professional: pro,
+        })
+      }
+    })
+    return items
+  }, [filteredProfessionals, showProfessionals])
+
   const hasContent = (showClasses && sessions.length > 0) || (showProfessionals && filteredProfessionals.length > 0)
 
   if (loading) {
@@ -370,8 +474,17 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
 
       {/* Main scrollable list */}
       <FlatList
-        data={[]}
-        renderItem={null}
+        data={serviceItems}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <ServiceCard
+            item={item}
+            index={index}
+            onPress={() => navigation.navigate('ServiceDetail', { professional: item.professional })}
+            colors={colors}
+            isDark={isDark}
+          />
+        )}
         ListHeaderComponent={
           <>
             {/* Classes section */}
@@ -391,7 +504,6 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
                     />
                   ))
                 ) : (
-                  /* Empty state for no classes on selected date */
                   <View style={[styles.emptyDateContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }]}>
                     <View style={[styles.emptyDateIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }]}>
                       <Feather name="calendar" size={28} color={colors.textTer} />
@@ -405,21 +517,10 @@ export default function MarketplaceScreen({ navigation, embedded = false }) {
               </View>
             )}
 
-            {/* Professionals section */}
-            {showProfessionals && filteredProfessionals.length > 0 && (
+            {/* Services section label */}
+            {showProfessionals && serviceItems.length > 0 && (
               <View style={styles.sectionContainer}>
-                <Text style={[styles.sectionLabel, { color: colors.textTer }]}>PROFESSIONALS</Text>
-                <View style={styles.proGrid}>
-                  {filteredProfessionals.map((item) => (
-                    <ProfessionalCard
-                      key={String(item.id)}
-                      item={item}
-                      onPress={() => navigation.navigate('ServiceDetail', { professional: item })}
-                      colors={colors}
-                      isDark={isDark}
-                    />
-                  ))}
-                </View>
+                <Text style={[styles.sectionLabel, { color: colors.textTer }]}>SERVICES</Text>
               </View>
             )}
 
@@ -747,6 +848,71 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.accent,
+    fontFamily: FONT.bold,
+  },
+
+  // Service cards
+  serviceCard: {
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    padding: SPACING.md,
+    overflow: 'hidden',
+  },
+  serviceCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  serviceCardName: {
+    fontSize: 17,
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+    letterSpacing: -0.3,
+    marginBottom: SPACING.xs,
+  },
+  serviceProviderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  serviceProviderText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+  },
+  serviceCategoryBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.full,
+    marginLeft: SPACING.sm,
+  },
+  serviceCategoryText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    fontFamily: FONT.bold,
+    textTransform: 'uppercase',
+  },
+  serviceCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    paddingTop: SPACING.md,
+  },
+  serviceRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  serviceRatingText: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 4,
+    fontFamily: FONT.numMedium,
+  },
+  servicePriceText: {
+    fontSize: 16,
+    fontWeight: '700',
     fontFamily: FONT.bold,
   },
 

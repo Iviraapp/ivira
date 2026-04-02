@@ -14,7 +14,7 @@ import {
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
+import { COLORS, SPACING, RADIUS, FONT, STATUS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
@@ -127,7 +127,7 @@ function ChipGroup({ items, selected, onToggle, multi = true }) {
               <Feather
                 name={item.icon}
                 size={13}
-                color={isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.45)'}
+                color={isSelected ? COLORS.text : COLORS.textTer}
               />
             )}
             <View style={item.sub ? { marginLeft: item.icon ? 0 : 0 } : undefined}>
@@ -135,7 +135,7 @@ function ChipGroup({ items, selected, onToggle, multi = true }) {
                 {item.label}
               </Text>
               {item.sub && (
-                <Text style={[styles.chipSub, isSelected && { color: 'rgba(255,255,255,0.7)' }]}>
+                <Text style={[styles.chipSub, isSelected && { color: COLORS.textSec }]}>
                   {item.sub}
                 </Text>
               )}
@@ -334,7 +334,7 @@ export default function MembershipActivationScreen({ navigation }) {
           <View style={styles.heroIconWrap}>
             <PulseRing color={COLORS.accent} />
             <View style={styles.heroIcon}>
-              <Feather name="maximize" size={26} color="#FFFFFF" />
+              <Feather name="maximize" size={26} color={COLORS.text} />
             </View>
           </View>
           <Text style={[styles.heroTitle, { color: colors.text }]}>
@@ -354,14 +354,14 @@ export default function MembershipActivationScreen({ navigation }) {
           <GlowLine />
 
           <View style={styles.pathLabelRow}>
-            <View style={[styles.pathLabelBadge, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
+            <View style={[styles.pathLabelBadge, { backgroundColor: COLORS.accentSoft }]}>
               <Text style={[styles.pathLabelText, { color: COLORS.accent }]}>A</Text>
             </View>
             <Text style={[styles.pathLabelTitle, { color: colors.textSec }]}>GYM OWNER PATH</Text>
           </View>
 
           <View style={styles.pathHeader}>
-            <View style={[styles.pathIconWrap, { backgroundColor: 'rgba(16,185,129,0.1)' }]}>
+            <View style={[styles.pathIconWrap, { backgroundColor: COLORS.accentSoft }]}>
               <Feather name="key" size={20} color={COLORS.accent} />
             </View>
             <View style={{ flex: 1 }}>
@@ -373,8 +373,8 @@ export default function MembershipActivationScreen({ navigation }) {
           </View>
 
           <View style={[styles.inputRow, {
-            backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.bgTer,
-            borderColor: isDark ? 'rgba(255,255,255,0.08)' : colors.border,
+            backgroundColor: colors.bgTer,
+            borderColor: colors.border,
           }]}>
             <Feather name="hash" size={16} color={colors.textTer} style={{ marginRight: SPACING.sm }} />
             <TextInput
@@ -402,10 +402,10 @@ export default function MembershipActivationScreen({ navigation }) {
             activeOpacity={0.8}
           >
             {linking ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={COLORS.text} />
             ) : (
               <>
-                <Feather name="check-circle" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Feather name="check-circle" size={16} color={COLORS.text} style={{ marginRight: 8 }} />
                 <Text style={styles.primaryBtnText}>Activate Membership</Text>
               </>
             )}
@@ -413,7 +413,7 @@ export default function MembershipActivationScreen({ navigation }) {
 
           <TouchableOpacity
             style={[styles.secondaryBtn, {
-              borderColor: isDark ? 'rgba(255,255,255,0.1)' : colors.border,
+              borderColor: colors.border,
             }]}
             onPress={() => premiumAlert('Coming Soon', 'Gym credential login will be available shortly.')}
             activeOpacity={0.7}
@@ -440,10 +440,10 @@ export default function MembershipActivationScreen({ navigation }) {
           <View style={styles.discoveryInner}>
             {/* Header */}
             <View style={styles.pathLabelRow}>
-              <View style={[styles.pathLabelBadge, { backgroundColor: 'rgba(139,92,246,0.2)' }]}>
-                <Text style={[styles.pathLabelText, { color: '#A78BFA' }]}>B</Text>
+              <View style={[styles.pathLabelBadge, { backgroundColor: COLORS.accentSoft }]}>
+                <Text style={[styles.pathLabelText, { color: COLORS.cyan }]}>B</Text>
               </View>
-              <Text style={[styles.pathLabelTitle, { color: 'rgba(255,255,255,0.5)' }]}>IVIRA DISCOVERY</Text>
+              <Text style={[styles.pathLabelTitle, { color: colors.textTer }]}>IVIRA DISCOVERY</Text>
             </View>
 
             <Text style={styles.discoveryHeadline}>Find a New Home</Text>
@@ -472,7 +472,7 @@ export default function MembershipActivationScreen({ navigation }) {
                   activeOpacity={0.8}
                 >
                   <Text style={styles.primaryBtnText}>Next</Text>
-                  <Feather name="arrow-right" size={16} color="#FFF" style={{ marginLeft: 6 }} />
+                  <Feather name="arrow-right" size={16} color={COLORS.text} style={{ marginLeft: 6 }} />
                 </TouchableOpacity>
               </>
             )}
@@ -489,19 +489,19 @@ export default function MembershipActivationScreen({ navigation }) {
                 <View style={styles.chipGrid}>
                   {CITIES.map(c => (
                     <TouchableOpacity key={c} style={[styles.chip, city === c && styles.chipActive]} onPress={() => setCity(prev => prev === c ? null : c)} activeOpacity={0.7}>
-                      <Feather name="map-pin" size={13} color={city === c ? '#FFFFFF' : 'rgba(255,255,255,0.45)'} />
+                      <Feather name="map-pin" size={13} color={city === c ? COLORS.text : COLORS.textTer} />
                       <Text style={[styles.chipText, city === c && styles.chipTextActive]}>{c}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: SPACING.lg }}>
-                  <TouchableOpacity style={[styles.secondaryBtn, { flex: 1, borderColor: 'rgba(255,255,255,0.1)' }]} onPress={() => setDiscoveryStep(0)} activeOpacity={0.7}>
-                    <Feather name="arrow-left" size={16} color="rgba(255,255,255,0.5)" style={{ marginRight: 6 }} />
-                    <Text style={[styles.secondaryBtnText, { color: 'rgba(255,255,255,0.5)' }]}>Back</Text>
+                  <TouchableOpacity style={[styles.secondaryBtn, { flex: 1, borderColor: colors.border }]} onPress={() => setDiscoveryStep(0)} activeOpacity={0.7}>
+                    <Feather name="arrow-left" size={16} color={colors.textTer} style={{ marginRight: 6 }} />
+                    <Text style={[styles.secondaryBtnText, { color: colors.textTer }]}>Back</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.primaryBtn, { flex: 1 }, !city && { opacity: 0.4 }]} onPress={() => { if (city) setDiscoveryStep(2) }} activeOpacity={0.8}>
                     <Text style={styles.primaryBtnText}>Next</Text>
-                    <Feather name="arrow-right" size={16} color="#FFF" style={{ marginLeft: 6 }} />
+                    <Feather name="arrow-right" size={16} color={COLORS.text} style={{ marginLeft: 6 }} />
                   </TouchableOpacity>
                 </View>
               </>
@@ -511,28 +511,28 @@ export default function MembershipActivationScreen({ navigation }) {
             {discoveryStep === 2 && (
               <>
                 <View style={styles.contactHeader}>
-                  <View style={styles.conciergeBadge}><Feather name="phone" size={10} color="#FFFFFF" /></View>
+                  <View style={styles.conciergeBadge}><Feather name="phone" size={10} color={COLORS.text} /></View>
                   <Text style={styles.contactHeaderText}>CONTACT DETAILS</Text>
                 </View>
                 <Text style={styles.fieldLabel}>Your name *</Text>
                 <View style={styles.formInput}>
-                  <Feather name="user" size={14} color="rgba(255,255,255,0.35)" />
-                  <TextInput style={styles.formInputText} placeholder="Full name" placeholderTextColor="rgba(255,255,255,0.25)" value={name} onChangeText={setName} autoCorrect={false} />
+                  <Feather name="user" size={14} color={COLORS.textTer} />
+                  <TextInput style={styles.formInputText} placeholder="Full name" placeholderTextColor={COLORS.textTer} value={name} onChangeText={setName} autoCorrect={false} />
                 </View>
                 <Text style={styles.fieldLabel}>Phone number *</Text>
                 <View style={styles.formInput}>
                   <Text style={styles.phonePrefix}>+91</Text>
-                  <TextInput style={styles.formInputText} placeholder="9876543210" placeholderTextColor="rgba(255,255,255,0.25)" value={phone} onChangeText={setPhone} keyboardType="phone-pad" maxLength={10} />
+                  <TextInput style={styles.formInputText} placeholder="9876543210" placeholderTextColor={COLORS.textTer} value={phone} onChangeText={setPhone} keyboardType="phone-pad" maxLength={10} />
                 </View>
                 <Text style={styles.fieldLabel}>Anything else? (optional)</Text>
                 <View style={[styles.formInput, { minHeight: 70, alignItems: 'flex-start', paddingTop: 12 }]}>
-                  <Feather name="message-square" size={14} color="rgba(255,255,255,0.35)" style={{ marginTop: 2 }} />
-                  <TextInput style={[styles.formInputText, { minHeight: 50, textAlignVertical: 'top' }]} placeholder="Specific requirements..." placeholderTextColor="rgba(255,255,255,0.25)" value={notes} onChangeText={setNotes} multiline autoCorrect={false} />
+                  <Feather name="message-square" size={14} color={COLORS.textTer} style={{ marginTop: 2 }} />
+                  <TextInput style={[styles.formInputText, { minHeight: 50, textAlignVertical: 'top' }]} placeholder="Specific requirements..." placeholderTextColor={COLORS.textTer} value={notes} onChangeText={setNotes} multiline autoCorrect={false} />
                 </View>
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: SPACING.lg }}>
-                  <TouchableOpacity style={[styles.secondaryBtn, { flex: 1, borderColor: 'rgba(255,255,255,0.1)' }]} onPress={() => setDiscoveryStep(1)} activeOpacity={0.7}>
-                    <Feather name="arrow-left" size={16} color="rgba(255,255,255,0.5)" style={{ marginRight: 6 }} />
-                    <Text style={[styles.secondaryBtnText, { color: 'rgba(255,255,255,0.5)' }]}>Back</Text>
+                  <TouchableOpacity style={[styles.secondaryBtn, { flex: 1, borderColor: colors.border }]} onPress={() => setDiscoveryStep(1)} activeOpacity={0.7}>
+                    <Feather name="arrow-left" size={16} color={colors.textTer} style={{ marginRight: 6 }} />
+                    <Text style={[styles.secondaryBtnText, { color: colors.textTer }]}>Back</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.submitBtn, { flex: 1 }, submitting && { opacity: 0.6 }]} onPress={handleSubmitForm} disabled={submitting} activeOpacity={0.8}>
                     {submitting ? <ActivityIndicator size="small" color={COLORS.accent} /> : (
@@ -544,7 +544,7 @@ export default function MembershipActivationScreen({ navigation }) {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.trustRow}>
-                  <Feather name="shield" size={11} color="rgba(255,255,255,0.35)" />
+                  <Feather name="shield" size={11} color={COLORS.textTer} />
                   <Text style={styles.trustText}>5,000+ partner gyms · Call within 24h</Text>
                 </View>
               </>
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.text,
     fontFamily: FONT.bold,
   },
   secondaryBtn: {
@@ -796,9 +796,9 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   discoveryInner: {
-    backgroundColor: '#0A1628',
+    backgroundColor: COLORS.bg,
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.2)',
+    borderColor: COLORS.accentSoft,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     shadowColor: COLORS.accent,
@@ -811,14 +811,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     fontFamily: FONT.extraBold,
-    color: '#FFFFFF',
+    color: COLORS.text,
     letterSpacing: -0.5,
     marginBottom: SPACING.xs,
   },
   discoverySub: {
     fontSize: 14,
     fontFamily: FONT.regular,
-    color: 'rgba(255,255,255,0.6)',
+    color: COLORS.textSec,
     lineHeight: 22,
     marginBottom: SPACING.md,
   },
@@ -833,7 +833,7 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: COLORS.border,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     fontFamily: FONT.numBold,
-    color: 'rgba(255,255,255,0.4)',
+    color: COLORS.textTer,
   },
 
   // Form section headers
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(16,185,129,0.15)',
+    backgroundColor: COLORS.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -875,13 +875,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     fontFamily: FONT.bold,
-    color: '#FFFFFF',
+    color: COLORS.text,
     flex: 1,
   },
   formRequired: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#EF4444',
+    color: COLORS.red,
   },
 
   // Chips
@@ -899,26 +899,26 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: colors.border,
+    backgroundColor: COLORS.bgSec,
   },
   chipActive: {
-    backgroundColor: 'rgba(16,185,129,0.2)',
-    borderColor: 'rgba(16,185,129,0.4)',
+    backgroundColor: COLORS.accentSoft,
+    borderColor: COLORS.accentGlow,
   },
   chipText: {
     fontSize: 12,
     fontWeight: '600',
     fontFamily: FONT.semibold,
-    color: 'rgba(255,255,255,0.45)',
+    color: COLORS.textTer,
   },
   chipTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.text,
   },
   chipSub: {
     fontSize: 10,
     fontFamily: FONT.regular,
-    color: 'rgba(255,255,255,0.3)',
+    color: COLORS.textTer,
     marginTop: 1,
   },
 
@@ -927,7 +927,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     fontFamily: FONT.semibold,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTer,
     marginBottom: SPACING.xs,
     marginTop: SPACING.sm,
   },
@@ -937,9 +937,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: COLORS.bgSec,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: COLORS.border,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
     minHeight: 46,
@@ -949,20 +949,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: FONT.regular,
-    color: '#FFFFFF',
+    color: COLORS.text,
   },
   phonePrefix: {
     fontSize: 14,
     fontWeight: '600',
     fontFamily: FONT.semibold,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTer,
     marginRight: 4,
   },
 
   // Discovery divider
   discoveryDivider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: COLORS.border,
     marginVertical: SPACING.lg,
   },
 
@@ -994,12 +994,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.text,
     borderRadius: RADIUS.lg,
     paddingVertical: 16,
     marginTop: SPACING.lg,
     marginBottom: SPACING.md,
-    shadowColor: '#000',
+    shadowColor: COLORS.bg,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -1022,7 +1022,7 @@ const styles = StyleSheet.create({
   trustText: {
     fontSize: 11,
     fontFamily: FONT.regular,
-    color: 'rgba(255,255,255,0.35)',
+    color: COLORS.textTer,
   },
 
   // How it works

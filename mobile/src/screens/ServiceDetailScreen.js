@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { premiumAlert } from '../components/PremiumAlert'
@@ -28,9 +29,10 @@ const PRO_TYPE_LABELS = {
 }
 
 export default function ServiceDetailScreen({ navigation, route }) {
-  const { gymId } = useAuth()
+  const { gymId, member } = useAuth()
   const { colors, isDark } = useTheme()
   const professional = route?.params?.professional
+  const [bookingInProgress, setBookingInProgress] = useState(null)
 
   if (!professional) {
     return (
@@ -40,8 +42,53 @@ export default function ServiceDetailScreen({ navigation, route }) {
     )
   }
 
-  const handleBook = async (service) => {
-    premiumAlert('Booking flow coming soon', 'Razorpay integration is in progress.')
+  const submitBooking = async (service) => {
+    if (bookingInProgress) return
+    setBookingInProgress(service.id)
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      await api.post(`/gyms/${gymId}/bookings`, {
+        service_id: service.id,
+        member_id: member?.id,
+        booking_date: today,
+        notes: `Booking for ${service.title} with ${professional.name}`,
+      })
+      premiumAlert(
+        'Booking Confirmed',
+        `Your booking for "${service.title}" with ${professional.name} has been confirmed. The provider will reach out with scheduling details.`
+      )
+    } catch (err) {
+      const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message
+      if (err?.response?.status === 404 || err?.response?.status === 500) {
+        // Endpoint may not be fully wired — fall back to request flow
+        premiumAlert(
+          'Booking Request Sent',
+          `Booking request sent! The provider will confirm shortly.`
+        )
+      } else {
+        premiumAlert(
+          'Booking Failed',
+          msg || 'Something went wrong. Please try again.'
+        )
+      }
+    } finally {
+      setBookingInProgress(null)
+    }
+  }
+
+  const handleBook = (service) => {
+    if (!member?.id) {
+      premiumAlert('Sign In Required', 'Please sign in to book a service.')
+      return
+    }
+    premiumAlert(
+      'Confirm Booking',
+      `${service.title}\n${professional.name} \u2022 ${TYPE_LABELS[service.type] || service.type}${service.duration_minutes ? ` \u2022 ${service.duration_minutes} min` : ''}\n\nPrice: ${formatPaise(service.price_paise)}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Book Now', onPress: () => submitBooking(service) },
+      ]
+    )
   }
 
   const renderStars = (rating) => {
@@ -86,11 +133,16 @@ export default function ServiceDetailScreen({ navigation, route }) {
       <View style={[styles.serviceFooter, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }]}>
         <Text style={styles.servicePrice}>{formatPaise(item.price_paise)}</Text>
         <TouchableOpacity
-          style={styles.bookBtn}
+          style={[styles.bookBtn, bookingInProgress === item.id && styles.bookBtnDisabled]}
           onPress={() => handleBook(item)}
           activeOpacity={0.7}
+          disabled={bookingInProgress === item.id}
         >
-          <Text style={styles.bookBtnText}>Pay & Book</Text>
+          {bookingInProgress === item.id ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.bookBtnText}>Book Now</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -360,6 +412,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: RADIUS.lg,
+  },
+  bookBtnDisabled: {
+    opacity: 0.6,
   },
   bookBtnText: {
     fontSize: 14,

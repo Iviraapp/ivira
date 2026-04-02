@@ -46,7 +46,13 @@ const MEAL_ICONS = {
   snack: 'coffee',
 }
 
-const CALORIE_GOAL = 2000
+const DEFAULT_GOALS = {
+  calorie_goal: 2000,
+  protein_goal: 120,
+  carb_goal: 250,
+  fat_goal: 65,
+  fiber_goal: 30,
+}
 
 // Removed demo data generator — real API data or empty state only
 
@@ -164,8 +170,7 @@ function MealTypeBadge({ type, colors }) {
   )
 }
 
-// Macro targets (customizable later from user profile)
-const MACRO_TARGETS = { protein: 120, carbs: 250, fat: 65, fiber: 30 }
+// MACRO_TARGETS removed — now passed via goals prop from API
 
 function MacroProgressBar({ label, value, target, color, unit, colors }) {
   const pct = Math.min(value / target, 1)
@@ -194,13 +199,14 @@ function MacroProgressBar({ label, value, target, color, unit, colors }) {
   )
 }
 
-function DailySummarySection({ dayData, colors }) {
-  const calPct = Math.min(dayData.calories / CALORIE_GOAL, 1)
-  const calStatus = dayData.calories > CALORIE_GOAL
-    ? { text: `${dayData.calories - CALORIE_GOAL} over target`, color: COLORS.red }
-    : dayData.calories >= CALORIE_GOAL * 0.8
+function DailySummarySection({ dayData, colors, goals }) {
+  const calorieGoal = goals.calorie_goal
+  const calPct = Math.min(dayData.calories / calorieGoal, 1)
+  const calStatus = dayData.calories > calorieGoal
+    ? { text: `${dayData.calories - calorieGoal} over target`, color: COLORS.red }
+    : dayData.calories >= calorieGoal * 0.8
       ? { text: 'On target', color: COLORS.green }
-      : { text: `${CALORIE_GOAL - dayData.calories} remaining`, color: COLORS.accent }
+      : { text: `${calorieGoal - dayData.calories} remaining`, color: COLORS.accent }
 
   return (
     <View style={[styles.dailySummary, { borderColor: colors.border }]}>
@@ -211,12 +217,12 @@ function DailySummarySection({ dayData, colors }) {
             {dayData.calories.toLocaleString()}
           </Text>
           <Text style={[styles.dailySummaryCalUnit, { color: colors.textTer }]}>
-            of {CALORIE_GOAL.toLocaleString()} kcal
+            of {calorieGoal.toLocaleString()} kcal
           </Text>
         </View>
         <View style={[styles.dailySummaryStatus, { backgroundColor: calStatus.color + '18' }]}>
           <Feather
-            name={dayData.calories >= CALORIE_GOAL * 0.8 && dayData.calories <= CALORIE_GOAL ? 'check-circle' : 'alert-circle'}
+            name={dayData.calories >= calorieGoal * 0.8 && dayData.calories <= calorieGoal ? 'check-circle' : 'alert-circle'}
             size={12}
             color={calStatus.color}
           />
@@ -233,7 +239,7 @@ function DailySummarySection({ dayData, colors }) {
             styles.calProgressFill,
             {
               width: `${calPct * 100}%`,
-              backgroundColor: dayData.calories > CALORIE_GOAL ? COLORS.red : COLORS.green,
+              backgroundColor: dayData.calories > calorieGoal ? COLORS.red : COLORS.green,
             },
           ]}
         />
@@ -241,11 +247,11 @@ function DailySummarySection({ dayData, colors }) {
 
       {/* Macro progress bars */}
       <View style={styles.macroProgressSection}>
-        <MacroProgressBar label="Protein" value={dayData.protein} target={MACRO_TARGETS.protein} color="#34A853" unit="g" colors={colors} />
-        <MacroProgressBar label="Carbs" value={dayData.carbs} target={MACRO_TARGETS.carbs} color="#F97316" unit="g" colors={colors} />
-        <MacroProgressBar label="Fat" value={dayData.fat} target={MACRO_TARGETS.fat} color="#FBBC05" unit="g" colors={colors} />
+        <MacroProgressBar label="Protein" value={dayData.protein} target={goals.protein_goal} color="#34A853" unit="g" colors={colors} />
+        <MacroProgressBar label="Carbs" value={dayData.carbs} target={goals.carb_goal} color="#F97316" unit="g" colors={colors} />
+        <MacroProgressBar label="Fat" value={dayData.fat} target={goals.fat_goal} color="#FBBC05" unit="g" colors={colors} />
         {dayData.fiber > 0 && (
-          <MacroProgressBar label="Fiber" value={dayData.fiber} target={MACRO_TARGETS.fiber} color="#8B5CF6" unit="g" colors={colors} />
+          <MacroProgressBar label="Fiber" value={dayData.fiber} target={goals.fiber_goal || 30} color="#8B5CF6" unit="g" colors={colors} />
         )}
       </View>
 
@@ -270,11 +276,11 @@ function DailySummarySection({ dayData, colors }) {
   )
 }
 
-function ExpandedMeals({ dayData, colors }) {
+function ExpandedMeals({ dayData, colors, goals }) {
   return (
     <View style={styles.expandedContainer}>
       {/* Daily summary at top */}
-      <DailySummarySection dayData={dayData} colors={colors} />
+      <DailySummarySection dayData={dayData} colors={colors} goals={goals} />
 
       {/* Individual meals */}
       <Text style={[styles.mealsHeading, { color: colors.textSec }]}>Meals</Text>
@@ -322,13 +328,13 @@ function ExpandedMeals({ dayData, colors }) {
   )
 }
 
-function DayCard({ dayData, isExpanded, onToggle, colors, card }) {
+function DayCard({ dayData, isExpanded, onToggle, colors, card, goals }) {
   const date = new Date(dayData.date + 'T00:00:00')
   const dayName = DAY_NAMES[date.getDay()]
   const monthName = SHORT_MONTHS[date.getMonth()]
   const dayNum = date.getDate()
 
-  const calProgress = Math.min(dayData.calories / CALORIE_GOAL, 1)
+  const calProgress = Math.min(dayData.calories / goals.calorie_goal, 1)
   const progressColor = calProgress > 1 ? COLORS.red : calProgress > 0.8 ? COLORS.green : COLORS.accent
 
   return (
@@ -389,7 +395,7 @@ function DayCard({ dayData, isExpanded, onToggle, colors, card }) {
         </View>
 
         {/* Expanded meals */}
-        {isExpanded && <ExpandedMeals dayData={dayData} colors={colors} />}
+        {isExpanded && <ExpandedMeals dayData={dayData} colors={colors} goals={goals} />}
       </View>
     </TouchableOpacity>
   )
@@ -398,7 +404,7 @@ function DayCard({ dayData, isExpanded, onToggle, colors, card }) {
 // --- Main Screen ---
 export default function NutritionLogScreen({ navigation }) {
   const { colors, card } = useTheme()
-  const { member, gymInfo } = useAuth()
+  const { member, gymId, gymInfo } = useAuth()
 
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date()
@@ -408,6 +414,32 @@ export default function NutritionLogScreen({ navigation }) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [expandedDay, setExpandedDay] = useState(null)
+  const [goals, setGoals] = useState(DEFAULT_GOALS)
+
+  // Fetch nutrition goals from API
+  useEffect(() => {
+    const fetchGoals = async () => {
+      const gId = gymId || gymInfo?.id
+      const mId = member?.id
+      if (!gId || !mId) return
+      try {
+        const res = await api.get(`/gyms/${gId}/members/${mId}/nutrition/goal`)
+        if (res.data) {
+          setGoals({
+            calorie_goal: res.data.calorie_goal || DEFAULT_GOALS.calorie_goal,
+            protein_goal: res.data.protein_goal || DEFAULT_GOALS.protein_goal,
+            carb_goal: res.data.carb_goal || DEFAULT_GOALS.carb_goal,
+            fat_goal: res.data.fat_goal || DEFAULT_GOALS.fat_goal,
+            fiber_goal: res.data.fiber_goal || DEFAULT_GOALS.fiber_goal,
+          })
+        }
+      } catch (err) {
+        console.warn('[NutritionLog] Failed to fetch nutrition goals:', err?.message)
+        // Keep DEFAULT_GOALS as fallback
+      }
+    }
+    fetchGoals()
+  }, [gymId, gymInfo?.id, member?.id])
 
   const fetchMonthData = useCallback(async (year, month) => {
     const gymId = gymInfo?.id
@@ -591,6 +623,7 @@ export default function NutritionLogScreen({ navigation }) {
                   onToggle={() => setExpandedDay(expandedDay === day.date ? null : day.date)}
                   colors={colors}
                   card={card}
+                  goals={goals}
                 />
               ))
             )}

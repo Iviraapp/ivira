@@ -233,6 +233,14 @@ export async function buildApp(opts = {}) {
 
   // Health check is registered via healthRoutes plugin (routes/health.js)
 
+  // Security headers
+  fastify.addHook('onSend', async (_request, reply) => {
+    reply.header('X-Content-Type-Options', 'nosniff');
+    reply.header('X-Frame-Options', 'DENY');
+    reply.header('X-XSS-Protection', '1; mode=block');
+    reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  });
+
   // Request correlation IDs
   fastify.addHook('onRequest', async (request) => {
     request.correlationId = request.headers['x-correlation-id'] || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
