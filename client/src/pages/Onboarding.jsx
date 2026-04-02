@@ -19,7 +19,7 @@ const STEPS = [
   { label: 'Launch', icon: CheckCircle },
 ]
 
-const CITIES = ['Bengaluru', 'Hyderabad', 'Chennai', 'Mumbai']
+// Cities no longer restricted — free-text input for global support
 
 const DURATIONS = [
   { value: 1, label: '1 Month' },
@@ -378,15 +378,13 @@ export default function Onboarding() {
         onChange={(e) => setPhone(e.target.value)}
         error={errors.phone}
       />
-      <Select
+      <Input
         label="City"
+        placeholder="e.g. Bengaluru, Dubai, London"
         value={city}
         onChange={(e) => setCity(e.target.value)}
         error={errors.city}
-      >
-        <option value="">Select a city</option>
-        {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-      </Select>
+      />
       <Input
         label="Area / Locality"
         placeholder="e.g. Koramangala, Banjara Hills"
