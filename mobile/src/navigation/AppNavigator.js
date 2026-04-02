@@ -78,7 +78,8 @@ function PrestigeSplash({ onFinish }) {
 const MAX_BIOMETRIC_RETRIES = 3
 
 function BiometricGate({ children }) {
-  const { biometricEnabled } = useAuth()
+  const auth = useAuth()
+  const biometricEnabled = auth?.biometricEnabled
   const [authed, setAuthed] = useState(false)
   const [checking, setChecking] = useState(true)
   const retryCount = React.useRef(0)
@@ -167,7 +168,10 @@ function BiometricGate({ children }) {
 }
 
 export default function AppNavigator() {
-  const { token, member, loading } = useAuth()
+  const auth = useAuth()
+  const token = auth?.token
+  const member = auth?.member
+  const loading = auth?.loading ?? true
   const { colors, isDark } = useTheme()
 
   // Memoize nav theme — must be before any conditional returns (rules of hooks)
