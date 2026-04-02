@@ -128,6 +128,24 @@ export async function recordMeal(mealType) {
   await savePatterns(patterns)
 }
 
+// Vira AI notification channel
+async function setupViraChannel() {
+  await loadNotifications()
+  if (!Notifications || Platform.OS !== 'android') return
+  try {
+    await Notifications.setNotificationChannelAsync('vira-coach', {
+      name: 'Vira AI Coach',
+      importance: Notifications.AndroidImportance?.HIGH || 4,
+      sound: 'default',
+      vibrationPattern: [0, 250, 100, 250],
+      lightColor: '#00e5a0',
+    })
+  } catch (e) {
+    if (__DEV__) console.warn('[SmartNotifs] Vira channel setup:', e?.message)
+  }
+}
+setupViraChannel()
+
 export async function recordWorkout() {
   const patterns = await loadPatterns()
   const now = new Date()
@@ -138,6 +156,22 @@ export async function recordWorkout() {
     date: now.toISOString().split('T')[0],
   }])
   await savePatterns(patterns)
+
+  // Vira: schedule post-workout recovery tip (90 min after workout)
+  await loadNotifications()
+  if (Notifications) {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Vira Recovery Tip',
+          body: 'Great workout! Stretch, hydrate, and aim for 7+ hours of sleep tonight for optimal recovery.',
+          data: { action: 'open_vira_chat' },
+          ...(Platform.OS === 'android' ? { channelId: 'vira-coach' } : {}),
+        },
+        trigger: { seconds: 5400 }, // 90 minutes
+      })
+    } catch {}
+  }
 }
 
 export async function recordFastingStart() {

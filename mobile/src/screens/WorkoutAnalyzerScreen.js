@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 import Haptics from '../lib/haptics'
 import { premiumAlert } from '../components/PremiumAlert'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // Optional deps — try/catch for safety
 let ImagePicker = null
@@ -439,6 +440,15 @@ Analyze the video and return ONLY valid JSON with NO markdown, no code fences, n
       setResult(parsed)
       setStage('done')
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+      // Save to AsyncStorage so Vira AI picks it up in next chat session
+      AsyncStorage.setItem('vira_last_analysis', JSON.stringify({
+        exercise:   parsed.exercise,
+        form_score: parsed.form_score,
+        issues:     parsed.issues || [],
+        tips:       parsed.tips || [],
+        timestamp:  Date.now(),
+      })).catch(() => {})
 
     } catch (err) {
       clearTimers()
