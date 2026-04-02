@@ -56,7 +56,13 @@ function FloatingOrb({ delay, size, x, y, color, fadeAnim }) {
 }
 
 export default function LoginScreen() {
-  const { requestOtp, verifyOtp, biometricAvailable, biometricEnabled, authenticateWithBiometrics, token } = useAuth()
+  const auth = useAuth()
+  const requestOtp = auth?.requestOtp
+  const verifyOtp = auth?.verifyOtp
+  const biometricAvailable = auth?.biometricAvailable
+  const biometricEnabled = auth?.biometricEnabled
+  const authenticateWithBiometrics = auth?.authenticateWithBiometrics
+  const token = auth?.token
   const { colors, isDark } = useTheme()
 
   const [step, setStep] = useState('welcome')

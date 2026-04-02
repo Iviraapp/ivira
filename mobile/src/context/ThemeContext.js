@@ -51,7 +51,12 @@ export function ThemeProvider({ children }) {
 export function useTheme() {
   const ctx = useContext(ThemeContext)
   if (!ctx) {
-    return { mode: 'system', setMode: () => {}, resolvedScheme: 'dark', isDark: true, colors: COLORS, card: ELITE_CARD, glow: ELITE_GLOW }
+    return {
+      mode: 'system', setMode: () => {}, resolvedScheme: 'dark', isDark: true,
+      colors: COLORS || {},
+      card: ELITE_CARD || {},
+      glow: ELITE_GLOW || {},
+    }
   }
   return ctx
 }
