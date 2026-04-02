@@ -31,6 +31,7 @@ import {
   Inter_900Black,
 } from '@expo-google-fonts/inter'
 import { SpaceMono_700Bold } from '@expo-google-fonts/space-mono'
+import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue'
 import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,
@@ -84,6 +85,7 @@ function App() {
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
+    BebasNeue_400Regular,
   })
 
   if (!fontsLoaded) {
