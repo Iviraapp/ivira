@@ -1,460 +1,353 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
+import {
+  View, Text, TouchableOpacity, StyleSheet,
+  Platform, Animated, Dimensions,
+} from 'react-native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { StackActions } from '@react-navigation/native'
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Animated, Dimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
-import { COLORS, SPACING, RADIUS } from '../lib/theme'
+import { COLORS, FONT, RADIUS, SPACING } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import AIChatModal from '../components/AIChatModal'
+
+// Screens
 import HomeScreen from '../screens/HomeScreen'
-import BarcodeScannerScreen from '../screens/BarcodeScannerScreen'
+import CirclesScreen from '../screens/CirclesScreen'
 import HealthScreen from '../screens/HealthScreen'
-import NutritionScreen from '../screens/NutritionScreen'
 import ProfileScreen from '../screens/ProfileScreen'
+
+// Stack screens (keep all existing ones)
+import BarcodeScannerScreen from '../screens/BarcodeScannerScreen'
+import NutritionScreen from '../screens/NutritionScreen'
+import WorkoutTrackerScreen from '../screens/WorkoutTrackerScreen'
+import WorkoutAnalyzerScreen from '../screens/WorkoutAnalyzerScreen'
+import WorkoutHistoryScreen from '../screens/WorkoutHistoryScreen'
+import SleepTrackerScreen from '../screens/SleepTrackerScreen'
+import ActivityDashboardScreen from '../screens/ActivityDashboardScreen'
+import FitnessScoreScreen from '../screens/FitnessScoreScreen'
+import NutritionLogScreen from '../screens/NutritionLogScreen'
+import FoodScannerScreen from '../screens/FoodScannerScreen'
+import ChallengesScreen from '../screens/ChallengesScreen'
+import AchievementsScreen from '../screens/AchievementsScreen'
+import ProgressScreen from '../screens/ProgressScreen'
+import ProgressPhotosScreen from '../screens/ProgressPhotosScreen'
+import MembershipActivationScreen from '../screens/MembershipActivationScreen'
+import MembershipRenewalScreen from '../screens/MembershipRenewalScreen'
+import GymDiscoveryScreen from '../screens/GymDiscoveryScreen'
+import CityLeaderboardScreen from '../screens/CityLeaderboardScreen'
+import ReferralScreen from '../screens/ReferralScreen'
+import InvoicesScreen from '../screens/InvoicesScreen'
+import NotificationSettingsScreen from '../screens/NotificationSettingsScreen'
+import RecipeScreen from '../screens/RecipeScreen'
+import YogaScreen from '../screens/YogaScreen'
+import FastingLogScreen from '../screens/FastingLogScreen'
+import NutritionDetailScreen from '../screens/NutritionDetailScreen'
+import ActionPlanScreen from '../screens/ActionPlanScreen'
+import RevenueDashboardScreen from '../screens/RevenueDashboardScreen'
 import HistoryScreen from '../screens/HistoryScreen'
-import CommunityHubScreen from '../screens/CommunityHubScreen'
-import ServiceDetailScreen from '../screens/ServiceDetailScreen'
+import SubscriptionScreen from '../screens/SubscriptionScreen'
+import TrainerDashboardScreen from '../screens/TrainerDashboardScreen'
 import PodHomeScreen from '../screens/PodHomeScreen'
-import DailyCommitScreen from '../screens/DailyCommitScreen'
 import PodFeedScreen from '../screens/PodFeedScreen'
 import PodDiscoveryScreen from '../screens/PodDiscoveryScreen'
 import PodStatsScreen from '../screens/PodStatsScreen'
-import ActionPlanScreen from '../screens/ActionPlanScreen'
-import InvoicesScreen from '../screens/InvoicesScreen'
-import NutritionLogScreen from '../screens/NutritionLogScreen'
-import FastingLogScreen from '../screens/FastingLogScreen'
-import ProgressScreen from '../screens/ProgressScreen'
-import NutritionDetailScreen from '../screens/NutritionDetailScreen'
-import MembershipActivationScreen from '../screens/MembershipActivationScreen'
-import NotificationSettingsScreen from '../screens/NotificationSettingsScreen'
-import WorkoutTrackerScreen from '../screens/WorkoutTrackerScreen'
-import MembershipRenewalScreen from '../screens/MembershipRenewalScreen'
-import RevenueDashboardScreen from '../screens/RevenueDashboardScreen'
-import ReferralScreen from '../screens/ReferralScreen'
-import ProgressPhotosScreen from '../screens/ProgressPhotosScreen'
-import FitnessScoreScreen from '../screens/FitnessScoreScreen'
-import ActivityDashboardScreen from '../screens/ActivityDashboardScreen'
-import FoodScannerScreen from '../screens/FoodScannerScreen'
-import RecipeScreen from '../screens/RecipeScreen'
-import ChallengesScreen from '../screens/ChallengesScreen'
-import AchievementsScreen from '../screens/AchievementsScreen'
-import SleepTrackerScreen from '../screens/SleepTrackerScreen'
-import YogaScreen from '../screens/YogaScreen'
-import CityLeaderboardScreen from '../screens/CityLeaderboardScreen'
-import SubscriptionScreen from '../screens/SubscriptionScreen'
-import GymDiscoveryScreen from '../screens/GymDiscoveryScreen'
-import TrainerDashboardScreen from '../screens/TrainerDashboardScreen'
-import WorkoutHistoryScreen from '../screens/WorkoutHistoryScreen'
-import WorkoutAnalyzerScreen from '../screens/WorkoutAnalyzerScreen'
+import DailyCommitScreen from '../screens/DailyCommitScreen'
+import ServiceDetailScreen from '../screens/ServiceDetailScreen'
+import CommunityHubScreen from '../screens/CommunityHubScreen'
+import MarketplaceScreen from '../screens/MarketplaceScreen'
+import CheckInScreen from '../screens/CheckInScreen'
 
-// Try to load BlurView — verify native module is available (not just JS)
 let BlurView = null
 try {
   if (Platform.OS !== 'web') {
     const { UIManager } = require('react-native')
-    const nativeAvailable = UIManager.getViewManagerConfig?.('ExpoBlurView') ||
+    const ok = UIManager.getViewManagerConfig?.('ExpoBlurView') ||
       UIManager.getViewManagerConfig?.('BlurView')
-    if (nativeAvailable) {
-      const blur = require('expo-blur')
-      BlurView = blur.BlurView
-    }
+    if (ok) BlurView = require('expo-blur').BlurView
   }
 } catch {}
 
 const Tab = createBottomTabNavigator()
-const HomeStackNav = createNativeStackNavigator()
-const HealthStackNav = createNativeStackNavigator()
-const CommunityStackNav = createNativeStackNavigator()
-const ProfileStackNav = createNativeStackNavigator()
+const HomeStack = createNativeStackNavigator()
+const HealthStack = createNativeStackNavigator()
+const CirclesStack = createNativeStackNavigator()
+const ProfileStack = createNativeStackNavigator()
 
+// ─── Stack navigators ────────────────────────────────────────
 function HomeStackNavigator() {
   const { colors } = useTheme()
   return (
-    <HomeStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-      <HomeStackNav.Screen name="HomeMain" component={HomeScreen} />
-      <HomeStackNav.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
-      <HomeStackNav.Screen name="History" component={HistoryScreen} />
-      <HomeStackNav.Screen name="NutritionLog" component={NutritionLogScreen} />
-      <HomeStackNav.Screen name="FastingLog" component={FastingLogScreen} />
-      <HomeStackNav.Screen name="Progress" component={ProgressScreen} />
-      <HomeStackNav.Screen name="NutritionDetail" component={NutritionDetailScreen} />
-      <HomeStackNav.Screen name="MembershipActivation" component={MembershipActivationScreen} />
-      <HomeStackNav.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
-      <HomeStackNav.Screen name="WorkoutHistory" component={WorkoutHistoryScreen} />
-      <HomeStackNav.Screen name="MembershipRenewal" component={MembershipRenewalScreen} />
-      <HomeStackNav.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
-      <HomeStackNav.Screen name="Referral" component={ReferralScreen} />
-      <HomeStackNav.Screen name="ProgressPhotos" component={ProgressPhotosScreen} />
-      <HomeStackNav.Screen name="FitnessScore" component={FitnessScoreScreen} />
-      <HomeStackNav.Screen name="ActivityDashboard" component={ActivityDashboardScreen} />
-      <HomeStackNav.Screen name="FoodScanner" component={FoodScannerScreen} />
-      <HomeStackNav.Screen name="Recipes" component={RecipeScreen} />
-      <HomeStackNav.Screen name="Challenges" component={ChallengesScreen} />
-      <HomeStackNav.Screen name="Achievements" component={AchievementsScreen} />
-      <HomeStackNav.Screen name="SleepTracker" component={SleepTrackerScreen} />
-      <HomeStackNav.Screen name="Yoga" component={YogaScreen} />
-      <HomeStackNav.Screen name="CityLeaderboard" component={CityLeaderboardScreen} />
-      <HomeStackNav.Screen name="Subscription" component={SubscriptionScreen} />
-      <HomeStackNav.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
-      <HomeStackNav.Screen name="TrainerDashboard" component={TrainerDashboardScreen} />
-      <HomeStackNav.Screen name="PodHome" component={PodHomeScreen} />
-      <HomeStackNav.Screen name="DailyCommit" component={DailyCommitScreen} />
-      <HomeStackNav.Screen name="PodFeed" component={PodFeedScreen} />
-      <HomeStackNav.Screen name="PodDiscovery" component={PodDiscoveryScreen} />
-      <HomeStackNav.Screen name="PodStats" component={PodStatsScreen} />
-    </HomeStackNav.Navigator>
+    <HomeStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="CheckIn" component={CheckInScreen} />
+      <HomeStack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
+      <HomeStack.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
+      <HomeStack.Screen name="WorkoutHistory" component={WorkoutHistoryScreen} />
+      <HomeStack.Screen name="NutritionLog" component={NutritionLogScreen} />
+      <HomeStack.Screen name="FoodScanner" component={FoodScannerScreen} />
+      <HomeStack.Screen name="SleepTracker" component={SleepTrackerScreen} />
+      <HomeStack.Screen name="ActivityDashboard" component={ActivityDashboardScreen} />
+      <HomeStack.Screen name="FitnessScore" component={FitnessScoreScreen} />
+      <HomeStack.Screen name="FastingLog" component={FastingLogScreen} />
+      <HomeStack.Screen name="Challenges" component={ChallengesScreen} />
+      <HomeStack.Screen name="Achievements" component={AchievementsScreen} />
+      <HomeStack.Screen name="Progress" component={ProgressScreen} />
+      <HomeStack.Screen name="Recipes" component={RecipeScreen} />
+      <HomeStack.Screen name="Yoga" component={YogaScreen} />
+      <HomeStack.Screen name="CityLeaderboard" component={CityLeaderboardScreen} />
+      <HomeStack.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
+      <HomeStack.Screen name="MembershipActivation" component={MembershipActivationScreen} />
+      <HomeStack.Screen name="MembershipRenewal" component={MembershipRenewalScreen} />
+      <HomeStack.Screen name="Subscription" component={SubscriptionScreen} />
+      <HomeStack.Screen name="History" component={HistoryScreen} />
+      <HomeStack.Screen name="NutritionDetail" component={NutritionDetailScreen} />
+      <HomeStack.Screen name="TrainerDashboard" component={TrainerDashboardScreen} />
+      <HomeStack.Screen name="PodHome" component={PodHomeScreen} />
+      <HomeStack.Screen name="PodFeed" component={PodFeedScreen} />
+      <HomeStack.Screen name="PodDiscovery" component={PodDiscoveryScreen} />
+      <HomeStack.Screen name="PodStats" component={PodStatsScreen} />
+      <HomeStack.Screen name="DailyCommit" component={DailyCommitScreen} />
+    </HomeStack.Navigator>
   )
 }
 
 function HealthStackNavigator() {
   const { colors } = useTheme()
   return (
-    <HealthStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-      <HealthStackNav.Screen name="HealthMain" component={HealthScreen} />
-      <HealthStackNav.Screen name="Nutrition" component={NutritionScreen} />
-      <HealthStackNav.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
-      <HealthStackNav.Screen name="ActionPlan" component={ActionPlanScreen} />
-      <HealthStackNav.Screen name="NutritionLog" component={NutritionLogScreen} />
-      <HealthStackNav.Screen name="NutritionDetail" component={NutritionDetailScreen} />
-      <HealthStackNav.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
-      <HealthStackNav.Screen name="FoodScanner" component={FoodScannerScreen} />
-      <HealthStackNav.Screen name="SleepTracker" component={SleepTrackerScreen} />
-      <HealthStackNav.Screen name="ActivityDashboard" component={ActivityDashboardScreen} />
-      <HealthStackNav.Screen name="FitnessScore" component={FitnessScoreScreen} />
-    </HealthStackNav.Navigator>
+    <HealthStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+      <HealthStack.Screen name="HealthMain" component={HealthScreen} />
+      <HealthStack.Screen name="Nutrition" component={NutritionScreen} />
+      <HealthStack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
+      <HealthStack.Screen name="NutritionLog" component={NutritionLogScreen} />
+      <HealthStack.Screen name="NutritionDetail" component={NutritionDetailScreen} />
+      <HealthStack.Screen name="FoodScanner" component={FoodScannerScreen} />
+      <HealthStack.Screen name="SleepTracker" component={SleepTrackerScreen} />
+      <HealthStack.Screen name="ActivityDashboard" component={ActivityDashboardScreen} />
+      <HealthStack.Screen name="FitnessScore" component={FitnessScoreScreen} />
+      <HealthStack.Screen name="ActionPlan" component={ActionPlanScreen} />
+      <HealthStack.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
+    </HealthStack.Navigator>
   )
 }
 
 function CirclesStackNavigator() {
   const { colors } = useTheme()
   return (
-    <CommunityStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-      <CommunityStackNav.Screen name="CirclesMain" component={PodHomeScreen} />
-      <CommunityStackNav.Screen name="DailyCommit" component={DailyCommitScreen} />
-      <CommunityStackNav.Screen name="PodFeed" component={PodFeedScreen} />
-      <CommunityStackNav.Screen name="PodDiscovery" component={PodDiscoveryScreen} />
-      <CommunityStackNav.Screen name="PodStats" component={PodStatsScreen} />
-      <CommunityStackNav.Screen name="CommunityHub" component={CommunityHubScreen} />
-      <CommunityStackNav.Screen name="ServiceDetail" component={ServiceDetailScreen} />
-      <CommunityStackNav.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
-      <CommunityStackNav.Screen name="WorkoutAnalyzer" component={WorkoutAnalyzerScreen} />
-    </CommunityStackNav.Navigator>
+    <CirclesStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+      <CirclesStack.Screen name="CirclesMain" component={CirclesScreen} />
+      <CirclesStack.Screen name="WorkoutAnalyzer" component={WorkoutAnalyzerScreen} />
+      <CirclesStack.Screen name="PodFeed" component={PodFeedScreen} />
+      <CirclesStack.Screen name="PodDiscovery" component={PodDiscoveryScreen} />
+      <CirclesStack.Screen name="PodStats" component={PodStatsScreen} />
+      <CirclesStack.Screen name="DailyCommit" component={DailyCommitScreen} />
+      <CirclesStack.Screen name="CommunityHub" component={CommunityHubScreen} />
+      <CirclesStack.Screen name="ServiceDetail" component={ServiceDetailScreen} />
+      <CirclesStack.Screen name="GymDiscovery" component={GymDiscoveryScreen} />
+      <CirclesStack.Screen name="Marketplace" component={MarketplaceScreen} />
+      <CirclesStack.Screen name="CityLeaderboard" component={CityLeaderboardScreen} />
+    </CirclesStack.Navigator>
   )
 }
 
 function ProfileStackNavigator() {
   const { colors } = useTheme()
   return (
-    <ProfileStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-      <ProfileStackNav.Screen name="ProfileMain" component={ProfileScreen} />
-      <ProfileStackNav.Screen name="Invoices" component={InvoicesScreen} />
-      <ProfileStackNav.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
-      <ProfileStackNav.Screen name="MembershipRenewal" component={MembershipRenewalScreen} />
-      <ProfileStackNav.Screen name="Progress" component={ProgressScreen} />
-      <ProfileStackNav.Screen name="ProgressPhotos" component={ProgressPhotosScreen} />
-      <ProfileStackNav.Screen name="Referral" component={ReferralScreen} />
-      <ProfileStackNav.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
-      <ProfileStackNav.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
-      <ProfileStackNav.Screen name="WorkoutHistory" component={WorkoutHistoryScreen} />
-      <ProfileStackNav.Screen name="FoodScanner" component={FoodScannerScreen} />
-      <ProfileStackNav.Screen name="Challenges" component={ChallengesScreen} />
-      <ProfileStackNav.Screen name="Achievements" component={AchievementsScreen} />
-      <ProfileStackNav.Screen name="SleepTracker" component={SleepTrackerScreen} />
-      <ProfileStackNav.Screen name="FastingLog" component={FastingLogScreen} />
-      <ProfileStackNav.Screen name="NutritionLog" component={NutritionLogScreen} />
-      <ProfileStackNav.Screen name="NutritionDetail" component={NutritionDetailScreen} />
-    </ProfileStackNav.Navigator>
+    <ProfileStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="Invoices" component={InvoicesScreen} />
+      <ProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+      <ProfileStack.Screen name="MembershipRenewal" component={MembershipRenewalScreen} />
+      <ProfileStack.Screen name="Progress" component={ProgressScreen} />
+      <ProfileStack.Screen name="ProgressPhotos" component={ProgressPhotosScreen} />
+      <ProfileStack.Screen name="Referral" component={ReferralScreen} />
+      <ProfileStack.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
+      <ProfileStack.Screen name="WorkoutTracker" component={WorkoutTrackerScreen} />
+      <ProfileStack.Screen name="WorkoutHistory" component={WorkoutHistoryScreen} />
+      <ProfileStack.Screen name="Achievements" component={AchievementsScreen} />
+      <ProfileStack.Screen name="Challenges" component={ChallengesScreen} />
+      <ProfileStack.Screen name="SleepTracker" component={SleepTrackerScreen} />
+      <ProfileStack.Screen name="FastingLog" component={FastingLogScreen} />
+      <ProfileStack.Screen name="NutritionLog" component={NutritionLogScreen} />
+      <ProfileStack.Screen name="NutritionDetail" component={NutritionDetailScreen} />
+    </ProfileStack.Navigator>
   )
 }
 
-function TabIcon({ name, focused }) {
-  const { colors, isDark } = useTheme()
-  // Inactive: deep charcoal for contrast; Active: COCA Blue to match FAB
-  const inactiveColor = isDark ? 'rgba(255,255,255,0.45)' : '#1A1A1A'
-  const activeColor = COLORS.accent
+// ─── Tab icon ────────────────────────────────────────────────
+function TabIcon({ name, focused, colors }) {
   return (
-    <View style={styles.iconWrap}>
-      <Feather
-        name={name}
-        size={22}
-        color={focused ? activeColor : inactiveColor}
-      />
-      {focused && <View style={[styles.activeDot, { backgroundColor: activeColor }]} />}
+    <View style={s.iconWrap}>
+      <Feather name={name} size={21} color={focused ? COLORS.accent : colors.textTer} />
+      {focused && <View style={[s.dot, { backgroundColor: COLORS.accent }]} />}
     </View>
   )
 }
 
-// ── Center Action FAB — rendered as screen-level overlay ─────────────
-function CenterActionFAB({ onPress, bottom }) {
-  const scaleAnim = useRef(new Animated.Value(1)).current
-  const glowAnim = useRef(new Animated.Value(0.3)).current
+// ─── Center QR FAB ──────────────────────────────────────────
+function QRFab({ onPress }) {
+  const scale = useRef(new Animated.Value(1)).current
+  const glow  = useRef(new Animated.Value(0.3)).current
 
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 0.6, duration: 1500, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0.3, duration: 1500, useNativeDriver: true }),
+        Animated.timing(glow, { toValue: 0.65, duration: 1600, useNativeDriver: true }),
+        Animated.timing(glow, { toValue: 0.3,  duration: 1600, useNativeDriver: true }),
       ])
     ).start()
   }, [])
 
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, { toValue: 0.88, useNativeDriver: true }).start()
-  }
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, { toValue: 1, damping: 12, stiffness: 200, useNativeDriver: true }).start()
-  }
-
   return (
-    <View style={[styles.fabScreenWrap, { bottom }]} pointerEvents="box-none">
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={1}
-        style={styles.fabTouchable}
-      >
-        {/* Outer glow ring */}
-        <Animated.View style={[styles.fabGlow, { opacity: glowAnim }]} />
-        {/* Main button */}
-        <Animated.View style={[styles.fab, { transform: [{ scale: scaleAnim }] }]}>
-          <Feather name="maximize" size={22} color="#FFFFFF" />
-        </Animated.View>
-      </TouchableOpacity>
-    </View>
-  )
-}
-
-// Floating AI Coach Button
-function AICoachButton() {
-  const { colors } = useTheme()
-  const { token } = useAuth()
-  const [chatVisible, setChatVisible] = useState(false)
-  const pulseAnim = useRef(new Animated.Value(1)).current
-
-  useEffect(() => {
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.12, duration: 1200, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
-      ])
-    )
-    pulse.start()
-    return () => pulse.stop()
-  }, [])
-
-  if (!token) return null
-
-  return (
-    <>
-      <Animated.View
-        style={[
-          styles.aiCoachWrapper,
-          { transform: [{ scale: pulseAnim }] },
-        ]}
-      >
-        <TouchableOpacity
-          style={[styles.aiCoachBtn, { backgroundColor: colors.accent }]}
-          onPress={() => setChatVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Feather name="zap" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={() => Animated.spring(scale, { toValue: 0.88, useNativeDriver: true }).start()}
+      onPressOut={() => Animated.spring(scale, { toValue: 1, damping: 12, stiffness: 200, useNativeDriver: true }).start()}
+      activeOpacity={1}
+    >
+      <Animated.View style={[s.fabGlow, { opacity: glow }]} />
+      <Animated.View style={[s.fab, { transform: [{ scale }] }]}>
+        <Feather name="maximize" size={22} color="#07080F" />
       </Animated.View>
-      <AIChatModal visible={chatVisible} onClose={() => setChatVisible(false)} />
-    </>
+    </TouchableOpacity>
   )
 }
 
-// ── Floating blurred tab bar — NO center Action tab ──────────────────
-function FloatingTabBar({ state, descriptors, navigation }) {
-  const icons = { Home: 'home', Health: 'heart', Circle: 'users', Profile: 'user' }
-  const { isDark, colors } = useTheme()
+// ─── Floating pill tab bar ───────────────────────────────────
+function FloatingTabBar({ state, navigation }) {
+  const { colors, isDark } = useTheme()
+  const icons = ['home', 'users', null, 'activity', 'user']
+  const labels = ['Home', 'Circles', null, 'Health', 'Me']
 
-  const handleTabPress = (route, isFocused, index) => {
+  const handlePress = (route, isFocused, index) => {
     if (isFocused) {
-      // Tap on active tab → pop nested stack to root screen
-      const nestedState = state.routes[index]?.state
-      if (nestedState && nestedState.index > 0) {
-        navigation.dispatch({
-          ...StackActions.popToTop(),
-          target: nestedState.key,
-        })
+      const nested = state.routes[index]?.state
+      if (nested?.index > 0) {
+        navigation.dispatch({ ...StackActions.popToTop(), target: nested.key })
       }
     } else {
       navigation.navigate(route.name)
     }
   }
 
-  const content = (
-    <View style={styles.floatingInner}>
-      {state.routes.map((route, index) => {
-        const isFocused = state.index === index
-        const iconName = icons[route.name]
-        if (!iconName) return null
-
-        // Insert spacer in the middle for the FAB gap — split tabs evenly
-        const isMiddle = index === Math.ceil(state.routes.length / 2)
-
+  const barContent = (
+    <View style={s.barInner}>
+      {state.routes.map((route, i) => {
+        const isFocused = state.index === i
+        if (i === 2) {
+          return <View key="fab-slot" style={s.fabSlot} />
+        }
         return (
-          <React.Fragment key={route.key}>
-            {isMiddle && <View style={styles.fabSpacer} />}
-            <TouchableOpacity
-              onPress={() => handleTabPress(route, isFocused, index)}
-              style={styles.floatingTab}
-              activeOpacity={0.7}
-            >
-              <TabIcon name={iconName} focused={isFocused} />
-            </TouchableOpacity>
-          </React.Fragment>
+          <TouchableOpacity
+            key={route.key}
+            style={s.tabBtn}
+            onPress={() => handlePress(route, isFocused, i)}
+            activeOpacity={0.7}
+          >
+            <TabIcon name={icons[i]} focused={isFocused} colors={colors} />
+            <Text style={[s.tabLabel, { color: isFocused ? COLORS.accent : colors.textTer }]}>
+              {labels[i]}
+            </Text>
+          </TouchableOpacity>
         )
       })}
     </View>
   )
 
   if (BlurView && Platform.OS !== 'web') {
-    try {
-      return (
-        <BlurView intensity={isDark ? 60 : 80} tint={isDark ? 'dark' : 'light'} style={[styles.floatingBar, !isDark && styles.floatingBarLight]}>
-          {content}
-        </BlurView>
-      )
-    } catch {
-      // BlurView native module not available — fall through to fallback
-    }
+    return (
+      <BlurView
+        intensity={isDark ? 55 : 75}
+        tint={isDark ? 'dark' : 'light'}
+        style={s.bar}
+      >
+        {barContent}
+      </BlurView>
+    )
   }
 
-  // Fallback without blur
   return (
-    <View style={[styles.floatingBar, isDark ? styles.floatingBarFallback : styles.floatingBarLightFallback]}>
-      {content}
+    <View style={[s.bar, { backgroundColor: isDark ? 'rgba(10,11,18,0.96)' : 'rgba(255,255,255,0.97)' }]}>
+      {barContent}
     </View>
   )
 }
 
-// ── Tab bar wrapper — only renders the floating bar ──────────────────
-function FloatingTabBarWrapper({ state, descriptors, navigation }) {
+function FloatingTabWrapper({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets()
-  const bottomOffset = Math.max(insets.bottom, 8) + 12
+  const bottom = Math.max(insets.bottom, 8) + 10
+  const fabBottom = bottom + 8
 
-  return (
-    <View style={[styles.floatingWrapper, { bottom: bottomOffset }]}>
-      <FloatingTabBar state={state} descriptors={descriptors} navigation={navigation} />
-    </View>
-  )
-}
+  const { hasGym } = useAuth()
+  const navRef = useRef(null)
 
-// Web fallback with manual tab switching
-function WebTabNavigator() {
-  const { gymId, hasGym } = useAuth()
-  const { colors } = useTheme()
-  const [activeTab, setActiveTab] = useState('Home')
-  const [webStack, setWebStack] = useState(null)
-  const screens = { Home: HomeScreen, Health: HealthScreen, Circle: PodHomeScreen, Profile: ProfileScreen }
-  const stackScreens = { BarcodeScanner: BarcodeScannerScreen, Nutrition: NutritionScreen, History: HistoryScreen, ServiceDetail: ServiceDetailScreen, Invoices: InvoicesScreen, NutritionLog: NutritionLogScreen, FastingLog: FastingLogScreen, Progress: ProgressScreen, NutritionDetail: NutritionDetailScreen, ActionPlan: ActionPlanScreen, MembershipActivation: MembershipActivationScreen, NotificationSettings: NotificationSettingsScreen, ActivityDashboard: ActivityDashboardScreen, WorkoutTracker: WorkoutTrackerScreen, WorkoutHistory: WorkoutHistoryScreen, MembershipRenewal: MembershipRenewalScreen, RevenueDashboard: RevenueDashboardScreen, Referral: ReferralScreen, ProgressPhotos: ProgressPhotosScreen, FitnessScore: FitnessScoreScreen, FoodScanner: FoodScannerScreen, Recipes: RecipeScreen, Challenges: ChallengesScreen, Achievements: AchievementsScreen, SleepTracker: SleepTrackerScreen, DailyCommit: DailyCommitScreen, PodFeed: PodFeedScreen, PodDiscovery: PodDiscoveryScreen, PodStats: PodStatsScreen, CommunityHub: CommunityHubScreen }
-  const icons = { Home: 'home', Health: 'heart', Circle: 'users', Profile: 'user' }
-  const tabOrder = gymId ? ['Home', 'Health', 'Circle', 'Profile'] : ['Home', 'Health', 'Profile']
-
-  const ActiveScreen = webStack && stackScreens[webStack] ? stackScreens[webStack] : screens[activeTab]
-  const navigation = {
-    navigate: (screen, params) => {
-      if (stackScreens[screen]) {
-        setWebStack(screen)
-      } else if (screens[screen]) {
-        setActiveTab(screen)
-        setWebStack(null)
-      }
-    },
-    goBack: () => setWebStack(null),
-  }
-
-  const handleActionPress = () => {
+  const handleQR = () => {
+    const nav = navRef.current || navigation
     if (hasGym) {
-      setActiveTab('Home')
-      setWebStack(null)
+      nav.navigate('Home', { screen: 'CheckIn' })
     } else {
-      setWebStack('MembershipActivation')
+      nav.navigate('Home', { screen: 'MembershipActivation' })
     }
   }
 
-  // Place FAB in the center of the tab row
-  const fabIndex = Math.floor(tabOrder.length / 2)
+  if (!navRef.current) navRef.current = navigation
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <View style={{ flex: 1 }}>
-        <ActiveScreen navigation={navigation} />
+    <>
+      <View style={[s.barWrap, { bottom }]}>
+        <FloatingTabBar state={state} descriptors={descriptors} navigation={navigation} />
       </View>
-      <View style={styles.webTabBar}>
-        {tabOrder.map((tab, index) => (
-          <React.Fragment key={tab}>
-            {index === fabIndex && (
-              <View style={styles.webFabSlot}>
-                <TouchableOpacity
-                  onPress={handleActionPress}
-                  activeOpacity={0.8}
-                  style={styles.webFab}
-                >
-                  <Feather name="maximize" size={22} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-            )}
-            <TouchableOpacity
-              onPress={() => { setActiveTab(tab); setWebStack(null) }}
-              style={styles.webTab}
-            >
-              <Feather
-                name={icons[tab]}
-                size={22}
-                color={activeTab === tab && !webStack ? COLORS.text : COLORS.textTer}
-              />
-              {activeTab === tab && !webStack && <View style={styles.activeDot} />}
-            </TouchableOpacity>
-          </React.Fragment>
-        ))}
+      <View style={[s.fabWrap, { bottom: fabBottom }]}>
+        <QRFab onPress={handleQR} />
       </View>
-      <AICoachButton />
-    </View>
+    </>
   )
 }
 
-function NativeTabNavigator() {
-  const { gymId, hasGym } = useAuth()
+// ─── AI Coach floating button ────────────────────────────────
+function AICoachFAB() {
   const { colors } = useTheme()
-  const insets = useSafeAreaInsets()
-  const navigationRef = useRef(null)
+  const { token } = useAuth()
+  const [visible, setVisible] = useState(false)
+  const pulse = useRef(new Animated.Value(1)).current
 
-  // Tab bar: height 70, docked at bottom with safe area offset
-  // FAB: height 60, seated inside the bar with bottom: 10
-  const tabBarBottom = Math.max(insets.bottom, 8) + 10
-  const fabBottom = tabBarBottom + 10 // FAB docked at bottom: 10 above bar base
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.1, duration: 1400, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1,   duration: 1400, useNativeDriver: true }),
+      ])
+    ).start()
+  }, [])
 
-  const handleActionPress = () => {
-    const nav = navigationRef.current
-    if (!nav) return
-    if (hasGym) {
-      nav.navigate('Home', {
-        screen: 'HomeMain',
-        params: { openNFC: true },
-      })
-    } else {
-      nav.navigate('Home', {
-        screen: 'MembershipActivation',
-      })
-    }
-  }
+  if (!token) return null
+
+  return (
+    <>
+      <Animated.View style={[s.aiWrap, { transform: [{ scale: pulse }] }]}>
+        <TouchableOpacity
+          style={[s.aiBtn, { backgroundColor: colors.purple || COLORS.purple }]}
+          onPress={() => setVisible(true)}
+          activeOpacity={0.8}
+        >
+          <Feather name="zap" size={20} color="#fff" />
+        </TouchableOpacity>
+      </Animated.View>
+      <AIChatModal visible={visible} onClose={() => setVisible(false)} />
+    </>
+  )
+}
+
+// ─── Main export ─────────────────────────────────────────────
+export default function TabNavigator() {
+  const { colors } = useTheme()
 
   return (
     <View style={{ flex: 1 }}>
       <Tab.Navigator
-        tabBar={(props) => {
-          // Capture the navigation ref from tab bar props
-          if (!navigationRef.current) navigationRef.current = props.navigation
-          return <FloatingTabBarWrapper {...props} />
-        }}
+        tabBar={(props) => <FloatingTabWrapper {...props} />}
         sceneContainerStyle={{ backgroundColor: colors.bg }}
         screenOptions={{
           headerShown: false,
@@ -462,197 +355,107 @@ function NativeTabNavigator() {
           tabBarHideOnKeyboard: true,
         }}
       >
-        <Tab.Screen name="Home" component={HomeStackNavigator} />
-        <Tab.Screen name="Health" component={HealthStackNavigator} />
-        <Tab.Screen name="Circle" component={CirclesStackNavigator} />
+        <Tab.Screen name="Home"    component={HomeStackNavigator} />
+        <Tab.Screen name="Circles" component={CirclesStackNavigator} />
+        <Tab.Screen name="QR"      component={HomeStackNavigator} listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault()
+            navigation.navigate('Home', { screen: 'CheckIn' })
+          }
+        })} />
+        <Tab.Screen name="Health"  component={HealthStackNavigator} />
         <Tab.Screen name="Profile" component={ProfileStackNavigator} />
       </Tab.Navigator>
-
-      {/* Center FAB — independent overlay, pixel-perfect centered */}
-      <CenterActionFAB onPress={handleActionPress} bottom={fabBottom} />
-
-      <AICoachButton />
+      <AICoachFAB />
     </View>
   )
 }
 
-export default function TabNavigator() {
-  if (Platform.OS === 'web') {
-    return <WebTabNavigator />
-  }
-  return <NativeTabNavigator />
-}
-
-const styles = StyleSheet.create({
-  // ── Floating tab bar ──────────────────────────────────────────────
-  floatingWrapper: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    zIndex: 100,
+const s = StyleSheet.create({
+  barWrap: {
+    position: 'absolute', left: 16, right: 16, zIndex: 100,
   },
-  floatingBar: {
-    borderRadius: 35,
+  bar: {
+    borderRadius: 36,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: 'rgba(255,255,255,0.08)',
-    // Pill shadow for floating effect
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 10,
   },
-  floatingBarFallback: {
-    backgroundColor: 'rgba(18,18,18,0.95)',
-  },
-  floatingBarLight: {
-    borderColor: 'rgba(0,0,0,0.04)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-  },
-  floatingBarLightFallback: {
-    backgroundColor: 'rgba(255,255,255,0.97)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  floatingInner: {
+  barInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 70,
+    height: 68,
   },
-  floatingTab: {
+  tabBtn: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 2,
     minHeight: 48,
   },
-
-  // Spacer in the middle of tabs where FAB sits — same flex as tabs for equal spacing
-  fabSpacer: {
-    flex: 1,
+  tabLabel: {
+    fontSize: 10,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    letterSpacing: 0.2,
   },
-
-  // ── Tab icon ──────────────────────────────────────────────────────
+  fabSlot: { flex: 1 },
   iconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
-    minWidth: 48,
+    minWidth: 32,
   },
-  iconWrapActive: {
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  iconWrapActiveLight: {},
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginTop: 4,
+  dot: {
+    width: 4, height: 4, borderRadius: 2, marginTop: 3,
   },
 
-  // ── Center Action FAB — screen-level overlay ───────────────────────
-  fabScreenWrap: {
+  // QR FAB
+  fabWrap: {
     position: 'absolute',
-    left: 0,
-    right: 0,
+    left: 0, right: 0,
     zIndex: 9999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fabTouchable: {
-    width: 60,
-    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
   },
   fabGlow: {
     position: 'absolute',
-    width: 66,
-    height: 66,
-    borderRadius: 33,
+    width: 68, height: 68,
+    borderRadius: 34,
     backgroundColor: COLORS.accent,
   },
   fab: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 58, height: 58,
+    borderRadius: 29,
     backgroundColor: COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    // iOS shadow
     shadowColor: COLORS.accent,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    // Android elevation
-    elevation: 8,
-    // Premium ring border
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.15)',
+    shadowOpacity: 0.55,
+    shadowRadius: 18,
+    elevation: 12,
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.18)',
   },
 
-  // ── Web tab bar ───────────────────────────────────────────────────
-  webTabBar: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.bgSec,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    paddingVertical: 10,
-    paddingBottom: 20,
-    alignItems: 'center',
-  },
-  webTab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    minHeight: 48,
-  },
-  webFabSlot: {
-    marginTop: -28,
-  },
-  webFab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-
-  // ── AI Coach FAB ──────────────────────────────────────────────────
-  aiCoachWrapper: {
+  // AI Coach FAB
+  aiWrap: {
     position: 'absolute',
-    bottom: 110,
-    right: 16,
+    bottom: 110, right: 18,
     zIndex: 200,
-    shadowColor: '#3B82F6',
+    shadowColor: COLORS.purple,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5,
     shadowRadius: 12,
     elevation: 14,
   },
-  aiCoachBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  aiBtn: {
+    width: 46, height: 46,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
   },
