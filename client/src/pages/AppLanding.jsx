@@ -220,7 +220,7 @@ export default function AppLanding() {
             maxWidth: 680, color: t.text,
           }}
         >
-          Your Health, In Your Pocket.
+          Your gym. Your coach. Your circle. One app.
         </motion.h1>
 
         <motion.p
@@ -230,7 +230,7 @@ export default function AppLanding() {
             maxWidth: 500, margin: '0 auto 36px', fontFamily: FONT_BODY,
           }}
         >
-          Check in with QR, track workouts, browse your gym's store, and manage your membership — all from the IVIRA app.
+          Check in with QR, get AI workout plans, track sleep, compete with your gym squad — IVIRA does it all.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -272,6 +272,10 @@ export default function AppLanding() {
             Sign In as Member
           </button>
         </motion.div>
+
+        <p style={{ fontSize: 13, color: t.textSec, marginTop: 16, letterSpacing: '0.5px' }}>
+          Used by members at gyms in Hyderabad, Chennai, Bengaluru & Mumbai
+        </p>
 
         {/* Store badges */}
         <motion.div

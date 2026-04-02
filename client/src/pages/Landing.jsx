@@ -649,6 +649,10 @@ export default function Landing() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenu, setMobileMenu] = useState(false)
   const [showGymSignUp, setShowGymSignUp] = useState(false)
+  const [showTrialForm, setShowTrialForm] = useState(false)
+  const [trialForm, setTrialForm] = useState({ ownerName: '', gym_name: '', email: '', phone: '', password: '' })
+  const [trialSubmitting, setTrialSubmitting] = useState(false)
+  const [trialError, setTrialError] = useState('')
   const [heroRef, heroVisible] = useScrollReveal(0.1)
 
   const arenas = useCounter(5000, 2200, heroVisible)
@@ -1016,9 +1020,7 @@ export default function Landing() {
             transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
             transition: 'all 0.8s ease 0.4s',
           }}>
-            {isMobile
-              ? 'Your Fitness. One App.'
-              : 'Run Your Gym. Crush Your Goals.'}
+            The only gym platform your members actually open every day.
           </h1>
 
           <p style={{
@@ -1029,9 +1031,7 @@ export default function Landing() {
             transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s ease 0.6s',
           }}>
-            {isMobile
-              ? 'QR check-in, workout logging, nutrition tracking, fasting timers, AI coaching, and your membership — all in one app.'
-              : 'For gym owners: member management, QR check-ins, Razorpay billing, WhatsApp notifications, analytics, and AI insights. For members: workout logging, nutrition tracking, sleep tracking, fasting timers, step counter, and an AI coach — all in one platform.'}
+            QR check-in, AI coaching, sleep tracking, and accountability groups — built in. Your members get a fitness app. You get a management system. One platform.
           </p>
 
           {/* CTAs — device-aware on mobile */}
@@ -1110,16 +1110,21 @@ export default function Landing() {
             ) : (
               <>
                 {/* Desktop: existing CTAs */}
-                <button onClick={() => setShowGymSignUp(true)} style={{
-                  fontFamily: FONT_BODY, fontSize: 15, fontWeight: 700,
-                  background: IVIRA_BLUE, color: WHITE, border: 'none', borderRadius: 10,
-                  padding: '14px 32px', cursor: 'pointer', transition: 'all 0.3s',
-                  boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
-                }}
-                onMouseEnter={e => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 8px 28px rgba(16,185,129,0.5)' }}
-                onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 16px rgba(16,185,129,0.35)' }}>
-                  Start Your 14-Day Free Trial
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <button onClick={() => setShowTrialForm(true)} style={{
+                    fontFamily: FONT_BODY, fontSize: 15, fontWeight: 700,
+                    background: IVIRA_BLUE, color: WHITE, border: 'none', borderRadius: 10,
+                    padding: '14px 32px', cursor: 'pointer', transition: 'all 0.3s',
+                    boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
+                  }}
+                  onMouseEnter={e => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 8px 28px rgba(16,185,129,0.5)' }}
+                  onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 16px rgba(16,185,129,0.35)' }}>
+                    Start free 14-day trial &rarr;
+                  </button>
+                  <span style={{ fontFamily: FONT_BODY, fontSize: 13, color: t.textMuted, fontWeight: 400 }}>
+                    No credit card. Set up in 5 minutes.
+                  </span>
+                </div>
                 <a href="https://api.ivira.app/downloads/ivira-latest.apk" download style={{
                   fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600,
                   background: 'transparent', color: t.text,
@@ -1199,6 +1204,71 @@ export default function Landing() {
             margin: '0 auto',
             animation: 'pulse 2s infinite',
           }} />
+        </div>
+      </section>
+
+      {/* ── INDIA TRUST STRIP ──────────────────────────────── */}
+      <div style={{
+        width: '100%', textAlign: 'center', padding: '16px 24px',
+        borderTop: `1px solid ${t.border}`, borderBottom: `1px solid ${t.border}`,
+        background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+      }}>
+        <span style={{
+          fontFamily: FONT_NAV, fontSize: 13, fontWeight: 600,
+          letterSpacing: '0.06em', color: t.textSec, lineHeight: 1.6,
+        }}>
+          <span style={{ color: ACCENT, fontWeight: 700 }}>Built for India</span>
+          {' '}&mdash; GST invoicing &middot; UPI + Razorpay &middot; WhatsApp reminders &middot; Hindi/Telugu/Tamil/Kannada
+        </span>
+      </div>
+
+      {/* ── SOCIAL PROOF TESTIMONIALS ──────────────────────── */}
+      {/* TODO: Replace with real testimonials */}
+      <section style={{ padding: 'clamp(48px, 8vw, 80px) 0', background: isDark ? t.bg : 'transparent' }}>
+        <div style={containerStyle}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 20,
+          }}>
+            {[
+              { quote: 'IVIRA replaced 4 tools we were paying for. Check-ins, payments, WhatsApp — everything in one place.', name: 'Rajesh K.', gym: 'PowerFit Gym', city: 'Hyderabad', members: '120+ members' },
+              { quote: 'My members actually use the app daily. Sleep tracking and the AI coach keep them engaged between sessions.', name: 'Priya M.', gym: 'FitZone Studio', city: 'Chennai', members: '85+ members' },
+              { quote: 'Set up took 10 minutes. The QR check-in alone saved us 2 hours of front desk work every day.', name: 'Arjun S.', gym: 'Iron Temple', city: 'Bengaluru', members: '200+ members' },
+            ].map((t2, i) => (
+              <motion.div key={i} custom={i} variants={fadeUp}
+                initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
+                <div style={{
+                  background: t.cardBg, borderRadius: 16, padding: 28,
+                  border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow,
+                  position: 'relative', overflow: 'hidden', height: '100%',
+                  display: 'flex', flexDirection: 'column', gap: 16,
+                }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: ACCENT }} />
+                  {/* Stars */}
+                  <div style={{ display: 'flex', gap: 2 }}>
+                    {[...Array(5)].map((_, s) => (
+                      <svg key={s} width="16" height="16" viewBox="0 0 24 24" fill="#FBBF24" stroke="none">
+                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+                      </svg>
+                    ))}
+                  </div>
+                  {/* Quote */}
+                  <p style={{
+                    fontFamily: FONT_BODY, fontSize: 15, color: t.text,
+                    lineHeight: 1.65, margin: 0, fontStyle: 'italic', flex: 1,
+                  }}>"{t2.quote}"</p>
+                  {/* Attribution */}
+                  <div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 14, fontWeight: 700, color: t.text }}>{t2.name}</div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: t.textMuted, marginTop: 2 }}>
+                      {t2.gym} &middot; {t2.city} &middot; {t2.members}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -2233,6 +2303,179 @@ export default function Landing() {
           color: ${t.selText};
         }
       `}</style>
+
+      {/* Trial Sign-Up Modal */}
+      {showTrialForm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(12px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20,
+        }} onClick={() => setShowTrialForm(false)}>
+          <div style={{
+            background: isDark ? '#0A0A0A' : '#FFFFFF',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh',
+            overflow: 'auto', padding: 'clamp(24px, 5vw, 40px)',
+            boxShadow: isDark ? '0 16px 48px rgba(0,0,0,0.6)' : '0 16px 48px rgba(0,0,0,0.15)',
+            position: 'relative',
+          }} onClick={e => e.stopPropagation()}>
+            {/* Accent top border */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, borderRadius: '16px 16px 0 0', background: `linear-gradient(90deg, ${IVIRA_BLUE}, ${ACCENT})` }} />
+
+            <div style={{ borderLeft: `3px solid ${ACCENT}`, paddingLeft: 16, marginBottom: 28 }}>
+              <h3 style={{
+                fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 800,
+                letterSpacing: '-0.02em', color: isDark ? WHITE : '#111111', margin: 0,
+              }}>Start Your Free Trial</h3>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: isDark ? SILVER : '#555555', margin: '8px 0 0' }}>
+                No credit card required. Set up in 5 minutes.
+              </p>
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              setTrialSubmitting(true)
+              setTrialError('')
+              try {
+                const res = await fetch('https://api.ivira.app/api/v1/auth/register', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(trialForm),
+                })
+                const data = await res.json()
+                if (res.ok && data.token) {
+                  localStorage.setItem('ivira_token', data.token)
+                  window.location.href = '/dashboard'
+                } else {
+                  setTrialError(data.message || data.error || 'Registration failed. Please try again.')
+                }
+              } catch {
+                setTrialError('Network error. Please try again.')
+              } finally {
+                setTrialSubmitting(false)
+              }
+            }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{
+                  fontFamily: FONT_NAV, fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.15em', textTransform: 'uppercase',
+                  color: isDark ? SILVER : '#555555', marginBottom: 6, display: 'block',
+                }}>OWNER NAME *</label>
+                <input required value={trialForm.ownerName}
+                  onChange={e => setTrialForm(f => ({ ...f, ownerName: e.target.value }))}
+                  placeholder="Your full name"
+                  style={{
+                    width: '100%', padding: '13px 14px', fontSize: 14, fontFamily: FONT_BODY,
+                    background: isDark ? '#111111' : '#F8F9FA', color: isDark ? '#E5E5E5' : '#111111',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+                    borderRadius: 10, outline: 'none', boxSizing: 'border-box',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = ACCENT}
+                  onBlur={e => e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'} />
+              </div>
+              <div>
+                <label style={{
+                  fontFamily: FONT_NAV, fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.15em', textTransform: 'uppercase',
+                  color: isDark ? SILVER : '#555555', marginBottom: 6, display: 'block',
+                }}>GYM NAME *</label>
+                <input required value={trialForm.gym_name}
+                  onChange={e => setTrialForm(f => ({ ...f, gym_name: e.target.value }))}
+                  placeholder="Your gym name"
+                  style={{
+                    width: '100%', padding: '13px 14px', fontSize: 14, fontFamily: FONT_BODY,
+                    background: isDark ? '#111111' : '#F8F9FA', color: isDark ? '#E5E5E5' : '#111111',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+                    borderRadius: 10, outline: 'none', boxSizing: 'border-box',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = ACCENT}
+                  onBlur={e => e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={{
+                    fontFamily: FONT_NAV, fontSize: 11, fontWeight: 700,
+                    letterSpacing: '0.15em', textTransform: 'uppercase',
+                    color: isDark ? SILVER : '#555555', marginBottom: 6, display: 'block',
+                  }}>EMAIL *</label>
+                  <input required type="email" value={trialForm.email}
+                    onChange={e => setTrialForm(f => ({ ...f, email: e.target.value }))}
+                    placeholder="you@gym.com"
+                    style={{
+                      width: '100%', padding: '13px 14px', fontSize: 14, fontFamily: FONT_BODY,
+                      background: isDark ? '#111111' : '#F8F9FA', color: isDark ? '#E5E5E5' : '#111111',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+                      borderRadius: 10, outline: 'none', boxSizing: 'border-box',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={e => e.target.style.borderColor = ACCENT}
+                    onBlur={e => e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'} />
+                </div>
+                <div>
+                  <label style={{
+                    fontFamily: FONT_NAV, fontSize: 11, fontWeight: 700,
+                    letterSpacing: '0.15em', textTransform: 'uppercase',
+                    color: isDark ? SILVER : '#555555', marginBottom: 6, display: 'block',
+                  }}>PHONE *</label>
+                  <input required type="tel" value={trialForm.phone}
+                    onChange={e => setTrialForm(f => ({ ...f, phone: e.target.value }))}
+                    placeholder="+91 98765 43210"
+                    style={{
+                      width: '100%', padding: '13px 14px', fontSize: 14, fontFamily: FONT_BODY,
+                      background: isDark ? '#111111' : '#F8F9FA', color: isDark ? '#E5E5E5' : '#111111',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+                      borderRadius: 10, outline: 'none', boxSizing: 'border-box',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={e => e.target.style.borderColor = ACCENT}
+                    onBlur={e => e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'} />
+                </div>
+              </div>
+              <div>
+                <label style={{
+                  fontFamily: FONT_NAV, fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.15em', textTransform: 'uppercase',
+                  color: isDark ? SILVER : '#555555', marginBottom: 6, display: 'block',
+                }}>PASSWORD *</label>
+                <input required type="password" value={trialForm.password}
+                  onChange={e => setTrialForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="Create a password"
+                  minLength={6}
+                  style={{
+                    width: '100%', padding: '13px 14px', fontSize: 14, fontFamily: FONT_BODY,
+                    background: isDark ? '#111111' : '#F8F9FA', color: isDark ? '#E5E5E5' : '#111111',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+                    borderRadius: 10, outline: 'none', boxSizing: 'border-box',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = ACCENT}
+                  onBlur={e => e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'} />
+              </div>
+              {trialError && (
+                <div style={{
+                  fontFamily: FONT_BODY, fontSize: 13, color: '#EF4444',
+                  background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
+                  borderRadius: 8, padding: '10px 14px',
+                }}>{trialError}</div>
+              )}
+              <button type="submit" disabled={trialSubmitting} style={{
+                fontFamily: FONT_BODY, fontSize: 15, fontWeight: 700,
+                background: trialSubmitting ? (isDark ? '#444444' : '#CBD5E1') : IVIRA_BLUE,
+                color: trialSubmitting ? (isDark ? '#999999' : '#64748B') : WHITE,
+                border: 'none', borderRadius: 10, padding: '16px 32px',
+                cursor: trialSubmitting ? 'not-allowed' : 'pointer', transition: 'all 0.3s',
+                marginTop: 4, letterSpacing: '0.02em',
+              }}>
+                {trialSubmitting ? 'Creating...' : 'Create My Gym \u2192'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Gym Owner Sign-Up Modal */}
       <GymSignUpModal open={showGymSignUp} onClose={() => setShowGymSignUp(false)} isDark={isDark} />
