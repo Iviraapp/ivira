@@ -13,6 +13,7 @@ import {
   Image,
   RefreshControl,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
 import { COLORS, SPACING, RADIUS, ELITE_CARD } from '../lib/theme'
@@ -550,7 +551,7 @@ export default function ProfileScreen({ navigation }) {
   const remaining = daysRemaining()
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -564,8 +565,8 @@ export default function ProfileScreen({ navigation }) {
               } catch (err) { console.warn('[Profile] refresh:', err?.message) }
               setRefreshing(false)
             }}
-            tintColor="#3B82F6"
-            colors={['#3B82F6']}
+            tintColor={COLORS.accent}
+            colors={[COLORS.accent]}
           />
         }
       >
@@ -638,7 +639,7 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         {/* Progress Summary — streak & weight progress */}
-        <View style={[styles.progressSummary, card]}>
+        <View style={[styles.progressSummary, card, styles.cardAccentBorder]}>
           <View style={styles.progressSummaryInner}>
             <View style={styles.progressStatCol}>
               <Text style={[styles.progressStatVal, { color: colors.accent }]}>
@@ -674,11 +675,11 @@ export default function ProfileScreen({ navigation }) {
         {/* CRED-style Quick Menu — grouped icon tiles */}
         <View style={styles.section}>
           <Text style={[styles.credMenuTitle, { color: colors.textTer }]}>FITNESS</Text>
-          <View style={[styles.credMenuCard, card]}>
+          <View style={[styles.credMenuCard, card, styles.cardAccentBorder]}>
             <View style={styles.credMenuGrid}>
               {[
                 { icon: 'activity', label: 'Workouts', bg: '#F97316', onPress: () => navigation.navigate('WorkoutTracker') },
-                { icon: 'bar-chart-2', label: 'Progress', bg: '#3B82F6', onPress: () => navigation.navigate('Progress') },
+                { icon: 'bar-chart-2', label: 'Progress', bg: COLORS.accent, onPress: () => navigation.navigate('Progress') },
                 { icon: 'target', label: 'Challenges', bg: '#8B5CF6', onPress: () => navigation.navigate('Challenges') },
                 { icon: 'star', label: 'Achievements', bg: '#F59E0B', onPress: () => navigation.navigate('Achievements') },
               ].map(item => (
@@ -695,7 +696,7 @@ export default function ProfileScreen({ navigation }) {
 
         <View style={styles.section}>
           <Text style={[styles.credMenuTitle, { color: colors.textTer }]}>NUTRITION & HEALTH</Text>
-          <View style={[styles.credMenuCard, card]}>
+          <View style={[styles.credMenuCard, card, styles.cardAccentBorder]}>
             <View style={styles.credMenuGrid}>
               {[
                 { icon: 'camera', label: 'Food Scanner', bg: '#EA4335', onPress: () => navigation.navigate('FoodScanner') },
@@ -716,17 +717,17 @@ export default function ProfileScreen({ navigation }) {
 
         <View style={styles.section}>
           <Text style={[styles.credMenuTitle, { color: colors.textTer }]}>QUICK ACCESS</Text>
-          <View style={[styles.credMenuCard, card]}>
+          <View style={[styles.credMenuCard, card, styles.cardAccentBorder]}>
             <View style={styles.credMenuGrid}>
               {[
-                { icon: 'credit-card', label: 'Membership', bg: '#3B82F6', onPress: () => navigation.navigate('MembershipRenewal') },
+                { icon: 'credit-card', label: 'Membership', bg: COLORS.accent, onPress: () => navigation.navigate('MembershipRenewal') },
                 { icon: 'activity', label: 'Workouts', bg: '#8B5CF6', onPress: () => navigation.navigate('WorkoutHistory') },
                 { icon: 'clock', label: 'Check-ins', bg: '#06B6D4', onPress: handleToggleCheckins },
                 { icon: 'calendar', label: 'Bookings', bg: '#F59E0B', onPress: handleToggleBookings },
                 { icon: 'image', label: 'Progress', bg: '#EC4899', onPress: handlePhotoUpload },
                 { icon: 'gift', label: 'Refer', bg: '#10B981', onPress: () => navigation.navigate('Referral') },
               ].map(item => (
-                <TouchableOpacity key={item.label} style={styles.credMenuItem} onPress={item.onPress} activeOpacity={0.65}>
+                <TouchableOpacity key={item.label} style={styles.credMenuItemWide} onPress={item.onPress} activeOpacity={0.65}>
                   <View style={[styles.credMenuIcon, { backgroundColor: item.bg + (isDark ? '1A' : '20') }]}>
                     <Feather name={item.icon} size={22} color={item.bg} />
                   </View>
@@ -758,7 +759,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Body Stats Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textTer }]}>BODY STATS</Text>
-          <View style={[styles.sectionCard, card]}>
+          <View style={[styles.sectionCard, card, styles.cardAccentBorder]}>
             <View style={styles.bodyStatsContent}>
               <View style={styles.bodyStatsInputRow}>
                 <View style={styles.bodyStatsField}>
@@ -823,7 +824,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Settings Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textTer }]}>SETTINGS</Text>
-          <View style={[styles.sectionCard, card]}>
+          <View style={[styles.sectionCard, card, styles.cardAccentBorder]}>
             <SettingRow
               icon="smartphone"
               label="Biometric Login"
@@ -927,7 +928,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Data & Privacy */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textTer }]}>DATA & PRIVACY</Text>
-          <View style={[styles.sectionCard, card]}>
+          <View style={[styles.sectionCard, card, styles.cardAccentBorder]}>
             <ActionRow icon="file-text" label="Invoices" onPress={handleInvoices} colors={colors} />
             <View style={[styles.separator, { backgroundColor: colors.border }]} />
             <ActionRow icon="download" label="Export My Data" onPress={handleExportData} colors={colors} />
@@ -939,7 +940,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Transformation Photos Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textTer }]}>TRANSFORMATION</Text>
-          <View style={[styles.sectionCard, card]}>
+          <View style={[styles.sectionCard, card, styles.cardAccentBorder]}>
             {member?.photos?.length > 0 ? (
               <View style={styles.photosContainer}>
                 <ScrollView
@@ -1008,7 +1009,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Support & About */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textTer }]}>SUPPORT & ABOUT</Text>
-          <View style={[styles.sectionCard, card]}>
+          <View style={[styles.sectionCard, card, styles.cardAccentBorder]}>
             <ActionRow icon="headphones" label="Contact Support" onPress={handleSupport} colors={colors} />
             <View style={[styles.separator, { backgroundColor: colors.border }]} />
             <ActionRow icon="info" label="About IVIRA" onPress={handleAbout} colors={colors} />
@@ -1288,7 +1289,7 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -1603,6 +1604,10 @@ const styles = StyleSheet.create({
     ...ELITE_CARD,
     overflow: 'hidden',
   },
+  cardAccentBorder: {
+    borderTopWidth: 3,
+    borderTopColor: COLORS.accent,
+  },
   // CRED-style menu tiles
   credMenuTitle: {
     fontSize: 11,
@@ -1625,6 +1630,11 @@ const styles = StyleSheet.create({
   credMenuItem: {
     alignItems: 'center',
     width: '25%',
+    paddingVertical: SPACING.sm + 2,
+  },
+  credMenuItemWide: {
+    alignItems: 'center',
+    width: '33.33%',
     paddingVertical: SPACING.sm + 2,
   },
   credMenuIcon: {

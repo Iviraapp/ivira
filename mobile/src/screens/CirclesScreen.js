@@ -5,7 +5,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
-import { COLORS, FONT, SPACING, RADIUS } from '../lib/theme'
+import { COLORS, FONT, SPACING, RADIUS, SHADOW, CARD, FEATURE } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import Haptics from '../lib/haptics'
@@ -58,7 +58,7 @@ export default function CirclesScreen({ navigation }) {
           <Text style={[s.sub, { color: colors.textTer }]}>Your accountability network</Text>
         </View>
         <TouchableOpacity
-          style={[s.uploadBtn, { backgroundColor: COLORS.accent }]}
+          style={[s.uploadBtn, { backgroundColor: colors.accent }]}
           onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); navigation.navigate('WorkoutAnalyzer') }}
           activeOpacity={0.85}
         >
@@ -76,7 +76,7 @@ export default function CirclesScreen({ navigation }) {
             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setActiveTab(t.id) }}
             activeOpacity={0.7}
           >
-            <Text style={[s.tabLabel, { color: activeTab === t.id ? COLORS.accent : colors.textTer }]}>{t.label}</Text>
+            <Text style={[s.tabLabel, { color: activeTab === t.id ? colors.accent : colors.textTer }]}>{t.label}</Text>
             {activeTab === t.id && <View style={s.tabUnderline} />}
           </TouchableOpacity>
         ))}
@@ -86,12 +86,14 @@ export default function CirclesScreen({ navigation }) {
         style={{ flex: 1 }}
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} colors={[COLORS.accent]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} colors={[colors.accent]} />}
       >
 
         {/* My Circle card — always visible */}
-        {myCircle && (
+        {myCircle ? (
           <MyCircleCard circle={myCircle} colors={colors} navigation={navigation} member={member} />
+        ) : (
+          <NoCircleCard colors={colors} navigation={navigation} />
         )}
 
         {activeTab === 'feed' && (
@@ -112,6 +114,23 @@ export default function CirclesScreen({ navigation }) {
   )
 }
 
+// ─── No Circle empty state ───────────────────────────────────
+function NoCircleCard({ colors, navigation }) {
+  return (
+    <View style={[s.card, { backgroundColor: colors.bgTer, borderColor: colors.border, borderTopWidth: 3, borderTopColor: FEATURE.circles }]}>
+      <View style={s.emptyState}>
+        <View style={[s.emptyIcon, { backgroundColor: COLORS.purpleSoft }]}>
+          <Feather name="users" size={28} color={FEATURE.circles} />
+        </View>
+        <Text style={[s.emptyTitle, { color: colors.text }]}>No Circle yet</Text>
+        <Text style={[s.emptySub, { color: colors.textSec }]}>
+          Join a Circle to compete with friends and stay accountable
+        </Text>
+      </View>
+    </View>
+  )
+}
+
 // ─── My Circle card ──────────────────────────────────────────
 function MyCircleCard({ circle, colors, navigation, member }) {
   const members = circle.members || []
@@ -121,9 +140,9 @@ function MyCircleCard({ circle, colors, navigation, member }) {
   const formAvg = circle.form_avg || circle.avg_score || 0
 
   return (
-    <View style={[s.card, { backgroundColor: colors.bgTer, borderColor: COLORS.accent + '30', borderTopWidth: 2, borderTopColor: COLORS.accent }]}>
+    <View style={[s.card, { backgroundColor: colors.bgTer, borderColor: colors.border, borderTopWidth: 3, borderTopColor: FEATURE.circles }]}>
       <View style={s.circleHeaderRow}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={[s.circleName, { color: colors.text }]}>{circle.name || 'My Circle'}</Text>
           <Text style={[s.circleMeta, { color: colors.textSec }]}>{members.length} members</Text>
         </View>
@@ -140,9 +159,9 @@ function MyCircleCard({ circle, colors, navigation, member }) {
           {members.slice(0, 6).map((m, i) => (
             <View
               key={i}
-              style={[s.memberAvatar, { backgroundColor: COLORS.accentSoft, borderColor: m.active_today ? COLORS.accent : 'transparent' }]}
+              style={[s.memberAvatar, { backgroundColor: colors.accentSoft, borderColor: m.active_today ? colors.accent : 'transparent' }]}
             >
-              <Text style={[s.memberInitial, { color: COLORS.accent }]}>
+              <Text style={[s.memberInitial, { color: colors.accent }]}>
                 {(m.name || m.member_name || '?').charAt(0).toUpperCase()}
               </Text>
             </View>
@@ -157,7 +176,7 @@ function MyCircleCard({ circle, colors, navigation, member }) {
 
       {/* Progress bars */}
       <View style={s.progressSection}>
-        <ProgressRow label="Weekly goal" value={`${weeklyDone}/${weeklyGoal}`} progress={progress} color={COLORS.accent} colors={colors} />
+        <ProgressRow label="Weekly goal" value={`${weeklyDone}/${weeklyGoal}`} progress={progress} color={colors.accent} colors={colors} />
         {formAvg > 0 && (
           <ProgressRow label="Avg form score" value={formAvg.toString()} progress={formAvg / 100} color={COLORS.purple} colors={colors} />
         )}
@@ -165,7 +184,7 @@ function MyCircleCard({ circle, colors, navigation, member }) {
 
       {/* Actions */}
       <View style={[s.cardActions, { borderTopColor: colors.border }]}>
-        <TouchableOpacity style={s.primaryActionBtn} onPress={() => navigation.navigate('WorkoutAnalyzer')} activeOpacity={0.85}>
+        <TouchableOpacity style={[s.primaryActionBtn, { backgroundColor: colors.accent }]} onPress={() => navigation.navigate('WorkoutAnalyzer')} activeOpacity={0.85}>
           <Feather name="video" size={14} color="#07080F" />
           <Text style={s.primaryActionText}>Prove a set</Text>
         </TouchableOpacity>
@@ -182,12 +201,12 @@ function FeedTab({ activity, colors, navigation, member }) {
   if (activity.length === 0) {
     return (
       <View style={s.emptyState}>
-        <View style={[s.emptyIcon, { backgroundColor: COLORS.accentSoft }]}>
-          <Feather name="activity" size={28} color={COLORS.accent} />
+        <View style={[s.emptyIcon, { backgroundColor: colors.accentSoft }]}>
+          <Feather name="activity" size={28} color={colors.accent} />
         </View>
         <Text style={[s.emptyTitle, { color: colors.text }]}>No activity yet today</Text>
         <Text style={[s.emptySub, { color: colors.textSec }]}>Be the first to post a verified set to your Circle</Text>
-        <TouchableOpacity style={s.primaryActionBtn} onPress={() => navigation.navigate('WorkoutAnalyzer')} activeOpacity={0.85}>
+        <TouchableOpacity style={[s.primaryActionBtn, s.emptyActionBtn, { backgroundColor: colors.accent }]} onPress={() => navigation.navigate('WorkoutAnalyzer')} activeOpacity={0.85}>
           <Feather name="video" size={14} color="#07080F" />
           <Text style={s.primaryActionText}>Upload my workout</Text>
         </TouchableOpacity>
@@ -201,9 +220,9 @@ function FeedTab({ activity, colors, navigation, member }) {
         const isSelf = item.member_id === member?.id
         const score = item.form_score || item.ai_score
         return (
-          <View key={i} style={[s.activityItem, { backgroundColor: colors.bgTer, borderColor: isSelf ? COLORS.accent + '30' : colors.border }]}>
-            <View style={[s.activityAvatar, { backgroundColor: isSelf ? COLORS.accentSoft : COLORS.purpleSoft }]}>
-              <Text style={[s.activityInitial, { color: isSelf ? COLORS.accent : COLORS.purple }]}>
+          <View key={i} style={[s.activityItem, { backgroundColor: colors.bgTer, borderColor: isSelf ? colors.accent + '30' : colors.border }]}>
+            <View style={[s.activityAvatar, { backgroundColor: isSelf ? colors.accentSoft : COLORS.purpleSoft }]}>
+              <Text style={[s.activityInitial, { color: isSelf ? colors.accent : COLORS.purple }]}>
                 {(item.member_name || item.name || '?').charAt(0).toUpperCase()}
               </Text>
             </View>
@@ -213,7 +232,9 @@ function FeedTab({ activity, colors, navigation, member }) {
                   {isSelf ? 'You' : item.member_name || item.name}
                 </Text>
                 {item.ai_verified && (
-                  <View style={s.verifiedBadge}><Text style={s.verifiedText}>AI Verified</Text></View>
+                  <View style={[s.verifiedBadge, { backgroundColor: colors.accentSoft }]}>
+                    <Text style={[s.verifiedText, { color: colors.accent }]}>AI Verified</Text>
+                  </View>
                 )}
               </View>
               <Text style={[s.activityMeta, { color: colors.textSec }]}>
@@ -225,7 +246,7 @@ function FeedTab({ activity, colors, navigation, member }) {
             </View>
             {score > 0 && (
               <View style={{ alignItems: 'center' }}>
-                <Text style={[s.activityScore, { color: score >= 80 ? COLORS.accent : score >= 60 ? COLORS.warn : COLORS.danger }]}>
+                <Text style={[s.activityScore, { color: score >= 80 ? colors.accent : score >= 60 ? COLORS.warn : COLORS.danger }]}>
                   {score}
                 </Text>
                 <Text style={[s.activityScoreLabel, { color: colors.textTer }]}>score</Text>
@@ -245,29 +266,32 @@ function LeaderboardTab({ leaderboard, colors, memberId }) {
   if (leaderboard.length === 0) {
     return (
       <View style={s.emptyState}>
-        <Feather name="bar-chart-2" size={28} color={colors.textTer} />
+        <View style={[s.emptyIcon, { backgroundColor: COLORS.purpleSoft }]}>
+          <Feather name="bar-chart-2" size={28} color={COLORS.purple} />
+        </View>
         <Text style={[s.emptyTitle, { color: colors.text }]}>Leaderboard loading...</Text>
+        <Text style={[s.emptySub, { color: colors.textSec }]}>Check back once Circle members start logging sets</Text>
       </View>
     )
   }
 
   return (
-    <View style={[s.card, { backgroundColor: colors.bgTer, borderColor: colors.borderStrong }]}>
+    <View style={[s.card, { backgroundColor: colors.bgTer, borderColor: colors.border, borderTopWidth: 3, borderTopColor: FEATURE.circles }]}>
       <Text style={[s.sectionTitle, { color: colors.text, marginBottom: 14 }]}>Circle Leaderboard</Text>
       {leaderboard.map((item, i) => {
         const isSelf = item.member_id === memberId
         return (
-          <View key={i} style={[s.lbRow, i === leaderboard.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }, isSelf && { backgroundColor: COLORS.accentSoft, borderRadius: 10, paddingHorizontal: 8, marginHorizontal: -8 }]}>
-            <Text style={s.lbRank}>{i < 3 ? medals[i] : `${i + 1}`}</Text>
-            <View style={[s.lbAvatar, { backgroundColor: isSelf ? COLORS.accentSoft : colors.bgHover }]}>
-              <Text style={[s.lbInitial, { color: isSelf ? COLORS.accent : colors.textSec }]}>
+          <View key={i} style={[s.lbRow, { borderBottomColor: colors.border }, i === leaderboard.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }, isSelf && { backgroundColor: colors.accentSoft, borderRadius: 10, paddingHorizontal: 8, marginHorizontal: -8 }]}>
+            <Text style={[s.lbRank, { color: i >= 3 ? colors.textTer : undefined }]}>{i < 3 ? medals[i] : `${i + 1}`}</Text>
+            <View style={[s.lbAvatar, { backgroundColor: isSelf ? colors.accentSoft : colors.bgHover }]}>
+              <Text style={[s.lbInitial, { color: isSelf ? colors.accent : colors.textSec }]}>
                 {(item.name || item.member_name || '?').charAt(0).toUpperCase()}
               </Text>
             </View>
             <Text style={[s.lbName, { color: colors.text, fontFamily: isSelf ? FONT.bold : FONT.regular }]}>
               {isSelf ? 'You' : item.name || item.member_name}
             </Text>
-            <Text style={[s.lbPoints, { color: isSelf ? COLORS.accent : colors.text }]}>
+            <Text style={[s.lbPoints, { color: isSelf ? colors.accent : colors.text }]}>
               {item.points || item.total_points || 0} pts
             </Text>
           </View>
@@ -291,28 +315,34 @@ function DiscoverTab({ allCircles, colors, gymId, memberId, onJoin }) {
     setJoining(null)
   }
 
+  const available = allCircles.filter(c => !c.is_member)
+
   return (
     <View>
       <Text style={[s.sectionTitle, { color: colors.text, marginBottom: 12 }]}>Join a Circle</Text>
-      {allCircles.filter(c => !c.is_member).map((circle, i) => (
+      {available.map((circle, i) => (
         <View key={i} style={[s.discoverCard, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
           <View style={{ flex: 1 }}>
             <Text style={[s.circleName, { color: colors.text }]}>{circle.name}</Text>
             <Text style={[s.circleMeta, { color: colors.textSec }]}>{circle.member_count || 0} members · {circle.city || 'Local'}</Text>
           </View>
           <TouchableOpacity
-            style={[s.joinBtn, { backgroundColor: joining === circle.id ? colors.bgHover : COLORS.accentSoft, borderColor: COLORS.accent + '40' }]}
+            style={[s.joinBtn, { backgroundColor: joining === circle.id ? colors.bgHover : colors.accentSoft, borderColor: colors.accent + '40' }]}
             onPress={() => join(circle.id)}
             disabled={!!joining}
             activeOpacity={0.7}
           >
-            <Text style={[s.joinBtnText, { color: COLORS.accent }]}>{joining === circle.id ? '...' : 'Join'}</Text>
+            <Text style={[s.joinBtnText, { color: colors.accent }]}>{joining === circle.id ? '...' : 'Join'}</Text>
           </TouchableOpacity>
         </View>
       ))}
-      {allCircles.filter(c => !c.is_member).length === 0 && (
+      {available.length === 0 && (
         <View style={s.emptyState}>
+          <View style={[s.emptyIcon, { backgroundColor: colors.accentSoft }]}>
+            <Feather name="check-circle" size={28} color={colors.accent} />
+          </View>
           <Text style={[s.emptyTitle, { color: colors.text }]}>You're in all available Circles!</Text>
+          <Text style={[s.emptySub, { color: colors.textSec }]}>New Circles will appear here when available</Text>
         </View>
       )}
     </View>
@@ -324,7 +354,7 @@ function ProgressRow({ label, value, progress, color, colors }) {
   return (
     <View style={s.progressRow}>
       <Text style={[s.progressLabel, { color: colors.textSec }]}>{label}</Text>
-      <View style={s.progressTrack}>
+      <View style={[s.progressTrack, { backgroundColor: colors.borderStrong }]}>
         <View style={[s.progressFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: color }]} />
       </View>
       <Text style={[s.progressValue, { color }]}>{value}</Text>
@@ -344,10 +374,10 @@ function formatRelativeTime(iso) {
 
 const s = StyleSheet.create({
   root: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: SPACING.sm },
   title: { fontSize: 26, fontFamily: FONT.extraBold, letterSpacing: -0.8 },
   sub: { fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
-  uploadBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 9, borderRadius: RADIUS.full },
+  uploadBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: SPACING.md, paddingVertical: 9, borderRadius: RADIUS.full },
   uploadBtnText: { fontSize: 13, fontFamily: FONT.bold, color: '#07080F' },
 
   // Tabs
@@ -355,34 +385,34 @@ const s = StyleSheet.create({
   tabItem: { flex: 1, alignItems: 'center', paddingVertical: 12, position: 'relative' },
   tabItemActive: {},
   tabLabel: { fontSize: 13, fontFamily: FONT.semibold },
-  tabUnderline: { position: 'absolute', bottom: 0, left: '15%', right: '15%', height: 2, backgroundColor: COLORS.accent, borderRadius: 1 },
+  tabUnderline: { position: 'absolute', bottom: 0, left: '15%', right: '15%', height: 2.5, backgroundColor: COLORS.accent, borderRadius: 1.5 },
 
   scroll: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md },
 
-  // Card
-  card: { borderRadius: RADIUS.xl, borderWidth: 0.5, padding: 18, marginBottom: SPACING.md },
+  // Card — consistent with theme CARD
+  card: { borderRadius: RADIUS.lg, borderWidth: 0.5, padding: SPACING.md, marginBottom: SPACING.md },
 
   // My Circle
-  circleHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 },
+  circleHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14, gap: SPACING.sm },
   circleName: { fontSize: 17, fontFamily: FONT.bold, letterSpacing: -0.3 },
   circleMeta: { fontSize: 12, fontFamily: FONT.regular, marginTop: 2 },
   rankBadge: { backgroundColor: COLORS.purpleSoft, paddingHorizontal: 12, paddingVertical: 4, borderRadius: RADIUS.full },
   rankText: { fontSize: 12, fontFamily: FONT.bold, color: COLORS.purple },
-  avatarRow: { flexDirection: 'row', gap: 6, marginBottom: 16 },
+  avatarRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: SPACING.md },
   memberAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
   memberInitial: { fontSize: 13, fontFamily: FONT.bold },
-  progressSection: { gap: 8, marginBottom: 16 },
+  progressSection: { gap: SPACING.sm, marginBottom: SPACING.md },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   progressLabel: { fontSize: 12, fontFamily: FONT.medium, width: 110 },
-  progressTrack: { flex: 1, height: 5, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
+  progressTrack: { flex: 1, height: 5, borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3 },
-  progressValue: { fontSize: 12, fontFamily: FONT.bold, minWidth: 32, textAlign: 'right' },
+  progressValue: { fontSize: 12, fontFamily: FONT.numBold, minWidth: 32, textAlign: 'right' },
 
   // Actions
   cardActions: { flexDirection: 'row', gap: 10, paddingTop: 14, borderTopWidth: 0.5 },
-  primaryActionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: COLORS.accent, paddingVertical: 10, borderRadius: 12 },
+  primaryActionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: RADIUS.sm },
   primaryActionText: { fontSize: 13, fontFamily: FONT.bold, color: '#07080F' },
-  ghostActionBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: 0.5 },
+  ghostActionBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: RADIUS.sm, borderWidth: 0.5 },
   ghostActionText: { fontSize: 13, fontFamily: FONT.semibold },
 
   // Activity feed
@@ -392,28 +422,29 @@ const s = StyleSheet.create({
   activityName: { fontSize: 14, fontFamily: FONT.semibold },
   activityMeta: { fontSize: 12, fontFamily: FONT.regular, marginTop: 2 },
   activityTime: { fontSize: 11, fontFamily: FONT.regular, marginTop: 2 },
-  activityScore: { fontSize: 22, fontFamily: 'Inter_800ExtraBold', letterSpacing: -0.5 },
+  activityScore: { fontSize: 22, fontFamily: FONT.numExtraBold, letterSpacing: -0.5 },
   activityScoreLabel: { fontSize: 10, fontFamily: FONT.medium, textAlign: 'center' },
-  verifiedBadge: { backgroundColor: COLORS.accentSoft, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
-  verifiedText: { fontSize: 9, fontFamily: FONT.bold, color: COLORS.accent, letterSpacing: 0.5 },
+  verifiedBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
+  verifiedText: { fontSize: 9, fontFamily: FONT.bold, letterSpacing: 0.5 },
 
   // Leaderboard
   sectionTitle: { fontSize: 15, fontFamily: FONT.bold, letterSpacing: -0.3 },
-  lbRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: 'rgba(255,255,255,0.07)' },
-  lbRank: { fontSize: 16, minWidth: 28, textAlign: 'center' },
+  lbRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 0.5 },
+  lbRank: { fontSize: 16, fontFamily: FONT.numBold, minWidth: 28, textAlign: 'center' },
   lbAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   lbInitial: { fontSize: 12, fontFamily: FONT.bold },
   lbName: { flex: 1, fontSize: 14, fontFamily: FONT.regular },
-  lbPoints: { fontSize: 15, fontFamily: 'Inter_700Bold' },
+  lbPoints: { fontSize: 15, fontFamily: FONT.numBold },
 
   // Discover
-  discoverCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: RADIUS.lg, borderWidth: 0.5, marginBottom: 10 },
+  discoverCard: { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, borderRadius: RADIUS.lg, borderWidth: 0.5, marginBottom: 10, gap: SPACING.sm },
   joinBtn: { paddingHorizontal: 18, paddingVertical: 8, borderRadius: RADIUS.full, borderWidth: 0.5 },
   joinBtnText: { fontSize: 13, fontFamily: FONT.bold },
 
   // Empty
   emptyState: { alignItems: 'center', paddingVertical: 40, gap: 10 },
-  emptyIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  emptyIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.sm },
   emptyTitle: { fontSize: 16, fontFamily: FONT.bold },
-  emptySub: { fontSize: 13, fontFamily: FONT.regular, textAlign: 'center', lineHeight: 20 },
+  emptySub: { fontSize: 13, fontFamily: FONT.regular, textAlign: 'center', lineHeight: 20, paddingHorizontal: SPACING.lg },
+  emptyActionBtn: { marginTop: SPACING.sm, flex: 0, paddingHorizontal: SPACING.lg },
 })

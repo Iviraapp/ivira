@@ -501,8 +501,8 @@ export default function HealthScreen({ navigation }) {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Wellness hero accent */}
-      <View style={[styles.heroAccent, { backgroundColor: '#0a0e1a' }]}>
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors?.bgTer || '#1A2236' }]} />
+      <View style={[styles.heroAccent, { backgroundColor: colors.bg }]}>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bgTer }]} />
       </View>
       <ScrollView
         contentContainerStyle={styles.content}
@@ -520,8 +520,8 @@ export default function HealthScreen({ navigation }) {
               } catch (err) { if (__DEV__) console.warn('[Health] refresh:', err?.message) }
               setRefreshing(false)
             }}
-            tintColor="#3B82F6"
-            colors={['#3B82F6']}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
@@ -547,7 +547,7 @@ export default function HealthScreen({ navigation }) {
           <Animated.View style={[
             styles.aiInsightCard,
             card,
-            { borderLeftColor: colors.accent, borderLeftWidth: 3, opacity: insightFadeAnim },
+            { borderTopColor: colors.accent, borderTopWidth: 3, opacity: insightFadeAnim },
           ]}>
             <View style={styles.aiInsightHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
@@ -762,10 +762,10 @@ export default function HealthScreen({ navigation }) {
         />
 
         {/* Heart Rate Section */}
-        <View style={[styles.heartSection, card, { borderTopColor: '#EA4335', borderTopWidth: 3 }]}>
+        <View style={[styles.heartSection, card, { borderTopColor: METABOLIC.heart, borderTopWidth: 3 }]}>
           <View style={styles.heartHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
-              <Feather name="heart" size={16} color="#EA4335" />
+              <Feather name="heart" size={16} color={METABOLIC.heart} />
               <Text style={[styles.heartTitle, { color: colors.text }]}>Heart</Text>
             </View>
             {hasWearable && (
@@ -777,9 +777,9 @@ export default function HealthScreen({ navigation }) {
           </View>
           <View style={styles.heartCards}>
             {[
-              { icon: 'heart', color: '#EA4335', value: heartRate ? `${heartRate.bpm}` : '--', unit: 'bpm', label: 'Current HR' },
-              { icon: 'activity', color: '#F59E0B', value: restingHR ? `${restingHR.bpm}` : '--', unit: 'bpm', label: 'Resting HR' },
-              { icon: 'trending-up', color: '#8B5CF6', value: hrv ? `${hrv.ms}` : '--', unit: 'ms', label: 'HRV' },
+              { icon: 'heart', color: METABOLIC.heart, value: heartRate ? `${heartRate.bpm}` : '--', unit: 'bpm', label: 'Current HR' },
+              { icon: 'activity', color: COLORS.amber, value: restingHR ? `${restingHR.bpm}` : '--', unit: 'bpm', label: 'Resting HR' },
+              { icon: 'trending-up', color: COLORS.purple, value: hrv ? `${hrv.ms}` : '--', unit: 'ms', label: 'HRV' },
             ].map(item => (
               <View key={item.label} style={[styles.heartCard, { backgroundColor: colors.bgTer }]}>
                 <View style={[styles.heartIconWrap, { backgroundColor: item.color + (isDark ? '1A' : '20') }]}>
@@ -820,11 +820,11 @@ export default function HealthScreen({ navigation }) {
         {/* Quick Links Row */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SPACING.lg, gap: SPACING.sm, paddingBottom: SPACING.md }}>
           {[
-            { label: 'Scan Food', icon: 'camera', color: '#EA4335', screen: 'FoodScanner' },
-            { label: 'Recipes', icon: 'book-open', color: '#34A853', screen: 'Recipes' },
-            { label: 'Challenges', icon: 'zap', color: '#8B5CF6', screen: 'Challenges' },
-            { label: 'Sleep', icon: 'moon', color: '#6366F1', screen: 'SleepTracker' },
-            { label: 'Badges', icon: 'star', color: '#F59E0B', screen: 'Achievements' },
+            { label: 'Scan Food', icon: 'camera', color: METABOLIC.heart, screen: 'FoodScanner' },
+            { label: 'Recipes', icon: 'book-open', color: COLORS.green, screen: 'Recipes' },
+            { label: 'Challenges', icon: 'zap', color: COLORS.purple, screen: 'Challenges' },
+            { label: 'Sleep', icon: 'moon', color: METABOLIC.sleep, screen: 'SleepTracker' },
+            { label: 'Badges', icon: 'star', color: COLORS.amber, screen: 'Achievements' },
           ].map((item) => (
             <TouchableOpacity
               key={item.screen}
@@ -836,7 +836,7 @@ export default function HealthScreen({ navigation }) {
               activeOpacity={0.7}
             >
               <Feather name={item.icon} size={14} color={item.color} />
-              <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>{item.label}</Text>
+              <Text style={{ color: colors.text, fontSize: 13, fontFamily: FONT.semibold, fontWeight: '600' }}>{item.label}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -1011,7 +1011,7 @@ export default function HealthScreen({ navigation }) {
         </Modal>
 
         {/* Water Tracking */}
-        <WaterTracker style={{ marginHorizontal: 4, marginBottom: 12 }} />
+        <WaterTracker style={{ marginBottom: SPACING.md }} />
 
 
         <View style={{ height: SPACING.xxl + SPACING.xl }} />
@@ -1288,7 +1288,7 @@ const styles = StyleSheet.create({
   heroAccentImage: {},
   heroAccentOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(10,14,26,0.55)',
+    backgroundColor: 'rgba(7,8,15,0.55)',
   },
   heroAccentOverlayLight: {
     backgroundColor: 'rgba(247,245,242,0.45)',
@@ -1339,7 +1339,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: COLORS.accentSoft,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
@@ -1388,7 +1388,7 @@ const styles = StyleSheet.create({
   },
   ringGlow: {
     position: 'absolute',
-    backgroundColor: 'rgba(52,168,83,0.15)',
+    backgroundColor: COLORS.accentGlow,
   },
   ringCenter: {
     position: 'absolute',
@@ -1410,13 +1410,13 @@ const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#94A3B8',
+    color: COLORS.textSec,
     marginTop: 1,
   },
   ringGoalText: {
     fontSize: 9,
     fontFamily: FONT.regular,
-    color: '#64748B',
+    color: COLORS.textTer,
     marginTop: 1,
   },
   goalBadge: {
@@ -1604,7 +1604,7 @@ const styles = StyleSheet.create({
     marginRight: SPACING.md,
   },
   mealIconLogged: {
-    backgroundColor: 'rgba(52,168,83,0.12)',
+    backgroundColor: COLORS.accentSoft,
   },
   mealSlotLabel: {
     fontSize: 15,
@@ -1649,7 +1649,7 @@ const styles = StyleSheet.create({
   calorieRingLabel: {
     fontSize: 10,
     fontFamily: FONT.medium,
-    color: '#94A3B8',
+    color: COLORS.textSec,
     marginTop: 1,
   },
 
@@ -1690,7 +1690,7 @@ const styles = StyleSheet.create({
   foodModalSearchRow: {
     paddingHorizontal: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: COLORS.border,
   },
   foodModalInput: {
     height: 48,
@@ -1704,7 +1704,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.03)',
+    borderBottomColor: COLORS.border,
   },
   foodResultName: {
     fontSize: 15,
@@ -2075,7 +2075,6 @@ const styles = StyleSheet.create({
   // Heart Rate Section
   heartSection: {
     padding: SPACING.lg,
-    marginHorizontal: SPACING.lg,
     marginBottom: SPACING.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

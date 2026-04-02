@@ -15,7 +15,7 @@ import { useHealth } from '../context/HealthContext'
 import Haptics from '../lib/haptics'
 import api from '../lib/api'
 import { getItem } from '../lib/storage'
-import { getDailyInsight, getWorkoutSuggestion } from '../lib/aiCoach'
+import { getWorkoutSuggestion } from '../lib/aiCoach'
 import { premiumAlert } from '../components/PremiumAlert'
 
 const { width: W } = Dimensions.get('window')
@@ -160,14 +160,14 @@ export default function HomeScreen({ navigation, route }) {
           )}
           <TouchableOpacity
             style={[s.notifBtn, { backgroundColor: colors.bgTer, borderColor: colors.borderStrong }]}
-            onPress={() => navigation.navigate('NotificationSettings')}
+            onPress={() => navigation.navigate('Profile', { screen: 'NotificationSettings' })}
             activeOpacity={0.7}
           >
             <Feather name="bell" size={18} color={colors.textSec} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[s.avatarBtn, { backgroundColor: colors.bgTer, borderColor: COLORS.accent + '50' }]}
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => navigation.navigate('Profile', { screen: 'ProfileMain' })}
             activeOpacity={0.7}
           >
             {profilePhoto
@@ -217,12 +217,13 @@ export default function HomeScreen({ navigation, route }) {
         </TouchableOpacity>
 
         {/* ── Stats row ── */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.statsRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.statsRow} style={s.statsScroll}>
           <StatTile
             value={steps >= 1000 ? `${(steps / 1000).toFixed(1)}k` : (steps || 0).toString()}
             label="steps"
             color={FEATURE.steps}
             progress={stepProgress}
+            colors={colors}
             onPress={() => navigation.navigate('ActivityDashboard')}
           />
           {sleepScore && (
@@ -230,6 +231,7 @@ export default function HomeScreen({ navigation, route }) {
               value={sleepHours ? `${sleepHours}h` : `${sleepScore}`}
               label={sleepHours ? 'sleep' : 'sleep score'}
               color={FEATURE.sleep}
+              colors={colors}
               onPress={() => navigation.navigate('SleepTracker')}
             />
           )}
@@ -238,6 +240,7 @@ export default function HomeScreen({ navigation, route }) {
             label="kcal"
             color={FEATURE.nutrition}
             progress={calProgress}
+            colors={colors}
             onPress={() => navigation.navigate('NutritionLog')}
           />
           {fastingHours && (
@@ -245,6 +248,7 @@ export default function HomeScreen({ navigation, route }) {
               value={`${fastingHours}h`}
               label="fasting"
               color={FEATURE.fasting}
+              colors={colors}
               onPress={() => navigation.navigate('FastingLog')}
             />
           )}
@@ -253,6 +257,7 @@ export default function HomeScreen({ navigation, route }) {
               value={`${activeMinutes}m`}
               label="active"
               color={FEATURE.activity}
+              colors={colors}
             />
           )}
         </ScrollView>
@@ -296,20 +301,20 @@ export default function HomeScreen({ navigation, route }) {
 function CheckinChip({ icon, label, active }) {
   return (
     <View style={[s.chip, active && s.chipActive]}>
-      <Feather name={icon} size={11} color={active ? '#07080F' : COLORS.accent} />
+      <Feather name={icon} size={11} color={active ? COLORS.bg : COLORS.accent} />
       <Text style={[s.chipText, active && s.chipTextActive]}>{label}</Text>
     </View>
   )
 }
 
-function StatTile({ value, label, color, progress, onPress }) {
+function StatTile({ value, label, color, progress, onPress, colors }) {
   const Wrapper = onPress ? TouchableOpacity : View
   return (
-    <Wrapper style={[s.statTile]} onPress={onPress} activeOpacity={0.7}>
+    <Wrapper style={[s.statTile, { backgroundColor: colors.bgTer, borderColor: colors.border }]} onPress={onPress} activeOpacity={0.7}>
       <Text style={[s.statVal, { color }]}>{value}</Text>
-      <Text style={s.statKey}>{label}</Text>
+      <Text style={[s.statKey, { color: colors.textTer }]}>{label}</Text>
       {progress !== undefined && (
-        <View style={s.statTrack}>
+        <View style={[s.statTrack, { backgroundColor: colors.border }]}>
           <View style={[s.statFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: color }]} />
         </View>
       )}
@@ -332,8 +337,8 @@ function CircleActivityCard({ activity, colors, onProveSet, onViewCircle }) {
       </View>
 
       {hasActivity ? (
-        activity.slice(0, 3).map((item, i) => (
-          <View key={i} style={[s.proofRow, i === activity.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]}>
+        activity.slice(0, 3).map((item, i, arr) => (
+          <View key={i} style={[s.proofRow, { borderBottomColor: colors.border }, i === arr.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]}>
             <View style={[s.proofAvatar, { backgroundColor: COLORS.accentSoft }]}>
               <Text style={[s.proofInitial, { color: COLORS.accent }]}>
                 {(item.member_name || item.name || '?').charAt(0).toUpperCase()}
@@ -360,9 +365,9 @@ function CircleActivityCard({ activity, colors, onProveSet, onViewCircle }) {
         </View>
       )}
 
-      <View style={s.cardActions}>
+      <View style={[s.cardActions, { borderTopColor: colors.border }]}>
         <TouchableOpacity style={s.primaryBtn} onPress={onProveSet} activeOpacity={0.85}>
-          <Feather name="video" size={14} color="#07080F" />
+          <Feather name="video" size={14} color={COLORS.bg} />
           <Text style={s.primaryBtnText}>Prove my set</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.ghostBtn, { borderColor: colors.borderStrong }]} onPress={onViewCircle} activeOpacity={0.7}>
@@ -406,7 +411,7 @@ function AIWorkoutCard({ workout, colors, isDark, onStart, onDismiss, onRefresh 
         </View>
         <Text style={[s.workoutReason, { color: colors.textSec }]}>{workout.reason}</Text>
         <TouchableOpacity style={s.primaryBtn} onPress={onStart} activeOpacity={0.85}>
-          <Feather name="play" size={14} color="#07080F" />
+          <Feather name="play" size={14} color={COLORS.bg} />
           <Text style={s.primaryBtnText}>Start Workout</Text>
         </TouchableOpacity>
       </View>
@@ -438,7 +443,7 @@ function ClassesStrip({ classes, bookedClasses, setBookedClasses, gymId, colors 
       <View style={s.sectionHeader}>
         <Text style={[s.sectionTitle, { color: colors.text }]}>Today's Classes</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.classesRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.classesRow} style={s.classesScroll}>
         {classes.map(cls => {
           const booked = !!bookedClasses[cls.id]
           const loading = booking === cls.id
@@ -458,7 +463,7 @@ function ClassesStrip({ classes, bookedClasses, setBookedClasses, gymId, colors 
                 disabled={booked || loading}
                 activeOpacity={0.8}
               >
-                <Text style={[s.bookBtnText, { color: booked ? COLORS.accent : '#07080F' }]}>
+                <Text style={[s.bookBtnText, { color: booked ? COLORS.accent : COLORS.bg }]}>
                   {loading ? '...' : booked ? 'Reserved' : 'Reserve'}
                 </Text>
               </TouchableOpacity>
@@ -472,14 +477,14 @@ function ClassesStrip({ classes, bookedClasses, setBookedClasses, gymId, colors 
 
 function QuickActions({ navigation, colors }) {
   const actions = [
-    { icon: 'activity',   label: 'Workout',   color: COLORS.accent,   onPress: () => navigation.navigate('WorkoutTracker') },
-    { icon: 'maximize',   label: 'Scan Food', color: '#F97316',        onPress: () => navigation.navigate('BarcodeScanner') },
-    { icon: 'moon',       label: 'Sleep',     color: COLORS.purple,   onPress: () => navigation.navigate('SleepTracker') },
-    { icon: 'camera',     label: 'AI Food',   color: '#EF4444',        onPress: () => navigation.navigate('FoodScanner') },
-    { icon: 'target',     label: 'Challenges',color: '#8B5CF6',        onPress: () => navigation.navigate('Challenges') },
-    { icon: 'award',      label: 'Score',     color: '#38BDF8',        onPress: () => navigation.navigate('FitnessScore') },
-    { icon: 'bar-chart-2',label: 'Leaderboard',color:'#06B6D4',       onPress: () => navigation.navigate('CityLeaderboard') },
-    { icon: 'book-open',  label: 'Recipes',   color: '#14B8A6',        onPress: () => navigation.navigate('Recipes') },
+    { icon: 'activity',   label: 'Workout',    color: COLORS.accent,  onPress: () => navigation.navigate('WorkoutTracker') },
+    { icon: 'maximize',   label: 'Scan Food',  color: COLORS.orange,  onPress: () => navigation.navigate('BarcodeScanner') },
+    { icon: 'moon',       label: 'Sleep',      color: COLORS.purple,  onPress: () => navigation.navigate('SleepTracker') },
+    { icon: 'camera',     label: 'AI Food',    color: COLORS.danger,  onPress: () => navigation.navigate('FoodScanner') },
+    { icon: 'target',     label: 'Challenges', color: FEATURE.fasting, onPress: () => navigation.navigate('Challenges') },
+    { icon: 'award',      label: 'Score',      color: COLORS.cyan,    onPress: () => navigation.navigate('FitnessScore') },
+    { icon: 'bar-chart-2',label: 'Leaderboard',color: COLORS.cyan,    onPress: () => navigation.navigate('CityLeaderboard') },
+    { icon: 'book-open',  label: 'Recipes',    color: COLORS.green,   onPress: () => navigation.navigate('Recipes') },
   ]
   return (
     <View style={{ marginBottom: SPACING.md }}>
@@ -512,9 +517,9 @@ const s = StyleSheet.create({
   greeting: { fontSize: 13, fontFamily: FONT.medium },
   name: { fontSize: 26, fontFamily: FONT.extraBold, letterSpacing: -0.8, marginTop: 1 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  streakPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,181,71,0.12)', borderWidth: 0.5, borderColor: 'rgba(255,181,71,0.3)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full },
+  streakPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.amber + '1F', borderWidth: 0.5, borderColor: COLORS.amber + '4D', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full },
   streakEmoji: { fontSize: 13 },
-  streakText: { fontSize: 12, fontFamily: FONT.bold, color: '#FFB547' },
+  streakText: { fontSize: 12, fontFamily: FONT.bold, color: COLORS.amber },
   notifBtn: { width: 38, height: 38, borderRadius: 12, borderWidth: 0.5, alignItems: 'center', justifyContent: 'center' },
   avatarBtn: { width: 38, height: 38, borderRadius: 19, borderWidth: 1.5, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   avatarImg: { width: 36, height: 36, borderRadius: 18 },
@@ -523,7 +528,7 @@ const s = StyleSheet.create({
   scroll: { paddingHorizontal: SPACING.lg },
 
   // Check-in card
-  checkinCard: { borderRadius: RADIUS.xl, borderWidth: 1, marginBottom: SPACING.md, overflow: 'hidden' },
+  checkinCard: { borderRadius: RADIUS.xl, borderWidth: 1, marginBottom: SPACING.md, overflow: 'hidden', ...SHADOW.sm },
   checkinTopBar: { height: 2.5, backgroundColor: COLORS.accent },
   checkinRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   qrPreview: { width: 48, height: 48, borderRadius: 14, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', borderWidth: 0.5, borderColor: COLORS.accent + '30' },
@@ -534,15 +539,16 @@ const s = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full, borderWidth: 0.5, borderColor: COLORS.accent + '40', backgroundColor: 'transparent' },
   chipActive: { backgroundColor: COLORS.accent },
   chipText: { fontSize: 11, fontFamily: FONT.semibold, color: COLORS.accent },
-  chipTextActive: { color: '#07080F' },
+  chipTextActive: { color: COLORS.bg },
   checkinCount: { fontSize: 11, fontFamily: FONT.medium },
 
   // Stats
-  statsRow: { gap: 10, paddingBottom: SPACING.md },
-  statTile: { backgroundColor: '#13161F', borderRadius: RADIUS.md, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.07)', padding: 14, minWidth: 90 },
-  statVal: { fontSize: 26, fontFamily: 'Inter_800ExtraBold', letterSpacing: -1, lineHeight: 28 },
-  statKey: { fontSize: 11, fontFamily: FONT.medium, color: 'rgba(240,242,248,0.35)', marginTop: 3 },
-  statTrack: { height: 3, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
+  statsRow: { gap: 10, paddingBottom: SPACING.md, paddingHorizontal: SPACING.lg },
+  statsScroll: { marginHorizontal: -SPACING.lg },
+  statTile: { borderRadius: RADIUS.md, borderWidth: 0.5, padding: 14, minWidth: 90 },
+  statVal: { fontSize: 26, fontFamily: FONT.numExtraBold, letterSpacing: -1, lineHeight: 28 },
+  statKey: { fontSize: 11, fontFamily: FONT.medium, marginTop: 3 },
+  statTrack: { height: 3, borderRadius: 2, marginTop: 8, overflow: 'hidden' },
   statFill: { height: '100%', borderRadius: 2 },
 
   // Card
@@ -554,20 +560,20 @@ const s = StyleSheet.create({
   liveText: { fontSize: 9, fontFamily: FONT.bold, color: COLORS.accent, letterSpacing: 1 },
 
   // Circle activity
-  proofRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: 'rgba(255,255,255,0.07)' },
+  proofRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 0.5 },
   proofAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   proofInitial: { fontSize: 13, fontFamily: FONT.bold },
   proofName: { fontSize: 13, fontFamily: FONT.semibold },
   proofMeta: { fontSize: 11, fontFamily: FONT.regular, marginTop: 1 },
-  proofScore: { fontSize: 20, fontFamily: 'Inter_800ExtraBold', letterSpacing: -0.5 },
+  proofScore: { fontSize: 20, fontFamily: FONT.numExtraBold, letterSpacing: -0.5 },
   emptyCircle: { alignItems: 'center', paddingVertical: 20, gap: 6 },
   emptyText: { fontSize: 14, fontFamily: FONT.semibold },
   emptySubText: { fontSize: 12, fontFamily: FONT.regular },
 
   // Buttons
-  cardActions: { flexDirection: 'row', gap: 10, marginTop: 14, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: 'rgba(255,255,255,0.07)' },
+  cardActions: { flexDirection: 'row', gap: 10, marginTop: 14, paddingTop: 14, borderTopWidth: 0.5 },
   primaryBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: COLORS.accent, paddingVertical: 10, borderRadius: 12 },
-  primaryBtnText: { fontSize: 13, fontFamily: FONT.bold, color: '#07080F' },
+  primaryBtnText: { fontSize: 13, fontFamily: FONT.bold, color: COLORS.bg },
   ghostBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: 0.5 },
   ghostBtnText: { fontSize: 13, fontFamily: FONT.semibold },
 
@@ -581,7 +587,8 @@ const s = StyleSheet.create({
   // Classes
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm },
   sectionTitle: { fontSize: 15, fontFamily: FONT.bold, letterSpacing: -0.3 },
-  classesRow: { gap: 10 },
+  classesScroll: { marginHorizontal: -SPACING.lg },
+  classesRow: { gap: 10, paddingHorizontal: SPACING.lg },
   classCard: { borderRadius: RADIUS.md, borderWidth: 0.5, padding: 14, width: 160 },
   classTimePill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 7, alignSelf: 'flex-start', marginBottom: 8 },
   classTimeText: { fontSize: 10, fontFamily: FONT.bold },
