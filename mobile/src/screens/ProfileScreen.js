@@ -25,6 +25,7 @@ import { startGymGeofencing, stopGymGeofencing, isGeofencingActive } from '../li
 import api from '../lib/api'
 import { getItem, setItem } from '../lib/storage'
 import { premiumAlert } from '../components/PremiumAlert'
+import ThemeToggle from '../components/ThemeToggle'
 
 let ImagePicker = null
 try { ImagePicker = require('expo-image-picker') } catch (err) { console.warn('[Profile] ImagePicker load:', err?.message) }
@@ -108,7 +109,7 @@ const CHECKIN_METHOD_ICONS = {
 
 export default function ProfileScreen({ navigation }) {
   const { member, gymId, gymInfo, logout, biometricAvailable, biometricEnabled, setBiometricEnabled, refreshProfile, connectGym } = useAuth()
-  const { mode: themeMode, setMode: setThemeMode, colors, isDark, card } = useTheme()
+  const { colors, isDark, card } = useTheme()
   const [refreshing, setRefreshing] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [qrModalVisible, setQrModalVisible] = useState(false)
@@ -869,50 +870,7 @@ export default function ProfileScreen({ navigation }) {
               colors={colors}
             />
             <View style={[styles.separator, { backgroundColor: colors.border }]} />
-            <View style={styles.settingRow}>
-              <View style={styles.settingRowLeft}>
-                <View style={[styles.settingIconWrap, { backgroundColor: colors.bgTer }]}>
-                  <Feather
-                    name={themeMode === 'dark' ? 'moon' : themeMode === 'light' ? 'sun' : 'smartphone'}
-                    size={18}
-                    color={colors.textSec}
-                  />
-                </View>
-                <Text style={[styles.settingLabel, { color: colors.text }]}>Theme</Text>
-              </View>
-              <View style={[styles.themeSegment, { backgroundColor: colors.bgTer }]}>
-                {[
-                  { key: 'light', label: 'Light', icon: 'sun' },
-                  { key: 'system', label: 'Auto', icon: 'smartphone' },
-                  { key: 'dark', label: 'Dark', icon: 'moon' },
-                ].map(opt => (
-                  <TouchableOpacity
-                    key={opt.key}
-                    style={[
-                      styles.themeSegmentBtn,
-                      themeMode === opt.key && [styles.themeSegmentBtnActive, { backgroundColor: colors.bgSec }],
-                    ]}
-                    onPress={() => {
-                      setThemeMode(opt.key)
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Feather
-                      name={opt.icon}
-                      size={13}
-                      color={themeMode === opt.key ? COLORS.accent : colors.textTer}
-                    />
-                    <Text style={[
-                      styles.themeSegmentLabel,
-                      { color: themeMode === opt.key ? COLORS.accent : colors.textTer },
-                    ]}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
+            <ThemeToggle />
             <View style={[styles.separator, { backgroundColor: colors.border }]} />
             <SettingRow
               icon="globe"
@@ -1689,31 +1647,6 @@ const styles = StyleSheet.create({
     color: COLORS.textTer,
     marginTop: 2,
   },
-  themeSegment: {
-    flexDirection: 'row',
-    borderRadius: RADIUS.md,
-    padding: 3,
-  },
-  themeSegmentBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: SPACING.sm + 2,
-    paddingVertical: SPACING.xs + 2,
-    borderRadius: RADIUS.sm + 2,
-  },
-  themeSegmentBtnActive: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  themeSegmentLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
   // Action Row
   actionRow: {
     flexDirection: 'row',
