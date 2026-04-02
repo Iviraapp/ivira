@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { Platform } from 'react-native'
+import * as Sentry from '@sentry/react-native'
 import { getItem, setItem, deleteItem } from '../lib/storage'
 import api from '../lib/api'
 import { registerForPushNotifications, setupNotificationHandlers } from '../lib/pushNotifications'
@@ -91,6 +92,7 @@ export function AuthProvider({ children }) {
       }
     } catch (e) {
       console.warn('[auth] Session restore failed:', e?.message)
+      Sentry.captureException(e, { extra: { context: 'session_restore_failed' } })
     } finally {
       setLoading(false)
     }
@@ -120,6 +122,9 @@ export function AuthProvider({ children }) {
 
     const { token: newToken, member: memberData } = res.data
 
+    // Set Sentry user context for future error reports
+    Sentry.setUser({ id: memberData?.id, username: memberData?.name })
+
     await setItem('ivira_member_token', newToken)
     await setItem('ivira_gym_id', gymIdVal)
     await setItem('ivira_member_data', JSON.stringify(memberData))
@@ -143,6 +148,9 @@ export function AuthProvider({ children }) {
     })
 
     const { token: newToken, member: memberData } = res.data
+
+    // Set Sentry user context for future error reports
+    Sentry.setUser({ id: memberData?.id, username: memberData?.name })
 
     await setItem('ivira_member_token', newToken)
     await setItem('ivira_gym_id', gymIdVal)
@@ -174,6 +182,7 @@ export function AuthProvider({ children }) {
     } catch (_) {
       // Fails silently — offline or already expired, local clear still proceeds
     }
+    Sentry.setUser(null)
     await stopGymGeofencing()
     await deleteItem('ivira_member_token')
     await deleteItem('ivira_gym_id')
@@ -201,6 +210,9 @@ export function AuthProvider({ children }) {
     await setItem('ivira_gym_id', resolvedGymId || '')
     await setItem('ivira_member_data', JSON.stringify(memberData))
     await deleteItem('ivira_pending_email')
+
+    // Set Sentry user context for future error reports
+    Sentry.setUser({ id: memberData?.id, username: memberData?.name })
 
     setToken(newToken)
     setGymId(resolvedGymId || null)

@@ -55,7 +55,9 @@ const config = {
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'ivira-dev-secret-change-in-production',
+    secret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production'
+      ? (() => { throw new Error('FATAL: JWT_SECRET must be set in production'); })()
+      : 'ivira-dev-secret-DO-NOT-USE-IN-PROD'),
   },
 
   anthropic: {
@@ -103,7 +105,9 @@ const config = {
     enabled: !!(process.env.APPLE_PASS_TYPE_ID && process.env.APPLE_PASS_CERT_PEM),
   },
 
-  adminSecret: process.env.ADMIN_SECRET || 'ivira-admin-2026',
+  adminSecret: process.env.ADMIN_SECRET || (process.env.NODE_ENV === 'production'
+    ? (() => { throw new Error('FATAL: ADMIN_SECRET must be set in production'); })()
+    : 'ivira-dev-admin-DO-NOT-USE-IN-PROD'),
 
   baseUrl: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
 
@@ -120,12 +124,6 @@ const config = {
   },
 };
 
-// Warn about insecure defaults in production
-if (!config.isDev && config.jwt.secret === 'ivira-dev-secret-change-in-production') {
-  console.error('⚠️  SECURITY: JWT_SECRET is using default value in production! Set a strong JWT_SECRET environment variable.');
-}
-if (!config.isDev && config.adminSecret === 'ivira-admin-2026') {
-  console.error('⚠️  SECURITY: ADMIN_SECRET is using default value in production! Set a strong ADMIN_SECRET environment variable.');
-}
+// Production will throw before reaching here if secrets are missing (see IIFE guards above)
 
 export default config;

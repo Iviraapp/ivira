@@ -2,6 +2,7 @@
 // Provides: steps, sleep, heart rate, HRV with real-time sync
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { Platform, AppState } from 'react-native'
+import * as Sentry from '@sentry/react-native'
 import { getItem, setItem } from '../lib/storage'
 import {
   requestHealthPermissions,
@@ -113,7 +114,10 @@ export function HealthProvider({ children, gymId, memberId }) {
           await requestExtendedPermissions()
           await requestSleepPermissions()
         }
-      } catch (err) { if (__DEV__) console.warn('[HealthCtx] permissions:', err?.message) }
+      } catch (err) {
+        if (__DEV__) console.warn('[HealthCtx] permissions:', err?.message)
+        Sentry.captureMessage('Health permissions request failed', 'warning')
+      }
 
       // Initial data fetch
       await fetchSteps()
@@ -351,6 +355,7 @@ export function HealthProvider({ children, gymId, memberId }) {
       setSleepSource('unavailable')
     } catch (err) {
       if (__DEV__) console.warn('[HealthCtx] fetchSleep:', err?.message)
+      Sentry.captureException(err, { extra: { context: 'health_fetch_sleep_failed' } })
       setSleepData(null)
       setSleepSource('unavailable')
     }
@@ -369,7 +374,10 @@ export function HealthProvider({ children, gymId, memberId }) {
       if (rhr) setRestingHR(rhr)
       if (hrvData) setHrv(hrvData)
       setWearableConnected(wearable)
-    } catch (err) { if (__DEV__) console.warn('[HealthCtx] fetchHeartData:', err?.message) }
+    } catch (err) {
+      if (__DEV__) console.warn('[HealthCtx] fetchHeartData:', err?.message)
+      Sentry.captureException(err, { extra: { context: 'health_fetch_heart_data_failed' } })
+    }
   }, [])
 
   // Manual step update

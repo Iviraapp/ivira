@@ -5,8 +5,11 @@ import * as Sentry from '@sentry/react-native'
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
   enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: 0.1,
+  environment: __DEV__ ? 'development' : 'production',
+  tracesSampleRate: __DEV__ ? 1.0 : 0.2,
   enableAutoSessionTracking: true,
+  enableNativeCrashHandling: true,
+  enableAutoPerformanceTracing: true,
 })
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'

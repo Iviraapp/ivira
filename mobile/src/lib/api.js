@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Constants from 'expo-constants'
+import * as Sentry from '@sentry/react-native'
 import { getItem, setItem, deleteItem } from './storage'
 
 const API_BASE = Constants.expoConfig?.extra?.apiBase || 'https://api.ivira.app/api/v1'
@@ -65,6 +66,7 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`
         return api(originalRequest)
       } catch (refreshErr) {
+        Sentry.captureException(refreshErr, { extra: { context: 'token_refresh_failed' } })
         refreshQueue.forEach(q => q.reject(refreshErr))
         refreshQueue = []
         await deleteItem('ivira_member_token')
