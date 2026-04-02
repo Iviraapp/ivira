@@ -100,7 +100,7 @@ export default function ReferralScreen({ navigation }) {
     if (!code?.code) return
     try {
       await Share.share({
-        message: `Join my gym on IVIRA! Use my referral code: ${code.code} to get free days. Download IVIRA now!`,
+        message: `Join me on IVIRA! 💪\n\nUse my code ${code.code} when you sign up — we both get rewarded.\n\n📱 Android: https://api.ivira.app/downloads/ivira-latest.apk\n🌐 Web: https://ivira.app/member/login`,
       })
     } catch (err) { console.warn('[Referral]', err?.message) }
   }

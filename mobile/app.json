@@ -98,6 +98,7 @@
     ],
     "extra": {
       "apiBase": "https://api.ivira.app/api/v1",
+      "geminiKey": "AIzaSyBsEhvajfDjzlconnSc5nca7WoKJ63Aj4M",
       "eas": {
         "projectId": "e554db55-7b14-4d81-b288-723ac43503c6"
       }

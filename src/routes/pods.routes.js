@@ -269,6 +269,41 @@ export default async function podRoutes(fastify) {
     }
   })
 
+  // ─── Pod Leaderboard ──────────────────────────────────────────────────
+  fastify.get('/gyms/:gymId/pods/leaderboard', memberAuth, async (request, reply) => {
+    try {
+      const { gymId } = request.params
+      const since = new Date()
+      since.setDate(since.getDate() - 7)
+
+      const rows = await db('pod_members')
+        .join('pods', 'pod_members.pod_id', 'pods.id')
+        .join('members', 'pod_members.member_id', 'members.id')
+        .leftJoin('checkins', function() {
+          this.on('checkins.member_id', 'pod_members.member_id')
+              .andOn('checkins.gym_id', db.raw('?', [gymId]))
+              .andOnVal('checkins.checked_in_at', '>=', since.toISOString())
+        })
+        .where({ 'pods.gym_id': gymId, 'pods.is_active': true, 'pod_members.status': 'active' })
+        .groupBy('pods.id', 'pods.name', 'pods.goal_type', 'pods.tier')
+        .select(
+          'pods.id', 'pods.name', 'pods.goal_type', 'pods.tier',
+          db.raw('COUNT(DISTINCT pod_members.member_id) as member_count'),
+          db.raw('COUNT(checkins.id) as weekly_checkins'),
+        )
+        .orderBy('weekly_checkins', 'desc')
+        .limit(10)
+
+      return { leaderboard: rows.map((r, i) => ({
+        rank: i + 1, id: r.id, name: r.name, goal_type: r.goal_type, tier: r.tier,
+        member_count: parseInt(r.member_count || 0), weekly_checkins: parseInt(r.weekly_checkins || 0),
+      })) }
+    } catch (err) {
+      request.log.error(err, 'pods/leaderboard failed')
+      return reply.code(500).send({ error: err.message })
+    }
+  })
+
   // ─── Open Squad routes ────────────────────────────────────────────────
   const openAuth = { preHandler: [fastify.verifyToken] }
 

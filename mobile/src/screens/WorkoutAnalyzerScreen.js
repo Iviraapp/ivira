@@ -14,6 +14,7 @@ import api from '../lib/api'
 import Haptics from '../lib/haptics'
 import { premiumAlert } from '../components/PremiumAlert'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import Constants from 'expo-constants'
 
 // Optional deps — try/catch for safety
 let ImagePicker = null
@@ -36,7 +37,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 // Gemini 2.0 Flash for video analysis
 const GEMINI_API = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
-const GEMINI_KEY = 'AIzaSyBsEhvajfDjzlconnSc5nca7WoKJ63Aj4M'
+const GEMINI_KEY = Constants.expoConfig?.extra?.geminiKey || 'AIzaSyBsEhvajfDjzlconnSc5nca7WoKJ63Aj4M'
 
 const EXERCISES = [
   'Auto-detect', 'Squat', 'Deadlift', 'Bench Press', 'Push-up',
@@ -472,7 +473,7 @@ Analyze the video and return ONLY valid JSON with NO markdown, no code fences, n
       await api.post(`/gyms/${routeGymId}/pods/${podId}/messages`, {
         memberId,
         type: 'workout_analysis',
-        message: result.circle_message,
+        text: result.circle_message,
         data: {
           exercise: result.exercise,
           reps: result.reps,
