@@ -187,7 +187,7 @@ function TabIcon({ name, focused, colors }) {
 }
 
 // ─── Center QR FAB ──────────────────────────────────────────
-function QRFab({ onPress }) {
+function QRFab({ onPress, hasGym, colors }) {
   const scale = useRef(new Animated.Value(1)).current
   const glow  = useRef(new Animated.Value(0.3)).current
 
@@ -211,6 +211,15 @@ function QRFab({ onPress }) {
       <Animated.View style={[s.fab, { transform: [{ scale }] }]}>
         <Feather name="maximize" size={22} color="#07080F" />
       </Animated.View>
+      {!hasGym && (
+        <View style={{
+          position: 'absolute', top: -2, right: -2,
+          width: 12, height: 12, borderRadius: 6,
+          backgroundColor: '#F97316',
+          borderWidth: 2, borderColor: colors?.bg || '#0A0B12',
+          zIndex: 10,
+        }} />
+      )}
     </TouchableOpacity>
   )
 }
@@ -281,6 +290,7 @@ function FloatingTabWrapper({ state, descriptors, navigation }) {
   const fabBottom = bottom + 8
 
   const { hasGym } = useAuth()
+  const { colors } = useTheme()
   const navRef = useRef(null)
 
   const handleQR = () => {
@@ -300,7 +310,7 @@ function FloatingTabWrapper({ state, descriptors, navigation }) {
         <FloatingTabBar state={state} descriptors={descriptors} navigation={navigation} />
       </View>
       <View style={[s.fabWrap, { bottom: fabBottom }]}>
-        <QRFab onPress={handleQR} />
+        <QRFab onPress={handleQR} hasGym={hasGym} colors={colors} />
       </View>
     </>
   )

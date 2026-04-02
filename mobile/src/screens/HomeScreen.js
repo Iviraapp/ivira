@@ -23,7 +23,7 @@ const STEP_GOAL = 10000
 
 export default function HomeScreen({ navigation, route }) {
   const { colors, isDark, card } = useTheme()
-  const { member, gymId, gymInfo } = useAuth()
+  const { member, gymId, gymInfo, hasGym } = useAuth()
   const { steps, activeMinutes, sleepData, fetchSteps, fetchSleep } = useHealth()
 
   const [profilePhoto, setProfilePhoto] = useState(null)
@@ -186,6 +186,7 @@ export default function HomeScreen({ navigation, route }) {
       >
 
         {/* ── Check-in hero card ── */}
+        {hasGym && (
         <TouchableOpacity
           style={[s.checkinCard, { backgroundColor: colors.bgTer, borderColor: COLORS.accent + '30' }]}
           onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); navigation.navigate('CheckIn') }}
@@ -215,6 +216,8 @@ export default function HomeScreen({ navigation, route }) {
             )}
           </View>
         </TouchableOpacity>
+        )}
+        {!hasGym && <GymLinkCard onLink={() => navigation.navigate('MembershipActivation')} onFind={() => navigation.navigate('GymDiscovery')} colors={colors} />}
 
         {/* ── Stats row — flex fills full width ── */}
         <View style={s.statsRow}>
@@ -278,7 +281,7 @@ export default function HomeScreen({ navigation, route }) {
         )}
 
         {/* ── Today's classes ── */}
-        {classes.length > 0 && (
+        {gymId && classes.length > 0 && (
           <ClassesStrip classes={classes} bookedClasses={bookedClasses} setBookedClasses={setBookedClasses} gymId={gymId} colors={colors} />
         )}
 
@@ -493,6 +496,70 @@ function QuickActions({ navigation, colors }) {
             <Text style={[s.actionLabel, { color: colors.text }]} numberOfLines={1}>{a.label}</Text>
           </TouchableOpacity>
         ))}
+      </View>
+    </View>
+  )
+}
+
+function GymLinkCard({ onLink, onFind, colors }) {
+  const pulseAnim = useRef(new Animated.Value(1)).current
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.06, duration: 1400, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1400, useNativeDriver: true }),
+      ])
+    ).start()
+  }, [])
+
+  return (
+    <View style={{
+      backgroundColor: colors.bgTer,
+      borderRadius: 20, borderWidth: 1, borderColor: COLORS.accent + '25',
+      overflow: 'hidden', marginBottom: 4,
+    }}>
+      <View style={{ height: 3, backgroundColor: COLORS.accent }} />
+      <View style={{ padding: 20 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <Animated.View style={{
+            width: 52, height: 52, borderRadius: 14,
+            backgroundColor: COLORS.accent + '15',
+            alignItems: 'center', justifyContent: 'center',
+            borderWidth: 1, borderColor: COLORS.accent + '30',
+            transform: [{ scale: pulseAnim }],
+          }}>
+            <Feather name="maximize" size={24} color={COLORS.accent} />
+          </Animated.View>
+          <View style={{ flex: 1, flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+            {['QR', 'NFC', 'GPS'].map(method => (
+              <View key={method} style={{
+                paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
+                backgroundColor: colors.bgTer, borderWidth: 1, borderColor: colors.border,
+                flexDirection: 'row', alignItems: 'center', gap: 5,
+              }}>
+                <Feather name={method === 'QR' ? 'maximize' : method === 'NFC' ? 'wifi' : 'map-pin'} size={10} color={colors.textTer} />
+                <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textTer, fontFamily: FONT.bold }}>{method}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+        <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, fontFamily: FONT.bold, marginBottom: 6, letterSpacing: -0.3 }}>
+          Tap-to-check-in is ready
+        </Text>
+        <Text style={{ fontSize: 13, color: colors.textSec, fontFamily: FONT.regular, lineHeight: 19, marginBottom: 20 }}>
+          Link your gym membership to unlock instant QR, NFC, and GPS check-in — no queues, no cards.
+        </Text>
+        <TouchableOpacity onPress={onLink} activeOpacity={0.85} style={{
+          backgroundColor: COLORS.accent, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10,
+        }}>
+          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', fontFamily: FONT.bold, letterSpacing: 0.1 }}>Link My Gym</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onFind} activeOpacity={0.7} style={{ alignItems: 'center', paddingVertical: 8 }}>
+          <Text style={{ fontSize: 13, color: colors.textSec, fontFamily: FONT.regular }}>
+            Don't have a code? <Text style={{ color: COLORS.accent, fontWeight: '600', fontFamily: FONT.bold }}>Find your gym →</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   )

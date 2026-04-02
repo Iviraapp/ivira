@@ -30,7 +30,7 @@ const REFRESH_SEC = 30
 
 export default function CheckInScreen({ navigation }) {
   const { colors, isDark } = useTheme()
-  const { member, gymId, gymInfo: gym, refreshProfile } = useAuth()
+  const { member, gymId, gymInfo: gym, refreshProfile, hasGym } = useAuth()
 
   const [qrData, setQrData]           = useState(null)
   const [countdown, setCountdown]     = useState(REFRESH_SEC)
@@ -101,6 +101,12 @@ export default function CheckInScreen({ navigation }) {
     }
     canAddToWallet().then(setWalletAvailable).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!hasGym) navigation.replace('MembershipActivation')
+  }, [hasGym])
+
+  if (!hasGym) return null
 
   const handleSuccess = (message) => {
     setCheckedIn(true)

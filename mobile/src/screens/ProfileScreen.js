@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
-import { COLORS, SPACING, RADIUS, ELITE_CARD } from '../lib/theme'
+import { COLORS, SPACING, RADIUS, ELITE_CARD, FONT } from '../lib/theme'
 import { formatDate, formatTime, getInitials } from '../lib/utils'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -108,7 +108,7 @@ const CHECKIN_METHOD_ICONS = {
 }
 
 export default function ProfileScreen({ navigation }) {
-  const { member, gymId, gymInfo, logout, biometricAvailable, biometricEnabled, setBiometricEnabled, refreshProfile, connectGym } = useAuth()
+  const { member, gymId, gymInfo, logout, biometricAvailable, biometricEnabled, setBiometricEnabled, refreshProfile, connectGym, hasGym } = useAuth()
   const { colors, isDark, card } = useTheme()
   const [refreshing, setRefreshing] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
@@ -614,28 +614,42 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
 
           {/* Membership info */}
-          {membership && (
-            <View style={[styles.membershipInfo, { backgroundColor: colors.bgTer }]}>
-              <View style={styles.membershipRow}>
-                <Text style={[styles.membershipPlan, { color: colors.text }]}>
-                  {membership.plan_name || 'Membership'}
-                </Text>
-                {!isExpired && remaining !== null && (
-                  <Text style={[styles.membershipDays, { color: colors.textSec }]}>
-                    {remaining} days left
+          {hasGym ? (
+            membership && (
+              <View style={[styles.membershipInfo, { backgroundColor: colors.bgTer }]}>
+                <View style={styles.membershipRow}>
+                  <Text style={[styles.membershipPlan, { color: colors.text }]}>
+                    {membership.plan_name || 'Membership'}
                   </Text>
+                  {!isExpired && remaining !== null && (
+                    <Text style={[styles.membershipDays, { color: colors.textSec }]}>
+                      {remaining} days left
+                    </Text>
+                  )}
+                </View>
+                {isExpired && (
+                  <TouchableOpacity
+                    style={styles.renewButton}
+                    onPress={() => premiumAlert('Renew Membership', 'Please contact your gym to renew.')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.renewButtonText, { color: colors.text }]}>Renew Membership</Text>
+                  </TouchableOpacity>
                 )}
               </View>
-              {isExpired && (
-                <TouchableOpacity
-                  style={styles.renewButton}
-                  onPress={() => premiumAlert('Renew Membership', 'Please contact your gym to renew.')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.renewButtonText, { color: colors.text }]}>Renew Membership</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            )
+          ) : (
+            <TouchableOpacity onPress={() => navigation.navigate('Home', { screen: 'MembershipActivation' })} activeOpacity={0.85}
+              style={{ backgroundColor: colors.bgTer, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: COLORS.accent + '25', flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: COLORS.accent + '15', alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="credit-card" size={20} color={COLORS.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text, fontFamily: FONT.bold, marginBottom: 3 }}>No gym linked yet</Text>
+                <Text style={{ fontSize: 12, color: colors.textSec, fontFamily: FONT.regular }}>Tap to add your membership details</Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={COLORS.accent} />
+            </TouchableOpacity>
           )}
         </View>
 
@@ -887,8 +901,12 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textTer }]}>DATA & PRIVACY</Text>
           <View style={[styles.sectionCard, card, styles.cardAccentBorder]}>
-            <ActionRow icon="file-text" label="Invoices" onPress={handleInvoices} colors={colors} />
-            <View style={[styles.separator, { backgroundColor: colors.border }]} />
+            {hasGym && (
+              <>
+                <ActionRow icon="file-text" label="Invoices" onPress={handleInvoices} colors={colors} />
+                <View style={[styles.separator, { backgroundColor: colors.border }]} />
+              </>
+            )}
             <ActionRow icon="download" label="Export My Data" onPress={handleExportData} colors={colors} />
             <View style={[styles.separator, { backgroundColor: colors.border }]} />
             <ActionRow icon="trash-2" label="Delete Account" onPress={handleDeleteAccount} color={COLORS.red} colors={colors} />
