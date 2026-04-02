@@ -1,1065 +1,499 @@
+/**
+ * MembershipActivationScreen v2
+ *
+ * Two paths:
+ *  A — Gym invite code (primary): member enters GYM-XXXXXX from gym owner
+ *  B — Gym credentials (secondary): phone + OTP from gym's own login
+ *
+ * QR check-in is LOCKED until one of these paths completes and gymId is stored.
+ * No fallback QR for unlinked members.
+ */
+
 import React, { useState, useRef, useEffect } from 'react'
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Animated,
-  ScrollView,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions,
+  View, Text, StyleSheet, TouchableOpacity, TextInput,
+  Animated, ScrollView, ActivityIndicator,
+  KeyboardAvoidingView, Platform, Dimensions,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { COLORS, SPACING, RADIUS, FONT, STATUS } from '../lib/theme'
+import { COLORS, FONT, SPACING, RADIUS, SHADOW } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
 import { premiumAlert } from '../components/PremiumAlert'
+import Haptics from '../lib/haptics'
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
+const { width: W } = Dimensions.get('window')
 
-// ── Animated accent line ─────────────────────────────────────────────
-function GlowLine() {
-  const anim = useRef(new Animated.Value(0)).current
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(anim, { toValue: 1, duration: 3000, useNativeDriver: true })
-    ).start()
-  }, [])
-  const translateX = anim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-SCREEN_WIDTH, SCREEN_WIDTH],
-  })
-  return (
-    <View style={styles.glowLineWrap}>
-      <Animated.View style={[styles.glowLine, { transform: [{ translateX }] }]} />
-    </View>
-  )
-}
-
-// ── Pulsing icon ring ────────────────────────────────────────────────
-function PulseRing({ color }) {
-  const anim = useRef(new Animated.Value(0)).current
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0, duration: 2000, useNativeDriver: true }),
-      ])
-    ).start()
-  }, [])
-  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.5] })
-  const opacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0] })
-  return (
-    <Animated.View style={[styles.pulseRing, { transform: [{ scale }], opacity, borderColor: color }]} />
-  )
-}
-
-// ── Form data ────────────────────────────────────────────────────────
-
-const FACILITY_TYPES = [
-  { key: 'gym', label: 'Gym', icon: 'trending-up' },
-  { key: 'fitness_centre', label: 'Fitness Centre', icon: 'activity' },
-  { key: 'boxing', label: 'Boxing', icon: 'zap' },
-  { key: 'mma', label: 'MMA', icon: 'shield' },
-  { key: 'yoga', label: 'Yoga Studio', icon: 'sun' },
-  { key: 'crossfit', label: 'CrossFit', icon: 'repeat' },
-  { key: 'swimming', label: 'Swimming', icon: 'droplet' },
-  { key: 'sports', label: 'Sports Academy', icon: 'award' },
-  { key: 'dance', label: 'Dance / Zumba', icon: 'music' },
-  { key: 'pilates', label: 'Pilates', icon: 'wind' },
-  { key: 'calisthenics', label: 'Calisthenics', icon: 'maximize' },
-  { key: 'martial_arts', label: 'Martial Arts', icon: 'target' },
+const PATHS = [
+  { id: 'code',  icon: 'hash',      label: 'Invite Code',       sub: 'From your gym owner' },
+  { id: 'login', icon: 'phone',     label: 'Gym Login',         sub: 'Phone + OTP'         },
+  { id: 'find',  icon: 'search',    label: 'Find a Gym',        sub: 'We\'ll match you'    },
 ]
-
-const FITNESS_GOALS = [
-  { key: 'weight_loss', label: 'Weight Loss', icon: 'trending-down' },
-  { key: 'muscle_gain', label: 'Muscle Gain', icon: 'trending-up' },
-  { key: 'flexibility', label: 'Flexibility', icon: 'wind' },
-  { key: 'endurance', label: 'Endurance', icon: 'heart' },
-  { key: 'stress_relief', label: 'Stress Relief', icon: 'coffee' },
-  { key: 'competition', label: 'Competition Prep', icon: 'award' },
-  { key: 'general_fitness', label: 'General Fitness', icon: 'activity' },
-  { key: 'rehab', label: 'Rehab / Recovery', icon: 'plus-circle' },
-]
-
-const EXPERIENCE_LEVELS = [
-  { key: 'beginner', label: 'Beginner', sub: 'New to fitness' },
-  { key: 'intermediate', label: 'Intermediate', sub: '1-3 years' },
-  { key: 'advanced', label: 'Advanced', sub: '3+ years' },
-]
-
-const PREFERRED_TIMINGS = [
-  { key: 'early_morning', label: 'Early Morning', sub: '5-7 AM' },
-  { key: 'morning', label: 'Morning', sub: '7-10 AM' },
-  { key: 'afternoon', label: 'Afternoon', sub: '12-4 PM' },
-  { key: 'evening', label: 'Evening', sub: '4-8 PM' },
-  { key: 'late_night', label: 'Late Night', sub: '8-11 PM' },
-]
-
-const BUDGET_RANGES = [
-  { key: 'budget', label: '< ₹2K/mo' },
-  { key: 'moderate', label: '₹2K - 4K/mo' },
-  { key: 'premium', label: '₹4K - 8K/mo' },
-  { key: 'elite', label: '₹8K+/mo' },
-]
-
-const CITIES = ['Bengaluru', 'Hyderabad', 'Chennai', 'Mumbai']
-
-// ── Reusable chip selector ───────────────────────────────────────────
-function ChipGroup({ items, selected, onToggle, multi = true }) {
-  return (
-    <View style={styles.chipGrid}>
-      {items.map(item => {
-        const isSelected = multi ? selected.includes(item.key) : selected === item.key
-        return (
-          <TouchableOpacity
-            key={item.key}
-            style={[styles.chip, isSelected && styles.chipActive]}
-            onPress={() => onToggle(item.key)}
-            activeOpacity={0.7}
-          >
-            {item.icon && (
-              <Feather
-                name={item.icon}
-                size={13}
-                color={isSelected ? COLORS.text : COLORS.textTer}
-              />
-            )}
-            <View style={item.sub ? { marginLeft: item.icon ? 0 : 0 } : undefined}>
-              <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
-                {item.label}
-              </Text>
-              {item.sub && (
-                <Text style={[styles.chipSub, isSelected && { color: COLORS.textSec }]}>
-                  {item.sub}
-                </Text>
-              )}
-            </View>
-          </TouchableOpacity>
-        )
-      })}
-    </View>
-  )
-}
-
-// ── Section label ────────────────────────────────────────────────────
-function FormSection({ number, title, required }) {
-  return (
-    <View style={styles.formSectionRow}>
-      <View style={styles.formSectionNum}>
-        <Text style={styles.formSectionNumText}>{number}</Text>
-      </View>
-      <Text style={styles.formSectionTitle}>{title}</Text>
-      {required && <Text style={styles.formRequired}>*</Text>}
-    </View>
-  )
-}
 
 export default function MembershipActivationScreen({ navigation }) {
-  const insets = useSafeAreaInsets()
-  const { colors, card, isDark } = useTheme()
-  const { connectGym, member } = useAuth()
+  const { colors, isDark } = useTheme()
+  const { connectGym, login, requestOtp, member } = useAuth()
 
-  // Path A state
-  const [inviteCode, setInviteCode] = useState('')
-  const [linking, setLinking] = useState(false)
+  const [activePath, setActivePath] = useState('code')
 
-  // Path B — intake form state
-  const [facilityTypes, setFacilityTypes] = useState([])
-  const [fitnessGoals, setFitnessGoals] = useState([])
-  const [experience, setExperience] = useState(null)
-  const [timings, setTimings] = useState([])
-  const [budget, setBudget] = useState(null)
-  const [city, setCity] = useState(null)
-  const [area, setArea] = useState('')
-  const [name, setName] = useState(member?.name || '')
-  const [phone, setPhone] = useState(member?.phone || '')
-  const [notes, setNotes] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [discoveryStep, setDiscoveryStep] = useState(0) // 0=what, 1=prefs, 2=contact
+  // Path A — invite code
+  const [inviteCode, setInviteCode]   = useState('')
+  const [linking, setLinking]         = useState(false)
+
+  // Path B — phone OTP
+  const [gymPhone, setGymPhone]       = useState('')
+  const [otpPhone, setOtpPhone]       = useState(member?.phone || '')
+  const [otp, setOtp]                 = useState('')
+  const [otpSent, setOtpSent]         = useState(false)
+  const [sendingOtp, setSendingOtp]   = useState(false)
+  const [verifying, setVerifying]     = useState(false)
+
+  // Path C — discovery
+  const [city, setCity]               = useState(null)
+  const [goal, setGoal]               = useState(null)
+  const [name, setName]               = useState(member?.name || '')
+  const [phone, setPhone]             = useState(member?.phone || '')
+  const [submitting, setSubmitting]   = useState(false)
 
   // Animations
-  const heroFade = useRef(new Animated.Value(0)).current
-  const heroSlide = useRef(new Animated.Value(30)).current
-  const pathAFade = useRef(new Animated.Value(0)).current
-  const pathASlide = useRef(new Animated.Value(40)).current
-  const pathBFade = useRef(new Animated.Value(0)).current
-  const pathBSlide = useRef(new Animated.Value(50)).current
+  const fadeAnim  = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(20)).current
+  const pathAnim  = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
-    Animated.stagger(120, [
-      Animated.parallel([
-        Animated.timing(heroFade, { toValue: 1, duration: 450, useNativeDriver: true }),
-        Animated.spring(heroSlide, { toValue: 0, damping: 20, stiffness: 130, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(pathAFade, { toValue: 1, duration: 450, useNativeDriver: true }),
-        Animated.spring(pathASlide, { toValue: 0, damping: 20, stiffness: 130, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(pathBFade, { toValue: 1, duration: 450, useNativeDriver: true }),
-        Animated.spring(pathBSlide, { toValue: 0, damping: 20, stiffness: 130, useNativeDriver: true }),
-      ]),
+    Animated.parallel([
+      Animated.timing(fadeAnim,  { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, damping: 20, stiffness: 140, useNativeDriver: true }),
     ]).start()
   }, [])
 
-  const toggleMulti = (list, setList) => (key) => {
-    setList(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
-  }
+  useEffect(() => {
+    pathAnim.setValue(0)
+    Animated.spring(pathAnim, { toValue: 1, damping: 18, stiffness: 160, useNativeDriver: true }).start()
+  }, [activePath])
 
-  const handleLinkGym = async () => {
-    const code = inviteCode.trim()
-    if (!code) {
-      premiumAlert('Enter Code', 'Please enter your gym activation code.')
-      return
-    }
+  // ── Path A: Invite code ──────────────────────────────────────
+  const handleInviteCode = async () => {
+    const code = inviteCode.trim().toUpperCase()
+    if (!code) { premiumAlert('Enter Code', 'Please enter your gym activation code.'); return }
     setLinking(true)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     try {
       await connectGym(code)
-      premiumAlert('Welcome!', 'Your membership is now active. Check in anytime!', [
-        { text: 'Let\'s Go', onPress: () => navigation.goBack() },
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      premiumAlert('Membership Activated!', 'You\'re all set. Your QR check-in is now live.', [
+        { text: 'Let\'s Go!', onPress: () => navigation.goBack() },
       ])
     } catch (err) {
-      premiumAlert('Invalid Code', err.response?.data?.message || 'Could not activate this code. Please check with your gym owner.')
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      premiumAlert('Invalid Code', err?.response?.data?.message || 'Code not recognised. Ask your gym owner for the correct code.')
     } finally {
       setLinking(false)
     }
   }
 
-  const handleSubmitForm = async () => {
-    // Validate required fields
-    if (facilityTypes.length === 0) {
-      premiumAlert('Required', 'Please select at least one facility type you\'re looking for.')
+  // ── Path B: Phone OTP ────────────────────────────────────────
+  const handleSendOtp = async () => {
+    if (!gymPhone.trim() || gymPhone.trim().length < 10) {
+      premiumAlert('Enter Phone', 'Please enter the phone number you registered with your gym.')
       return
     }
-    if (fitnessGoals.length === 0) {
-      premiumAlert('Required', 'Please select at least one fitness goal.')
-      return
+    setSendingOtp(true)
+    try {
+      await api.post('/auth/member/otp/request', { phone: gymPhone.trim() })
+      setOtpSent(true)
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    } catch (err) {
+      premiumAlert('Failed', err?.response?.data?.message || 'Could not send OTP. Check the number and try again.')
+    } finally {
+      setSendingOtp(false)
     }
-    if (!city) {
-      premiumAlert('Required', 'Please select your city.')
-      return
-    }
-    if (!name.trim()) {
-      premiumAlert('Required', 'Please enter your name so we can reach you.')
-      return
-    }
-    if (!phone.trim() || phone.trim().length < 10) {
-      premiumAlert('Required', 'Please enter a valid phone number.')
-      return
-    }
+  }
 
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length < 4) { premiumAlert('Enter OTP', 'Please enter the OTP sent to your phone.'); return }
+    setVerifying(true)
+    try {
+      // Try to find gymId from phone first
+      const gymRes = await api.get(`/auth/member/gym-by-phone?phone=${gymPhone.trim()}`).catch(() => ({ data: null }))
+      const resolvedGymId = gymRes.data?.gym_id
+      if (!resolvedGymId) { premiumAlert('Not Found', 'No gym membership found for this number.'); return }
+      await login(resolvedGymId, gymPhone.trim(), otp)
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      navigation.goBack()
+    } catch (err) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      premiumAlert('Wrong OTP', 'The code didn\'t match. Try again or request a new one.')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  // ── Path C: Discovery ────────────────────────────────────────
+  const handleDiscovery = async () => {
+    if (!name.trim() || phone.trim().length < 10) {
+      premiumAlert('Missing Info', 'Please enter your name and a valid phone number.')
+      return
+    }
     setSubmitting(true)
-
-    const payload = {
-      facility_types: facilityTypes,
-      fitness_goals: fitnessGoals,
-      experience_level: experience,
-      preferred_timings: timings,
-      budget_range: budget,
-      city,
-      area: area.trim(),
-      name: name.trim(),
-      phone: phone.trim(),
-      notes: notes.trim(),
-      source: 'discovery',
-    }
-
     try {
       await api.post('/concierge/inquiries', {
         name: name.trim(),
         phone: phone.trim(),
-        discipline: facilityTypes[0] || 'gym',
+        city,
+        discipline: goal || 'gym',
         inquiry_type: 'discovery',
-        message: `Goals: ${fitnessGoals.join(', ')}. Experience: ${experience}. ${notes.trim()}`,
-        source: 'app_discovery',
+        source: 'app_activation',
       })
-
-      const facilityLabels = facilityTypes.map(k => FACILITY_TYPES.find(f => f.key === k)?.label).filter(Boolean)
-      const goalLabels = fitnessGoals.map(k => FITNESS_GOALS.find(g => g.key === k)?.label).filter(Boolean)
-
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       premiumAlert(
         'We\'re On It!',
-        `Our concierge team will find the best ${facilityLabels.slice(0, 2).join(' & ')} options${area ? ` near ${area}` : ` in ${city}`} for ${goalLabels.slice(0, 2).join(' & ')}.\n\nExpect a call on ${phone} within 24 hours with personalized recommendations and exclusive deals.`,
+        `Our team will call ${phone} within 24 hours with the best gyms${city ? ` in ${city}` : ''} for you.`,
         [{ text: 'Got it', onPress: () => navigation.goBack() }]
       )
-    } catch (err) {
+    } catch {
       premiumAlert('Error', 'Something went wrong. Please try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const formProgress = [
-    facilityTypes.length > 0,
-    fitnessGoals.length > 0,
-    experience !== null,
-    timings.length > 0,
-    budget !== null,
-    city !== null,
-    name.trim().length > 0,
-    phone.trim().length >= 10,
-  ].filter(Boolean).length
-  const totalSteps = 8
-
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        style={[styles.container, { backgroundColor: colors.bg }]}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 160 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={[styles.backBtn, { backgroundColor: colors.bgTer }]}
-            activeOpacity={0.7}
-          >
+    <SafeAreaView style={[s.root, { backgroundColor: colors.bg }]} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+
+          {/* Back */}
+          <TouchableOpacity style={[s.backBtn, { backgroundColor: colors.bgTer }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
             <Feather name="arrow-left" size={20} color={colors.text} />
           </TouchableOpacity>
-        </View>
 
-        {/* Hero */}
-        <Animated.View style={[styles.hero, { opacity: heroFade, transform: [{ translateY: heroSlide }] }]}>
-          <View style={styles.heroIconWrap}>
-            <PulseRing color={COLORS.accent} />
-            <View style={styles.heroIcon}>
-              <Feather name="maximize" size={26} color={COLORS.text} />
+          {/* Hero */}
+          <Animated.View style={[s.hero, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+            <View style={s.heroIconRing}>
+              <View style={s.heroIcon}>
+                <Feather name="shield" size={26} color="#07080f" />
+              </View>
             </View>
-          </View>
-          <Text style={[styles.heroTitle, { color: colors.text }]}>
-            Activate Your Membership
-          </Text>
-          <Text style={[styles.heroSub, { color: colors.textSec }]}>
-            Join your facility or discover the perfect gym for your journey
-          </Text>
-        </Animated.View>
+            <Text style={[s.heroTitle, { color: colors.text }]}>Activate Membership</Text>
+            <Text style={[s.heroSub, { color: colors.textSec }]}>
+              Your QR check-in unlocks the moment your gym is linked
+            </Text>
+          </Animated.View>
 
-        {/* ─── PATH A: Gym Owner Path ──────────────────────────────── */}
-        <Animated.View style={[
-          styles.pathCard,
-          card,
-          { opacity: pathAFade, transform: [{ translateY: pathASlide }] },
-        ]}>
-          <GlowLine />
-
-          <View style={styles.pathLabelRow}>
-            <View style={[styles.pathLabelBadge, { backgroundColor: COLORS.accentSoft }]}>
-              <Text style={[styles.pathLabelText, { color: COLORS.accent }]}>A</Text>
-            </View>
-            <Text style={[styles.pathLabelTitle, { color: colors.textSec }]}>GYM OWNER PATH</Text>
-          </View>
-
-          <View style={styles.pathHeader}>
-            <View style={[styles.pathIconWrap, { backgroundColor: COLORS.accentSoft }]}>
-              <Feather name="key" size={20} color={COLORS.accent} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.pathTitle, { color: colors.text }]}>Join Your Facility</Text>
-              <Text style={[styles.pathDesc, { color: colors.textSec }]}>
-                Enter the activation code from your gym owner
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.inputRow, {
-            backgroundColor: colors.bgTer,
-            borderColor: colors.border,
-          }]}>
-            <Feather name="hash" size={16} color={colors.textTer} style={{ marginRight: SPACING.sm }} />
-            <TextInput
-              style={[styles.input, { color: colors.text }]}
-              placeholder="GYM-XXXXXX"
-              placeholderTextColor={colors.textTer}
-              value={inviteCode}
-              onChangeText={setInviteCode}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              returnKeyType="go"
-              onSubmitEditing={handleLinkGym}
-            />
-            {inviteCode.length > 0 && (
-              <TouchableOpacity onPress={() => setInviteCode('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Feather name="x" size={16} color={colors.textTer} />
+          {/* Path selector */}
+          <View style={[s.pathSelector, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
+            {PATHS.map(p => (
+              <TouchableOpacity
+                key={p.id}
+                style={[s.pathTab, activePath === p.id && s.pathTabActive]}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setActivePath(p.id) }}
+                activeOpacity={0.75}
+              >
+                <Feather name={p.icon} size={14} color={activePath === p.id ? '#07080f' : colors.textTer} />
+                <Text style={[s.pathTabLabel, { color: activePath === p.id ? '#07080f' : colors.textTer }]}>{p.label}</Text>
               </TouchableOpacity>
-            )}
+            ))}
           </View>
 
-          <TouchableOpacity
-            style={[styles.primaryBtn, linking && { opacity: 0.6 }]}
-            onPress={handleLinkGym}
-            disabled={linking}
-            activeOpacity={0.8}
-          >
-            {linking ? (
-              <ActivityIndicator size="small" color={COLORS.text} />
-            ) : (
-              <>
-                <Feather name="check-circle" size={16} color={COLORS.text} style={{ marginRight: 8 }} />
-                <Text style={styles.primaryBtnText}>Activate Membership</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          {/* Path content */}
+          <Animated.View style={{
+            opacity: pathAnim,
+            transform: [{ translateY: pathAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
+          }}>
 
-          <TouchableOpacity
-            style={[styles.secondaryBtn, {
-              borderColor: colors.border,
-            }]}
-            onPress={() => premiumAlert('Coming Soon', 'Gym credential login will be available shortly.')}
-            activeOpacity={0.7}
-          >
-            <Feather name="log-in" size={16} color={colors.textSec} style={{ marginRight: 8 }} />
-            <Text style={[styles.secondaryBtnText, { color: colors.textSec }]}>
-              Login with Gym Credentials
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
+            {/* ── Path A: Invite code ── */}
+            {activePath === 'code' && (
+              <View style={[s.pathCard, { backgroundColor: colors.bgTer, borderColor: COLORS.accent + '30' }]}>
+                <View style={s.pathTopAccent} />
 
-        {/* Divider */}
-        <View style={styles.dividerRow}>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-          <Text style={[styles.dividerText, { color: colors.textTer }]}>OR</Text>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-        </View>
+                <View style={s.pathCardHeader}>
+                  <View style={[s.pathCardIcon, { backgroundColor: COLORS.accentSoft }]}>
+                    <Feather name="hash" size={18} color={COLORS.accent} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.pathCardTitle, { color: colors.text }]}>Enter Gym Code</Text>
+                    <Text style={[s.pathCardSub, { color: colors.textSec }]}>Your gym owner provides this code</Text>
+                  </View>
+                </View>
 
-        {/* ─── PATH B: IVIRA Discovery — Full Intake Form ──────────── */}
-        <Animated.View style={[
-          styles.discoveryCard,
-          { opacity: pathBFade, transform: [{ translateY: pathBSlide }] },
-        ]}>
-          <View style={styles.discoveryInner}>
-            {/* Header */}
-            <View style={styles.pathLabelRow}>
-              <View style={[styles.pathLabelBadge, { backgroundColor: COLORS.accentSoft }]}>
-                <Text style={[styles.pathLabelText, { color: COLORS.cyan }]}>B</Text>
-              </View>
-              <Text style={[styles.pathLabelTitle, { color: colors.textTer }]}>IVIRA DISCOVERY</Text>
-            </View>
+                <View style={[s.codeInputWrap, { backgroundColor: colors.bg, borderColor: inviteCode ? COLORS.accent + '60' : colors.borderStrong }]}>
+                  <Text style={[s.codePrefix, { color: colors.textTer }]}>GYM–</Text>
+                  <TextInput
+                    style={[s.codeInput, { color: colors.text }]}
+                    placeholder="XXXXXX"
+                    placeholderTextColor={colors.textTer}
+                    value={inviteCode}
+                    onChangeText={v => setInviteCode(v.replace(/[^A-Za-z0-9]/g, '').toUpperCase())}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    maxLength={8}
+                    returnKeyType="go"
+                    onSubmitEditing={handleInviteCode}
+                  />
+                  {inviteCode.length > 0 && (
+                    <TouchableOpacity onPress={() => setInviteCode('')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                      <Feather name="x-circle" size={16} color={colors.textTer} />
+                    </TouchableOpacity>
+                  )}
+                </View>
 
-            <Text style={styles.discoveryHeadline}>Find a New Home</Text>
-            <Text style={styles.discoverySub}>
-              Tell us what you're looking for and our concierge team will match you with the perfect facility and exclusive deals
-            </Text>
-
-            {/* Step indicator */}
-            <View style={styles.progressRow}>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${((discoveryStep + 1) / 3) * 100}%` }]} />
-              </View>
-              <Text style={styles.progressText}>Step {discoveryStep + 1}/3</Text>
-            </View>
-
-            {/* ── STEP 1: What are you looking for? ────────────────── */}
-            {discoveryStep === 0 && (
-              <>
-                <FormSection number="1" title="What type of facility?" required />
-                <ChipGroup items={FACILITY_TYPES} selected={facilityTypes} onToggle={toggleMulti(facilityTypes, setFacilityTypes)} />
-                <FormSection number="2" title="Your fitness goals?" required />
-                <ChipGroup items={FITNESS_GOALS} selected={fitnessGoals} onToggle={toggleMulti(fitnessGoals, setFitnessGoals)} />
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (facilityTypes.length === 0 || fitnessGoals.length === 0) && { opacity: 0.4 }]}
-                  onPress={() => { if (facilityTypes.length > 0 && fitnessGoals.length > 0) setDiscoveryStep(1) }}
-                  activeOpacity={0.8}
+                  style={[s.primaryBtn, linking && { opacity: 0.6 }]}
+                  onPress={handleInviteCode}
+                  disabled={linking}
+                  activeOpacity={0.85}
                 >
-                  <Text style={styles.primaryBtnText}>Next</Text>
-                  <Feather name="arrow-right" size={16} color={COLORS.text} style={{ marginLeft: 6 }} />
+                  {linking
+                    ? <ActivityIndicator size="small" color="#07080f" />
+                    : <>
+                        <Feather name="unlock" size={16} color="#07080f" />
+                        <Text style={s.primaryBtnText}>Activate & Unlock QR</Text>
+                      </>
+                  }
                 </TouchableOpacity>
-              </>
+
+                <View style={s.howToGetCode}>
+                  <Feather name="info" size={12} color={colors.textTer} />
+                  <Text style={[s.howToText, { color: colors.textTer }]}>
+                    Ask your gym owner for the code. It looks like GYM-AB1234. They can generate it from the IVIRA gym portal.
+                  </Text>
+                </View>
+              </View>
             )}
 
-            {/* ── STEP 2: Preferences ──────────────────────────────── */}
-            {discoveryStep === 1 && (
-              <>
-                <FormSection number="3" title="Experience level" />
-                <ChipGroup items={EXPERIENCE_LEVELS} selected={experience} onToggle={(key) => setExperience(prev => prev === key ? null : key)} multi={false} />
-                <FormSection number="4" title="Preferred times & budget" />
-                <ChipGroup items={PREFERRED_TIMINGS} selected={timings} onToggle={toggleMulti(timings, setTimings)} />
-                <ChipGroup items={BUDGET_RANGES} selected={budget} onToggle={(key) => setBudget(prev => prev === key ? null : key)} multi={false} />
-                <FormSection number="5" title="Location" required />
-                <View style={styles.chipGrid}>
-                  {CITIES.map(c => (
-                    <TouchableOpacity key={c} style={[styles.chip, city === c && styles.chipActive]} onPress={() => setCity(prev => prev === c ? null : c)} activeOpacity={0.7}>
-                      <Feather name="map-pin" size={13} color={city === c ? COLORS.text : COLORS.textTer} />
-                      <Text style={[styles.chipText, city === c && styles.chipTextActive]}>{c}</Text>
+            {/* ── Path B: Gym login ── */}
+            {activePath === 'login' && (
+              <View style={[s.pathCard, { backgroundColor: colors.bgTer, borderColor: colors.borderStrong }]}>
+
+                <View style={s.pathCardHeader}>
+                  <View style={[s.pathCardIcon, { backgroundColor: 'rgba(108,99,255,0.12)' }]}>
+                    <Feather name="phone" size={18} color="#6C63FF" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.pathCardTitle, { color: colors.text }]}>Login with Gym Phone</Text>
+                    <Text style={[s.pathCardSub, { color: colors.textSec }]}>The number you gave your gym when joining</Text>
+                  </View>
+                </View>
+
+                {!otpSent ? (
+                  <>
+                    <View style={[s.inputRow, { backgroundColor: colors.bg, borderColor: colors.borderStrong }]}>
+                      <Text style={[s.phonePrefix, { color: colors.textTer }]}>+91</Text>
+                      <TextInput
+                        style={[s.textInput, { color: colors.text }]}
+                        placeholder="10-digit mobile number"
+                        placeholderTextColor={colors.textTer}
+                        value={gymPhone}
+                        onChangeText={setGymPhone}
+                        keyboardType="phone-pad"
+                        maxLength={10}
+                        returnKeyType="send"
+                        onSubmitEditing={handleSendOtp}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={[s.primaryBtn, { backgroundColor: '#6C63FF' }, sendingOtp && { opacity: 0.6 }]}
+                      onPress={handleSendOtp}
+                      disabled={sendingOtp}
+                      activeOpacity={0.85}
+                    >
+                      {sendingOtp
+                        ? <ActivityIndicator size="small" color="#fff" />
+                        : <>
+                            <Feather name="send" size={15} color="#fff" />
+                            <Text style={[s.primaryBtnText, { color: '#fff' }]}>Send OTP</Text>
+                          </>
+                      }
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <View style={[s.otpSentBadge, { backgroundColor: COLORS.accentSoft }]}>
+                      <Feather name="check-circle" size={13} color={COLORS.accent} />
+                      <Text style={[s.otpSentText, { color: COLORS.accent }]}>OTP sent to +91 {gymPhone}</Text>
+                    </View>
+                    <View style={[s.inputRow, { backgroundColor: colors.bg, borderColor: colors.borderStrong }]}>
+                      <Feather name="lock" size={14} color={colors.textTer} />
+                      <TextInput
+                        style={[s.textInput, { color: colors.text, letterSpacing: 6, fontFamily: FONT.numBold }]}
+                        placeholder="• • • •"
+                        placeholderTextColor={colors.textTer}
+                        value={otp}
+                        onChangeText={setOtp}
+                        keyboardType="number-pad"
+                        maxLength={6}
+                        returnKeyType="done"
+                        onSubmitEditing={handleVerifyOtp}
+                        autoFocus
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={[s.primaryBtn, { backgroundColor: '#6C63FF' }, verifying && { opacity: 0.6 }]}
+                      onPress={handleVerifyOtp}
+                      disabled={verifying}
+                      activeOpacity={0.85}
+                    >
+                      {verifying
+                        ? <ActivityIndicator size="small" color="#fff" />
+                        : <>
+                            <Feather name="unlock" size={15} color="#fff" />
+                            <Text style={[s.primaryBtnText, { color: '#fff' }]}>Verify & Unlock QR</Text>
+                          </>
+                      }
+                    </TouchableOpacity>
+                    <TouchableOpacity style={s.resendBtn} onPress={() => setOtpSent(false)} activeOpacity={0.7}>
+                      <Text style={[s.resendText, { color: colors.textTer }]}>Wrong number? Go back</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            )}
+
+            {/* ── Path C: Find a gym ── */}
+            {activePath === 'find' && (
+              <View style={[s.pathCard, { backgroundColor: colors.bgTer, borderColor: colors.borderStrong }]}>
+
+                <View style={s.pathCardHeader}>
+                  <View style={[s.pathCardIcon, { backgroundColor: 'rgba(249,115,22,0.12)' }]}>
+                    <Feather name="search" size={18} color="#F97316" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.pathCardTitle, { color: colors.text }]}>Find the Right Gym</Text>
+                    <Text style={[s.pathCardSub, { color: colors.textSec }]}>Our team will call you within 24h</Text>
+                  </View>
+                </View>
+
+                <Text style={[s.fieldLabel, { color: colors.textSec }]}>Your city</Text>
+                <View style={s.cityRow}>
+                  {['Hyderabad', 'Bengaluru', 'Chennai', 'Mumbai'].map(c => (
+                    <TouchableOpacity
+                      key={c}
+                      style={[s.cityChip, { borderColor: city === c ? COLORS.accent : colors.borderStrong, backgroundColor: city === c ? COLORS.accentSoft : 'transparent' }]}
+                      onPress={() => setCity(prev => prev === c ? null : c)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[s.cityChipText, { color: city === c ? COLORS.accent : colors.textSec }]}>{c}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: SPACING.lg }}>
-                  <TouchableOpacity style={[styles.secondaryBtn, { flex: 1, borderColor: colors.border }]} onPress={() => setDiscoveryStep(0)} activeOpacity={0.7}>
-                    <Feather name="arrow-left" size={16} color={colors.textTer} style={{ marginRight: 6 }} />
-                    <Text style={[styles.secondaryBtnText, { color: colors.textTer }]}>Back</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.primaryBtn, { flex: 1 }, !city && { opacity: 0.4 }]} onPress={() => { if (city) setDiscoveryStep(2) }} activeOpacity={0.8}>
-                    <Text style={styles.primaryBtnText}>Next</Text>
-                    <Feather name="arrow-right" size={16} color={COLORS.text} style={{ marginLeft: 6 }} />
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
 
-            {/* ── STEP 3: Contact & Submit ─────────────────────────── */}
-            {discoveryStep === 2 && (
-              <>
-                <View style={styles.contactHeader}>
-                  <View style={styles.conciergeBadge}><Feather name="phone" size={10} color={COLORS.text} /></View>
-                  <Text style={styles.contactHeaderText}>CONTACT DETAILS</Text>
+                <Text style={[s.fieldLabel, { color: colors.textSec, marginTop: 12 }]}>Your name</Text>
+                <View style={[s.inputRow, { backgroundColor: colors.bg, borderColor: colors.borderStrong }]}>
+                  <Feather name="user" size={14} color={colors.textTer} />
+                  <TextInput style={[s.textInput, { color: colors.text }]} placeholder="Full name" placeholderTextColor={colors.textTer} value={name} onChangeText={setName} autoCorrect={false} />
                 </View>
-                <Text style={styles.fieldLabel}>Your name *</Text>
-                <View style={styles.formInput}>
-                  <Feather name="user" size={14} color={COLORS.textTer} />
-                  <TextInput style={styles.formInputText} placeholder="Full name" placeholderTextColor={COLORS.textTer} value={name} onChangeText={setName} autoCorrect={false} />
+
+                <Text style={[s.fieldLabel, { color: colors.textSec }]}>Phone number</Text>
+                <View style={[s.inputRow, { backgroundColor: colors.bg, borderColor: colors.borderStrong }]}>
+                  <Text style={[s.phonePrefix, { color: colors.textTer }]}>+91</Text>
+                  <TextInput style={[s.textInput, { color: colors.text }]} placeholder="9876543210" placeholderTextColor={colors.textTer} value={phone} onChangeText={setPhone} keyboardType="phone-pad" maxLength={10} />
                 </View>
-                <Text style={styles.fieldLabel}>Phone number *</Text>
-                <View style={styles.formInput}>
-                  <Text style={styles.phonePrefix}>+91</Text>
-                  <TextInput style={styles.formInputText} placeholder="9876543210" placeholderTextColor={COLORS.textTer} value={phone} onChangeText={setPhone} keyboardType="phone-pad" maxLength={10} />
-                </View>
-                <Text style={styles.fieldLabel}>Anything else? (optional)</Text>
-                <View style={[styles.formInput, { minHeight: 70, alignItems: 'flex-start', paddingTop: 12 }]}>
-                  <Feather name="message-square" size={14} color={COLORS.textTer} style={{ marginTop: 2 }} />
-                  <TextInput style={[styles.formInputText, { minHeight: 50, textAlignVertical: 'top' }]} placeholder="Specific requirements..." placeholderTextColor={COLORS.textTer} value={notes} onChangeText={setNotes} multiline autoCorrect={false} />
-                </View>
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: SPACING.lg }}>
-                  <TouchableOpacity style={[styles.secondaryBtn, { flex: 1, borderColor: colors.border }]} onPress={() => setDiscoveryStep(1)} activeOpacity={0.7}>
-                    <Feather name="arrow-left" size={16} color={colors.textTer} style={{ marginRight: 6 }} />
-                    <Text style={[styles.secondaryBtnText, { color: colors.textTer }]}>Back</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.submitBtn, { flex: 1 }, submitting && { opacity: 0.6 }]} onPress={handleSubmitForm} disabled={submitting} activeOpacity={0.8}>
-                    {submitting ? <ActivityIndicator size="small" color={COLORS.accent} /> : (
-                      <>
-                        <Feather name="send" size={16} color={COLORS.accent} style={{ marginRight: 8 }} />
-                        <Text style={styles.submitBtnText}>Submit</Text>
+
+                <TouchableOpacity
+                  style={[s.primaryBtn, { backgroundColor: '#F97316' }, submitting && { opacity: 0.6 }]}
+                  onPress={handleDiscovery}
+                  disabled={submitting}
+                  activeOpacity={0.85}
+                >
+                  {submitting
+                    ? <ActivityIndicator size="small" color="#fff" />
+                    : <>
+                        <Feather name="send" size={15} color="#fff" />
+                        <Text style={[s.primaryBtnText, { color: '#fff' }]}>Find My Gym</Text>
                       </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.trustRow}>
-                  <Feather name="shield" size={11} color={COLORS.textTer} />
-                  <Text style={styles.trustText}>5,000+ partner gyms · Call within 24h</Text>
-                </View>
-              </>
-            )}
-          </View>
-        </Animated.View>
-
-        {/* How it works */}
-        <View style={styles.howSection}>
-          <Text style={[styles.howTitle, { color: colors.text }]}>How it works</Text>
-          {[
-            { step: '1', icon: 'edit-3', text: 'Fill out what you\'re looking for above' },
-            { step: '2', icon: 'search', text: 'Our team finds the best matching facilities' },
-            { step: '3', icon: 'phone-call', text: 'We call you with curated options & deals' },
-            { step: '4', icon: 'check-circle', text: 'Pick your gym and start training' },
-          ].map((item, i) => (
-            <View key={i} style={[styles.howRow, { borderColor: colors.border }]}>
-              <View style={[styles.howStep, { backgroundColor: isDark ? colors.bgTer : colors.bgTer }]}>
-                <Text style={[styles.howStepNum, { color: COLORS.accent }]}>{item.step}</Text>
+                  }
+                </TouchableOpacity>
+                <Text style={[s.trustNote, { color: colors.textTer }]}>5,000+ partner gyms · We call within 24 hours</Text>
               </View>
-              <Feather name={item.icon} size={15} color={colors.textSec} style={{ marginRight: SPACING.sm }} />
-              <Text style={[styles.howText, { color: colors.textSec }]}>{item.text}</Text>
+            )}
+
+          </Animated.View>
+
+          {/* Locked QR preview */}
+          <View style={[s.lockedQr, { backgroundColor: colors.bgTer, borderColor: colors.border }]}>
+            <View style={s.lockedOverlay}>
+              <Feather name="lock" size={20} color={colors.textTer} />
+              <Text style={[s.lockedText, { color: colors.textTer }]}>QR check-in locked</Text>
+              <Text style={[s.lockedSub, { color: colors.textTer }]}>Links your gym above to unlock</Text>
             </View>
-          ))}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <View style={s.qrBlur} />
+          </View>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
+const s = StyleSheet.create({
+  root: { flex: 1 },
+  scroll: { paddingHorizontal: SPACING.lg, paddingBottom: 60 },
 
-  // Header
-  header: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xs,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  backBtn: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: SPACING.sm, marginBottom: SPACING.md },
 
   // Hero
-  hero: {
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-    paddingBottom: SPACING.lg,
-  },
-  heroIconWrap: {
-    width: 72,
-    height: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.md,
-  },
-  pulseRing: {
-    position: 'absolute',
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 2,
-  },
-  heroIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: COLORS.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    fontFamily: FONT.extraBold,
-    letterSpacing: -0.8,
-    textAlign: 'center',
-    marginBottom: SPACING.xs,
-  },
-  heroSub: {
-    fontSize: 14,
-    fontFamily: FONT.regular,
-    textAlign: 'center',
-    lineHeight: 22,
-    maxWidth: 300,
-  },
+  hero: { alignItems: 'center', paddingVertical: SPACING.lg },
+  heroIconRing: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.md },
+  heroIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', ...SHADOW.lg },
+  heroTitle: { fontSize: 24, fontFamily: FONT.extraBold, letterSpacing: -0.8, textAlign: 'center', marginBottom: 6 },
+  heroSub: { fontSize: 14, fontFamily: FONT.regular, textAlign: 'center', lineHeight: 22, maxWidth: 280 },
+
+  // Path selector
+  pathSelector: { flexDirection: 'row', borderRadius: RADIUS.lg, borderWidth: 0.5, padding: 4, gap: 4, marginBottom: SPACING.md },
+  pathTab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: RADIUS.md },
+  pathTabActive: { backgroundColor: COLORS.accent },
+  pathTabLabel: { fontSize: 11, fontFamily: FONT.semibold },
 
   // Path card
-  pathCard: {
-    marginHorizontal: SPACING.lg,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    marginBottom: SPACING.sm,
-    overflow: 'hidden',
-  },
-  glowLineWrap: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    overflow: 'hidden',
-  },
-  glowLine: {
-    width: 80,
-    height: 2,
-    backgroundColor: COLORS.accent,
-    borderRadius: 1,
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-  },
+  pathCard: { borderRadius: RADIUS.xl, borderWidth: 0.5, padding: SPACING.md, marginBottom: SPACING.md, overflow: 'hidden' },
+  pathTopAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 2, backgroundColor: COLORS.accent },
+  pathCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: SPACING.md, marginTop: 8 },
+  pathCardIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  pathCardTitle: { fontSize: 16, fontFamily: FONT.bold },
+  pathCardSub: { fontSize: 12, fontFamily: FONT.regular, marginTop: 2 },
 
-  // Path labels
-  pathLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: SPACING.md,
-  },
-  pathLabelBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pathLabelText: {
-    fontSize: 11,
-    fontWeight: '900',
-    fontFamily: FONT.extraBold,
-  },
-  pathLabelTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: FONT.extraBold,
-    letterSpacing: 2,
-  },
+  // Code input
+  codeInputWrap: { flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.lg, borderWidth: 1.5, paddingHorizontal: SPACING.md, height: 58, marginBottom: SPACING.md },
+  codePrefix: { fontSize: 18, fontFamily: FONT.bold, marginRight: 4 },
+  codeInput: { flex: 1, fontSize: 22, fontFamily: 'Inter_700Bold', letterSpacing: 6, height: '100%' },
 
-  pathHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  pathIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pathTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    fontFamily: FONT.bold,
-    letterSpacing: -0.3,
-  },
-  pathDesc: {
-    fontSize: 13,
-    fontFamily: FONT.regular,
-    marginTop: 2,
-    lineHeight: 18,
-  },
+  // Generic input row
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: RADIUS.lg, borderWidth: 0.5, paddingHorizontal: SPACING.md, height: 52, marginBottom: SPACING.sm },
+  phonePrefix: { fontSize: 14, fontFamily: FONT.semibold },
+  textInput: { flex: 1, fontSize: 15, fontFamily: FONT.regular, height: '100%' },
 
-  // Input
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.md,
-    height: 50,
-    borderWidth: 1,
-    marginBottom: SPACING.md,
-  },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: FONT.medium,
-    letterSpacing: 2,
-    height: '100%',
-  },
+  // OTP
+  otpSentBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10, borderRadius: RADIUS.md, marginBottom: SPACING.sm },
+  otpSentText: { fontSize: 12, fontFamily: FONT.semibold },
+  resendBtn: { alignItems: 'center', paddingVertical: 8 },
+  resendText: { fontSize: 12, fontFamily: FONT.medium },
 
-  // Buttons
-  primaryBtn: {
-    backgroundColor: COLORS.accent,
-    borderRadius: RADIUS.lg,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-    marginBottom: SPACING.sm,
-  },
-  primaryBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.text,
-    fontFamily: FONT.bold,
-  },
-  secondaryBtn: {
-    borderRadius: RADIUS.lg,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  secondaryBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    fontFamily: FONT.semibold,
-  },
+  // Primary button
+  primaryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.accent, paddingVertical: 14, borderRadius: RADIUS.lg, marginBottom: SPACING.sm, ...SHADOW.md },
+  primaryBtnText: { fontSize: 15, fontFamily: FONT.bold, color: '#07080f' },
 
-  // Divider
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: SPACING.xl * 2,
-    marginVertical: SPACING.lg,
-  },
-  dividerLine: { flex: 1, height: 1 },
-  dividerText: {
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: FONT.bold,
-    marginHorizontal: SPACING.md,
-    letterSpacing: 1.5,
-  },
+  // How to get code
+  howToGetCode: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, paddingTop: 10, borderTopWidth: 0.5, borderTopColor: 'rgba(255,255,255,0.07)' },
+  howToText: { flex: 1, fontSize: 12, fontFamily: FONT.regular, lineHeight: 18 },
 
-  // Discovery card
-  discoveryCard: {
-    marginHorizontal: SPACING.lg,
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-    marginBottom: SPACING.xl,
-  },
-  discoveryInner: {
-    backgroundColor: COLORS.bg,
-    borderWidth: 1,
-    borderColor: COLORS.accentSoft,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 10,
-  },
-  discoveryHeadline: {
-    fontSize: 22,
-    fontWeight: '800',
-    fontFamily: FONT.extraBold,
-    color: COLORS.text,
-    letterSpacing: -0.5,
-    marginBottom: SPACING.xs,
-  },
-  discoverySub: {
-    fontSize: 14,
-    fontFamily: FONT.regular,
-    color: COLORS.textSec,
-    lineHeight: 22,
-    marginBottom: SPACING.md,
-  },
+  // City chips
+  fieldLabel: { fontSize: 12, fontFamily: FONT.semibold, marginBottom: 8 },
+  cityRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
+  cityChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: RADIUS.full, borderWidth: 0.5 },
+  cityChipText: { fontSize: 13, fontFamily: FONT.semibold },
+  trustNote: { fontSize: 11, fontFamily: FONT.regular, textAlign: 'center', marginTop: 4 },
 
-  // Progress bar
-  progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: SPACING.xl,
-  },
-  progressBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: COLORS.border,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: COLORS.accent,
-    borderRadius: 2,
-  },
-  progressText: {
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: FONT.numBold,
-    color: COLORS.textTer,
-  },
-
-  // Form section headers
-  formSectionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: SPACING.sm,
-    marginTop: SPACING.md,
-  },
-  formSectionNum: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: COLORS.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  formSectionNumText: {
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: FONT.numExtraBold,
-    color: COLORS.accent,
-  },
-  formSectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: FONT.bold,
-    color: COLORS.text,
-    flex: 1,
-  },
-  formRequired: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.red,
-  },
-
-  // Chips
-  chipGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 7,
-    marginBottom: SPACING.sm,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: COLORS.bgSec,
-  },
-  chipActive: {
-    backgroundColor: COLORS.accentSoft,
-    borderColor: COLORS.accentGlow,
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    fontFamily: FONT.semibold,
-    color: COLORS.textTer,
-  },
-  chipTextActive: {
-    color: COLORS.text,
-  },
-  chipSub: {
-    fontSize: 10,
-    fontFamily: FONT.regular,
-    color: COLORS.textTer,
-    marginTop: 1,
-  },
-
-  // Field label
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    fontFamily: FONT.semibold,
-    color: colors.textTer,
-    marginBottom: SPACING.xs,
-    marginTop: SPACING.sm,
-  },
-
-  // Form text inputs
-  formInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: COLORS.bgSec,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.md,
-    minHeight: 46,
-    marginBottom: SPACING.xs,
-  },
-  formInputText: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: FONT.regular,
-    color: COLORS.text,
-  },
-  phonePrefix: {
-    fontSize: 14,
-    fontWeight: '600',
-    fontFamily: FONT.semibold,
-    color: colors.textTer,
-    marginRight: 4,
-  },
-
-  // Discovery divider
-  discoveryDivider: {
-    height: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: SPACING.lg,
-  },
-
-  // Contact header
-  contactHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: SPACING.md,
-  },
-  conciergeBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: COLORS.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contactHeaderText: {
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: FONT.extraBold,
-    color: COLORS.accent,
-    letterSpacing: 1.5,
-  },
-
-  // Submit button
-  submitBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.text,
-    borderRadius: RADIUS.lg,
-    paddingVertical: 16,
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.md,
-    shadowColor: COLORS.bg,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  submitBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: FONT.bold,
-    color: COLORS.accent,
-  },
-
-  // Trust
-  trustRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  trustText: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-    color: COLORS.textTer,
-  },
-
-  // How it works
-  howSection: {
-    marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.xxl,
-  },
-  howTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: FONT.bold,
-    letterSpacing: -0.3,
-    marginBottom: SPACING.md,
-  },
-  howRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-  },
-  howStep: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: SPACING.sm,
-  },
-  howStepNum: {
-    fontSize: 12,
-    fontWeight: '800',
-    fontFamily: FONT.numExtraBold,
-  },
-  howText: {
-    fontSize: 13,
-    fontFamily: FONT.regular,
-    flex: 1,
-    lineHeight: 20,
-  },
+  // Locked QR preview
+  lockedQr: { borderRadius: RADIUS.xl, borderWidth: 0.5, height: 140, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: SPACING.xl },
+  lockedOverlay: { alignItems: 'center', gap: 6, zIndex: 2 },
+  lockedText: { fontSize: 14, fontFamily: FONT.semibold },
+  lockedSub: { fontSize: 12, fontFamily: FONT.regular },
+  qrBlur: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(7,8,15,0.7)', zIndex: 1 },
 })
