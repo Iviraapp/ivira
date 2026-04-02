@@ -37,7 +37,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#3B82F6"
+        "backgroundColor": "#0A0E1A"
       },
       "package": "com.ivira.member",
       "permissions": [
@@ -93,13 +93,7 @@
           "locationAlwaysAndWhenInUsePermission": "IVIRA uses your location to verify gym check-ins"
         }
       ],
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-1836914755619181~7453478671",
-          "iosAppId": "ca-app-pub-1836914755619181~7453478671"
-        }
-      ],
+      "expo-splash-screen",
       "@sentry/react-native"
     ],
     "extra": {
