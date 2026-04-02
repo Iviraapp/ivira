@@ -16,6 +16,7 @@ import { runRenewalReminders } from './renewal-reminders.js';
 import { runCheckinStreakNudge } from './checkin-streak.js';
 import { getPodJobs } from './pod-jobs.js';
 import { runClassReminders } from './class-reminders.js';
+import { runOutcomeSnapshots } from './outcome-snapshots.js';
 
 /**
  * Cron Scheduler
@@ -53,6 +54,7 @@ const dailyJobs = [
   { name: 'renewal_reminders', fn: runRenewalReminders, hour: 10, minute: 0 },   // 10:00 AM IST
   { name: 'checkin_streak_nudge', fn: runCheckinStreakNudge, hour: 20, minute: 0 }, // 8:00 PM IST
   ...getPodJobs().dailyJobs,
+  { name: 'outcome_snapshots', fn: runOutcomeSnapshots, hour: 2, minute: 0 },  // 2:00 AM IST
 ];
 
 /**

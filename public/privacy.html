@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07080F" />
+  <meta name="description" content="IVIRA Privacy Policy — How we collect, use, store, and protect your personal information." />
+  <meta property="og:title" content="IVIRA — Privacy Policy" />
+  <meta property="og:description" content="How IVIRA collects, uses, stores, and protects your personal information." />
+  <meta property="og:url" content="https://ivira.app/privacy" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-180.png" />
+  <title>Privacy Policy — IVIRA</title>
+  <style>
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/satoshi-400.woff2') format('woff2');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/satoshi-500.woff2') format('woff2');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/satoshi-700.woff2') format('woff2');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/satoshi-900.woff2') format('woff2');
+      font-weight: 900; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'General Sans';
+      src: url('/fonts/general-sans-500.woff2') format('woff2');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'General Sans';
+      src: url('/fonts/general-sans-700.woff2') format('woff2');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #07080F;
+      color: #E0E0E8;
+      font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 56px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .wordmark {
+      font-family: 'General Sans', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .back-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: #00E5A0;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 0.75; }
+
+    /* Meta line */
+    .meta {
+      font-size: 14px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 48px;
+    }
+
+    /* Typography */
+    h1 {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 900;
+      font-size: 36px;
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    h2 {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: #fff;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    h3 {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      color: #fff;
+      margin-top: 28px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: #C0C0CC;
+    }
+
+    ul {
+      margin: 0 0 16px 20px;
+      color: #C0C0CC;
+    }
+    ul li { margin-bottom: 6px; }
+    ul li strong { color: #E0E0E8; }
+
+    a {
+      color: #00E5A0;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    a:hover { opacity: 0.75; }
+
+    /* Footer */
+    .page-footer {
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-copy {
+      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.5);
+    }
+    .footer-links a:hover { color: #00E5A0; }
+
+    @media (max-width: 600px) {
+      .wrapper { padding: 32px 18px 64px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 19px; margin-top: 36px; padding-top: 24px; }
+      .page-header { margin-bottom: 40px; }
+      .page-footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <header class="page-header">
+      <a href="/" class="wordmark">IVIRA</a>
+      <a href="/" class="back-link">&larr; Back to Home</a>
+    </header>
+
+    <h1>Privacy Policy</h1>
+    <p class="meta">Effective Date: 1 April 2026 &nbsp;&middot;&nbsp; Last Updated: 1 April 2026</p>
+
+    <p>IVIRA ("we," "us," or "our") operates the IVIRA mobile application (the "App"). This Privacy Policy explains how we collect, use, store, and protect your personal information when you use the App. By using IVIRA, you agree to the practices described in this policy.</p>
+
+    <p>This policy complies with the Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, the Digital Personal Data Protection Act, 2023, Apple App Store Guidelines, and Google Play Developer Policies.</p>
+
+    <h2>1. Information We Collect</h2>
+
+    <h3>1.1 Account Information</h3>
+    <p>When you register, we collect your name, email address, phone number, date of birth, gender, and profile photo. If you register through your gym, we may also receive your membership ID and gym affiliation.</p>
+
+    <h3>1.2 Health and Fitness Data</h3>
+    <p>With your explicit consent, we collect:</p>
+    <ul>
+      <li><strong>Workout data:</strong> exercises, sets, reps, weights, duration, and workout history.</li>
+      <li><strong>Nutrition data:</strong> food logs, calorie intake, macronutrient breakdown, hydration intake, and fasting schedules.</li>
+      <li><strong>Step count and activity data:</strong> daily steps, distance, and active minutes sourced from Apple HealthKit or Google Health Connect with your permission.</li>
+      <li><strong>Sleep data:</strong> sleep duration, sleep stages, and disturbance events collected via your device's accelerometer and microphone during sleep tracking sessions you initiate.</li>
+      <li><strong>Body measurements:</strong> weight, height, body fat percentage, and progress photos you upload.</li>
+      <li><strong>Workout form analysis:</strong> video recordings you submit for AI-based form scoring. Videos are processed for analysis and are not stored permanently unless you choose to save them.</li>
+    </ul>
+
+    <h3>1.3 Device and Sensor Data</h3>
+    <ul>
+      <li><strong>Camera:</strong> used for barcode scanning, food photo recognition, progress photos, and workout form analysis. Camera access is only activated when you use these features.</li>
+      <li><strong>Microphone:</strong> used during sleep tracking sessions to detect snoring and sleep disturbances. Microphone access is only active during sessions you explicitly start and stop. Raw audio is processed on-device and is not uploaded or stored.</li>
+      <li><strong>Location data:</strong> used for GPS-based gym check-in. Location is accessed only when you check in and is not continuously tracked in the background.</li>
+      <li><strong>NFC:</strong> used for tap-based gym check-in at supported facilities.</li>
+      <li><strong>Accelerometer:</strong> used for sleep movement detection and step counting.</li>
+    </ul>
+
+    <h3>1.4 Payment Information</h3>
+    <p>Payment transactions are processed by Razorpay. We do not store your credit card numbers, debit card numbers, UPI IDs, or bank account details. We receive transaction confirmations including amount, date, and payment status from Razorpay.</p>
+
+    <h3>1.5 Usage and Analytics Data</h3>
+    <p>We collect anonymized usage data including app interactions, feature usage, crash reports, and performance metrics to improve the App.</p>
+
+    <h2>2. How We Use Your Information</h2>
+
+    <p>We use your information to:</p>
+    <ul>
+      <li>Provide and operate the App's features including gym check-in, workout tracking, nutrition logging, sleep tracking, and AI coaching.</li>
+      <li>Personalize your experience with tailored workout suggestions, nutrition recommendations, and AI coach responses.</li>
+      <li>Process membership payments and subscriptions.</li>
+      <li>Enable social features such as Circles, leaderboards, streaks, and nudges.</li>
+      <li>Send you relevant notifications including workout reminders, fasting alerts, hydration reminders, and Circle activity.</li>
+      <li>Analyze aggregated, anonymized data to improve the App's features and performance.</li>
+      <li>Respond to your support requests and communications.</li>
+      <li>Comply with legal obligations.</li>
+    </ul>
+
+    <p>We do not sell your personal data to third parties. We do not use your health data for advertising purposes.</p>
+
+    <h2>3. Data Sharing</h2>
+
+    <p>We share your information only in these circumstances:</p>
+    <ul>
+      <li><strong>Gym partners:</strong> your check-in activity and membership status are shared with your affiliated gym to manage your membership.</li>
+      <li><strong>Circles members:</strong> if you join a Circle, your chosen display name, workout streaks, and leaderboard scores are visible to other members of that Circle.</li>
+      <li><strong>Service providers:</strong>
+        <ul>
+          <li><strong>Razorpay</strong> processes payments on our behalf. Their privacy policy governs payment data handling.</li>
+          <li><strong>Google Cloud Platform</strong> provides infrastructure and AI processing services.</li>
+          <li><strong>Sentry</strong> receives anonymized crash reports and error logs for stability monitoring.</li>
+          <li><strong>Firebase</strong> provides push notification delivery and analytics.</li>
+        </ul>
+      </li>
+      <li><strong>Legal requirements:</strong> we may disclose information if required by law, regulation, legal process, or government request.</li>
+    </ul>
+
+    <h2>4. Apple HealthKit and Google Health Connect</h2>
+
+    <p>We integrate with Apple HealthKit and Google Health Connect to read and write health and fitness data with your explicit permission. In accordance with Apple and Google policies:</p>
+    <ul>
+      <li>Health data obtained from HealthKit or Health Connect is not shared with third parties, used for advertising, or sold.</li>
+      <li>Health data is not stored in iCloud or any unencrypted cloud storage.</li>
+      <li>You can revoke HealthKit or Health Connect permissions at any time through your device settings.</li>
+      <li>We request only the specific data types necessary for the features you use.</li>
+    </ul>
+
+    <h2>5. Data Storage and Security</h2>
+
+    <ul>
+      <li>All personal and health data is encrypted in transit using TLS 1.2 or higher and encrypted at rest using AES-256 encryption.</li>
+      <li>Data is stored on secure cloud infrastructure with access controls, regular security audits, and intrusion detection.</li>
+      <li>Employee access to user data is restricted on a need-to-know basis and is logged.</li>
+      <li>We implement reasonable security practices and procedures as required under the Information Technology Act, 2000 and associated rules.</li>
+    </ul>
+
+    <h2>6. Data Retention</h2>
+
+    <ul>
+      <li>We retain your account and health data for as long as your account is active.</li>
+      <li>If you delete your account, we will delete or anonymize your personal data within 30 days, except where retention is required by law.</li>
+      <li>Anonymized, aggregated data that cannot identify you may be retained indefinitely for analytical purposes.</li>
+    </ul>
+
+    <h2>7. Your Rights</h2>
+
+    <p>You have the right to:</p>
+    <ul>
+      <li><strong>Access</strong> your personal data by requesting a copy through the App or by contacting us.</li>
+      <li><strong>Correct</strong> inaccurate data through your profile settings or by contacting us.</li>
+      <li><strong>Delete</strong> your account and associated data through the App settings or by contacting us. Account deletion is processed within 30 days.</li>
+      <li><strong>Export</strong> your data in a portable format by requesting an export through the App or by contacting us.</li>
+      <li><strong>Withdraw consent</strong> for specific data collection (such as location, microphone, or HealthKit access) at any time through your device settings.</li>
+      <li><strong>Opt out</strong> of non-essential notifications through the App settings.</li>
+    </ul>
+
+    <h2>8. Children's Privacy</h2>
+
+    <p>IVIRA is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected data from a child under 13, we will delete that information promptly. If you believe a child under 13 has provided us with personal information, please contact us at <a href="mailto:privacy@ivira.app">privacy@ivira.app</a>.</p>
+
+    <h2>9. Cookies and Tracking</h2>
+
+    <p>The App does not use browser cookies. We use anonymized analytics identifiers to understand feature usage and improve the App. We do not track you across other apps or websites.</p>
+
+    <h2>10. International Data Transfers</h2>
+
+    <p>Your data is primarily stored and processed in India. If data is transferred to servers outside India for processing (such as AI model inference), we ensure appropriate safeguards are in place consistent with applicable Indian data protection laws.</p>
+
+    <h2>11. Changes to This Policy</h2>
+
+    <p>We may update this Privacy Policy from time to time. We will notify you of material changes through the App or via email. Continued use of the App after changes constitutes acceptance of the updated policy. The "Last Updated" date at the top reflects the most recent revision.</p>
+
+    <h2>12. Grievance Officer</h2>
+
+    <p>In accordance with the Information Technology Act, 2000 and applicable rules, the Grievance Officer for IVIRA can be contacted at:</p>
+    <p><strong>Email:</strong> <a href="mailto:privacy@ivira.app">privacy@ivira.app</a><br />
+    <strong>Response time:</strong> We will acknowledge your concern within 24 hours and resolve it within 30 days.</p>
+
+    <h2>13. Contact Us</h2>
+
+    <p>If you have questions or concerns about this Privacy Policy or our data practices, contact us at:</p>
+    <p><strong>Email:</strong> <a href="mailto:privacy@ivira.app">privacy@ivira.app</a><br />
+    <strong>Website:</strong> <a href="https://ivira.app/privacy">https://ivira.app/privacy</a></p>
+
+    <footer class="page-footer">
+      <span class="footer-copy">&copy; 2026 IVIRA. All rights reserved.</span>
+      <nav class="footer-links">
+        <a href="/terms">Terms of Service</a>
+        <a href="/">Home</a>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>

@@ -13,6 +13,8 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react'
+import MemberOutcomesCard from '../../components/dashboard/MemberOutcomesCard'
+import GymFeedComposer from '../../components/dashboard/GymFeedComposer'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -705,6 +707,14 @@ export default function Home() {
         {/* Revenue widget */}
         <FadeIn delay={700} style={{ marginBottom: sp(24) }}>
           <RevenueWidget gymId={gymId} theme={theme} />
+        </FadeIn>
+
+        {/* Member outcomes + Gym feed */}
+        <FadeIn delay={900} style={{ marginBottom: sp(24) }}>
+          <MemberOutcomesCard gymId={gymId} theme={theme} />
+        </FadeIn>
+        <FadeIn delay={960} style={{ marginBottom: sp(24) }}>
+          <GymFeedComposer gymId={gymId} theme={theme} />
         </FadeIn>
 
         {/* Quick actions */}

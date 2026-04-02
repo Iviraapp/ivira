@@ -32,18 +32,41 @@ export default async function marketplaceRoutes(fastify) {
 
   // Gym feed / announcements
   fastify.get('/gyms/:gymId/feed', async (request, reply) => {
-    // No feed table yet — return demo data
-    return reply.send({
-      feed: [
-        {
-          id: 'demo-1',
-          type: 'announcement',
-          title: 'Welcome to the gym community!',
-          body: 'Stay tuned for updates, challenges, and events.',
-          created_at: new Date().toISOString(),
-        },
-      ],
-    })
+    const { gymId } = request.params
+    const limit = Math.min(parseInt(request.query.limit) || 20, 50)
+    const before = request.query.before || null
+
+    let query = db('gym_feed')
+      .where({ gym_id: gymId, is_active: true })
+      .orderByRaw('is_pinned DESC, created_at DESC')
+      .limit(limit)
+      .select('*')
+
+    if (before) query = query.where('created_at', '<', before)
+
+    const posts = await query
+
+    const recentMilestones = await db('gym_announcements')
+      .where({ gym_id: gymId })
+      .whereIn('type', ['milestone', 'streak', 'challenge'])
+      .where('created_at', '>=', new Date(Date.now() - 7 * 86400000).toISOString())
+      .orderBy('created_at', 'desc')
+      .limit(5)
+      .select('id', 'type', 'title', 'body', 'created_at', 'metadata')
+      .catch(() => [])
+
+    const combined = [
+      ...posts.map(p => ({ ...p, source: 'owner' })),
+      ...recentMilestones.map(m => ({ ...m, source: 'auto', is_pinned: false, image_url: null })),
+    ]
+      .sort((a, b) => {
+        if (a.is_pinned && !b.is_pinned) return -1
+        if (!a.is_pinned && b.is_pinned) return 1
+        return new Date(b.created_at) - new Date(a.created_at)
+      })
+      .slice(0, limit)
+
+    return reply.send({ feed: combined })
   })
 
   // Live check-ins (last 2 hours, opted-in members)
@@ -160,17 +183,50 @@ export default async function marketplaceRoutes(fastify) {
     return reply.send({ booking })
   })
 
-  // Post announcement (demo — no feed table yet)
-  fastify.post('/gyms/:gymId/feed', authHooks, async (request, reply) => {
-    // Placeholder until feed table is created
-    return reply.code(201).send({
-      message: 'Feed post created (demo)',
-      post: {
-        id: crypto.randomUUID(),
-        ...request.body,
-        created_at: new Date().toISOString(),
+  // Post announcement
+  fastify.post('/gyms/:gymId/feed', {
+    ...authHooks,
+    schema: {
+      body: {
+        type: 'object', required: ['title'],
+        properties: {
+          type: { type: 'string', enum: ['announcement', 'milestone', 'challenge', 'event', 'tip'], default: 'announcement' },
+          title: { type: 'string', minLength: 1, maxLength: 200 },
+          body: { type: 'string', maxLength: 2000 },
+          image_url: { type: 'string', maxLength: 500 },
+          cta_label: { type: 'string', maxLength: 80 },
+          cta_url: { type: 'string', maxLength: 500 },
+          is_pinned: { type: 'boolean' },
+        },
       },
-    })
+    },
+  }, async (request, reply) => {
+    const { gymId } = request.params
+    const { type = 'announcement', title, body, image_url, cta_label, cta_url, is_pinned = false } = request.body
+    const [post] = await db('gym_feed').insert({
+      gym_id: gymId, posted_by: request.user?.id || null, type, title: title.trim(),
+      body: body?.trim() || null, image_url: image_url || null,
+      cta_label: cta_label || null, cta_url: cta_url || null, is_pinned,
+    }).returning('*')
+    return reply.code(201).send({ post })
+  })
+
+  // Delete feed post
+  fastify.delete('/gyms/:gymId/feed/:postId', authHooks, async (request, reply) => {
+    const { gymId, postId } = request.params
+    const post = await db('gym_feed').where({ id: postId, gym_id: gymId }).first()
+    if (!post) return reply.code(404).send({ error: 'Post not found' })
+    await db('gym_feed').where({ id: postId }).update({ is_active: false, updated_at: new Date() })
+    return reply.send({ ok: true })
+  })
+
+  // Pin/unpin feed post
+  fastify.patch('/gyms/:gymId/feed/:postId/pin', authHooks, async (request, reply) => {
+    const { gymId, postId } = request.params
+    const [post] = await db('gym_feed').where({ id: postId, gym_id: gymId })
+      .update({ is_pinned: !!request.body?.is_pinned, updated_at: new Date() }).returning('*')
+    if (!post) return reply.code(404).send({ error: 'Post not found' })
+    return reply.send({ post })
   })
 
   // ══════════════════════════════════════════════════════════════════════════

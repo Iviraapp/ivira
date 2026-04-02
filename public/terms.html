@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07080F" />
+  <meta name="description" content="IVIRA Terms of Service — Terms governing your use of the IVIRA mobile application." />
+  <meta property="og:title" content="IVIRA — Terms of Service" />
+  <meta property="og:description" content="Terms governing your use of the IVIRA mobile application." />
+  <meta property="og:url" content="https://ivira.app/terms" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-180.png" />
+  <title>Terms of Service — IVIRA</title>
+  <style>
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/satoshi-400.woff2') format('woff2');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/satoshi-500.woff2') format('woff2');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/satoshi-700.woff2') format('woff2');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/satoshi-900.woff2') format('woff2');
+      font-weight: 900; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'General Sans';
+      src: url('/fonts/general-sans-500.woff2') format('woff2');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'General Sans';
+      src: url('/fonts/general-sans-700.woff2') format('woff2');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #07080F;
+      color: #E0E0E8;
+      font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 56px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .wordmark {
+      font-family: 'General Sans', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .back-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: #00E5A0;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 0.75; }
+
+    .meta {
+      font-size: 14px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 48px;
+    }
+
+    h1 {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 900;
+      font-size: 36px;
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    h2 {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: #fff;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    h3 {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      color: #fff;
+      margin-top: 28px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: #C0C0CC;
+    }
+
+    ul {
+      margin: 0 0 16px 20px;
+      color: #C0C0CC;
+    }
+    ul li { margin-bottom: 6px; }
+    ul li strong { color: #E0E0E8; }
+
+    a {
+      color: #00E5A0;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    a:hover { opacity: 0.75; }
+
+    .page-footer {
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-copy {
+      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.5);
+    }
+    .footer-links a:hover { color: #00E5A0; }
+
+    @media (max-width: 600px) {
+      .wrapper { padding: 32px 18px 64px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 19px; margin-top: 36px; padding-top: 24px; }
+      .page-header { margin-bottom: 40px; }
+      .page-footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <header class="page-header">
+      <a href="/" class="wordmark">IVIRA</a>
+      <a href="/" class="back-link">&larr; Back to Home</a>
+    </header>
+
+    <h1>Terms of Service</h1>
+    <p class="meta">Effective Date: 1 April 2026 &nbsp;&middot;&nbsp; Last Updated: 1 April 2026</p>
+
+    <p>These Terms of Service ("Terms") govern your use of the IVIRA mobile application ("App") operated by IVIRA ("we," "us," or "our"). By creating an account or using the App, you agree to these Terms. If you do not agree, do not use the App.</p>
+
+    <h2>1. Eligibility</h2>
+
+    <p>You must be at least 13 years old to use the App. If you are between 13 and 18, you represent that your parent or legal guardian has reviewed and consented to these Terms. By using the App, you represent that the information you provide during registration is accurate and complete.</p>
+
+    <h2>2. Account Registration</h2>
+
+    <p>You must create an account to use the App. You are responsible for maintaining the confidentiality of your login credentials and for all activity under your account. You agree to notify us immediately at <a href="mailto:support@ivira.app">support@ivira.app</a> if you suspect unauthorized access to your account.</p>
+
+    <h2>3. Subscriptions and Payments</h2>
+
+    <h3>3.1 Subscription Plans</h3>
+    <p>IVIRA may offer free and paid subscription plans. Features available to you depend on your active plan. Paid plans are billed on a recurring basis (monthly or annually) as selected at the time of purchase.</p>
+
+    <h3>3.2 Payment Processing</h3>
+    <p>Payments are processed through Razorpay. By subscribing, you authorize Razorpay to charge your selected payment method (UPI, credit/debit card, net banking, or wallet) on a recurring basis until you cancel. All amounts are in Indian Rupees (INR).</p>
+
+    <h3>3.3 Cancellation and Refunds</h3>
+    <p>You may cancel your subscription at any time through the App. Cancellation takes effect at the end of the current billing period. No refunds are provided for partial billing periods. If your gym manages your subscription through IVIRA, cancellation terms are governed by your agreement with your gym.</p>
+
+    <h3>3.4 Price Changes</h3>
+    <p>We may change subscription prices with at least 30 days' notice. Continued use after a price change constitutes acceptance of the new price.</p>
+
+    <h2>4. Health and Fitness Disclaimer</h2>
+
+    <p>IVIRA provides fitness tracking, nutrition logging, sleep monitoring, and AI-generated coaching for general wellness purposes only. The App is <strong>not a medical device</strong> and does not provide medical advice, diagnosis, or treatment.</p>
+    <ul>
+      <li>AI coaching responses from Vira AI are informational and are not a substitute for professional medical or fitness advice.</li>
+      <li>Workout form analysis provides general guidance and does not guarantee injury prevention.</li>
+      <li>Sleep tracking data is approximate and is not equivalent to clinical sleep studies.</li>
+      <li>Nutrition information is based on available food databases and user input and may not be perfectly accurate.</li>
+    </ul>
+    <p>Always consult a qualified healthcare professional or certified fitness trainer before starting any new exercise program, diet, or wellness regimen. If you experience pain, dizziness, or discomfort during exercise, stop immediately and seek medical attention.</p>
+    <p>You use the App's health and fitness features at your own risk.</p>
+
+    <h2>5. User Content</h2>
+
+    <h3>5.1 Your Content</h3>
+    <p>You retain ownership of all content you create or upload through the App, including progress photos, workout logs, food logs, and Circle posts ("User Content"). By uploading User Content, you grant us a limited, non-exclusive license to store, process, and display that content as necessary to provide the App's features to you.</p>
+
+    <h3>5.2 Prohibited Content</h3>
+    <p>You agree not to upload content that is illegal, abusive, harassing, defamatory, sexually explicit, or that infringes on the rights of others. We reserve the right to remove content that violates these Terms and to suspend or terminate accounts that repeatedly violate them.</p>
+
+    <h3>5.3 Circles Community Standards</h3>
+    <p>When participating in Circles, you agree to interact respectfully with other members. Harassment, bullying, spam, or sharing of misleading health information is prohibited.</p>
+
+    <h2>6. Gym Check-In</h2>
+
+    <p>Gym check-in features (QR, NFC, GPS) are provided to verify your attendance at partner gym facilities. You agree not to manipulate or falsify check-in data. Fraudulent check-ins may result in account suspension.</p>
+
+    <h2>7. Intellectual Property</h2>
+
+    <p>The App, its design, features, code, branding, and content (excluding User Content) are owned by IVIRA and protected by applicable intellectual property laws. You may not copy, modify, distribute, reverse engineer, or create derivative works from any part of the App without our written permission.</p>
+
+    <h2>8. Privacy</h2>
+
+    <p>Your use of the App is also governed by our <a href="/privacy">Privacy Policy</a>. By using the App, you consent to the data practices described therein.</p>
+
+    <h2>9. Termination</h2>
+
+    <h3>9.1 By You</h3>
+    <p>You may delete your account at any time through the App settings. Upon deletion, your personal data will be removed in accordance with our Privacy Policy.</p>
+
+    <h3>9.2 By Us</h3>
+    <p>We may suspend or terminate your account if you violate these Terms, engage in fraudulent activity, or if required by law. We will provide notice where reasonably possible.</p>
+
+    <h2>10. Limitation of Liability</h2>
+
+    <p>To the maximum extent permitted by applicable law:</p>
+    <ul>
+      <li>IVIRA is provided "as is" and "as available" without warranties of any kind, express or implied.</li>
+      <li>We do not warrant that the App will be uninterrupted, error-free, or free of harmful components.</li>
+      <li>We are not liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the App.</li>
+      <li>Our total liability for any claim related to the App shall not exceed the amount you paid to us in the 12 months preceding the claim, or INR 5,000, whichever is greater.</li>
+    </ul>
+
+    <h2>11. Indemnification</h2>
+
+    <p>You agree to indemnify and hold IVIRA, its officers, employees, and partners harmless from any claims, damages, losses, or expenses (including legal fees) arising from your use of the App, your violation of these Terms, or your violation of any third-party rights.</p>
+
+    <h2>12. Modifications to the Terms</h2>
+
+    <p>We may update these Terms from time to time. We will notify you of material changes through the App or via email at least 15 days before they take effect. Continued use of the App after changes take effect constitutes acceptance of the updated Terms.</p>
+
+    <h2>13. Governing Law and Dispute Resolution</h2>
+
+    <p>These Terms are governed by the laws of India. Any dispute arising from these Terms or your use of the App shall be subject to the exclusive jurisdiction of the courts in Bengaluru, Karnataka, India.</p>
+    <p>Before initiating any legal proceeding, you agree to attempt resolution by contacting us at <a href="mailto:support@ivira.app">support@ivira.app</a>. We will endeavor to resolve disputes amicably within 30 days.</p>
+
+    <h2>14. Severability</h2>
+
+    <p>If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force.</p>
+
+    <h2>15. Contact Us</h2>
+
+    <p>For questions about these Terms, contact us at:</p>
+    <p><strong>Email:</strong> <a href="mailto:support@ivira.app">support@ivira.app</a><br />
+    <strong>Website:</strong> <a href="https://ivira.app/terms">https://ivira.app/terms</a></p>
+
+    <footer class="page-footer">
+      <span class="footer-copy">&copy; 2026 IVIRA. All rights reserved.</span>
+      <nav class="footer-links">
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/">Home</a>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>
