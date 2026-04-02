@@ -22,6 +22,7 @@ const registerSchema = {
       timezone: { type: 'string' },
       currency: { type: 'string', minLength: 3, maxLength: 3, default: 'INR' },
       payment_gateway: { type: 'string', enum: ['razorpay', 'stripe'], default: 'razorpay' },
+      turnstileToken: { type: 'string' },
     },
   },
 };
@@ -77,6 +78,11 @@ export default async function authRoutes(fastify) {
 
   // Register a new gym (public)
   fastify.post('/auth/register', { schema: registerSchema }, async (request, reply) => {
+    // Verify Turnstile CAPTCHA
+    const { verifyTurnstile } = await import('../utils/turnstile.js')
+    const turnstileOk = await verifyTurnstile(request.body.turnstileToken, request.ip)
+    if (!turnstileOk) return reply.code(403).send({ error: 'CAPTCHA_FAILED', message: 'Please complete the CAPTCHA verification.' })
+
     const gym = await authService.registerGym(request.body);
     return reply.code(201).send({ gym });
   });
@@ -307,6 +313,102 @@ export default async function authRoutes(fastify) {
       },
     };
   });
+
+  // Google OAuth login/signup
+  fastify.post('/auth/google', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['idToken'],
+        properties: {
+          idToken: { type: 'string' },
+          role: { type: 'string', enum: ['owner', 'member'], default: 'member' },
+          gymId: { type: 'string' }, // optional, for member linking
+        },
+      },
+    },
+  }, async (request, reply) => {
+    const { idToken, role = 'member', gymId } = request.body
+
+    // Verify Google ID token
+    let googleUser
+    try {
+      const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`)
+      if (!res.ok) return reply.code(401).send({ error: 'Invalid Google token' })
+      googleUser = await res.json()
+      if (!googleUser.email) return reply.code(401).send({ error: 'Google account has no email' })
+    } catch {
+      return reply.code(401).send({ error: 'Google token verification failed' })
+    }
+
+    const email = googleUser.email.toLowerCase()
+    const name = googleUser.name || email.split('@')[0]
+    const picture = googleUser.picture || null
+
+    if (role === 'owner') {
+      // Look up existing gym owner by email
+      let gym = await db('gyms').where('owner_email', email).first()
+
+      if (!gym) {
+        // Create new gym + owner account
+        const [newGym] = await db('gyms').insert({
+          gym_name: `${name}'s Gym`,
+          owner_name: name,
+          owner_email: email,
+          owner_phone: '',
+          city: '',
+          country_code: 'IN',
+          currency: 'INR',
+          payment_gateway: 'razorpay',
+          google_id: googleUser.sub,
+          photo_url: picture,
+          trial_ends_at: new Date(Date.now() + 14 * 86400000),
+        }).returning('*')
+        gym = newGym
+      }
+
+      const token = jwt.sign(
+        { gymId: gym.id, email, role: 'owner', name },
+        config.jwt.secret,
+        { expiresIn: '7d' }
+      )
+
+      return { token, gym, isNewGym: !gym.owner_phone }
+    }
+
+    // Member login/signup
+    let member = await db('members').where('email', email).first()
+
+    if (!member && gymId) {
+      // Create new member linked to gym
+      const [newMember] = await db('members').insert({
+        gym_id: gymId,
+        name,
+        email,
+        phone: '',
+        google_id: googleUser.sub,
+        photo_url: picture,
+        status: 'active',
+      }).returning('*')
+      member = newMember
+    } else if (!member) {
+      // No gym specified — create unlinked member
+      return reply.code(404).send({
+        error: 'NO_GYM',
+        message: 'No account found. Please join a gym first or provide a gym code.',
+        email,
+        name,
+      })
+    }
+
+    const token = jwt.sign(
+      { memberId: member.id, gymId: member.gym_id, email, role: 'member' },
+      config.jwt.secret,
+      { expiresIn: '7d' }
+    )
+
+    return { token, memberId: member.id, gymId: member.gym_id, member }
+  })
 
   // Admin: one-time test gym setup (protected by secret)
   fastify.post('/admin/setup-test-gym', async (request, reply) => {

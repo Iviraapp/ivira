@@ -653,6 +653,44 @@ export default function Landing() {
   const [trialForm, setTrialForm] = useState({ ownerName: '', gym_name: '', email: '', phone: '', password: '' })
   const [trialSubmitting, setTrialSubmitting] = useState(false)
   const [trialError, setTrialError] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
+
+  useEffect(() => {
+    window.onTurnstileSuccess = (token) => setTurnstileToken(token)
+    return () => { delete window.onTurnstileSuccess }
+  }, [])
+
+  const handleGoogleSignIn = () => {
+    if (!window.google?.accounts?.id) {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+      if (!clientId) return
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/google/callback')}&response_type=token&scope=email+profile`
+      return
+    }
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: async (response) => {
+        try {
+          const res = await fetch('https://api.ivira.app/api/v1/auth/google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: response.credential, role: 'owner' }),
+          })
+          const data = await res.json()
+          if (data.token) {
+            localStorage.setItem('ivira_token', data.token)
+            window.location.href = '/dashboard'
+          } else {
+            setTrialError(data.message || 'Google sign-in failed')
+          }
+        } catch (err) {
+          setTrialError('Google sign-in failed')
+        }
+      },
+    })
+    window.google.accounts.id.prompt()
+  }
+
   const [heroRef, heroVisible] = useScrollReveal(0.1)
 
   const arenas = useCounter(5000, 2200, heroVisible)
@@ -2334,6 +2372,26 @@ export default function Landing() {
               </p>
             </div>
 
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                padding: '12px 20px', borderRadius: 12,
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 16,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 01-1.8 2.71v2.26h2.92a8.78 8.78 0 002.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A8.99 8.99 0 009 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 013.68 9c0-.6.1-1.17.28-1.71V4.96H.96A8.99 8.99 0 000 9c0 1.45.35 2.82.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A8.99 8.99 0 00.96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>
+              Continue with Google
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 16px' }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>or</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+            </div>
+
             <form onSubmit={async (e) => {
               e.preventDefault()
               setTrialSubmitting(true)
@@ -2342,7 +2400,7 @@ export default function Landing() {
                 const res = await fetch('https://api.ivira.app/api/v1/auth/register', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(trialForm),
+                  body: JSON.stringify({ ...trialForm, turnstileToken }),
                 })
                 const data = await res.json()
                 if (res.ok && data.token) {
@@ -2455,6 +2513,15 @@ export default function Landing() {
                   onFocus={e => e.target.style.borderColor = ACCENT}
                   onBlur={e => e.target.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'} />
               </div>
+              {/* Cloudflare Turnstile CAPTCHA */}
+              <div
+                className="cf-turnstile"
+                data-sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAABExample'}
+                data-callback="onTurnstileSuccess"
+                data-theme="dark"
+                style={{ marginBottom: 16 }}
+              />
+
               {trialError && (
                 <div style={{
                   fontFamily: FONT_BODY, fontSize: 13, color: '#EF4444',

@@ -22,6 +22,7 @@ export default function Login() {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [googleError, setGoogleError] = useState('')
   const [lang, setLang] = useState(() => localStorage.getItem('ivira_lang') || 'en')
   const [btnHover, setBtnHover] = useState(false)
   const [shaking, setShaking] = useState(false)
@@ -50,6 +51,44 @@ export default function Login() {
     }, 1000)
     return () => clearInterval(interval)
   }, [step])
+
+  const handleGoogleSignIn = () => {
+    if (!window.google?.accounts?.id) {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+      if (!clientId) return
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/google/callback')}&response_type=token&scope=email+profile`
+      return
+    }
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: async (response) => {
+        try {
+          const res = await fetch('https://api.ivira.app/api/v1/auth/google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: response.credential, role: 'owner' }),
+          })
+          const data = await res.json()
+          if (data.token) {
+            login(data.token, data.gym)
+            localStorage.setItem('ivira_lang', lang)
+            toast.success(`Welcome back, ${data.gym.owner_name || data.gym.gym_name}!`)
+            const gym = data.gym
+            if (gym.onboarding_step !== undefined && gym.onboarding_step < 4) {
+              navigate('/onboarding', { replace: true })
+            } else {
+              navigate('/dashboard', { replace: true })
+            }
+          } else {
+            setGoogleError(data.message || 'Google sign-in failed')
+          }
+        } catch (err) {
+          setGoogleError('Google sign-in failed')
+        }
+      },
+    })
+    window.google.accounts.id.prompt()
+  }
 
   const requestOTP = async () => {
     if (!email.trim()) return setError('Please enter your email')
@@ -210,6 +249,28 @@ export default function Login() {
             {loading && <Loader2 size={18} style={{ animation: 'authSpin 1s linear infinite' }} />}
             {loading ? 'Sending...' : 'SEND LOGIN CODE'}
           </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px' }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>or</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              padding: '12px 20px', borderRadius: 12,
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+              color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 01-1.8 2.71v2.26h2.92a8.78 8.78 0 002.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A8.99 8.99 0 009 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 013.68 9c0-.6.1-1.17.28-1.71V4.96H.96A8.99 8.99 0 000 9c0 1.45.35 2.82.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A8.99 8.99 0 00.96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>
+            Continue with Google
+          </button>
+
+          {googleError && <p style={{ color: errorColor, fontSize: 13, textAlign: 'center', margin: '8px 0 0', fontFamily: ff }}>{googleError}</p>}
 
           <p style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: textTer, fontFamily: ff }}>
             <a

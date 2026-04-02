@@ -112,6 +112,18 @@ const config = {
     enabled: !!(process.env.APPLE_PASS_TYPE_ID && process.env.APPLE_PASS_CERT_PEM),
   },
 
+  turnstile: {
+    siteKey: process.env.TURNSTILE_SITE_KEY,
+    secretKey: process.env.TURNSTILE_SECRET_KEY,
+    enabled: !!process.env.TURNSTILE_SECRET_KEY,
+  },
+
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    enabled: !!process.env.GOOGLE_CLIENT_ID,
+  },
+
   adminSecret: process.env.ADMIN_SECRET || (process.env.NODE_ENV === 'production'
     ? (() => { throw new Error('FATAL: ADMIN_SECRET must be set in production'); })()
     : 'ivira-dev-admin-DO-NOT-USE-IN-PROD'),
