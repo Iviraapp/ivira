@@ -14,3 +14,4 @@ android/app/build/
 google-services.json
 GoogleService-Info.plist
 .vercel
+.claude/worktrees/
