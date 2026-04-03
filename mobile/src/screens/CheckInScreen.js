@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated,
-  Dimensions, Platform, Modal,
+  Dimensions, Platform, Modal, ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
@@ -40,6 +40,7 @@ export default function CheckInScreen({ navigation }) {
   const [walletAvailable, setWalletAvailable] = useState(false)
   const [addingWallet, setAddingWallet] = useState(false)
   const [checkedIn, setCheckedIn]     = useState(false)
+  const [proximity, setProximity]     = useState(null)
 
   const breathe   = useRef(new Animated.Value(1)).current
   const successAnim = useRef(new Animated.Value(0)).current
@@ -101,6 +102,24 @@ export default function CheckInScreen({ navigation }) {
     }
     canAddToWallet().then(setWalletAvailable).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!gym?.latitude || !gym?.longitude || !Location) {
+      setProximity({ dist: null, canGPS: false })
+      return
+    }
+    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
+      .then(pos => {
+        const dLat = (gym.latitude - pos.coords.latitude) * Math.PI / 180
+        const dLon = (gym.longitude - pos.coords.longitude) * Math.PI / 180
+        const a = Math.sin(dLat/2)**2 +
+          Math.cos(pos.coords.latitude * Math.PI/180) *
+          Math.cos(gym.latitude * Math.PI/180) *
+          Math.sin(dLon/2)**2
+        const dist = Math.round(6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)))
+        setProximity({ dist, canGPS: dist <= (gym.gps_radius_meters || 150) })
+      }).catch(() => setProximity({ dist: null, canGPS: false }))
+  }, [gym?.latitude, gym?.longitude])
 
   useEffect(() => {
     if (!hasGym) navigation.replace('MembershipActivation')
@@ -222,6 +241,23 @@ export default function CheckInScreen({ navigation }) {
         <Text style={[s.orText, { color: colors.textTer }]}>or use</Text>
 
         <View style={s.methods}>
+          {proximity?.canGPS && (
+            <TouchableOpacity onPress={handleGPS} disabled={gpsChecking} activeOpacity={0.85}
+              style={{ backgroundColor: COLORS.accent + '12', borderWidth: 1, borderColor: COLORS.accent + '40',
+                borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+              <View style={{ width: 42, height: 42, borderRadius: 12, backgroundColor: COLORS.accent + '20',
+                alignItems: 'center', justifyContent: 'center' }}>
+                <Feather name="map-pin" size={20} color={COLORS.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, fontFamily: FONT.bold, marginBottom: 2 }}>GPS Check-in</Text>
+                <Text style={{ fontSize: 12, color: COLORS.accent, fontFamily: FONT.regular }}>
+                  {gpsChecking ? 'Getting location...' : `You're ${proximity.dist}m away — tap to check in`}
+                </Text>
+              </View>
+              {gpsChecking ? <ActivityIndicator size="small" color={COLORS.accent} /> : <Feather name="chevron-right" size={18} color={COLORS.accent} />}
+            </TouchableOpacity>
+          )}
           <MethodButton
             icon="rss"
             label={nfcScanning ? 'Hold near reader...' : 'NFC Tap'}
@@ -231,27 +267,35 @@ export default function CheckInScreen({ navigation }) {
             onPress={handleNFC}
             colors={colors}
           />
-          <MethodButton
-            icon="map-pin"
-            label={gpsChecking ? 'Getting location...' : 'GPS Check-in'}
-            sub="When near the gym"
-            loading={gpsChecking}
-            onPress={handleGPS}
-            colors={colors}
-          />
-          {walletAvailable && isActive && (
-            <MethodButton
-              icon={Platform.OS === 'ios' ? 'credit-card' : 'smartphone'}
-              label={addingWallet ? 'Adding...' : Platform.OS === 'ios' ? 'Apple Wallet' : 'Google Wallet'}
-              sub="Add membership card"
-              loading={addingWallet}
-              onPress={async () => {
-                setAddingWallet(true)
-                await addMembershipToWallet({ gymId, memberId: member?.id, memberName: member?.name, gymName: gym?.name, planName: membership?.plan_name || membership?.name, expiryDate: membership?.end_date || membership?.membership_end }).catch(() => {})
-                setAddingWallet(false)
-              }}
-              colors={colors}
-            />
+          {walletAvailable && (
+            <View style={{ marginTop: 8, marginBottom: 4 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <View style={{ flex: 1, height: 0.5, backgroundColor: colors.border }} />
+                <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.medium, letterSpacing: 0.5 }}>OR</Text>
+                <View style={{ flex: 1, height: 0.5, backgroundColor: colors.border }} />
+              </View>
+              <TouchableOpacity
+                onPress={() => addMembershipToWallet({ gymId, memberId: member?.id, memberName: member?.name,
+                  gymName: gym?.gym_name || gym?.name, planName: membership?.plan_name, expiryDate: membership?.end_date })}
+                activeOpacity={0.85}
+                style={{ backgroundColor: colors.bgTer, borderWidth: 1, borderColor: colors.borderStrong,
+                  borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <View style={{ width: 42, height: 42, borderRadius: 12,
+                  backgroundColor: Platform.OS === 'android' ? 'rgba(66,133,244,0.12)' : 'rgba(0,0,0,0.06)',
+                  alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name="credit-card" size={20} color={Platform.OS === 'android' ? '#4285F4' : colors.text} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text, fontFamily: FONT.bold, marginBottom: 2 }}>
+                    {Platform.OS === 'android' ? 'Add to Google Wallet' : 'Add to Apple Wallet'}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: colors.textSec, fontFamily: FONT.regular, lineHeight: 17 }}>
+                    Shows on your lock screen near the gym — tap to check in
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={16} color={colors.textTer} />
+              </TouchableOpacity>
+            </View>
           )}
         </View>
 

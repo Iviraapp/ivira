@@ -11,6 +11,7 @@ Sentry.init({
   enableNativeCrashHandling: true,
   enableAutoPerformanceTracing: true,
 })
+import * as Notifications from 'expo-notifications'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StyleSheet, View, ActivityIndicator } from 'react-native'
@@ -54,6 +55,26 @@ function HealthProviderBridge({ children }) {
 function ThemedApp() {
   const { colors, isDark } = useTheme()
 
+  useEffect(() => {
+    // Handle notification tap → navigate to CheckIn
+    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data
+      if (data?.action === 'open_checkin') {
+        import('./src/lib/storage').then(({ setItem }) => {
+          setItem('ivira_pending_nav', 'CheckIn').catch(() => {})
+        })
+      }
+    })
+    return () => sub.remove()
+  }, [])
+
+  useEffect(() => {
+    try {
+      Notifications.setNotificationCategoryAsync?.('gym_nearby', [
+        { identifier: 'CHECK_IN', buttonTitle: 'Check In', options: { opensAppToForeground: true } },
+      ])
+    } catch {}
+  }, [])
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>

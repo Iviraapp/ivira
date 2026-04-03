@@ -9,7 +9,8 @@ try { TaskManager = require('expo-task-manager') } catch (err) { if (__DEV__) co
 try { Notifications = require('expo-notifications') } catch (err) { if (__DEV__) console.warn('[Geofence] Notifications load:', err?.message) }
 
 const GEOFENCE_TASK = 'IVIRA_GYM_GEOFENCE'
-const GEOFENCE_RADIUS = 200 // meters
+const OUTER_RADIUS = 250
+const INNER_RADIUS = 50
 const COOLDOWN_KEY = 'ivira_geofence_last_notified'
 const COOLDOWN_MS = 4 * 60 * 60 * 1000 // 4 hours between notifications
 
@@ -33,17 +34,33 @@ if (TaskManager) {
         return
       }
 
+      const isInner = data.region?.identifier?.endsWith('_inner')
+      const isOuter = data.region?.identifier?.endsWith('_outer')
+
       // Send local notification
       if (Notifications) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: 'You\'re near your gym! 🎯',
-            body: 'Ready for a workout? Open IVIRA to start tracking.',
-            data: { type: 'gym_nearby', gymId: data.region.identifier },
-            sound: true,
-          },
-          trigger: null, // immediate
-        })
+        if (isInner) {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: 'You\'re at the gym 🏋️',
+              body: 'Ready for a workout? Open IVIRA to start tracking.',
+              data: { action: 'open_checkin' },
+              sound: false,
+            },
+            trigger: null,
+          })
+        } else if (isOuter) {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: 'You\'re near your gym 🎯',
+              body: 'Ready for a workout? Open IVIRA to start tracking.',
+              data: { action: 'open_checkin' },
+              sound: true,
+              categoryIdentifier: 'gym_nearby',
+            },
+            trigger: null,
+          })
+        }
       }
 
       await setItem(COOLDOWN_KEY, String(Date.now()))
@@ -104,16 +121,24 @@ export async function startGymGeofencing(gymInfo) {
     // Start geofencing
     await Location.startGeofencingAsync(GEOFENCE_TASK, [
       {
-        identifier: gymInfo.id || 'gym',
+        identifier: `${gymInfo.id}_outer`,
         latitude: lat,
         longitude: lng,
-        radius: GEOFENCE_RADIUS,
+        radius: OUTER_RADIUS,
+        notifyOnEnter: true,
+        notifyOnExit: false,
+      },
+      {
+        identifier: `${gymInfo.id}_inner`,
+        latitude: lat,
+        longitude: lng,
+        radius: INNER_RADIUS,
         notifyOnEnter: true,
         notifyOnExit: false,
       },
     ])
 
-    console.log(`[geofence] Monitoring gym at ${lat},${lng} (${GEOFENCE_RADIUS}m radius)`)
+    console.log(`[geofence] Monitoring gym at ${lat},${lng} (outer=${OUTER_RADIUS}m, inner=${INNER_RADIUS}m)`)
     return true
   } catch (err) {
     if (__DEV__) console.warn('[geofence] Setup failed:', err?.message)
