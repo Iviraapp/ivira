@@ -16,6 +16,7 @@ import { Feather } from '@expo/vector-icons'
 import Haptics from '../lib/haptics'
 import { COLORS, SPACING, RADIUS, FONT } from '../lib/theme'
 import { useAuth } from '../context/AuthContext'
+import api from '../lib/api'
 import { useTheme } from '../context/ThemeContext'
 import { premiumAlert } from '../components/PremiumAlert'
 
@@ -70,6 +71,9 @@ export default function LoginScreen() {
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [hasPasswordSet, setHasPasswordSet] = useState(false)
   const [resendTimer, setResendTimer] = useState(30)
 
   const otpRefs = useRef([...Array(6)].map(() => React.createRef()))
@@ -143,8 +147,9 @@ export default function LoginScreen() {
   }, [fadeAnim, slideAnim])
 
   const goBack = useCallback(() => {
-    if (step === 'otp') {
+    if (step === 'otp' || step === 'password') {
       setOtpDigits(['', '', '', '', '', ''])
+      setPassword('')
       if (resendIntervalRef.current) clearInterval(resendIntervalRef.current)
       animateTransition('email')
     } else if (step === 'email') {
@@ -158,23 +163,74 @@ export default function LoginScreen() {
     const newErrors = {}
     if (!email.trim()) newErrors.email = 'Email is required'
     else if (!validateEmail(email.trim())) newErrors.email = 'Please enter a valid email'
-
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
 
     setErrors({})
     setLoading(true)
     try {
-      await requestOtp(email.trim().toLowerCase())
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      startResendTimer()
-      animateTransition('otp')
-    } catch (err) {
-      const message = err.response?.data?.message || err.response?.data?.error || 'Failed to send login code. Please try again.'
-      premiumAlert('Error', message)
+      // Check if user has a password set
+      const { data } = await api.post('/auth/check-password', { email: email.trim().toLowerCase() })
+      if (data.hasPassword) {
+        setHasPasswordSet(true)
+        animateTransition('password')
+      } else {
+        await requestOtp(email.trim().toLowerCase())
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        startResendTimer()
+        animateTransition('otp')
+      }
+    } catch {
+      // Fallback to OTP if check-password endpoint not available
+      try {
+        await requestOtp(email.trim().toLowerCase())
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        startResendTimer()
+        animateTransition('otp')
+      } catch (err) {
+        premiumAlert('Error', err.response?.data?.message || 'Failed to send login code.')
+      }
     } finally {
       setLoading(false)
     }
   }, [email, requestOtp, animateTransition, startResendTimer])
+
+  const handlePasswordLogin = useCallback(async () => {
+    if (!password) { setErrors({ password: 'Password is required' }); return }
+    setErrors({})
+    setLoading(true)
+    try {
+      const { data } = await api.post('/auth/login/password', {
+        email: email.trim().toLowerCase(), password,
+      })
+      // Store token + member data via AuthContext
+      if (auth?.loginDirect) {
+        await auth.loginDirect(data.token, data.member || data.gym)
+      } else {
+        // Fallback: store manually
+        const { setItem } = await import('../lib/storage')
+        await setItem('ivira_member_token', data.token)
+        if (data.member) await setItem('ivira_member_data', JSON.stringify(data.member))
+        if (data.gym) await setItem('ivira_gym_id', data.gymId || data.gym?.id)
+      }
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    } catch (err) {
+      const code = err.response?.data?.error
+      if (code === 'PASSWORD_NOT_SET') {
+        // Fall back to OTP
+        try {
+          await requestOtp(email.trim().toLowerCase())
+          startResendTimer()
+          animateTransition('otp')
+        } catch {}
+      } else {
+        setErrors({ password: 'Incorrect password' })
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+        setPassword('')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [email, password, auth, requestOtp, animateTransition, startResendTimer])
 
   const handleVerify = useCallback(async (code) => {
     setLoading(true)
@@ -420,6 +476,80 @@ export default function LoginScreen() {
         {step === 'welcome' && renderWelcome()}
         {step === 'email' && renderEmail()}
         {step === 'otp' && renderOtp()}
+        {step === 'password' && (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.formContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.bgSec, borderColor: colors.border }]} onPress={goBack} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <Feather name="arrow-left" size={22} color={colors.text} />
+            </TouchableOpacity>
+
+            <View style={[styles.formIconWrap, { backgroundColor: colors.accentSoft }]}>
+              <Feather name="lock" size={24} color={COLORS.accent} />
+            </View>
+            <Text style={[styles.formTitle, { color: colors.text }]}>Welcome back</Text>
+            <Text style={[styles.formSubtitle, { color: colors.textSec }]}>Enter your password to sign in</Text>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.label, { color: colors.textSec }]}>PASSWORD</Text>
+              <View style={[styles.inputWrap, { backgroundColor: colors.bgSec, borderColor: errors.password ? COLORS.red : colors.border }]}>
+                <Feather name="lock" size={16} color={colors.textTer} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }, errors.password && styles.inputError]}
+                  placeholder="Your password"
+                  placeholderTextColor={colors.textTer}
+                  value={password}
+                  onChangeText={t => { setPassword(t); setErrors({}) }}
+                  secureTextEntry={!showPassword}
+                  autoFocus
+                  returnKeyType="go"
+                  onSubmitEditing={handlePasswordLogin}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(p => !p)}
+                  style={{ paddingHorizontal: 14, paddingVertical: 14 }}
+                >
+                  <Feather name={showPassword ? 'eye-off' : 'eye'} size={18} color={colors.textTer} />
+                </TouchableOpacity>
+              </View>
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.primaryBtn, { backgroundColor: COLORS.accent }, loading && styles.primaryBtnDisabled]}
+              onPress={handlePasswordLogin}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={[styles.primaryBtnText, { color: '#FFFFFF' }]}>Sign In</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 16 }}>
+              <TouchableOpacity onPress={async () => {
+                setLoading(true)
+                try {
+                  await requestOtp(email.trim().toLowerCase())
+                  startResendTimer()
+                  animateTransition('otp')
+                } catch {}
+                setLoading(false)
+              }}>
+                <Text style={{ color: COLORS.accent, fontSize: 13, fontFamily: FONT.semibold }}>Use OTP instead</Text>
+              </TouchableOpacity>
+              <Text style={{ color: colors.textTer, fontSize: 13 }}>·</Text>
+              <TouchableOpacity onPress={() => { setPassword(''); animateTransition('email') }}>
+                <Text style={{ color: colors.textTer, fontSize: 13, fontFamily: FONT.regular }}>Different email</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        )}
       </Animated.View>
     </KeyboardAvoidingView>
   )

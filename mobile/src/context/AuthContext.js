@@ -194,6 +194,33 @@ export function AuthProvider({ children }) {
     setGymInfo(null)
   }, [])
 
+  // Direct login with token (for password-based auth)
+  const loginDirect = useCallback(async (newToken, memberData) => {
+    await setItem('ivira_member_token', newToken)
+    setToken(newToken)
+    if (memberData) {
+      setMember(memberData)
+      await setItem('ivira_member_data', JSON.stringify(memberData))
+      if (memberData.gym_id) {
+        setGymId(memberData.gym_id)
+        await setItem('ivira_gym_id', memberData.gym_id)
+        // Fetch gym info
+        try {
+          const gymRes = await api.get(`/gyms/${memberData.gym_id}`)
+          setGymInfo(gymRes.data?.gym || gymRes.data)
+        } catch (e) {
+          console.warn('[auth] Failed to fetch gym info after direct login:', e?.message)
+        }
+      }
+    }
+    // Set Sentry user context
+    Sentry.setUser({ id: memberData?.id, username: memberData?.name })
+    // Register for push notifications
+    registerForPushNotifications().catch(e =>
+      console.warn('[auth] Push registration failed:', e?.message)
+    )
+  }, [])
+
   // B2C: request OTP for email-based login
   const requestOtp = useCallback(async (email) => {
     await setItem('ivira_pending_email', email)
@@ -298,6 +325,7 @@ export function AuthProvider({ children }) {
       hasGym,
       login,
       loginWithEmail,
+      loginDirect,
       logout,
       refreshProfile,
       authenticateWithBiometrics,
