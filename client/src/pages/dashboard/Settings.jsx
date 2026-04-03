@@ -720,6 +720,145 @@ function DisplayTab({ theme, sp, density, setDensity }) {
   )
 }
 
+/* ---- Change Password Card ---- */
+function ChangePasswordCard({ theme, sp }) {
+  const toast = useToast()
+  const [hasPassword, setHasPassword] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [showPw, setShowPw] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    api.get('/auth/password-status').then(r => {
+      setHasPassword(r.data.hasPassword)
+      setLoading(false)
+    }).catch(() => {
+      setHasPassword(false)
+      setLoading(false)
+    })
+  }, [])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (!newPw) return setError('Please enter a new password')
+    if (newPw.length < 6) return setError('Password must be at least 6 characters')
+    if (newPw !== confirmPw) return setError('Passwords do not match')
+    setSaving(true)
+    try {
+      await api.post('/auth/set-password', {
+        ...(hasPassword ? { currentPassword } : {}),
+        password: newPw,
+      })
+      toast.success(hasPassword ? 'Password updated' : 'Password set successfully')
+      setHasPassword(true)
+      setCurrentPassword('')
+      setNewPw('')
+      setConfirmPw('')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update password')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const inputSty = {
+    width: '100%', padding: `${sp(10)}px ${sp(14)}px`, background: theme.bgTer,
+    border: `1px solid ${theme.borderStrong}`, borderRadius: 8, color: theme.text,
+    fontSize: 14, fontFamily: "'Inter', -apple-system, sans-serif", outline: 'none', boxSizing: 'border-box',
+  }
+
+  return (
+    <div style={{
+      background: theme.bgSec, border: `1px solid ${theme.borderStrong}`,
+      borderTop: `3px solid ${theme.accent}`,
+      borderRadius: 14, padding: sp(28), backdropFilter: 'blur(20px)', marginBottom: sp(20),
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: sp(6) }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 8, background: theme.accentSoft,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Shield size={18} color={theme.accent} />
+        </div>
+        <h3 style={{ fontSize: 17, fontWeight: 600, color: theme.text, margin: 0, fontFamily: "'Inter', -apple-system, sans-serif" }}>
+          Account Password
+        </h3>
+      </div>
+      <p style={{ fontSize: 13, color: theme.textSec, marginTop: 4, marginBottom: sp(20), fontFamily: "'Inter', -apple-system, sans-serif" }}>
+        {loading ? 'Checking...' : hasPassword ? 'Your account has a password set. You can update it below.' : 'No password set. Add one to skip OTP login.'}
+      </p>
+
+      {!loading && (
+        <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
+          {hasPassword && (
+            <div style={{ marginBottom: sp(14) }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: theme.textSec, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: "'Inter', -apple-system, sans-serif" }}>
+                Current Password
+              </label>
+              <input
+                type={showPw ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                style={inputSty}
+              />
+            </div>
+          )}
+
+          <div style={{ marginBottom: sp(14) }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: theme.textSec, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: "'Inter', -apple-system, sans-serif" }}>
+              {hasPassword ? 'New Password' : 'Password'}
+            </label>
+            <input
+              type={showPw ? 'text' : 'password'}
+              value={newPw}
+              onChange={(e) => setNewPw(e.target.value)}
+              placeholder="At least 6 characters"
+              style={inputSty}
+            />
+          </div>
+
+          <div style={{ marginBottom: sp(14) }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: theme.textSec, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: "'Inter', -apple-system, sans-serif" }}>
+              Confirm Password
+            </label>
+            <input
+              type={showPw ? 'text' : 'password'}
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              placeholder="Confirm password"
+              style={inputSty}
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: error ? sp(10) : 0 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.textSec, cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}>
+              <input type="checkbox" checked={showPw} onChange={() => setShowPw(!showPw)} style={{ cursor: 'pointer' }} />
+              Show passwords
+            </label>
+          </div>
+
+          {error && <p style={{ color: theme.red || '#EF4444', fontSize: 13, margin: `${sp(8)}px 0`, fontFamily: "'Inter', -apple-system, sans-serif" }}>{error}</p>}
+
+          <button type="submit" disabled={saving} style={{
+            marginTop: sp(16), background: theme.grad, color: '#fff', border: 'none', borderRadius: 10,
+            padding: `${sp(12)}px ${sp(24)}px`, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
+            fontSize: 14, fontFamily: "'Inter', -apple-system, sans-serif",
+            opacity: saving ? 0.7 : 1, transition: 'all 0.2s',
+          }}>
+            {saving ? 'Saving...' : hasPassword ? 'Update Password' : 'Set Password'}
+          </button>
+        </form>
+      )}
+    </div>
+  )
+}
+
 /* ---- Support Tab ---- */
 function SupportTab({ gymId, gym, theme, sp }) {
   const toast = useToast()
@@ -1127,7 +1266,12 @@ export default function Settings() {
         {activeTab === 'language' && <LanguageTab gymId={gymId} gym={gym} updateGym={updateGym} theme={theme} sp={sp} />}
         {activeTab === 'notifications' && <NotificationsTab gymId={gymId} theme={theme} sp={sp} />}
         {activeTab === 'display' && <DisplayTab theme={theme} sp={sp} density={density} setDensity={setDensity} />}
-        {activeTab === 'support' && <SupportTab gymId={gymId} gym={gym} theme={theme} sp={sp} />}
+        {activeTab === 'support' && (
+          <>
+            <ChangePasswordCard theme={theme} sp={sp} />
+            <SupportTab gymId={gymId} gym={gym} theme={theme} sp={sp} />
+          </>
+        )}
         {activeTab === 'privacy' && <DataPrivacyTab gymId={gymId} theme={theme} sp={sp} />}
       </div>
 

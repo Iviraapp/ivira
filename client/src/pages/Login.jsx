@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Lock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import AuthLayout, { useAuthTheme } from '../components/auth/AuthLayout'
@@ -29,6 +29,12 @@ export default function Login() {
   const [subdomainModal, setSubdomainModal] = useState(false)
   const [countdown, setCountdown] = useState(60)
   const [canResend, setCanResend] = useState(false)
+  const [password, setPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [gymToken, setGymToken] = useState(null)
+  const [gymData, setGymData] = useState(null)
   const navigate = useNavigate()
   const { login, isAuthenticated } = useAuth()
   const toast = useToast()
@@ -95,12 +101,107 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
+      const { data } = await api.post('/auth/check-password', { email: email.trim() })
+      if (data.hasPassword) {
+        setStep('password')
+      } else {
+        await api.post('/auth/otp/email/request', { email: email.trim() })
+        setStep('otp')
+      }
+    } catch (err) {
+      // If check-password endpoint doesn't exist yet, fall back to OTP
+      if (err.response?.status === 404) {
+        try {
+          await api.post('/auth/otp/email/request', { email: email.trim() })
+          setStep('otp')
+        } catch (otpErr) {
+          setError(otpErr.response?.data?.message || 'Failed to send OTP')
+        }
+      } else {
+        setError(err.response?.data?.message || 'Failed to send OTP')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const sendOTPFallback = async () => {
+    setError('')
+    setLoading(true)
+    try {
       await api.post('/auth/otp/email/request', { email: email.trim() })
       setStep('otp')
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loginWithPassword = async () => {
+    if (!password) return setError('Please enter your password')
+    setError('')
+    setLoading(true)
+    try {
+      const { data } = await api.post('/auth/login/password', { email: email.trim(), password })
+      login(data.token, data.gym)
+      localStorage.setItem('ivira_lang', lang)
+      toast.success(`Welcome back, ${data.gym.owner_name || data.gym.gym_name}!`)
+      const gym = data.gym
+      if (gym.onboarding_step !== undefined && gym.onboarding_step < 4) {
+        navigate('/onboarding', { replace: true })
+      } else {
+        navigate('/dashboard', { replace: true })
+      }
+    } catch (err) {
+      const code = err.response?.data?.code
+      if (code === 'PASSWORD_NOT_SET') {
+        sendOTPFallback()
+        return
+      }
+      setError(err.response?.data?.message || 'Incorrect password')
+      setShaking(true)
+      setTimeout(() => { setShaking(false); setError('') }, 1500)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSetPassword = async () => {
+    if (!newPassword) return setError('Please enter a password')
+    if (newPassword.length < 6) return setError('Password must be at least 6 characters')
+    if (newPassword !== confirmPassword) return setError('Passwords do not match')
+    setError('')
+    setLoading(true)
+    try {
+      await api.post('/auth/set-password', { password: newPassword }, {
+        headers: { Authorization: `Bearer ${gymToken}` },
+      })
+      login(gymToken, gymData)
+      localStorage.setItem('ivira_lang', lang)
+      toast.success('Password set successfully!')
+      const gym = gymData
+      if (gym.onboarding_step !== undefined && gym.onboarding_step < 4) {
+        navigate('/onboarding', { replace: true })
+      } else {
+        navigate('/dashboard', { replace: true })
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to set password')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const skipSetPassword = () => {
+    login(gymToken, gymData)
+    localStorage.setItem('ivira_lang', lang)
+    toast.success(`Welcome back, ${gymData.owner_name || gymData.gym_name}!`)
+    const gym = gymData
+    if (gym.onboarding_step !== undefined && gym.onboarding_step < 4) {
+      navigate('/onboarding', { replace: true })
+    } else {
+      navigate('/dashboard', { replace: true })
     }
   }
 
@@ -130,18 +231,9 @@ export default function Login() {
     setLoading(true)
     try {
       const { data } = await api.post('/auth/otp/email/verify', { email: email.trim(), otp: otpStr })
-      setStep('verifying')
-      setTimeout(() => {
-        login(data.token, data.gym)
-        localStorage.setItem('ivira_lang', lang)
-        toast.success(`Welcome back, ${data.gym.owner_name || data.gym.gym_name}!`)
-        const gym = data.gym
-        if (gym.onboarding_step !== undefined && gym.onboarding_step < 4) {
-          navigate('/onboarding', { replace: true })
-        } else {
-          navigate('/dashboard', { replace: true })
-        }
-      }, 1500)
+      setGymToken(data.token)
+      setGymData(data.gym)
+      setStep('set-password')
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP')
       setShaking(true)
@@ -247,7 +339,7 @@ export default function Login() {
             style={{ ...t.buttonStyle(loading, btnHover), marginTop: 14 }}
           >
             {loading && <Loader2 size={18} style={{ animation: 'authSpin 1s linear infinite' }} />}
-            {loading ? 'Sending...' : 'SEND LOGIN CODE'}
+            {loading ? 'Checking...' : 'CONTINUE'}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px' }}>
@@ -283,6 +375,86 @@ export default function Login() {
               Forgot your gym's custom subdomain?
             </a>
           </p>
+        </>
+      )}
+
+      {/* Password step */}
+      {step === 'password' && (
+        <>
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: textPrimary, margin: 0, fontFamily: ff }}>
+              Enter Password
+            </h2>
+            <p style={{ fontSize: 14, color: textSec, margin: '8px 0 0', fontFamily: ff, lineHeight: 1.5 }}>
+              Sign in to <strong style={{ color: textPrimary }}>{email}</strong>
+            </p>
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: textSec, marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase', fontFamily: ff }}>
+              Password
+            </label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && loginWithPassword()}
+                autoFocus
+                style={{ ...t.inputStyle(!!error), paddingRight: 44 }}
+                onFocus={t.onFocus}
+                onBlur={(e) => t.onBlur(e, !!error)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: textTer,
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {error && (
+              <p style={{
+                color: errorColor, fontSize: 13, margin: '8px 0 0', fontFamily: ff,
+                animation: shaking ? 'authShake 0.4s ease-in-out' : 'none',
+              }}>{error}</p>
+            )}
+          </div>
+
+          <button
+            onClick={loginWithPassword}
+            disabled={loading}
+            onMouseEnter={() => setBtnHover(true)}
+            onMouseLeave={() => setBtnHover(false)}
+            style={{ ...t.buttonStyle(loading, btnHover), marginTop: 14 }}
+          >
+            {loading && <Loader2 size={18} style={{ animation: 'authSpin 1s linear infinite' }} />}
+            {loading ? 'Signing in...' : 'SIGN IN'}
+          </button>
+
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
+            <button
+              onClick={sendOTPFallback}
+              style={{ background: 'none', border: 'none', color: accent, fontSize: 14, cursor: 'pointer', fontFamily: ff, fontWeight: 600, transition: 'opacity 0.2s' }}
+              onMouseEnter={(e) => (e.target.style.opacity = '0.7')}
+              onMouseLeave={(e) => (e.target.style.opacity = '1')}
+            >
+              Use OTP instead
+            </button>
+          </div>
+
+          <button
+            onClick={() => { setStep('email'); setError(''); setPassword('') }}
+            style={{ display: 'block', margin: '12px auto 0', background: 'none', border: 'none', color: accent, fontSize: 14, cursor: 'pointer', fontFamily: ff, transition: 'opacity 0.2s' }}
+            onMouseEnter={(e) => (e.target.style.opacity = '0.7')}
+            onMouseLeave={(e) => (e.target.style.opacity = '1')}
+          >
+            Different email
+          </button>
         </>
       )}
 
@@ -357,6 +529,92 @@ export default function Login() {
             onMouseLeave={(e) => (e.target.style.opacity = '1')}
           >
             Use a different email
+          </button>
+        </>
+      )}
+
+      {/* Set Password step */}
+      {step === 'set-password' && (
+        <>
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: '50%', background: accent + '18',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 16px',
+            }}>
+              <Lock size={28} color={accent} />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: textPrimary, margin: '0 0 6px', fontFamily: ff }}>
+              Set a Password
+            </h2>
+            <p style={{ fontSize: 14, color: textSec, margin: 0, lineHeight: 1.5, fontFamily: ff }}>
+              Skip OTP next time by creating a password for your account.
+            </p>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: textSec, marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase', fontFamily: ff }}>
+              New Password
+            </label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="At least 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoFocus
+                style={{ ...t.inputStyle(!!error), paddingRight: 44 }}
+                onFocus={t.onFocus}
+                onBlur={(e) => t.onBlur(e, !!error)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: textTer,
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: textSec, marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase', fontFamily: ff }}>
+              Confirm Password
+            </label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Confirm your password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSetPassword()}
+              style={t.inputStyle(!!error && confirmPassword && newPassword !== confirmPassword)}
+              onFocus={t.onFocus}
+              onBlur={(e) => t.onBlur(e, !!error)}
+            />
+            {error && <p style={{ color: errorColor, fontSize: 13, margin: '8px 0 0', fontFamily: ff }}>{error}</p>}
+          </div>
+
+          <button
+            onClick={handleSetPassword}
+            disabled={loading}
+            onMouseEnter={() => setBtnHover(true)}
+            onMouseLeave={() => setBtnHover(false)}
+            style={{ ...t.buttonStyle(loading, btnHover), marginTop: 14 }}
+          >
+            {loading && <Loader2 size={18} style={{ animation: 'authSpin 1s linear infinite' }} />}
+            {loading ? 'Setting...' : 'SET PASSWORD & CONTINUE'}
+          </button>
+
+          <button
+            onClick={skipSetPassword}
+            style={{ display: 'block', margin: '20px auto 0', background: 'none', border: 'none', color: textTer, fontSize: 14, cursor: 'pointer', fontFamily: ff, transition: 'color 0.2s' }}
+            onMouseEnter={(e) => (e.target.style.color = textSec)}
+            onMouseLeave={(e) => (e.target.style.color = textTer)}
+          >
+            Skip for now
           </button>
         </>
       )}

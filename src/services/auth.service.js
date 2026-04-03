@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import db from '../config/database.js';
 import config from '../config/index.js';
 import redis from '../config/redis.js';
@@ -422,4 +423,28 @@ export async function verifyStaffLoginOTP(email, code) {
       gymId: staff.gym_id,
     },
   };
+}
+
+// --- Password-based Login ---
+
+export async function setGymPassword(gymId, plainPassword) {
+  if (!plainPassword || plainPassword.length < 8) throw new ValidationError('Password must be at least 8 characters');
+  const hash = await bcrypt.hash(plainPassword, 12);
+  await db('gyms').where({ id: gymId }).update({ password_hash: hash, password_set_at: new Date(), updated_at: new Date() });
+  return { success: true };
+}
+
+export async function loginWithPassword(email, plainPassword) {
+  const gym = await db('gyms').whereRaw('LOWER(owner_email) = LOWER(?)', [email.trim()]).first();
+  if (!gym) throw new ValidationError('Invalid email or password');
+  if (!gym.password_hash) throw new ValidationError('PASSWORD_NOT_SET');
+  const valid = await bcrypt.compare(plainPassword, gym.password_hash);
+  if (!valid) throw new ValidationError('Invalid email or password');
+  const token = jwt.sign({ gymId: gym.id, email: gym.owner_email, role: 'owner' }, config.jwt.secret, { expiresIn: '30d' });
+  return { token, gym };
+}
+
+export async function hasPassword(email) {
+  const gym = await db('gyms').whereRaw('LOWER(owner_email) = LOWER(?)', [email.trim()]).select('password_hash').first();
+  return !!(gym?.password_hash);
 }

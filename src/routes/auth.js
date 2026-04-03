@@ -543,6 +543,48 @@ export default async function authRoutes(fastify) {
     return authService.verifyStaffLoginOTP(request.body.email, request.body.otp);
   });
 
+  // ── Password-based Login ──────────────────────────────────────────────
+
+  const passwordLoginRateLimit = {
+    config: { rateLimit: { max: 10, timeWindow: '15 minutes' } }
+  }
+
+  // Check if gym owner has a password set
+  fastify.post('/auth/check-password', {
+    ...otpRateLimit,
+    schema: { body: { type: 'object', required: ['email'], properties: { email: { type: 'string', format: 'email' } } } },
+  }, async (request) => {
+    const result = await authService.hasPassword(request.body.email);
+    return { hasPassword: result };
+  });
+
+  // Login with email + password
+  fastify.post('/auth/login/password', {
+    ...passwordLoginRateLimit,
+    schema: { body: { type: 'object', required: ['email', 'password'], properties: { email: { type: 'string', format: 'email' }, password: { type: 'string', minLength: 8 } } } },
+  }, async (request, reply) => {
+    try {
+      const result = await authService.loginWithPassword(request.body.email, request.body.password);
+      return result;
+    } catch (err) {
+      if (err.message === 'PASSWORD_NOT_SET') {
+        return reply.code(400).send({ error: 'PASSWORD_NOT_SET', message: 'Password not set for this account. Please use OTP login first and set a password.' });
+      }
+      return reply.code(401).send({ error: 'INVALID_CREDENTIALS', message: 'Invalid email or password' });
+    }
+  });
+
+  // Set/update password (requires authentication)
+  fastify.post('/auth/set-password', {
+    preHandler: [fastify.verifyToken],
+    schema: { body: { type: 'object', required: ['password'], properties: { password: { type: 'string', minLength: 8 } } } },
+  }, async (request, reply) => {
+    const gymId = request.user.gymId;
+    if (!gymId) return reply.code(403).send({ error: 'Only gym owners can set a password' });
+    const result = await authService.setGymPassword(gymId, request.body.password);
+    return result;
+  });
+
   // ── Member phone OTP (gym-agnostic) ────────────────────────────────────
   fastify.post('/auth/member/otp/request', {
     ...otpRateLimit,
