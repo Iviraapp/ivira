@@ -153,12 +153,10 @@ export default function HomeScreen({ navigation, route }) {
           <Text style={[s.name, { color: colors.text }]}>{firstName}</Text>
         </View>
         <View style={s.headerRight}>
-          {streak > 0 && (
-            <View style={s.streakPill}>
-              <Text style={s.streakEmoji}>🔥</Text>
-              <Text style={s.streakText}>{streak}d</Text>
-            </View>
-          )}
+          <View style={s.streakPill}>
+            <Text style={s.streakEmoji}>{streak > 0 ? '🔥' : '⚡'}</Text>
+            <Text style={s.streakText}>{streak > 0 ? `${streak}d` : 'Start'}</Text>
+          </View>
           <TouchableOpacity
             style={[s.notifBtn, { backgroundColor: colors.bgTer, borderColor: colors.borderStrong }]}
             onPress={() => navigation.navigate('NotificationSettings')}
@@ -223,7 +221,7 @@ export default function HomeScreen({ navigation, route }) {
         {/* ── Stats row — flex fills full width ── */}
         <View style={s.statsRow}>
           <StatTile
-            value={steps >= 1000 ? `${(steps / 1000).toFixed(1)}k` : (steps || 0).toString()}
+            value={steps > 0 ? (steps >= 1000 ? `${(steps / 1000).toFixed(1)}k` : steps.toString()) : '—'}
             label="steps"
             color={FEATURE.steps}
             progress={stepProgress}
@@ -238,7 +236,7 @@ export default function HomeScreen({ navigation, route }) {
             />
           ) : null}
           <StatTile
-            value={(nutrition.calories || 0).toString()}
+            value={nutrition.calories > 0 ? nutrition.calories.toString() : '—'}
             label="kcal"
             color={FEATURE.nutrition}
             progress={calProgress}
@@ -268,6 +266,10 @@ export default function HomeScreen({ navigation, route }) {
           onProveSet={() => navigation.navigate('Circles', { screen: 'WorkoutAnalyzer' })}
           onViewCircle={() => navigation.navigate('Circles')}
         />
+
+        <View style={{ alignItems: 'center', marginBottom: 4, marginTop: -4 }}>
+          <Feather name="chevron-down" size={16} color={colors.textTer} />
+        </View>
 
         {/* ── AI workout suggestion ── */}
         {!aiDismissed && aiWorkout && (
@@ -300,17 +302,19 @@ export default function HomeScreen({ navigation, route }) {
 function CheckinChip({ icon, label, active }) {
   return (
     <View style={[s.chip, active && s.chipActive]}>
-      <Feather name={icon} size={11} color={active ? '#07080F' : COLORS.accent} />
+      <Feather name={icon} size={10} color={active ? '#07080F' : COLORS.accent} />
       <Text style={[s.chipText, active && s.chipTextActive]}>{label}</Text>
     </View>
   )
 }
 
 function StatTile({ value, label, color, progress, onPress }) {
+  const { colors } = useTheme()
   const Wrapper = onPress ? TouchableOpacity : View
+  const isEmpty = value === '0' || value === 0 || value === '—'
   return (
-    <Wrapper style={[s.statTile]} onPress={onPress} activeOpacity={0.7}>
-      <Text style={[s.statVal, { color }]}>{value}</Text>
+    <Wrapper style={[s.statTile, { backgroundColor: colors.bgTer, borderColor: colors.borderStrong }]} onPress={onPress} activeOpacity={0.7}>
+      <Text style={[s.statVal, { color: isEmpty ? colors.textTer : color }]}>{value}</Text>
       <Text style={s.statKey}>{label}</Text>
       {progress !== undefined && (
         <View style={s.statTrack}>
@@ -357,10 +361,9 @@ function CircleActivityCard({ activity, colors, onProveSet, onViewCircle }) {
           </View>
         ))
       ) : (
-        <View style={s.emptyCircle}>
-          <Feather name="users" size={28} color={colors.textTer} />
-          <Text style={[s.emptyText, { color: colors.textSec }]}>No Circle activity yet today</Text>
-          <Text style={[s.emptySubText, { color: colors.textTer }]}>Be the first to post a set</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 }}>
+          <Feather name="users" size={16} color={colors.textTer} />
+          <Text style={{ color: colors.textTer, fontSize: 13, fontFamily: FONT.regular }}>No sets posted yet today — be first</Text>
         </View>
       )}
 
@@ -593,21 +596,21 @@ const s = StyleSheet.create({
   // Check-in card
   checkinCard: { borderRadius: RADIUS.xl, borderWidth: 1, marginBottom: SPACING.md, overflow: 'hidden' },
   checkinTopBar: { height: 2.5, backgroundColor: COLORS.accent },
-  checkinRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
+  checkinRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, paddingVertical: 10 },
   qrPreview: { width: 48, height: 48, borderRadius: 14, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', borderWidth: 0.5, borderColor: COLORS.accent + '30' },
   checkinTitle: { fontSize: 16, fontFamily: FONT.bold },
   checkinSub: { fontSize: 12, fontFamily: FONT.regular, marginTop: 2 },
   checkinArrow: { width: 28, height: 28, borderRadius: 8, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  checkinMethods: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingBottom: 14 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full, borderWidth: 0.5, borderColor: COLORS.accent + '40', backgroundColor: 'transparent' },
+  checkinMethods: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingBottom: 10 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.full, borderWidth: 0.5, borderColor: COLORS.accent + '40', backgroundColor: 'transparent' },
   chipActive: { backgroundColor: COLORS.accent },
-  chipText: { fontSize: 11, fontFamily: FONT.semibold, color: COLORS.accent },
+  chipText: { fontSize: 10, fontFamily: FONT.semibold, color: COLORS.accent },
   chipTextActive: { color: '#07080F' },
   checkinCount: { fontSize: 11, fontFamily: FONT.medium },
 
   // Stats
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: SPACING.md },
-  statTile: { flex: 1, backgroundColor: '#13161F', borderRadius: RADIUS.md, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.07)', padding: 14, minWidth: 0 },
+  statTile: { flex: 1, borderRadius: RADIUS.md, borderWidth: 0.5, padding: 14, minWidth: 0 },
   statVal: { fontSize: 26, fontFamily: 'Inter_800ExtraBold', letterSpacing: -1, lineHeight: 28 },
   statKey: { fontSize: 11, fontFamily: FONT.medium, color: 'rgba(240,242,248,0.35)', marginTop: 3 },
   statTrack: { height: 3, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
