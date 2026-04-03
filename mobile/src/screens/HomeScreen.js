@@ -144,7 +144,7 @@ export default function HomeScreen({ navigation, route }) {
   const sleepHours = sleepData?.durationMinutes ? (sleepData.durationMinutes / 60).toFixed(1) : null
 
   return (
-    <SafeAreaView style={[s.root, { backgroundColor: colors.bg }]} edges={['top']}>
+    <SafeAreaView style={[s.root, { backgroundColor: colors.bg }]} edges={['top', 'bottom']}>
 
       {/* ── Header ── */}
       <Animated.View style={[s.header, { opacity: headerFade }]}>
@@ -153,10 +153,14 @@ export default function HomeScreen({ navigation, route }) {
           <Text style={[s.name, { color: colors.text }]}>{firstName}</Text>
         </View>
         <View style={s.headerRight}>
-          <View style={s.streakPill}>
+          <TouchableOpacity
+            style={s.streakPill}
+            onPress={() => navigation.navigate(streak > 0 ? 'ActivityDashboard' : 'Challenges')}
+            activeOpacity={0.7}
+          >
             <Text style={s.streakEmoji}>{streak > 0 ? '🔥' : '⚡'}</Text>
-            <Text style={s.streakText}>{streak > 0 ? `${streak}d` : 'Start'}</Text>
-          </View>
+            <Text style={s.streakText}>{streak > 0 ? `${streak}d` : 'Day 1'}</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[s.notifBtn, { backgroundColor: colors.bgTer, borderColor: colors.borderStrong }]}
             onPress={() => navigation.navigate('NotificationSettings')}
@@ -216,7 +220,40 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         </TouchableOpacity>
         )}
-        {!hasGym && <GymLinkCard onLink={() => navigation.navigate('MembershipActivation')} onFind={() => navigation.navigate('GymDiscovery')} colors={colors} />}
+        {!hasGym && (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MembershipActivation')}
+            activeOpacity={0.85}
+            style={{
+              backgroundColor: colors.bgTer,
+              borderRadius: 20, borderWidth: 1, borderColor: COLORS.accent + '25',
+              overflow: 'hidden', marginBottom: SPACING.md,
+            }}
+          >
+            <View style={{ height: 2.5, backgroundColor: COLORS.accent }} />
+            <View style={{ padding: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <View style={{ width: 48, height: 48, borderRadius: 14,
+                  backgroundColor: COLORS.accent + '15', alignItems: 'center',
+                  justifyContent: 'center', borderWidth: 1, borderColor: COLORS.accent + '25' }}>
+                  <Feather name="maximize" size={22} color={COLORS.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, fontFamily: FONT.bold, marginBottom: 3 }}>
+                    Tap-to-check-in is ready
+                  </Text>
+                  <Text style={{ fontSize: 12, color: colors.textSec, fontFamily: FONT.regular }}>
+                    Link your gym to unlock QR · NFC · GPS
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={COLORS.accent} />
+              </View>
+              <View style={{ backgroundColor: COLORS.accent, borderRadius: 12, paddingVertical: 13, alignItems: 'center' }}>
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: FONT.bold }}>Link My Gym</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* ── Stats row — flex fills full width ── */}
         <View style={s.statsRow}>
@@ -291,7 +328,7 @@ export default function HomeScreen({ navigation, route }) {
         {/* ── Quick actions grid ── */}
         <QuickActions navigation={navigation} colors={colors} />
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
     </SafeAreaView>
   )
@@ -318,7 +355,12 @@ function StatTile({ value, label, color, progress, onPress }) {
       <Text style={s.statKey}>{label}</Text>
       {progress !== undefined && (
         <View style={s.statTrack}>
-          <View style={[s.statFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: color }]} />
+          <View style={[s.statFill, { width: isEmpty ? '0%' : `${Math.round(progress * 100)}%`, backgroundColor: color }]} />
+        </View>
+      )}
+      {progress === undefined && (
+        <View style={s.statTrack}>
+          <View style={[s.statFill, { width: '0%', backgroundColor: color }]} />
         </View>
       )}
     </Wrapper>
