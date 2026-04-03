@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  RefreshControl, Animated,
+  RefreshControl, Animated, Share,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
@@ -21,6 +21,7 @@ export default function CirclesScreen({ navigation }) {
   const [allCircles, setAllCircles]   = useState([])
   const [refreshing, setRefreshing]   = useState(false)
   const [activeTab, setActiveTab]     = useState('feed') // feed | leaderboard | discover
+  const [todayCommit, setTodayCommit] = useState(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -33,6 +34,15 @@ export default function CirclesScreen({ navigation }) {
         const pods = Array.isArray(podRes.data) ? podRes.data : podRes.data?.pods || []
         setMyCircle(pods[0] || null)
         setAllCircles(pods)
+        if (pods[0]?.id && gymId) {
+          const commitRes = await api.get(
+            `/gyms/${gymId}/pods/${pods[0].id}/commitments`,
+            { params: { date: new Date().toISOString().split('T')[0] } }
+          ).catch(() => ({ data: { commitments: [] } }))
+          const myCommit = (commitRes.data?.commitments || [])
+            .find(c => c.member_id === member?.id)
+          setTodayCommit(myCommit || null)
+        }
         setActivity(Array.isArray(actRes.data) ? actRes.data : actRes.data?.activity || [])
         setLeaderboard(Array.isArray(lbRes.data) ? lbRes.data : lbRes.data?.leaderboard || [])
       } else if (member?.id) {
@@ -115,7 +125,7 @@ export default function CirclesScreen({ navigation }) {
         )}
 
         {activeTab === 'feed' && (
-          <FeedTab activity={activity} colors={colors} navigation={navigation} member={member} />
+          <FeedTab activity={activity} colors={colors} navigation={navigation} member={member} todayCommit={todayCommit} podId={myCircle?.id} gymId={gymId} />
         )}
 
         {activeTab === 'leaderboard' && (
@@ -175,13 +185,21 @@ function MyCircleCard({ circle, colors, navigation, member }) {
       {members.length > 0 && (
         <View style={s.avatarRow}>
           {members.slice(0, 6).map((m, i) => (
-            <View
-              key={i}
-              style={[s.memberAvatar, { backgroundColor: colors.accentSoft, borderColor: m.active_today ? colors.accent : 'transparent' }]}
-            >
-              <Text style={[s.memberInitial, { color: colors.accent }]}>
-                {(m.name || m.member_name || '?').charAt(0).toUpperCase()}
-              </Text>
+            <View key={i} style={{ alignItems: 'center', gap: 3 }}>
+              <View style={[s.memberAvatar, {
+                backgroundColor: COLORS.accentSoft || COLORS.accent + '15',
+                borderColor: m.active_today ? COLORS.accent : 'transparent',
+                borderWidth: m.active_today ? 2 : 0,
+              }]}>
+                <Text style={[s.memberInitial, { color: COLORS.accent }]}>
+                  {(m.name || m.member_name || '?').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              {(m.streak || m.current_streak || 0) > 0 && (
+                <Text style={{ fontSize: 9, color: colors.textTer, fontFamily: FONT.bold }}>
+                  🔥{m.streak || m.current_streak}
+                </Text>
+              )}
             </View>
           ))}
           {members.length > 6 && (
@@ -209,36 +227,84 @@ function MyCircleCard({ circle, colors, navigation, member }) {
         <TouchableOpacity style={[s.ghostActionBtn, { borderColor: colors.borderStrong }]} onPress={() => navigation.navigate('PodStats', { podId: circle.id })} activeOpacity={0.7}>
           <Text style={[s.ghostActionText, { color: colors.textSec }]}>Circle stats</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.ghostActionBtn, { borderColor: colors.borderStrong }]}
+          onPress={async () => {
+            try {
+              await Share.share({
+                message: `Join my Circle "${circle.name}" on IVIRA! We hold each other accountable at the gym 💪\n\nDownload: https://api.ivira.app/downloads/ivira-latest.apk\nWeb: https://ivira.app/member/login`,
+              })
+            } catch {}
+          }}
+          activeOpacity={0.7}
+        >
+          <Feather name="user-plus" size={13} color={colors.textSec} />
+          <Text style={[s.ghostActionText, { color: colors.textSec }]}>Invite</Text>
+        </TouchableOpacity>
       </View>
     </View>
   )
 }
 
 // ─── Feed tab ────────────────────────────────────────────────
-function FeedTab({ activity, colors, navigation, member }) {
+function FeedTab({ activity, colors, navigation, member, todayCommit, podId, gymId }) {
+  const [reactions, setReactions] = useState({})
+
+  const commitPrompt = !todayCommit && podId ? (
+    <TouchableOpacity
+      style={[s.card, { backgroundColor: colors.bgTer, borderColor: colors.accent + '40', borderTopWidth: 3, borderTopColor: COLORS.accent, marginBottom: SPACING.md }]}
+      onPress={() => navigation.navigate('DailyCommit', { podId, gymId })}
+      activeOpacity={0.85}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={[s.emptyIcon, { width: 36, height: 36, borderRadius: 18, marginBottom: 0, backgroundColor: colors.accentSoft }]}>
+          <Feather name="target" size={18} color={colors.accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: colors.text }}>Commit to today's session</Text>
+          <Text style={{ fontSize: 12, fontFamily: FONT.regular, color: colors.textSec, marginTop: 2 }}>Tell your Circle what you'll crush today</Text>
+        </View>
+        <Feather name="chevron-right" size={18} color={colors.textTer} />
+      </View>
+    </TouchableOpacity>
+  ) : todayCommit ? (
+    <View style={[s.card, { backgroundColor: colors.accentSoft, borderColor: colors.accent + '30', marginBottom: SPACING.md }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Feather name="check-circle" size={16} color={colors.accent} />
+        <Text style={{ fontSize: 13, fontFamily: FONT.semibold, color: colors.accent }}>
+          You committed to: {todayCommit.text || todayCommit.commitment || 'Today\'s session'}
+        </Text>
+      </View>
+    </View>
+  ) : null
+
   if (activity.length === 0) {
     return (
-      <View style={s.emptyState}>
-        <View style={[s.emptyIcon, { backgroundColor: colors.accentSoft }]}>
-          <Feather name="activity" size={28} color={colors.accent} />
+      <View>
+        {commitPrompt}
+        <View style={s.emptyState}>
+          <View style={[s.emptyIcon, { backgroundColor: colors.accentSoft }]}>
+            <Feather name="activity" size={28} color={colors.accent} />
+          </View>
+          <Text style={[s.emptyTitle, { color: colors.text }]}>No activity yet today</Text>
+          <Text style={[s.emptySub, { color: colors.textSec }]}>Be the first to post a verified set to your Circle</Text>
+          <TouchableOpacity style={[s.primaryActionBtn, s.emptyActionBtn, { backgroundColor: colors.accent }]} onPress={() => navigation.navigate('WorkoutAnalyzer')} activeOpacity={0.85}>
+            <Feather name="video" size={14} color="#07080F" />
+            <Text style={s.primaryActionText}>Upload my workout</Text>
+          </TouchableOpacity>
         </View>
-        <Text style={[s.emptyTitle, { color: colors.text }]}>No activity yet today</Text>
-        <Text style={[s.emptySub, { color: colors.textSec }]}>Be the first to post a verified set to your Circle</Text>
-        <TouchableOpacity style={[s.primaryActionBtn, s.emptyActionBtn, { backgroundColor: colors.accent }]} onPress={() => navigation.navigate('WorkoutAnalyzer')} activeOpacity={0.85}>
-          <Feather name="video" size={14} color="#07080F" />
-          <Text style={s.primaryActionText}>Upload my workout</Text>
-        </TouchableOpacity>
       </View>
     )
   }
 
   return (
     <View>
+      {commitPrompt}
       {activity.map((item, i) => {
         const isSelf = item.member_id === member?.id
         const score = item.form_score || item.ai_score
         return (
-          <View key={i} style={[s.activityItem, { backgroundColor: colors.bgTer, borderColor: isSelf ? colors.accent + '30' : colors.border }]}>
+          <View key={i} style={[s.activityItem, { backgroundColor: colors.bgTer, borderColor: isSelf ? colors.accent + '30' : colors.border, flexWrap: 'wrap' }]}>
             <View style={[s.activityAvatar, { backgroundColor: isSelf ? colors.accentSoft : COLORS.purpleSoft }]}>
               <Text style={[s.activityInitial, { color: isSelf ? colors.accent : COLORS.purple }]}>
                 {(item.member_name || item.name || '?').charAt(0).toUpperCase()}
@@ -270,6 +336,19 @@ function FeedTab({ activity, colors, navigation, member }) {
                 <Text style={[s.activityScoreLabel, { color: colors.textTer }]}>score</Text>
               </View>
             )}
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                setReactions(prev => ({ ...prev, [i]: (prev[i] || 0) + (prev[i] ? 0 : 1) }))
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8, alignSelf: 'flex-end' }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 14 }}>💪</Text>
+              {reactions[i] > 0 && (
+                <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.bold }}>{reactions[i]}</Text>
+              )}
+            </TouchableOpacity>
           </View>
         )
       })}
