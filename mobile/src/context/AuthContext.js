@@ -268,8 +268,14 @@ export function AuthProvider({ children }) {
         memberData = res.data?.member || res.data
       } else {
         // B2C user without a gym — use B2C profile endpoint
-        const res = await api.get('/auth/b2c/profile')
-        memberData = res.data?.member || res.data
+        try {
+          const res = await api.get('/auth/b2c/profile')
+          memberData = res.data?.member || res.data
+        } catch {
+          // Route may not exist yet — use cached member data
+          const cached = await getItem('ivira_member_data').catch(() => null)
+          if (cached) memberData = JSON.parse(cached)
+        }
       }
       setMember(memberData)
       await setItem('ivira_member_data', JSON.stringify(memberData))
