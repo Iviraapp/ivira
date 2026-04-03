@@ -12,6 +12,7 @@ import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { COLORS, FONT, SPACING, RADIUS } from '../lib/theme'
 import { setItem } from '../lib/storage'
+import Svg, { Circle as SvgCircle, Path, Text as SvgText, Line, Rect, G } from 'react-native-svg'
 
 const { width: W, height: H } = Dimensions.get('window')
 const ONBOARDING_KEY = 'ivira_onboarding_seen'
@@ -19,232 +20,227 @@ const ONBOARDING_KEY = 'ivira_onboarding_seen'
 // ── Slide config ─────────────────────────────────────────────────────
 const SLIDES = [
   {
-    tagline: 'BALANCE STARTS HERE',
-    title: 'IVI',
-    titleAccent: 'RA',
-    subtitle: 'Track workouts, nutrition, and recovery — your complete health companion.',
-    // Visual scene config
-    bgBase: '#08060F',
-    orbs: [
-      { x: W * 0.15, y: H * 0.12, size: 260, color: 'rgba(16,185,129,0.25)', delay: 0 },
-      { x: W * 0.6, y: H * 0.08, size: 200, color: 'rgba(139,92,246,0.2)', delay: 800 },
-      { x: W * 0.35, y: H * 0.32, size: 180, color: 'rgba(249,115,22,0.18)', delay: 400 },
-      { x: W * 0.7, y: H * 0.28, size: 140, color: 'rgba(16,185,129,0.12)', delay: 1200 },
-    ],
-    icon: 'activity',
-    iconSize: 160,
-    shapes: [
-      { type: 'ring', x: W * 0.5, y: H * 0.22, size: 200, color: 'rgba(16,185,129,0.08)' },
-      { type: 'ring', x: W * 0.2, y: H * 0.35, size: 120, color: 'rgba(139,92,246,0.06)' },
-      { type: 'diamond', x: W * 0.78, y: H * 0.15, size: 24, color: 'rgba(255,255,255,0.08)' },
-      { type: 'diamond', x: W * 0.12, y: H * 0.28, size: 16, color: 'rgba(255,255,255,0.05)' },
-    ],
+    tagline: 'ONE NUMBER',
+    title: 'Your fitness',
+    titleAccent: '\nscore, daily.',
+    subtitle: 'Steps, sleep, workouts, and nutrition — combined into one score that tells you exactly where you stand.',
+    bgBase: '#07080F',
+    accentColor: '#10B981',
   },
   {
-    tagline: 'YOUR BODY, YOUR DATA',
-    title: 'Move',
-    titleAccent: 'Smart',
-    subtitle: 'Vira AI coaching, step tracking, and fasting timers to keep you on track.',
-    bgBase: '#060D1A',
-    orbs: [
-      { x: W * 0.6, y: H * 0.1, size: 280, color: 'rgba(34,197,94,0.2)', delay: 200 },
-      { x: W * 0.1, y: H * 0.2, size: 220, color: 'rgba(16,185,129,0.22)', delay: 600 },
-      { x: W * 0.45, y: H * 0.35, size: 160, color: 'rgba(20,184,166,0.18)', delay: 0 },
-      { x: W * 0.8, y: H * 0.3, size: 120, color: 'rgba(34,197,94,0.1)', delay: 1000 },
-    ],
-    icon: 'trending-up',
-    iconSize: 160,
-    shapes: [
-      { type: 'ring', x: W * 0.4, y: H * 0.18, size: 240, color: 'rgba(34,197,94,0.06)' },
-      { type: 'ring', x: W * 0.75, y: H * 0.32, size: 100, color: 'rgba(16,185,129,0.05)' },
-      { type: 'diamond', x: W * 0.88, y: H * 0.12, size: 20, color: 'rgba(255,255,255,0.06)' },
-      { type: 'diamond', x: W * 0.25, y: H * 0.38, size: 14, color: 'rgba(255,255,255,0.04)' },
-    ],
+    tagline: 'ACCOUNTABILITY',
+    title: 'Prove it.',
+    titleAccent: '\nTogether.',
+    subtitle: 'Your Circle watches you show up. AI verifies your form. Your streak speaks for itself.',
+    bgBase: '#07080F',
+    accentColor: '#8B5CF6',
   },
   {
-    tagline: 'COMMUNITY POWERED',
-    title: 'Train',
-    titleAccent: 'Together',
-    subtitle: 'Check in with NFC, join classes, and connect with your gym community.',
-    bgBase: '#0A0614',
-    orbs: [
-      { x: W * 0.3, y: H * 0.08, size: 300, color: 'rgba(139,92,246,0.22)', delay: 0 },
-      { x: W * 0.7, y: H * 0.2, size: 200, color: 'rgba(236,72,153,0.18)', delay: 400 },
-      { x: W * 0.15, y: H * 0.3, size: 180, color: 'rgba(16,185,129,0.15)', delay: 800 },
-      { x: W * 0.55, y: H * 0.38, size: 140, color: 'rgba(139,92,246,0.1)', delay: 1200 },
-    ],
-    icon: 'users',
-    iconSize: 160,
-    shapes: [
-      { type: 'ring', x: W * 0.55, y: H * 0.25, size: 220, color: 'rgba(139,92,246,0.07)' },
-      { type: 'ring', x: W * 0.15, y: H * 0.15, size: 140, color: 'rgba(236,72,153,0.05)' },
-      { type: 'diamond', x: W * 0.9, y: H * 0.1, size: 22, color: 'rgba(255,255,255,0.07)' },
-      { type: 'diamond', x: W * 0.08, y: H * 0.42, size: 18, color: 'rgba(255,255,255,0.05)' },
-    ],
+    tagline: 'AI COACHING',
+    title: 'Vira knows',
+    titleAccent: '\nyour body.',
+    subtitle: "Reads your sleep, adapts your workout, nudges you when you're near the gym.",
+    bgBase: '#07080F',
+    accentColor: '#10B981',
   },
 ]
 
-// ── Animated floating orb ────────────────────────────────────────────
-function FloatingOrb({ x, y, size, color, delay }) {
-  const float = useRef(new Animated.Value(0)).current
-  const pulse = useRef(new Animated.Value(0.8)).current
+// ── Slide 1 Visual — Fitness Score Ring ──────────────────────────────
+function Slide1Visual() {
+  const cx = W / 2, cy = H * 0.28, r = 88, ir = 66
+  const circ = 2 * Math.PI * r
+  const progress = circ * 0.75 // 270 degrees
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(float, { toValue: 1, duration: 5000 + delay, useNativeDriver: true }),
-        Animated.timing(float, { toValue: 0, duration: 5000 + delay, useNativeDriver: true }),
-      ])
-    ).start()
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.15, duration: 3000 + delay * 0.5, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.85, duration: 3000 + delay * 0.5, useNativeDriver: true }),
-      ])
-    ).start()
-  }, [])
-
-  const translateY = float.interpolate({ inputRange: [0, 1], outputRange: [0, -30] })
-  const translateX = float.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 15, 0] })
+  const pills = [
+    { label: '8,420 steps', x: cx - 120, y: cy - 80, bg: 'rgba(139,92,246,0.15)', color: '#A78BFA' },
+    { label: '7.2h sleep', x: cx + 40, y: cy - 80, bg: 'rgba(16,185,129,0.12)', color: '#34D399' },
+    { label: '1,840 kcal', x: cx - 120, y: cy + 80, bg: 'rgba(251,191,36,0.12)', color: '#FBBF24' },
+    { label: '14h fast', x: cx + 50, y: cy + 80, bg: 'rgba(249,115,22,0.12)', color: '#FB923C' },
+  ]
 
   return (
-    <Animated.View style={{
-      position: 'absolute',
-      left: x - size / 2,
-      top: y - size / 2,
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: color,
-      transform: [{ translateY }, { translateX }, { scale: pulse }],
-    }} />
+    <View style={{ position: 'absolute', width: W, height: H * 0.58 }}>
+      {/* Grid lines */}
+      <Svg width={W} height={H * 0.58} style={StyleSheet.absoluteFillObject}>
+        <Line x1={W*0.33} y1={0} x2={W*0.33} y2={H*0.58} stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+        <Line x1={W*0.66} y1={0} x2={W*0.66} y2={H*0.58} stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+        <Line x1={0} y1={H*0.19} x2={W} y2={H*0.19} stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+        <Line x1={0} y1={H*0.38} x2={W} y2={H*0.38} stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+
+        {/* Outer ring */}
+        <SvgCircle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(16,185,129,0.08)" strokeWidth={1} />
+        {/* Inner ring */}
+        <SvgCircle cx={cx} cy={cy} r={ir} fill="none" stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+        {/* Progress arc */}
+        <SvgCircle cx={cx} cy={cy} r={r} fill="none" stroke="#10B981" strokeWidth={3}
+          strokeDasharray={`${progress} ${circ}`} strokeLinecap="round"
+          transform={`rotate(-90 ${cx} ${cy})`} />
+
+        {/* Score text */}
+        <SvgText x={cx} y={cy + 2} textAnchor="middle" fontSize={28} fontWeight="bold" fill="#FFFFFF">74</SvgText>
+        <SvgText x={cx} y={cy + 18} textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.3)" letterSpacing={2}>SCORE</SvgText>
+
+        {/* Cardinal dots */}
+        <SvgCircle cx={cx} cy={cy - r - 6} r={3} fill="#10B981" />
+        <SvgCircle cx={cx + r + 6} cy={cy} r={3} fill="#10B981" />
+        <SvgCircle cx={cx} cy={cy + r + 6} r={3} fill="#10B981" />
+        <SvgCircle cx={cx - r - 6} cy={cy} r={3} fill="#10B981" />
+      </Svg>
+
+      {/* Stat pills */}
+      {pills.map((p, i) => (
+        <View key={i} style={{
+          position: 'absolute', left: p.x, top: p.y,
+          backgroundColor: p.bg, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5,
+        }}>
+          <Text style={{ fontSize: 11, color: p.color, fontWeight: '600', fontFamily: FONT.bold }}>{p.label}</Text>
+        </View>
+      ))}
+    </View>
   )
 }
 
-// ── Decorative shape (ring or diamond) ───────────────────────────────
-function Shape({ type, x, y, size, color }) {
-  const spin = useRef(new Animated.Value(0)).current
-
-  useEffect(() => {
-    if (type === 'diamond') {
-      Animated.loop(
-        Animated.timing(spin, { toValue: 1, duration: 12000, useNativeDriver: true })
-      ).start()
-    }
-  }, [])
-
-  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['45deg', '405deg'] })
-
-  if (type === 'ring') {
-    return (
-      <View style={{
-        position: 'absolute',
-        left: x - size / 2,
-        top: y - size / 2,
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        borderWidth: 1.5,
-        borderColor: color,
-      }} />
-    )
-  }
+// ── Slide 2 Visual — Circles/Social ─────────────────────────────────
+function Slide2Visual() {
+  const cx = W / 2, cy = H * 0.24
 
   return (
-    <Animated.View style={{
-      position: 'absolute',
-      left: x - size / 2,
-      top: y - size / 2,
-      width: size,
-      height: size,
-      backgroundColor: color,
-      transform: [{ rotate }],
-      borderRadius: 4,
-    }} />
+    <View style={{ position: 'absolute', width: W, height: H * 0.58 }}>
+      <Svg width={W} height={H * 0.58} style={StyleSheet.absoluteFillObject}>
+        {/* Grid */}
+        <Line x1={W*0.33} y1={0} x2={W*0.33} y2={H*0.58} stroke="rgba(139,92,246,0.06)" strokeWidth={0.5} />
+        <Line x1={W*0.66} y1={0} x2={W*0.66} y2={H*0.58} stroke="rgba(139,92,246,0.06)" strokeWidth={0.5} />
+        <Line x1={0} y1={H*0.19} x2={W} y2={H*0.19} stroke="rgba(139,92,246,0.06)" strokeWidth={0.5} />
+        <Line x1={0} y1={H*0.38} x2={W} y2={H*0.38} stroke="rgba(139,92,246,0.06)" strokeWidth={0.5} />
+
+        {/* Dashed connecting lines */}
+        <Line x1={cx - 80} y1={cy} x2={cx - 36} y2={cy} stroke="rgba(139,92,246,0.2)" strokeWidth={1} strokeDasharray="4,4" />
+        <Line x1={cx + 36} y1={cy} x2={cx + 80} y2={cy} stroke="rgba(139,92,246,0.2)" strokeWidth={1} strokeDasharray="4,4" />
+
+        {/* Left member */}
+        <SvgCircle cx={cx - 100} cy={cy} r={24} fill="rgba(16,185,129,0.1)" stroke="rgba(16,185,129,0.2)" strokeWidth={1} />
+        <SvgText x={cx - 100} y={cy + 5} textAnchor="middle" fontSize={14} fontWeight="bold" fill="#34D399">R</SvgText>
+
+        {/* Center (YOU) */}
+        <SvgCircle cx={cx} cy={cy} r={36} fill="rgba(139,92,246,0.1)" stroke="rgba(139,92,246,0.25)" strokeWidth={1.5} />
+        <SvgText x={cx} y={cy + 5} textAnchor="middle" fontSize={18} fontWeight="bold" fill="#A78BFA">N</SvgText>
+        <SvgText x={cx} y={cy + 22} textAnchor="middle" fontSize={7} fill="rgba(255,255,255,0.3)" letterSpacing={2}>YOU</SvgText>
+
+        {/* Right member */}
+        <SvgCircle cx={cx + 100} cy={cy} r={24} fill="rgba(249,115,22,0.1)" stroke="rgba(249,115,22,0.2)" strokeWidth={1} />
+        <SvgText x={cx + 100} y={cy + 5} textAnchor="middle" fontSize={14} fontWeight="bold" fill="#FB923C">A</SvgText>
+      </Svg>
+
+      {/* Streak badge */}
+      <View style={{ position: 'absolute', left: cx + 20, top: cy - 50,
+        backgroundColor: 'rgba(251,191,36,0.15)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3,
+        flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+        <Text style={{ fontSize: 10 }}>🔥</Text>
+        <Text style={{ fontSize: 10, color: '#FBBF24', fontWeight: '700', fontFamily: FONT.bold }}>7d</Text>
+      </View>
+
+      {/* AI Verified pill */}
+      <View style={{ position: 'absolute', left: cx - 55, top: cy + 60,
+        backgroundColor: 'rgba(16,185,129,0.12)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5,
+        flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        <Text style={{ fontSize: 10 }}>✓</Text>
+        <Text style={{ fontSize: 11, color: '#34D399', fontWeight: '600', fontFamily: FONT.bold }}>AI VERIFIED SET</Text>
+      </View>
+
+      {/* Prove My Set card */}
+      <View style={{ position: 'absolute', left: W * 0.1, right: W * 0.1, top: cy + 100,
+        backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, borderWidth: 0.5,
+        borderColor: 'rgba(255,255,255,0.08)', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(139,92,246,0.15)',
+          alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 14 }}>▶</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 13, color: '#FFFFFF', fontWeight: '700', fontFamily: FONT.bold }}>Prove my set</Text>
+          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: FONT.regular }}>Record · AI analyses form · Share</Text>
+        </View>
+        <View style={{ backgroundColor: 'rgba(16,185,129,0.15)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
+          <Text style={{ fontSize: 14, color: '#34D399', fontWeight: '800', fontFamily: FONT.bold }}>86</Text>
+        </View>
+      </View>
+    </View>
   )
 }
 
-// ── Center icon with glow ────────────────────────────────────────────
-function CenterIcon({ name, size }) {
-  const breathe = useRef(new Animated.Value(1)).current
-  const glow = useRef(new Animated.Value(0.08)).current
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(breathe, { toValue: 1.08, duration: 2500, useNativeDriver: true }),
-        Animated.timing(breathe, { toValue: 1, duration: 2500, useNativeDriver: true }),
-      ])
-    ).start()
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glow, { toValue: 0.14, duration: 2000, useNativeDriver: true }),
-        Animated.timing(glow, { toValue: 0.06, duration: 2000, useNativeDriver: true }),
-      ])
-    ).start()
-  }, [])
+// ── Slide 3 Visual — Vira AI Chat + Geofence ────────────────────────
+function Slide3Visual() {
+  const cx = W / 2
 
   return (
-    <Animated.View style={{
-      position: 'absolute',
-      top: H * 0.2,
-      alignSelf: 'center',
-      transform: [{ scale: breathe }],
-      opacity: glow,
-    }}>
-      <Feather name={name} size={size} color="#FFFFFF" />
-    </Animated.View>
-  )
-}
+    <View style={{ position: 'absolute', width: W, height: H * 0.58 }}>
+      {/* Grid */}
+      <Svg width={W} height={H * 0.58} style={StyleSheet.absoluteFillObject}>
+        <Line x1={W*0.33} y1={0} x2={W*0.33} y2={H*0.58} stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+        <Line x1={W*0.66} y1={0} x2={W*0.66} y2={H*0.58} stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+        <Line x1={0} y1={H*0.19} x2={W} y2={H*0.19} stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+        <Line x1={0} y1={H*0.38} x2={W} y2={H*0.38} stroke="rgba(16,185,129,0.06)" strokeWidth={0.5} />
+      </Svg>
 
-// ── Particle dots floating upward ────────────────────────────────────
-function Particles() {
-  const particles = useRef(
-    Array.from({ length: 12 }, (_, i) => ({
-      x: Math.random() * W,
-      delay: Math.random() * 4000,
-      size: 2 + Math.random() * 3,
-      anim: new Animated.Value(0),
-      opacity: 0.1 + Math.random() * 0.2,
-    }))
-  ).current
+      {/* Vira message */}
+      <View style={{ position: 'absolute', left: 24, right: 60, top: H * 0.08 }}>
+        <Text style={{ fontSize: 8, color: '#34D399', fontWeight: '700', fontFamily: FONT.bold, marginBottom: 4, letterSpacing: 1 }}>VIRA</Text>
+        <View style={{ backgroundColor: 'rgba(16,185,129,0.08)', borderRadius: 14, borderTopLeftRadius: 4,
+          padding: 12, borderWidth: 0.5, borderColor: 'rgba(16,185,129,0.15)' }}>
+          <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 18, fontFamily: FONT.regular }}>
+            You slept 5.8h — going heavy today risks injury. Try mobility.
+          </Text>
+        </View>
+      </View>
 
-  useEffect(() => {
-    particles.forEach(p => {
-      const animate = () => {
-        p.anim.setValue(0)
-        Animated.timing(p.anim, {
-          toValue: 1,
-          duration: 6000 + p.delay,
-          useNativeDriver: true,
-        }).start(() => animate())
-      }
-      setTimeout(animate, p.delay)
-    })
-  }, [])
+      {/* User reply */}
+      <View style={{ position: 'absolute', right: 24, left: 80, top: H * 0.19 }}>
+        <View style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14, borderTopRightRadius: 4,
+          padding: 12, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)', alignSelf: 'flex-end' }}>
+          <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: FONT.regular }}>
+            Ok what's today's workout then?
+          </Text>
+        </View>
+      </View>
 
-  return (
-    <>
-      {particles.map((p, i) => {
-        const translateY = p.anim.interpolate({ inputRange: [0, 1], outputRange: [H * 0.5, -H * 0.1] })
-        const opacity = p.anim.interpolate({ inputRange: [0, 0.2, 0.8, 1], outputRange: [0, p.opacity, p.opacity, 0] })
-        return (
-          <Animated.View
-            key={i}
-            style={{
-              position: 'absolute',
-              left: p.x,
-              width: p.size,
-              height: p.size,
-              borderRadius: p.size / 2,
-              backgroundColor: '#FFFFFF',
-              transform: [{ translateY }],
-              opacity,
-            }}
-          />
-        )
-      })}
-    </>
+      {/* Vira response with workout */}
+      <View style={{ position: 'absolute', left: 24, right: 40, top: H * 0.27 }}>
+        <View style={{ backgroundColor: 'rgba(16,185,129,0.08)', borderRadius: 14, borderTopLeftRadius: 4,
+          padding: 12, borderWidth: 0.5, borderColor: 'rgba(16,185,129,0.15)' }}>
+          <Text style={{ fontSize: 13, color: '#FFFFFF', fontWeight: '700', fontFamily: FONT.bold, marginBottom: 4 }}>
+            Mobility & Core · 30 min
+          </Text>
+          <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 16, fontFamily: FONT.regular, marginBottom: 8 }}>
+            Foam roll → hip openers → dead bugs → planks
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ backgroundColor: '#10B981', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 5 }}>
+              <Text style={{ fontSize: 11, color: '#07080F', fontWeight: '700', fontFamily: FONT.bold }}>Start</Text>
+            </View>
+            <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}>
+              <Text style={{ fontSize: 10, color: '#A78BFA', fontFamily: FONT.regular }}>based on last night's sleep</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Geofence ring */}
+      <Svg width={W} height={120} style={{ position: 'absolute', top: H * 0.44, left: 0 }}>
+        <SvgCircle cx={cx} cy={60} r={50} fill="none" stroke="rgba(16,185,129,0.1)" strokeWidth={1} strokeDasharray="6,4" />
+        <SvgCircle cx={cx} cy={60} r={30} fill="none" stroke="rgba(16,185,129,0.15)" strokeWidth={1} strokeDasharray="4,3" />
+        <SvgText x={cx} y={63} textAnchor="middle" fontSize={9} fill="rgba(255,255,255,0.25)" fontWeight="bold">GYM</SvgText>
+      </Svg>
+
+      {/* Proximity pills */}
+      <View style={{ position: 'absolute', left: W * 0.06, top: H * 0.46,
+        backgroundColor: 'rgba(16,185,129,0.12)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 }}>
+        <Text style={{ fontSize: 10, color: '#34D399', fontWeight: '600', fontFamily: FONT.bold }}>Almost there! 🎯</Text>
+      </View>
+      <View style={{ position: 'absolute', right: W * 0.06, top: H * 0.46,
+        backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5,
+        borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.08)' }}>
+        <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600', fontFamily: FONT.bold }}>Tap to check in</Text>
+      </View>
+    </View>
   )
 }
 
@@ -266,18 +262,18 @@ function BottomGradient() {
 }
 
 // ── Pagination dot ───────────────────────────────────────────────────
-function Dot({ active }) {
-  const w = useRef(new Animated.Value(active ? 28 : 8)).current
+function Dot({ active, color }) {
+  const w = useRef(new Animated.Value(active ? 20 : 6)).current
   const o = useRef(new Animated.Value(active ? 1 : 0.25)).current
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(w, { toValue: active ? 28 : 8, damping: 15, stiffness: 180, useNativeDriver: false }),
+      Animated.spring(w, { toValue: active ? 20 : 6, damping: 15, stiffness: 180, useNativeDriver: false }),
       Animated.timing(o, { toValue: active ? 1 : 0.25, duration: 250, useNativeDriver: false }),
     ]).start()
   }, [active])
 
-  return <Animated.View style={[styles.dot, { width: w, opacity: o }]} />
+  return <Animated.View style={[styles.dot, { width: w, opacity: o, backgroundColor: active ? color : 'rgba(255,255,255,0.15)' }]} />
 }
 
 // ── Main Screen ──────────────────────────────────────────────────────
@@ -332,21 +328,9 @@ export default function OnboardingScreen({ onComplete }) {
     <View style={[styles.container, { backgroundColor: slide.bgBase }]}>
       {/* Animated scene */}
       <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: sceneFade }]}>
-        {/* Floating orbs */}
-        {slide.orbs.map((orb, i) => (
-          <FloatingOrb key={`${activeSlide}-orb-${i}`} {...orb} />
-        ))}
-
-        {/* Geometric shapes */}
-        {slide.shapes.map((s, i) => (
-          <Shape key={`${activeSlide}-shape-${i}`} {...s} />
-        ))}
-
-        {/* Center icon */}
-        <CenterIcon name={slide.icon} size={slide.iconSize} />
-
-        {/* Particle dots */}
-        <Particles key={`particles-${activeSlide}`} />
+        {activeSlide === 0 && <Slide1Visual />}
+        {activeSlide === 1 && <Slide2Visual />}
+        {activeSlide === 2 && <Slide3Visual />}
       </Animated.View>
 
       {/* Bottom gradient */}
@@ -366,7 +350,7 @@ export default function OnboardingScreen({ onComplete }) {
       {/* Bottom content */}
       <View style={[styles.content, { paddingBottom: insets.bottom + 20 }]}>
         {/* Tagline */}
-        <Animated.Text style={[styles.tagline, { opacity: titleFade, transform: [{ translateY: titleSlide }] }]}>
+        <Animated.Text style={[styles.tagline, { color: slide.accentColor, opacity: titleFade, transform: [{ translateY: titleSlide }] }]}>
           {slide.tagline}
         </Animated.Text>
 
@@ -374,7 +358,7 @@ export default function OnboardingScreen({ onComplete }) {
         <Animated.View style={{ transform: [{ translateY: titleSlide }], opacity: titleFade }}>
           <Text style={styles.title}>
             {slide.title}
-            <Text style={styles.titleAccent}>{slide.titleAccent}</Text>
+            <Text style={[styles.titleAccent, { color: slide.accentColor }]}>{slide.titleAccent}</Text>
           </Text>
         </Animated.View>
 
@@ -385,14 +369,25 @@ export default function OnboardingScreen({ onComplete }) {
 
         {/* Dots */}
         <View style={styles.dotsRow}>
-          {SLIDES.map((_, i) => <Dot key={i} active={i === activeSlide} />)}
+          {SLIDES.map((_, i) => <Dot key={i} active={i === activeSlide} color={slide.accentColor} />)}
         </View>
 
         {/* CTA */}
         <Animated.View style={{ opacity: ctaFade }}>
-          <TouchableOpacity style={styles.ctaBtn} onPress={handleNext} activeOpacity={0.85}>
-            <Text style={styles.ctaText}>{isLast ? 'Start Moving' : 'Next'}</Text>
-            <Feather name={isLast ? 'arrow-right' : 'chevron-right'} size={20} color="#FFFFFF" />
+          <TouchableOpacity
+            style={[
+              styles.ctaBtn,
+              isLast
+                ? { backgroundColor: slide.accentColor, shadowColor: slide.accentColor }
+                : { backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', shadowOpacity: 0 },
+            ]}
+            onPress={handleNext}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.ctaText, { color: isLast ? '#07080F' : '#FFFFFF' }]}>
+              {isLast ? 'Start Moving' : 'Next'}
+            </Text>
+            <Feather name={isLast ? 'arrow-right' : 'chevron-right'} size={20} color={isLast ? '#07080F' : '#FFFFFF'} />
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -450,27 +445,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     fontFamily: FONT.bold,
-    color: 'rgba(255,255,255,0.4)',
     letterSpacing: 4,
     marginBottom: SPACING.sm,
   },
   title: {
-    fontSize: 52,
-    fontWeight: '900',
+    fontSize: 36,
+    fontWeight: '800',
     fontFamily: FONT.extraBold,
     color: '#FFFFFF',
-    letterSpacing: -2.5,
-    lineHeight: 58,
+    letterSpacing: -1,
+    lineHeight: 40,
     marginBottom: SPACING.md,
   },
-  titleAccent: {
-    color: COLORS.accent,
-  },
+  titleAccent: {},
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: FONT.regular,
-    color: 'rgba(255,255,255,0.55)',
-    lineHeight: 23,
+    color: 'rgba(255,255,255,0.45)',
+    lineHeight: 21,
     marginBottom: SPACING.lg + 4,
     maxWidth: 300,
   },
@@ -485,7 +477,6 @@ const styles = StyleSheet.create({
   dot: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#FFFFFF',
   },
 
   // CTA
@@ -494,10 +485,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: COLORS.accent,
     borderRadius: RADIUS.xl,
     paddingVertical: 18,
-    shadowColor: COLORS.accent,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.45,
     shadowRadius: 24,
@@ -507,7 +496,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     fontFamily: FONT.bold,
-    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
 })
