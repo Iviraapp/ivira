@@ -69,7 +69,17 @@ export default async function memberRoutes(fastify) {
 
   // --- Member self-service (member JWT auth) ---
   fastify.get('/gyms/:gymId/members/me', { preHandler: [verifyMemberToken] }, async (request) => {
-    return memberService.getMemberProfile(request.params.gymId, request.member.memberId);
+    const profile = await memberService.getMemberProfile(request.params.gymId, request.member.memberId);
+    // Auto-restore streak freeze after 30 days
+    const member = profile?.member || profile;
+    if (member && !member.streak_freeze_available && member.streak_freeze_used_at) {
+      const daysSinceUse = (Date.now() - new Date(member.streak_freeze_used_at).getTime()) / 86400000;
+      if (daysSinceUse >= 30) {
+        await db('members').where({ id: request.member.memberId }).update({ streak_freeze_available: true, streak_freeze_granted_at: new Date() });
+        member.streak_freeze_available = true;
+      }
+    }
+    return profile;
   });
 
   fastify.get('/gyms/:gymId/members/me/checkins', { preHandler: [verifyMemberToken] }, async (request) => {
@@ -176,6 +186,23 @@ export default async function memberRoutes(fastify) {
       mimetype || 'image/jpeg'
     );
     return result;
+  });
+
+  // --- Streak freeze (member JWT auth) ---
+  fastify.post('/gyms/:gymId/members/:memberId/streak-freeze', { preHandler: [verifyMemberToken] }, async (request, reply) => {
+    const { gymId, memberId } = request.params;
+    const member = await db('members').where({ id: memberId, gym_id: gymId }).first();
+    if (!member) return reply.code(404).send({ error: 'Member not found' });
+    if (!member.streak_freeze_available) {
+      return reply.code(400).send({ error: 'NO_FREEZE', message: 'No streak freeze available. You get one per month.' });
+    }
+    await db('members').where({ id: memberId }).update({
+      streak: (member.streak || 0) + 1,
+      streak_freeze_available: false,
+      streak_freeze_used_at: new Date(),
+      updated_at: new Date(),
+    });
+    return { success: true, streak: (member.streak || 0) + 1, message: 'Streak freeze used!', freeze_resets_in_days: 30 };
   });
 
   // --- Gym owner routes (owner JWT auth) ---

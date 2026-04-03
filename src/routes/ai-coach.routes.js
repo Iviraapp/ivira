@@ -97,7 +97,11 @@ function buildContextBlock(context) {
   if (context.protein_today > 0)  lines.push(`Protein today: ${context.protein_today}g`);
   if (context.last_checkin_today) lines.push(`Checked in at gym today: yes`);
   if (context.fasting_hours)      lines.push(`Currently ${context.fasting_hours}h into intermittent fast`);
-  if (context.last_form_score)    lines.push(`Last AI workout form score: ${context.last_form_score}/100`);
+  if (context.last_form_score !== null && context.last_form_score !== undefined) {
+    lines.push(`Last workout analysis: ${context.last_exercise || 'exercise'} — form score ${context.last_form_score}/100`);
+    if (context.last_form_issues?.length > 0) lines.push(`Form issues: ${context.last_form_issues.join('; ')}`);
+    if (context.last_form_tips?.length > 0) lines.push(`AI tips given: ${context.last_form_tips.join('; ')}`);
+  }
   if (context.circle_name)        lines.push(`Circle (accountability group): ${context.circle_name}`);
   if (context.circle_rank)        lines.push(`Current Circle rank: #${context.circle_rank}`);
   if (context.circle_points)      lines.push(`Circle points today: ${context.circle_points}`);
@@ -143,6 +147,9 @@ const messageSchema = {
           last_checkin_today:    { type: 'boolean' },
           fasting_hours:         { type: 'number' },
           last_form_score:       { type: 'number' },
+          last_exercise:         { type: 'string' },
+          last_form_issues:      { type: 'array', items: { type: 'string' } },
+          last_form_tips:        { type: 'array', items: { type: 'string' } },
           circle_name:           { type: 'string' },
           circle_rank:           { type: 'number' },
           circle_points:         { type: 'number' },

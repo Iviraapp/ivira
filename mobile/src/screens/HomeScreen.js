@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext'
 import { useHealth } from '../context/HealthContext'
 import Haptics from '../lib/haptics'
 import api from '../lib/api'
-import { getItem } from '../lib/storage'
+import { getItem, deleteItem } from '../lib/storage'
 import { getDailyInsight, getWorkoutSuggestion } from '../lib/aiCoach'
 import { premiumAlert } from '../components/PremiumAlert'
 
@@ -23,7 +23,7 @@ const STEP_GOAL = 10000
 
 export default function HomeScreen({ navigation, route }) {
   const { colors, isDark, card } = useTheme()
-  const { member, gymId, gymInfo, hasGym } = useAuth()
+  const { member, gymId, gymInfo, hasGym, refreshProfile } = useAuth()
   const { steps, activeMinutes, sleepData, fetchSteps, fetchSleep } = useHealth()
 
   const [profilePhoto, setProfilePhoto] = useState(null)
@@ -31,6 +31,13 @@ export default function HomeScreen({ navigation, route }) {
   const [streak, setStreak] = useState(member?.streak || 0)
   const [checkinCount, setCheckinCount] = useState(member?.checkin_count || 0)
   const [fastingHours, setFastingHours] = useState(null)
+
+  // Fitness score
+  const [fitnessScore, setFitnessScore] = useState(null)
+  const [cityRank, setCityRank] = useState(null)
+
+  // Streak freeze
+  const [showFreezeBanner, setShowFreezeBanner] = useState(false)
 
   // Nutrition
   const [nutrition, setNutrition] = useState({ calories: 0, protein: 0, carbs: 0, fats: 0 })
@@ -118,6 +125,46 @@ export default function HomeScreen({ navigation, route }) {
       .then(setAiWorkout).catch(() => {})
   }, [member?.id, gymId])
 
+  // Fitness score
+  useEffect(() => {
+    if (!gymId || !member?.id) return
+    api.get(`/gyms/${gymId}/members/${member.id}/fitness-score`)
+      .then(res => {
+        setFitnessScore(res.data?.score || res.data?.fitness_score || null)
+        setCityRank(res.data?.city_rank || null)
+      })
+      .catch(() => {
+        const streakScore = Math.min((member?.streak || 0) * 2, 30)
+        const stepsScore = Math.min(Math.floor((steps || 0) / 333), 30)
+        const checkinScore = Math.min((member?.checkin_count || 0), 40)
+        const simple = streakScore + stepsScore + checkinScore
+        if (simple > 0) setFitnessScore(simple)
+      })
+  }, [gymId, member?.id, steps])
+
+  // Streak freeze detection
+  useEffect(() => {
+    getItem('ivira_streak_broke').then(broke => {
+      if (broke === 'true' && member?.streak_freeze_available) {
+        setShowFreezeBanner(true)
+        deleteItem('ivira_streak_broke').catch(() => {})
+      }
+    }).catch(() => {})
+  }, [member?.streak_freeze_available])
+
+  const useStreakFreeze = async () => {
+    if (!gymId || !member?.id) return
+    try {
+      const res = await api.post(`/gyms/${gymId}/members/${member.id}/streak-freeze`)
+      setShowFreezeBanner(false)
+      if (refreshProfile) refreshProfile()
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      premiumAlert('Streak Saved! 🧊', `Your streak is back to ${res.data.streak} days. Freeze resets in 30 days.`)
+    } catch (err) {
+      premiumAlert('Error', err.response?.data?.message || 'Could not use freeze')
+    }
+  }
+
   // Handle nutrition param from barcode scanner
   useEffect(() => {
     if (route?.params?.nutritionLogged) {
@@ -188,6 +235,35 @@ export default function HomeScreen({ navigation, route }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} colors={[COLORS.accent]} />}
       >
 
+        {/* ── Streak freeze banner ── */}
+        {showFreezeBanner && (
+          <View style={{
+            backgroundColor: '#3B82F615', borderWidth: 1, borderColor: '#3B82F630',
+            borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center',
+            gap: 12, marginBottom: SPACING.md,
+          }}>
+            <Text style={{ fontSize: 24 }}>🧊</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text, fontFamily: FONT.bold, marginBottom: 3 }}>
+                Your streak broke — but you have a freeze!
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSec, fontFamily: FONT.regular }}>
+                Use your streak freeze to get it back. One per month.
+              </Text>
+            </View>
+            <View style={{ gap: 6 }}>
+              <TouchableOpacity onPress={useStreakFreeze}
+                style={{ backgroundColor: '#3B82F6', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, alignItems: 'center' }}
+                activeOpacity={0.85}>
+                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', fontFamily: FONT.bold }}>Use Freeze</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowFreezeBanner(false)} style={{ alignItems: 'center', padding: 4 }} activeOpacity={0.7}>
+                <Text style={{ color: colors.textTer, fontSize: 11, fontFamily: FONT.regular }}>Dismiss</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* ── Check-in hero card ── */}
         {hasGym && (
         <TouchableOpacity
@@ -257,6 +333,15 @@ export default function HomeScreen({ navigation, route }) {
 
         {/* ── Stats row — flex fills full width ── */}
         <View style={s.statsRow}>
+          {fitnessScore !== null && (
+            <StatTile
+              value={fitnessScore.toString()}
+              label={cityRank ? `score · #${cityRank} city` : 'fitness score'}
+              color={fitnessScore >= 80 ? COLORS.accent : fitnessScore >= 60 ? COLORS.warn : COLORS.danger}
+              onPress={() => navigation.navigate('FitnessScore')}
+              colors={colors}
+            />
+          )}
           <StatTile
             value={steps > 0 ? (steps >= 1000 ? `${(steps / 1000).toFixed(1)}k` : steps.toString()) : '—'}
             label="steps"
@@ -295,6 +380,19 @@ export default function HomeScreen({ navigation, route }) {
             />
           ) : null}
         </View>
+
+        {/* ── City rank nudge ── */}
+        {cityRank && cityRank <= 50 && (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CityLeaderboard')}
+            activeOpacity={0.8}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, marginTop: -4, marginBottom: 6 }}>
+            <Text style={{ fontSize: 12, color: COLORS.accent, fontFamily: FONT.bold }}>
+              🏆 #{cityRank} in {gymInfo?.city || 'your city'} this week
+            </Text>
+            <Feather name="chevron-right" size={12} color={COLORS.accent} />
+          </TouchableOpacity>
+        )}
 
         {/* ── Circle live activity ── */}
         <CircleActivityCard

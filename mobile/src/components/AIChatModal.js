@@ -181,6 +181,9 @@ export default function AIChatModal({ visible, onClose }) {
   const [nutritionGoal, setNutritionGoal] = useState({ calories: 2000 })
   const [fastingHours, setFastingHours]   = useState(null)
   const [lastFormScore, setLastFormScore] = useState(null)
+  const [lastExercise, setLastExercise]   = useState(null)
+  const [lastFormIssues, setLastFormIssues] = useState([])
+  const [lastFormTips, setLastFormTips]   = useState([])
   const [circleInfo, setCircleInfo]       = useState(null)
   const [checkedInToday, setCheckedInToday] = useState(false)
   const [contextReady, setContextReady]   = useState(false)
@@ -239,6 +242,9 @@ export default function AIChatModal({ visible, onClose }) {
         // Only use if within last 24h
         if (parsed?.timestamp && (Date.now() - parsed.timestamp) < 86400000) {
           setLastFormScore(parsed.form_score || null)
+          setLastExercise(parsed.exercise || null)
+          setLastFormIssues(parsed.issues || [])
+          setLastFormTips(parsed.tips || [])
         }
       }
     } catch (e) {
@@ -263,11 +269,14 @@ export default function AIChatModal({ visible, onClose }) {
     gym_city:               gymInfo?.city || null,
     fasting_hours:          fastingHours,
     last_form_score:        lastFormScore,
+    last_exercise:          lastExercise,
+    last_form_issues:       lastFormIssues,
+    last_form_tips:         lastFormTips,
     circle_name:            circleInfo?.name || null,
     circle_rank:            circleInfo?.city_rank || null,
     circle_points:          circleInfo?.my_points || null,
     circle_members_active:  circleInfo?.active_today || null,
-  }), [member, steps, sleepData, nutrition, nutritionGoal, checkedInToday, gymInfo, fastingHours, lastFormScore, circleInfo])
+  }), [member, steps, sleepData, nutrition, nutritionGoal, checkedInToday, gymInfo, fastingHours, lastFormScore, lastExercise, lastFormIssues, lastFormTips, circleInfo])
 
   // Set initial messages once context is ready
   useEffect(() => {

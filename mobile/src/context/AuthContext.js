@@ -61,6 +61,14 @@ export function AuthProvider({ children }) {
           const memberData = res.data?.member || res.data
           setMember(memberData)
           await setItem('ivira_member_data', JSON.stringify(memberData))
+
+          // Streak broke detection
+          const lastStreakDate = await getItem('ivira_last_streak_date').catch(() => null)
+          const today = new Date().toISOString().split('T')[0]
+          if (lastStreakDate && lastStreakDate !== today && memberData?.streak === 0) {
+            await setItem('ivira_streak_broke', 'true').catch(() => {})
+          }
+          await setItem('ivira_last_streak_date', today).catch(() => {})
         } catch (e) {
           console.warn('[auth] Failed to refresh member profile:', e?.message)
         }
