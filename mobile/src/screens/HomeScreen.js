@@ -113,6 +113,7 @@ export default function HomeScreen({ navigation, route }) {
 
   // AI workout
   useEffect(() => {
+    if (!gymId || !member?.id) return
     getWorkoutSuggestion({ memberId: member?.id, name: member?.name, gymId })
       .then(setAiWorkout).catch(() => {})
   }, [member?.id, gymId])

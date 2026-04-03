@@ -203,6 +203,11 @@ export default function ProfileScreen({ navigation }) {
       return
     }
 
+    if (!gymId || !member?.id) {
+      premiumAlert('Not Connected', 'Connect a gym to save body stats.')
+      return
+    }
+
     setSavingStats(true)
     try {
       await api.patch(`/gyms/${gymId}/members/${member.id}`, {
@@ -244,6 +249,12 @@ export default function ProfileScreen({ navigation }) {
       if (result.canceled) return
 
       const localUri = result.assets[0].uri
+
+      if (!gymId) {
+        premiumAlert('Not Connected', 'Connect a gym to upload your profile picture.')
+        return
+      }
+
       setUploadingPhoto(true)
 
       // Upload to dedicated photo endpoint (enforces 30-day cooldown)
@@ -289,6 +300,11 @@ export default function ProfileScreen({ navigation }) {
 
       if (result.canceled) return
 
+      if (!gymId || !member?.id) {
+        premiumAlert('Not Connected', 'Connect a gym to upload progress photos.')
+        return
+      }
+
       setUploadingPhoto(true)
       await api.post(`/gyms/${gymId}/members/${member.id}/photos`, {
         image: result.assets[0].base64,
@@ -306,6 +322,7 @@ export default function ProfileScreen({ navigation }) {
 
   // --- Bookings ---
   const loadBookings = async () => {
+    if (!gymId || !member?.id) { setBookings([]); return }
     setBookingsLoading(true)
     try {
       const res = await api.get(`/gyms/${gymId}/members/${member.id}/bookings`)
@@ -335,6 +352,7 @@ export default function ProfileScreen({ navigation }) {
           text: 'Cancel Booking',
           style: 'destructive',
           onPress: async () => {
+            if (!gymId) return
             setCancellingBookingId(bookingId)
             try {
               await api.post(`/gyms/${gymId}/bookings/${bookingId}/cancel`)
@@ -354,6 +372,7 @@ export default function ProfileScreen({ navigation }) {
 
   // --- Check-in History ---
   const loadCheckins = async () => {
+    if (!gymId || !member?.id) { setCheckins([]); return }
     setCheckinsLoading(true)
     try {
       const res = await api.get(`/gyms/${gymId}/members/${member.id}/checkins?limit=10`)
@@ -506,6 +525,11 @@ export default function ProfileScreen({ navigation }) {
     const name = editName.trim()
     if (!name) {
       premiumAlert('Required', 'Name cannot be empty.')
+      return
+    }
+
+    if (!gymId || !member?.id) {
+      premiumAlert('Not Connected', 'Connect a gym to update your profile.')
       return
     }
 

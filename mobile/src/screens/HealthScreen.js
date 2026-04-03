@@ -39,8 +39,6 @@ const DEFAULT_NUTRITION_GOAL = { calorie_goal: 2000, protein_goal: 120, carb_goa
 import {
   requestHealthPermissions,
   requestExtendedPermissions,
-  getTodaySteps,
-  syncStepsToBackend,
   getLatestHeartRate,
   getRestingHeartRate,
   getHRV,
@@ -301,26 +299,14 @@ export default function HealthScreen({ navigation }) {
       // Stop auto-sync when switching to manual
       if (healthSyncRef.current) { clearInterval(healthSyncRef.current); healthSyncRef.current = null }
     } else {
-      // Switching back to auto — stop timer, refresh from health API
+      // Switching back to auto — stop timer, refresh from HealthContext
       setTimerRunning(false)
       try {
-        const granted = await requestHealthPermissions()
-        if (granted) {
-          const result = await getTodaySteps()
-          const stepCount = typeof result === 'object' ? result.steps : result
-          const source = typeof result === 'object' ? result.source : null
-          setSteps(stepCount)
-          setLastSynced(new Date())
-          if (source) {
-            setStepSource('health')
-          }
-          if (gymId && member?.id) {
-            syncStepsToBackend(gymId, member.id, stepCount)
-          }
-        }
+        await contextFetchSteps?.()
+        setLastSynced(new Date())
       } catch (err) { if (__DEV__) console.warn('[Health] step tracking:', err?.message) }
     }
-  }, [gymId, member?.id])
+  }, [contextFetchSteps])
 
   const handleManualStepAdjust = useCallback((delta) => {
     setManualSteps(prev => Math.max(0, prev + delta))
@@ -407,28 +393,16 @@ export default function HealthScreen({ navigation }) {
   const handleSync = useCallback(async () => {
     setSyncing(true)
     try {
-      const granted = await requestHealthPermissions()
-      if (granted) {
-        const result = await getTodaySteps()
-        const stepCount = typeof result === 'object' ? result.steps : result
-        const source = typeof result === 'object' ? result.source : null
-        setSteps(stepCount)
-        setLastSynced(new Date())
-        if (source) {
-          setStepSource('health')
-        }
-        if (gymId && member?.id) {
-          syncStepsToBackend(gymId, member.id, stepCount)
-        }
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      }
+      await contextFetchSteps?.()
+      setLastSynced(new Date())
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     } catch (err) {
       if (__DEV__) console.warn('[Health] sync:', err?.message)
       premiumAlert('Sync Failed', 'Could not sync health data. Please try again.')
     } finally {
       setSyncing(false)
     }
-  }, [gymId, member?.id])
+  }, [contextFetchSteps])
 
   const handleGoalSave = useCallback(async (macroGoal) => {
     setGoal(macroGoal)

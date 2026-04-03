@@ -120,9 +120,24 @@ export function HealthProvider({ children, gymId, memberId }) {
       }
 
       // Initial data fetch
-      await fetchSteps()
+      const stepResult = await fetchSteps()
+      if (!stepResult) {
+        await new Promise(r => setTimeout(r, 2000))
+        await fetchSteps()
+      }
       await fetchSleep()
       await fetchHeartData()
+
+      // Delayed retry — ensures auth token is loaded before syncing
+      setTimeout(async () => {
+        const token = await getItem('ivira_member_token')
+        if (token && gymId && memberId) {
+          const result = await getTodaySteps().catch(() => null)
+          if (result?.steps > 0) {
+            syncStepsToBackend(gymId, memberId, result.steps).catch(() => {})
+          }
+        }
+      }, 3000)
 
       // Subscribe to real-time step updates (iOS: push, Android: change tokens)
       stepSubRef.current = subscribeToSteps(({ steps: newSteps, source }) => {
@@ -142,9 +157,11 @@ export function HealthProvider({ children, gymId, memberId }) {
           })
           setStepSource(source)
           setActiveMinutes(Math.floor(newSteps / STEPS_PER_ACTIVE_MINUTE))
-          if (gymId && memberId) {
-            syncStepsToBackend(gymId, memberId, newSteps).catch(() => {})
-          }
+          getItem('ivira_member_token').then(token => {
+            if (gymId && memberId && newSteps > 0 && token) {
+              syncStepsToBackend(gymId, memberId, newSteps).catch(() => {})
+            }
+          }).catch(() => {})
         }
       })
 
@@ -202,7 +219,11 @@ export function HealthProvider({ children, gymId, memberId }) {
       setActiveMinutes(Math.floor(newSteps / STEPS_PER_ACTIVE_MINUTE))
 
       if (gymId && memberId && newSteps > 0) {
-        syncStepsToBackend(gymId, memberId, newSteps).catch(err => { if (__DEV__) console.warn('[HealthCtx]', err?.message) })
+        getItem('ivira_member_token').then(token => {
+          if (token) {
+            syncStepsToBackend(gymId, memberId, newSteps).catch(err => { if (__DEV__) console.warn('[HealthCtx]', err?.message) })
+          }
+        }).catch(() => {})
       }
     }
 
@@ -387,7 +408,8 @@ export function HealthProvider({ children, gymId, memberId }) {
     setStepSource('manual')
     setActiveMinutes(Math.floor(count / 100))
     await setItem(`ivira_manual_steps_${today}`, String(count))
-    if (gymId && memberId) {
+    const token = await getItem('ivira_member_token')
+    if (gymId && memberId && count > 0 && token) {
       syncStepsToBackend(gymId, memberId, count).catch(err => { if (__DEV__) console.warn('[HealthCtx]', err?.message) })
     }
   }, [gymId, memberId])

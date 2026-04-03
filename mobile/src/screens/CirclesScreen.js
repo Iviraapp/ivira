@@ -23,19 +23,37 @@ export default function CirclesScreen({ navigation }) {
   const [activeTab, setActiveTab]     = useState('feed') // feed | leaderboard | discover
 
   const fetchData = useCallback(async () => {
-    if (!gymId || !member?.id) return
     try {
-      const [podRes, actRes, lbRes] = await Promise.all([
-        api.get(`/gyms/${gymId}/members/${member.id}/pods`).catch(() => ({ data: [] })),
-        api.get(`/gyms/${gymId}/members/${member.id}/pods/activity`).catch(() => ({ data: [] })),
-        api.get(`/gyms/${gymId}/pods/leaderboard`).catch(() => ({ data: [] })),
-      ])
-      const pods = Array.isArray(podRes.data) ? podRes.data : podRes.data?.pods || []
-      setMyCircle(pods[0] || null)
-      setAllCircles(pods)
-      setActivity(Array.isArray(actRes.data) ? actRes.data : [])
-      setLeaderboard(Array.isArray(lbRes.data) ? lbRes.data : [])
-    } catch {}
+      if (gymId && member?.id) {
+        const [podRes, actRes, lbRes] = await Promise.all([
+          api.get(`/gyms/${gymId}/members/${member.id}/pods`).catch(() => ({ data: [] })),
+          api.get(`/gyms/${gymId}/members/${member.id}/pods/activity`).catch(() => ({ data: [] })),
+          api.get(`/gyms/${gymId}/pods/leaderboard`).catch(() => ({ data: [] })),
+        ])
+        const pods = Array.isArray(podRes.data) ? podRes.data : podRes.data?.pods || []
+        setMyCircle(pods[0] || null)
+        setAllCircles(pods)
+        setActivity(Array.isArray(actRes.data) ? actRes.data : actRes.data?.activity || [])
+        setLeaderboard(Array.isArray(lbRes.data) ? lbRes.data : lbRes.data?.leaderboard || [])
+      } else if (member?.id) {
+        const squadsRes = await api.get('/squads/mine').catch(() => ({ data: { pods: [] } }))
+        const pods = squadsRes.data?.pods || []
+        setMyCircle(pods[0] || null)
+        setAllCircles(pods)
+        setActivity([])
+        setLeaderboard([])
+      }
+      const openRes = await api.get('/squads').catch(() => ({ data: { pods: [] } }))
+      const open = openRes.data?.pods || []
+      if (open.length > 0) {
+        setAllCircles(prev => {
+          const existingIds = new Set(prev.map(p => p.id))
+          return [...prev, ...open.filter(p => !existingIds.has(p.id))]
+        })
+      }
+    } catch (err) {
+      if (__DEV__) console.warn('[Circles] fetchData error:', err?.message)
+    }
   }, [gymId, member?.id])
 
   useEffect(() => { fetchData() }, [fetchData])
