@@ -225,31 +225,31 @@ export default function HomeScreen({ navigation, route }) {
             onPress={() => navigation.navigate('MembershipActivation')}
             activeOpacity={0.85}
             style={{
-              backgroundColor: colors.bgTer,
               borderRadius: 20, borderWidth: 1, borderColor: COLORS.accent + '25',
               overflow: 'hidden', marginBottom: SPACING.md,
+              backgroundColor: colors.bgTer,
             }}
           >
             <View style={{ height: 2.5, backgroundColor: COLORS.accent }} />
-            <View style={{ padding: 16 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <View style={{ padding: 18 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <View style={{ width: 48, height: 48, borderRadius: 14,
                   backgroundColor: COLORS.accent + '15', alignItems: 'center',
                   justifyContent: 'center', borderWidth: 1, borderColor: COLORS.accent + '25' }}>
                   <Feather name="maximize" size={22} color={COLORS.accent} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, fontFamily: FONT.bold, marginBottom: 3 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, fontFamily: FONT.bold, marginBottom: 3 }}>
                     Tap-to-check-in is ready
                   </Text>
-                  <Text style={{ fontSize: 12, color: colors.textSec, fontFamily: FONT.regular }}>
+                  <Text style={{ fontSize: 12, color: colors.textSec, fontFamily: FONT.regular, lineHeight: 17 }}>
                     Link your gym to unlock QR · NFC · GPS
                   </Text>
                 </View>
                 <Feather name="chevron-right" size={18} color={COLORS.accent} />
               </View>
               <View style={{ backgroundColor: COLORS.accent, borderRadius: 12, paddingVertical: 13, alignItems: 'center' }}>
-                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: FONT.bold }}>Link My Gym</Text>
+                <Text style={{ color: '#07080F', fontSize: 14, fontWeight: '700', fontFamily: FONT.bold }}>Link My Gym</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -328,7 +328,7 @@ export default function HomeScreen({ navigation, route }) {
         {/* ── Quick actions grid ── */}
         <QuickActions navigation={navigation} colors={colors} />
 
-        <View style={{ height: 140 }} />
+        <View style={{ height: 160 }} />
       </ScrollView>
     </SafeAreaView>
   )
