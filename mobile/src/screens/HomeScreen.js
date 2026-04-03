@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext'
 import { useHealth } from '../context/HealthContext'
 import Haptics from '../lib/haptics'
 import api from '../lib/api'
-import { getItem, deleteItem } from '../lib/storage'
+import { getItem, setItem, deleteItem } from '../lib/storage'
 import { getDailyInsight, getWorkoutSuggestion } from '../lib/aiCoach'
 import { premiumAlert } from '../components/PremiumAlert'
 
@@ -425,6 +425,90 @@ export default function HomeScreen({ navigation, route }) {
 
         {/* ── Quick actions grid ── */}
         <QuickActions navigation={navigation} colors={colors} />
+
+        {__DEV__ && (
+          <View style={{
+            marginTop: 16, padding: 16, backgroundColor: '#FF000010',
+            borderWidth: 1, borderColor: '#FF000030', borderRadius: 16, gap: 8,
+          }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#FF6B6B',
+              fontFamily: FONT.bold, marginBottom: 4, letterSpacing: 0.5 }}>
+              🛠 DEV TESTING — not visible in production
+            </Text>
+
+            <TouchableOpacity
+              onPress={async () => {
+                await setItem('ivira_streak_broke', 'true')
+                setShowFreezeBanner(true)
+              }}
+              style={{ backgroundColor: '#FF6B6B20', borderRadius: 10, padding: 10, alignItems: 'center' }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 12, color: '#FF6B6B', fontFamily: FONT.bold }}>Test: Show streak freeze banner</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={async () => {
+                const { scheduleSmartNotifications } = await import('../lib/SmartNotificationEngine')
+                await setItem('ivira_force_weekly_recap', 'true')
+                await scheduleSmartNotifications(member)
+                await deleteItem('ivira_force_weekly_recap')
+                premiumAlert('Dev', 'Weekly recap notification scheduled')
+              }}
+              style={{ backgroundColor: '#3B82F620', borderRadius: 10, padding: 10, alignItems: 'center' }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 12, color: '#3B82F6', fontFamily: FONT.bold }}>Test: Trigger weekly recap notification</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={async () => {
+                const { getWorkoutSuggestion } = await import('../lib/aiCoach')
+                const result = await getWorkoutSuggestion({ memberId: member?.id, name: member?.name, gymId }, [], {}, 38)
+                setAiWorkout(result)
+                setAiDismissed(false)
+                premiumAlert('Dev', `Workout overridden to: ${result?.type} (sleep override)`)
+              }}
+              style={{ backgroundColor: '#8B5CF620', borderRadius: 10, padding: 10, alignItems: 'center' }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 12, color: '#8B5CF6', fontFamily: FONT.bold }}>Test: Simulate poor sleep → override workout</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={async () => {
+                if (!gymId || !member?.id) { premiumAlert('Dev', 'No gymId — link a gym first'); return }
+                const podRes = await api.get(`/gyms/${gymId}/members/${member.id}/pods`).catch(() => null)
+                const pods = podRes?.data?.pods || podRes?.data || []
+                const podId = pods[0]?.id
+                if (!podId) { premiumAlert('Dev', 'No Circle found'); return }
+                await api.post(`/gyms/${gymId}/pods/${podId}/messages`, {
+                  type: 'pr', text: '🏆 NEW PR! Bench Press 100kg — Test Workout, 45 min 💪',
+                  data: { personal_records: [{ exercise_name: 'Bench Press', weight_kg: 100, reps: 5 }] },
+                })
+                premiumAlert('Dev', 'PR posted to Circle feed')
+              }}
+              style={{ backgroundColor: '#10B98120', borderRadius: 10, padding: 10, alignItems: 'center' }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 12, color: '#10B981', fontFamily: FONT.bold }}>Test: Post fake PR to Circle</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={async () => {
+                await deleteItem('ivira_streak_broke')
+                await deleteItem('ivira_force_weekly_recap')
+                await deleteItem('ivira_last_weekly_recap')
+                setShowFreezeBanner(false)
+                premiumAlert('Dev', 'All test flags cleared')
+              }}
+              style={{ backgroundColor: '#88888820', borderRadius: 10, padding: 10, alignItems: 'center' }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 12, color: '#888', fontFamily: FONT.bold }}>Reset all test flags</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={{ height: 160 }} />
       </ScrollView>

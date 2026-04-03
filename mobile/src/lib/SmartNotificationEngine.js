@@ -565,6 +565,36 @@ export async function scheduleSmartNotifications(member) {
       }
     }
   }
+
+  // ── Weekly recap (Monday or dev force flag) ────────────────────
+  const MONDAY = 1
+  const forceRecap = await getItem('ivira_force_weekly_recap').catch(() => null)
+  if (dayOfWeek === MONDAY || forceRecap === 'true') {
+    const lastRecap = await getItem('ivira_last_weekly_recap').catch(() => null)
+    const todayStr = today.toISOString().split('T')[0]
+    if (lastRecap !== todayStr || forceRecap === 'true') {
+      const recapHour = analysis.peakAppOpen ? analysis.peakAppOpen.hour : 9
+      const recapMinute = analysis.peakAppOpen ? analysis.peakAppOpen.minute : 0
+      const secondsUntil = getSecondsUntilTime(recapHour, recapMinute)
+      if (secondsUntil > 0 || forceRecap === 'true') {
+        await Notifications.scheduleNotificationAsync({
+          identifier: 'smart-weekly-recap',
+          content: {
+            title: 'Your Weekly Recap is Ready',
+            body: member?.streak
+              ? `${member.streak}-day streak! Tap to see your full weekly summary.`
+              : 'Tap to see your weekly summary and insights.',
+            ...(Platform.OS === 'android' && { channelId: 'smart-motivation' }),
+            data: { action: 'open_weekly_recap' },
+          },
+          trigger: forceRecap === 'true'
+            ? { type: 'timeInterval', seconds: 5, repeats: false }
+            : { type: 'timeInterval', seconds: secondsUntil, repeats: false },
+        })
+        await setItem('ivira_last_weekly_recap', todayStr)
+      }
+    }
+  }
 }
 
 /**
@@ -574,7 +604,7 @@ export async function cancelSmartNotifications() {
   await loadNotifications()
   if (!Notifications) return
 
-  const prefixes = ['smart-workout', 'smart-restday', 'smart-water-', 'smart-meal-', 'smart-streak']
+  const prefixes = ['smart-workout', 'smart-restday', 'smart-water-', 'smart-meal-', 'smart-streak', 'smart-weekly-recap']
   try {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync()
     for (const n of scheduled) {
