@@ -225,8 +225,12 @@ function QRFab({ onPress, hasGym, colors }) {
 }
 
 // ─── Floating pill tab bar ───────────────────────────────────
-function FloatingTabBar({ state, navigation }) {
+function FloatingTabWrapper({ state, descriptors, navigation }) {
   const { colors, isDark } = useTheme()
+  const { hasGym } = useAuth()
+  const insets = useSafeAreaInsets()
+  const bottom = Math.max(insets.bottom, 8) + 10
+
   const icons = ['home', 'users', null, 'activity', 'user']
   const labels = ['Home', 'Circles', null, 'Health', 'Me']
 
@@ -241,78 +245,62 @@ function FloatingTabBar({ state, navigation }) {
     }
   }
 
-  const barContent = (
-    <View style={s.barInner}>
-      {state.routes.map((route, i) => {
-        const isFocused = state.index === i
-        if (i === 2) {
-          return <View key="fab-slot" style={s.fabSlot} />
-        }
-        return (
-          <TouchableOpacity
-            key={route.key}
-            style={s.tabBtn}
-            onPress={() => handlePress(route, isFocused, i)}
-            activeOpacity={0.7}
-          >
-            <TabIcon name={icons[i]} focused={isFocused} colors={colors} />
-            <Text style={[s.tabLabel, { color: isFocused ? COLORS.accent : colors.textTer }]}>
-              {labels[i]}
-            </Text>
-          </TouchableOpacity>
-        )
-      })}
-    </View>
-  )
-
-  if (BlurView && Platform.OS !== 'web') {
-    return (
-      <BlurView
-        intensity={isDark ? 55 : 75}
-        tint={isDark ? 'dark' : 'light'}
-        style={s.bar}
-      >
-        {barContent}
-      </BlurView>
-    )
-  }
-
-  return (
-    <View style={[s.bar, { backgroundColor: isDark ? 'rgba(10,11,18,0.96)' : 'rgba(255,255,255,0.97)' }]}>
-      {barContent}
-    </View>
-  )
-}
-
-function FloatingTabWrapper({ state, descriptors, navigation }) {
-  const insets = useSafeAreaInsets()
-  const bottom = Math.max(insets.bottom, 8) + 10
-  const fabBottom = bottom + 8
-
-  const { hasGym } = useAuth()
-  const { colors } = useTheme()
-  const navRef = useRef(null)
-
   const handleQR = () => {
-    const nav = navRef.current || navigation
     if (hasGym) {
-      nav.navigate('Home', { screen: 'CheckIn' })
+      navigation.navigate('Home', { screen: 'CheckIn' })
     } else {
-      nav.navigate('Home', { screen: 'MembershipActivation' })
+      navigation.navigate('Home', { screen: 'MembershipActivation' })
     }
   }
 
-  if (!navRef.current) navRef.current = navigation
+  const bgColor = isDark ? 'rgba(7,8,15,0.92)' : 'rgba(255,255,255,0.95)'
 
   return (
-    <>
-      <View style={[s.barWrap, { bottom }]} pointerEvents="box-none">
-        <FloatingTabBar state={state} descriptors={descriptors} navigation={navigation} />
+    <View style={[s.barWrap, { bottom }]}>
+      <View style={[s.bar, { backgroundColor: bgColor }]}>
+        <View style={s.barInner}>
+          {state.routes.map((route, i) => {
+            const isFocused = state.index === i
+            if (i === 2) {
+              // Center FAB slot
+              return (
+                <View key="fab-slot" style={s.fabSlot}>
+                  <TouchableOpacity
+                    style={[s.fab, { marginTop: -20 }]}
+                    onPress={handleQR}
+                    activeOpacity={0.85}
+                  >
+                    <Feather name="maximize" size={22} color="#fff" />
+                    {!hasGym && (
+                      <View style={{
+                        position: 'absolute', top: -2, right: -2,
+                        width: 12, height: 12, borderRadius: 6,
+                        backgroundColor: '#F97316',
+                        borderWidth: 2, borderColor: bgColor,
+                        zIndex: 10,
+                      }} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )
+            }
+            return (
+              <TouchableOpacity
+                key={route.key}
+                style={s.tabBtn}
+                onPress={() => handlePress(route, isFocused, i)}
+                activeOpacity={0.7}
+              >
+                <TabIcon name={icons[i]} focused={isFocused} colors={colors} />
+                <Text style={[s.tabLabel, { color: isFocused ? COLORS.accent : colors.textTer }]}>
+                  {labels[i]}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
       </View>
-      <View style={[s.fabWrap, { bottom: fabBottom }]} pointerEvents="box-none">
-        <QRFab onPress={handleQR} hasGym={hasGym} colors={colors} />
-      </View>
-    </>
+    </View>
   )
 }
 
@@ -387,7 +375,6 @@ const s = StyleSheet.create({
   },
   bar: {
     borderRadius: 36,
-    overflow: 'hidden',
     borderWidth: 0.5,
     borderColor: 'rgba(255,255,255,0.08)',
     shadowColor: '#000',
