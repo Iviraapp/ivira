@@ -306,10 +306,10 @@ function FloatingTabWrapper({ state, descriptors, navigation }) {
 
   return (
     <>
-      <View style={[s.barWrap, { bottom }]}>
+      <View style={[s.barWrap, { bottom }]} pointerEvents="box-none">
         <FloatingTabBar state={state} descriptors={descriptors} navigation={navigation} />
       </View>
-      <View style={[s.fabWrap, { bottom: fabBottom }]}>
+      <View style={[s.fabWrap, { bottom: fabBottom }]} pointerEvents="box-none">
         <QRFab onPress={handleQR} hasGym={hasGym} colors={colors} />
       </View>
     </>
