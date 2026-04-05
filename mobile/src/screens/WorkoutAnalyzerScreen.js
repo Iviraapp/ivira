@@ -330,6 +330,8 @@ export default function WorkoutAnalyzerScreen({ navigation, route }) {
       }
     } catch (err) {
       console.warn('[WorkoutAnalyzer] base64 read error:', err?.message)
+      setVideoBase64(null)
+      premiumAlert('Video Error', `Could not read video: ${err?.message || 'Unknown error'}`)
     }
   }
 
@@ -337,6 +339,12 @@ export default function WorkoutAnalyzerScreen({ navigation, route }) {
   const analyze = useCallback(async () => {
     if (!videoBase64) {
       premiumAlert('Loading', 'Video is still loading, please wait a moment.')
+      return
+    }
+
+    if (!GEMINI_KEY) {
+      setErrorMsg('AI key not configured. Contact support.')
+      setStage('error')
       return
     }
 

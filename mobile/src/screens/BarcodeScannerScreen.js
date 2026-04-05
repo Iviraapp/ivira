@@ -105,8 +105,8 @@ export default function BarcodeScannerScreen({ navigation, route }) {
         return
       }
       try {
-        const { Camera } = require('expo-camera')
-        const { status } = await Camera.requestCameraPermissionsAsync()
+        const cam = require('expo-camera')
+        const { status } = await (cam.requestCameraPermissionsAsync || cam.Camera?.requestCameraPermissionsAsync || (() => ({ status: 'granted' })))()
         setHasPermission(status === 'granted')
       } catch {
         setHasPermission(false)
@@ -139,8 +139,9 @@ export default function BarcodeScannerScreen({ navigation, route }) {
   }, [sessionItems, navigation])
 
   // Handle barcode scanned
-  const handleBarCodeScanned = useCallback(async ({ data }) => {
-    if (scanned) return
+  const handleBarCodeScanned = useCallback(async (event) => {
+    const data = event?.data || event?.codeStringValue || event?.value || ''
+    if (!data || scanned) return
     setScanned(true)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     await lookupBarcode(data)

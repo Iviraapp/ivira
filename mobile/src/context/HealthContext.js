@@ -232,7 +232,7 @@ export function HealthProvider({ children, gymId, memberId }) {
       const result = await getTodaySteps()
       if (result.source && result.steps > 0) {
         updateSteps(result.steps, 'health')
-        return // Success — don't fall through to pedometer (prevents double counting)
+        return true // Success — don't fall through to pedometer (prevents double counting)
       }
     } catch (err) { if (__DEV__) console.warn('[HealthCtx] fetchSteps health:', err?.message) }
 
@@ -247,13 +247,14 @@ export function HealthProvider({ children, gymId, memberId }) {
           start.setHours(0, 0, 0, 0)
           const { steps: pedometerSteps } = await Pedometer.getStepCountAsync(start, new Date())
           updateSteps(pedometerSteps || 0, 'pedometer')
-          return
+          return true
         }
       } catch (err) { if (__DEV__) console.warn('[HealthCtx] fetchSteps pedometer:', err?.message) }
     }
 
     // Neither available
     setStepSource('unavailable')
+    return false
   }, [stepMode, gymId, memberId])
 
   // Fetch sleep — Health Connect/HealthKit first, then fallback to local engine data

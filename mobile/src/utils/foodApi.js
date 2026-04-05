@@ -15,6 +15,9 @@ const USDA_API_KEY            = process.env.EXPO_PUBLIC_USDA_API_KEY            
 const FATSECRET_CLIENT_ID     = process.env.EXPO_PUBLIC_FATSECRET_CLIENT_ID     || ''
 const FATSECRET_CLIENT_SECRET = process.env.EXPO_PUBLIC_FATSECRET_CLIENT_SECRET || ''
 
+if (!USDA_API_KEY && __DEV__) console.warn('[FoodApi] EXPO_PUBLIC_USDA_API_KEY not set — USDA lookups disabled')
+if (!FATSECRET_CLIENT_ID && __DEV__) console.warn('[FoodApi] EXPO_PUBLIC_FATSECRET_CLIENT_ID not set — FatSecret lookups disabled')
+
 // FatSecret bearer token cache
 let _fsToken = null
 let _fsTokenExpiry = 0

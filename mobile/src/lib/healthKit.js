@@ -41,6 +41,7 @@ function ensureHealthConnectReady() {
     try {
       const result = await HealthConnect.initialize()
       _hcReady = !!result
+      if (!_hcReady) _hcInitPromise = null // Allow retry when init returns false
       return _hcReady
     } catch (err) {
       if (__DEV__) console.warn('[HealthKit] Health Connect initialize failed:', err.message)
@@ -818,7 +819,7 @@ function _setupIOSObserver() {
     // Listen for new step data pushed by HealthKit
     _iosStepSub = emitter.addListener('healthKit:StepCount:new', async () => {
       const result = await getTodaySteps()
-      if (result.steps > 0) {
+      if (result.source) {
         _notifyStepListeners({ steps: result.steps, source: 'healthkit' })
       }
     })
@@ -859,7 +860,7 @@ async function _setupAndroidChangePolling() {
         if (!_androidChangeToken || !HealthConnect.getChanges) {
           // Fallback: just re-read steps
           const result = await getTodaySteps()
-          if (result.steps > 0) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
+          if (result.source) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
           return
         }
 
@@ -879,13 +880,13 @@ async function _setupAndroidChangePolling() {
         // If there are changes, fetch updated total
         if (changes.upsertionChanges?.length > 0 || changes.deletionChanges?.length > 0) {
           const result = await getTodaySteps()
-          if (result.steps > 0) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
+          if (result.source) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
         }
       } catch (err) {
         // Fallback on error
         if (__DEV__) console.warn('[HealthKit] Change polling error:', err.message)
         const result = await getTodaySteps()
-        if (result.steps > 0) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
+        if (result.source) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
       }
     }, 10_000) // 10 second delta checks (lightweight — only asks "anything new?")
   } catch (err) {
@@ -893,7 +894,7 @@ async function _setupAndroidChangePolling() {
     // Fall back to simple polling
     _androidPollTimer = setInterval(async () => {
       const result = await getTodaySteps()
-      if (result.steps > 0) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
+      if (result.source) _notifyStepListeners({ steps: result.steps, source: 'health_connect' })
     }, 15_000)
   }
 }
