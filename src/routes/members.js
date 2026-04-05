@@ -306,4 +306,78 @@ export default async function memberRoutes(fastify) {
 
     return { membership: updated, message: `Membership resumed. Extended by ${pausedDays} days.` };
   });
+
+  // ── CRM: Member Notes ────────────────────────────────
+
+  // GET /gyms/:gymId/members/:memberId/notes
+  fastify.get('/gyms/:gymId/members/:memberId/notes', { preHandler: [fastify.verifyToken] }, async (request) => {
+    const { gymId, memberId } = request.params;
+    const notes = await db('member_notes')
+      .where({ member_id: memberId, gym_id: gymId })
+      .orderByRaw('is_pinned DESC, created_at DESC')
+      .limit(50);
+    return { notes };
+  });
+
+  // POST /gyms/:gymId/members/:memberId/notes
+  fastify.post('/gyms/:gymId/members/:memberId/notes', { preHandler: [fastify.verifyToken] }, async (request) => {
+    const { gymId, memberId } = request.params;
+    const { content, type, is_pinned, followup_date } = request.body;
+    if (!content?.trim()) return { error: 'Content required' };
+    const [note] = await db('member_notes').insert({
+      member_id: memberId, gym_id: gymId,
+      created_by: request.user.gymId || request.user.memberId,
+      content: content.trim(), type: type || 'general',
+      is_pinned: !!is_pinned, followup_date: followup_date || null,
+    }).returning('*');
+    return { note };
+  });
+
+  // DELETE /gyms/:gymId/members/:memberId/notes/:noteId
+  fastify.delete('/gyms/:gymId/members/:memberId/notes/:noteId', { preHandler: [fastify.verifyToken] }, async (request) => {
+    await db('member_notes').where({ id: request.params.noteId, gym_id: request.params.gymId }).delete();
+    return { success: true };
+  });
+
+  // ── CRM: Birthday alerts ─────────────────────────────
+
+  // GET /gyms/:gymId/members/birthdays — upcoming birthdays
+  fastify.get('/gyms/:gymId/members/birthdays', { preHandler: [fastify.verifyToken] }, async (request) => {
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+
+    // Next 14 days of birthdays
+    const members = await db('members')
+      .where({ gym_id: request.params.gymId, status: 'active' })
+      .whereNotNull('birthday_month')
+      .select('id', 'name', 'phone', 'email', 'birthday_month', 'birthday_day', 'photo_url');
+
+    const upcoming = members.filter(m => {
+      const bday = new Date(today.getFullYear(), m.birthday_month - 1, m.birthday_day);
+      const diff = (bday - today) / 86400000;
+      return diff >= 0 && diff <= 14;
+    }).sort((a, b) => {
+      const da = new Date(today.getFullYear(), a.birthday_month - 1, a.birthday_day);
+      const db2 = new Date(today.getFullYear(), b.birthday_month - 1, b.birthday_day);
+      return da - db2;
+    });
+
+    return { birthdays: upcoming };
+  });
+
+  // ── CRM: Followup reminders ──────────────────────────
+
+  // GET /gyms/:gymId/followups — notes with upcoming followup dates
+  fastify.get('/gyms/:gymId/followups', { preHandler: [fastify.verifyToken] }, async (request) => {
+    const followups = await db('member_notes')
+      .where({ gym_id: request.params.gymId })
+      .whereNotNull('followup_date')
+      .where('followup_date', '>=', new Date().toISOString().split('T')[0])
+      .leftJoin('members', 'member_notes.member_id', 'members.id')
+      .select('member_notes.*', 'members.name as member_name', 'members.phone as member_phone')
+      .orderBy('followup_date', 'asc')
+      .limit(20);
+    return { followups };
+  });
 }

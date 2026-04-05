@@ -1,4 +1,5 @@
 import config from '../config/index.js';
+import db from '../config/database.js';
 
 const AI_RATE_LIMIT_WINDOW_MS = 60_000;
 const AI_RATE_LIMIT_DEFAULT = 20;
@@ -81,7 +82,14 @@ When user context is provided, weave it naturally into responses:
 
 OFF-TOPIC RESPONSE:
 If the user asks anything outside fitness/health/wellness, respond with exactly:
-"I'm your fitness coach, so I can only help with workout, nutrition, and wellness topics! 🎯 Got a fitness question? I'm all ears."`;
+"I'm your fitness coach, so I can only help with workout, nutrition, and wellness topics! 🎯 Got a fitness question? I'm all ears."
+
+MEMORY INSTRUCTIONS:
+When the user shares personal fitness information (injuries, preferences, goals, schedules, dietary restrictions), note it internally. Examples:
+- "My left knee hurts" → remember: injury: left knee pain
+- "I'm vegetarian" → remember: diet: vegetarian
+- "I work out at 6 AM" → remember: schedule: morning 6 AM workouts
+Reference these facts naturally in future conversations.`;
 
 // ── Build personalised context block from user data ─────────────
 function buildContextBlock(context) {
@@ -259,6 +267,29 @@ async function callAI({ systemPrompt, messages, maxTokens = 512, request, reply 
 }
 
 export default async function aiCoachRoutes(fastify) {
+  // GET /ai/memory — get Vira's learned facts about this user
+  fastify.get('/ai/memory', { preHandler: [fastify.verifyToken] }, async (request) => {
+    const memberId = request.user.memberId
+    if (!memberId) return { memories: [] }
+    const memories = await db('vira_memory')
+      .where({ member_id: memberId })
+      .whereRaw("(expires_at IS NULL OR expires_at > NOW())")
+      .orderBy('learned_at', 'desc')
+      .limit(50)
+    return { memories }
+  })
+
+  // POST /ai/memory — save a learned fact (called by AI after conversations)
+  fastify.post('/ai/memory', { preHandler: [fastify.verifyToken] }, async (request) => {
+    const memberId = request.user.memberId
+    if (!memberId) return { success: false }
+    const { key, value, source } = request.body
+    const [mem] = await db('vira_memory').insert({
+      member_id: memberId, key, value, source: source || 'conversation',
+    }).returning('*')
+    return { memory: mem }
+  })
+
   fastify.post('/ai/coach', {
     schema: messageSchema,
     preHandler: [
@@ -275,7 +306,21 @@ export default async function aiCoachRoutes(fastify) {
 
     // Build personalised system prompt with context block injected
     const contextBlock = buildContextBlock(context);
-    const systemPrompt = BASE_SYSTEM_PROMPT + contextBlock;
+
+    // Fetch Vira's persistent memories for this user
+    let memoryBlock = ''
+    if (request.user?.memberId) {
+      const memories = await db('vira_memory')
+        .where({ member_id: request.user.memberId })
+        .whereRaw("(expires_at IS NULL OR expires_at > NOW())")
+        .orderBy('confidence', 'desc')
+        .limit(10)
+      if (memories.length > 0) {
+        memoryBlock = '\n\nVIRA MEMORY (things you learned about this user from past conversations):\n' +
+          memories.map(m => `- ${m.key}: ${m.value}`).join('\n')
+      }
+    }
+    const systemPrompt = BASE_SYSTEM_PROMPT + contextBlock + memoryBlock;
 
     const messages = [];
     for (const msg of history.slice(-16)) {

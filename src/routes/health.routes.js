@@ -399,4 +399,74 @@ export default async function healthOsRoutes(fastify) {
 
     return { history };
   });
+
+  // ── Member Progress Timeline ─────────────────────────
+
+  // GET /gyms/:gymId/members/:memberId/timeline — complete progress history
+  fastify.get('/gyms/:gymId/members/:memberId/timeline', authHooks, async (request) => {
+    const { gymId, memberId } = request.params;
+    const limit = Math.min(parseInt(request.query.limit) || 50, 200);
+
+    // Gather multiple data sources into a unified timeline
+    const [workouts, photos, checkins, achievements, sleepLogs, nutritionHighlights] = await Promise.all([
+      // Workout sessions
+      db('workout_sessions')
+        .where({ member_id: memberId, gym_id: gymId })
+        .select('id', 'name', 'duration_minutes', 'total_volume', 'created_at')
+        .orderBy('created_at', 'desc').limit(20)
+        .then(rows => rows.map(r => ({ type: 'workout', ...r, timestamp: r.created_at }))),
+
+      // Progress photos
+      db('member_photos')
+        .where({ member_id: memberId, gym_id: gymId })
+        .select('id', 'url', 'type', 'taken_at', 'created_at')
+        .orderBy('created_at', 'desc').limit(10)
+        .then(rows => rows.map(r => ({ type: 'photo', ...r, timestamp: r.created_at }))),
+
+      // Check-ins
+      db('checkins')
+        .where({ member_id: memberId, gym_id: gymId })
+        .select('id', 'method', 'checked_in_at')
+        .orderBy('checked_in_at', 'desc').limit(30)
+        .then(rows => rows.map(r => ({ type: 'checkin', ...r, timestamp: r.checked_in_at }))),
+
+      // Achievements
+      db('member_achievements')
+        .where({ member_id: memberId })
+        .leftJoin('achievements', 'member_achievements.achievement_id', 'achievements.id')
+        .select('member_achievements.id', 'achievements.name', 'achievements.icon', 'member_achievements.earned_at')
+        .orderBy('earned_at', 'desc').limit(10)
+        .catch(() => [])
+        .then(rows => (rows || []).map(r => ({ type: 'achievement', ...r, timestamp: r.earned_at }))),
+
+      // Nutrition daily summaries
+      db('daily_nutrition_logs')
+        .where({ member_id: memberId, gym_id: gymId })
+        .select(db.raw("log_date, SUM(total_calories) as calories, SUM(total_protein) as protein"))
+        .groupBy('log_date')
+        .orderBy('log_date', 'desc').limit(7)
+        .catch(() => [])
+        .then(rows => (rows || []).map(r => ({ type: 'nutrition_day', ...r, timestamp: r.log_date }))),
+
+      // PR/milestones - placeholder
+      Promise.resolve([]),
+    ]);
+
+    // Merge and sort by timestamp
+    const timeline = [...workouts, ...photos, ...checkins, ...achievements, ...sleepLogs, ...nutritionHighlights]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, limit);
+
+    // Stats summary
+    const member = await db('members').where({ id: memberId }).first();
+    const summary = {
+      total_workouts: workouts.length,
+      total_checkins: member?.checkin_count || checkins.length,
+      current_streak: member?.streak || 0,
+      member_since: member?.created_at,
+      photos_count: photos.length,
+    };
+
+    return { timeline, summary };
+  });
 }

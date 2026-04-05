@@ -71,6 +71,7 @@ import financeRoutes from './routes/finance.routes.js';
 import podRoutes from './routes/pods.routes.js';
 import adminDashboardRoutes from './routes/admin-dashboard.routes.js';
 import memberOutcomesRoutes from './routes/member-outcomes.routes.js';
+import passportRoutes from './routes/passport.routes.js';
 import multipart from '@fastify/multipart';
 import fastifyCookie from '@fastify/cookie';
 import { startCronJobs } from './cron/scheduler.js';
@@ -190,6 +191,7 @@ export async function buildApp(opts = {}) {
   await fastify.register(podRoutes, { prefix: '/api/v1' });
   await fastify.register(adminDashboardRoutes);
   await fastify.register(memberOutcomesRoutes, { prefix: '/api/v1' });
+  await fastify.register(passportRoutes, { prefix: '/api/v1' });
   // APK download route — serve locally if available, otherwise redirect to GitHub Release
   fastify.get('/downloads/ivira-latest.apk', async (request, reply) => {
     const fs = await import('fs');

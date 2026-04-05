@@ -76,6 +76,9 @@ export default function HomeScreen({ navigation, route }) {
   const [aiWorkout, setAiWorkout] = useState(null)
   const [aiDismissed, setAiDismissed] = useState(false)
 
+  // Food suggestions
+  const [foodSuggestions, setFoodSuggestions] = useState(null)
+
   // Greeting
   const greeting = getGreeting()
   const firstName = (member?.name || 'there').split(' ')[0]
@@ -145,6 +148,14 @@ export default function HomeScreen({ navigation, route }) {
     getWorkoutSuggestion({ memberId: member?.id, name: member?.name, gymId })
       .then(setAiWorkout).catch(() => {})
   }, [member?.id, gymId])
+
+  // Food suggestions
+  useEffect(() => {
+    if (!gymId || !member?.id) return
+    api.get(`/gyms/${gymId}/members/${member.id}/nutrition/suggestions`)
+      .then(res => setFoodSuggestions(res.data))
+      .catch(() => {})
+  }, [gymId, member?.id])
 
   // Fitness score
   useEffect(() => {
@@ -488,6 +499,42 @@ export default function HomeScreen({ navigation, route }) {
             </Text>
             <Feather name="chevron-right" size={12} color={COLORS.accent} />
           </TouchableOpacity>
+        )}
+
+        {/* ── Food suggestions ── */}
+        {foodSuggestions?.suggestions?.length > 0 && (
+          <View style={{ marginBottom: SPACING.md }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text, fontFamily: FONT.bold }}>
+                {foodSuggestions.meal_type.charAt(0).toUpperCase() + foodSuggestions.meal_type.slice(1)} Ideas
+              </Text>
+              <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.regular }}>
+                {foodSuggestions.remaining.calories} cal left
+              </Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {foodSuggestions.suggestions.slice(0, 4).map((f, i) => (
+                <TouchableOpacity key={i} activeOpacity={0.85}
+                  onPress={() => navigation.navigate('NutritionLog')}
+                  style={{
+                    backgroundColor: colors.bgTer, borderRadius: 14, padding: 12, width: 140,
+                    borderWidth: 0.5, borderColor: f.fits_budget ? COLORS.accent + '20' : colors.border,
+                  }}>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text, fontFamily: FONT.semibold, marginBottom: 4 }} numberOfLines={2}>
+                    {f.name}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.textTer, fontFamily: FONT.regular }}>
+                    {f.calories} cal · {f.protein}g protein
+                  </Text>
+                  {f.region && (
+                    <Text style={{ fontSize: 9, color: COLORS.accent, fontFamily: FONT.bold, marginTop: 4 }}>
+                      {f.region}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
         )}
 
         {/* ── Circle live activity ── */}
