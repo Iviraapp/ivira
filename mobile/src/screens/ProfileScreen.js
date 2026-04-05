@@ -432,23 +432,34 @@ export default function ProfileScreen({ navigation }) {
   }
 
   const handleDeleteAccount = () => {
+    const actualDelete = async () => {
+      try {
+        if (gymId) {
+          await api.delete(`/gyms/${gymId}/members/me`)
+        }
+        await logout()
+      } catch (err) {
+        premiumAlert('Error', err.response?.data?.message || 'Failed to delete account. Please try again.')
+      }
+    }
+
     premiumAlert(
       'Delete Account',
-      'This permanently deletes your account and all data. This cannot be undone.',
+      'This will permanently delete your account, all workout data, nutrition logs, and progress photos. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete Account',
+          text: 'Delete Forever',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              if (gymId) {
-                await api.delete(`/gyms/${gymId}/members/me`)
-              }
-              await logout()
-            } catch (err) {
-              premiumAlert('Error', err.response?.data?.message || 'Failed to delete account. Please try again.')
-            }
+          onPress: () => {
+            premiumAlert(
+              'Are you absolutely sure?',
+              'Type "DELETE" to confirm.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Yes, Delete', style: 'destructive', onPress: actualDelete },
+              ],
+            )
           },
         },
       ],

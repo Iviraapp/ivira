@@ -315,11 +315,20 @@ export default function HealthScreen({ navigation }) {
 
   const handleManualStepSubmit = useCallback(() => {
     const val = parseInt(manualStepInput, 10)
-    if (!isNaN(val) && val >= 0) {
-      setManualSteps(prev => prev + val)
-      setManualStepInput('')
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    if (isNaN(val) || val < 0 || val > 200000) {
+      premiumAlert('Invalid', 'Steps must be between 0 and 200,000')
+      return
     }
+    setManualSteps(prev => {
+      const total = prev + val
+      if (total > 200000) {
+        premiumAlert('Invalid', 'Total steps cannot exceed 200,000')
+        return prev
+      }
+      return total
+    })
+    setManualStepInput('')
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
   }, [manualStepInput])
 
   const handleTimerToggle = useCallback(() => {

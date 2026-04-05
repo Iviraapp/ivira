@@ -20,6 +20,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import api from '../lib/api'
+import { premiumAlert } from '../components/PremiumAlert'
 import Haptics from '../lib/haptics'
 import SleepEngine, {
   SleepStage, STAGE_COLORS, STAGE_LABELS, AudioEvent,
@@ -1236,6 +1237,17 @@ export default function SleepTrackerScreen({ navigation }) {
 
   // ── Log Sleep ──────────────────────────────────────────────────
   const handleLogSleep = useCallback(() => {
+    // Validate sleep duration
+    const durationMinutes = calcDurationMinutes(bedHour, bedMin, wakeHour, wakeMin)
+    if (durationMinutes > 24 * 60) {
+      premiumAlert('Invalid Duration', 'Sleep duration cannot exceed 24 hours.')
+      return
+    }
+    if (durationMinutes < 30) {
+      premiumAlert('Too Short', 'Sleep duration must be at least 30 minutes.')
+      return
+    }
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     const today = new Date().toISOString().split('T')[0]
     const notes = serializeTags(logTags, '')

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  RefreshControl, Animated, Share,
+  RefreshControl, Animated, Share, ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
@@ -20,10 +20,13 @@ export default function CirclesScreen({ navigation }) {
   const [leaderboard, setLeaderboard] = useState([])
   const [allCircles, setAllCircles]   = useState([])
   const [refreshing, setRefreshing]   = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [fetchError, setFetchError]   = useState(false)
   const [activeTab, setActiveTab]     = useState('feed') // feed | leaderboard | discover
   const [todayCommit, setTodayCommit] = useState(null)
 
   const fetchData = useCallback(async () => {
+    setFetchError(false)
     try {
       if (gymId && member?.id) {
         const [podRes, actRes, lbRes] = await Promise.all([
@@ -63,6 +66,9 @@ export default function CirclesScreen({ navigation }) {
       }
     } catch (err) {
       if (__DEV__) console.warn('[Circles] fetchData error:', err?.message)
+      setFetchError(true)
+    } finally {
+      setInitialLoading(false)
     }
   }, [gymId, member?.id])
 
@@ -110,6 +116,26 @@ export default function CirclesScreen({ navigation }) {
         ))}
       </View>
 
+      {initialLoading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={colors.accent} />
+        </View>
+      ) : fetchError ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.lg }}>
+          <View style={[s.emptyIcon, { backgroundColor: COLORS.accent + '15' }]}>
+            <Feather name="wifi-off" size={28} color={colors.textTer} />
+          </View>
+          <Text style={{ fontSize: 16, fontFamily: FONT.bold, color: colors.text, marginTop: 12 }}>Couldn't load Circles</Text>
+          <Text style={{ fontSize: 13, fontFamily: FONT.regular, color: colors.textSec, textAlign: 'center', marginTop: 6 }}>Check your connection and try again.</Text>
+          <TouchableOpacity
+            onPress={onRefresh}
+            style={{ marginTop: 16, backgroundColor: colors.accent, paddingHorizontal: 24, paddingVertical: 10, borderRadius: RADIUS.full }}
+            activeOpacity={0.85}
+          >
+            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#07080F' }}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={s.scroll}
@@ -138,6 +164,7 @@ export default function CirclesScreen({ navigation }) {
 
         <View style={{ height: 120 }} />
       </ScrollView>
+      )}
     </SafeAreaView>
   )
 }
@@ -366,7 +393,7 @@ function LeaderboardTab({ leaderboard, colors, memberId }) {
         <View style={[s.emptyIcon, { backgroundColor: COLORS.purpleSoft }]}>
           <Feather name="bar-chart-2" size={28} color={COLORS.purple} />
         </View>
-        <Text style={[s.emptyTitle, { color: colors.text }]}>Leaderboard loading...</Text>
+        <Text style={[s.emptyTitle, { color: colors.text }]}>No leaderboard data yet</Text>
         <Text style={[s.emptySub, { color: colors.textSec }]}>Check back once Circle members start logging sets</Text>
       </View>
     )

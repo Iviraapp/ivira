@@ -97,6 +97,17 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     loadRecentFoods().then(setRecentFoods)
   }, [])
 
+  // Restore barcode session from AsyncStorage on mount
+  useEffect(() => {
+    AsyncStorage.getItem('ivira_barcode_session').then(data => {
+      if (data) {
+        const { items, calories } = JSON.parse(data)
+        setSessionItems(items || [])
+        setSessionCalories(calories || 0)
+      }
+    }).catch(() => {})
+  }, [])
+
   // Request camera permission
   useEffect(() => {
     ;(async () => {
@@ -124,6 +135,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
 
   // Handle "Done" - navigate back with session totals
   const handleDone = useCallback(() => {
+    AsyncStorage.removeItem('ivira_barcode_session').catch(() => {})
     const totalNutrition = sessionItems.reduce(
       (acc, item) => ({
         calories: acc.calories + item.calories,
@@ -212,8 +224,9 @@ export default function BarcodeScannerScreen({ navigation, route }) {
   // Compute scaled macros based on serving size and serving count
   const getScaledMacros = useCallback(() => {
     if (!product?.per100g) return { calories: 0, protein: 0, carbs: 0, fats: 0 }
-    const factor = (parseFloat(servingGrams) || 100) / 100
-    const count = parseFloat(servingCount) || 1
+    const validServing = Math.max(0.1, Math.min(parseFloat(servingGrams) || 100, 5000))
+    const factor = validServing / 100
+    const count = Math.max(0.1, Math.min(parseFloat(servingCount) || 1, 100))
     return {
       calories: Math.round(product.per100g.calories * factor * count),
       protein: Math.round(product.per100g.protein * factor * count * 10) / 10,
@@ -260,13 +273,18 @@ export default function BarcodeScannerScreen({ navigation, route }) {
       loadRecentFoods().then(setRecentFoods)
 
       // Update multi-scan session totals
-      setSessionItems(prev => [...prev, {
+      const newItem = {
         name: product?.name || 'Scanned Food',
         calories: scaled.calories,
         protein: scaled.protein,
         carbs: scaled.carbs,
         fats: scaled.fats,
-      }])
+      }
+      setSessionItems(prev => {
+        const updated = [...prev, newItem]
+        AsyncStorage.setItem('ivira_barcode_session', JSON.stringify({ items: updated, calories: sessionCalories + scaled.calories })).catch(() => {})
+        return updated
+      })
       setSessionCalories(prev => prev + scaled.calories)
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
@@ -308,7 +326,11 @@ export default function BarcodeScannerScreen({ navigation, route }) {
       }
 
       // Update multi-scan session totals
-      setSessionItems(prev => [...prev, { name: 'Quick Add', calories: cal, protein: prot, carbs: carb, fats: fat }])
+      setSessionItems(prev => {
+        const updated = [...prev, { name: 'Quick Add', calories: cal, protein: prot, carbs: carb, fats: fat }]
+        AsyncStorage.setItem('ivira_barcode_session', JSON.stringify({ items: updated, calories: sessionCalories + cal })).catch(() => {})
+        return updated
+      })
       setSessionCalories(prev => prev + cal)
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
@@ -804,7 +826,11 @@ export default function BarcodeScannerScreen({ navigation, route }) {
                   loadRecentFoods().then(setRecentFoods)
 
                   // Update multi-scan session
-                  setSessionItems(prev => [...prev, { name: manualEntry.name || 'Manual Entry', calories: cal, protein: prot, carbs: carb, fats: fat }])
+                  setSessionItems(prev => {
+                    const updated = [...prev, { name: manualEntry.name || 'Manual Entry', calories: cal, protein: prot, carbs: carb, fats: fat }]
+                    AsyncStorage.setItem('ivira_barcode_session', JSON.stringify({ items: updated, calories: sessionCalories + cal })).catch(() => {})
+                    return updated
+                  })
                   setSessionCalories(prev => prev + cal)
 
                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)

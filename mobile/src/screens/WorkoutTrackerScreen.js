@@ -366,7 +366,11 @@ function SetRow({ set, index, onChange, onRemove, colors }) {
           placeholder="kg"
           placeholderTextColor={colors.textTer}
           value={set.weight}
-          onChangeText={v => onChange({ ...set, weight: v })}
+          onChangeText={v => {
+            const cleaned = v.replace(/[^0-9.]/g, '')
+            const num = parseFloat(cleaned)
+            onChange({ ...set, weight: (cleaned === '' || isNaN(num)) ? cleaned : String(Math.max(0, num)) })
+          }}
           keyboardType="decimal-pad"
         />
       </View>
@@ -377,7 +381,11 @@ function SetRow({ set, index, onChange, onRemove, colors }) {
           placeholder="reps"
           placeholderTextColor={colors.textTer}
           value={set.reps}
-          onChangeText={v => onChange({ ...set, reps: v })}
+          onChangeText={v => {
+            const cleaned = v.replace(/[^0-9]/g, '')
+            const num = parseInt(cleaned, 10)
+            onChange({ ...set, reps: (cleaned === '' || isNaN(num)) ? cleaned : String(Math.max(0, num)) })
+          }}
           keyboardType="number-pad"
         />
       </View>
@@ -593,15 +601,20 @@ export default function WorkoutTrackerScreen({ navigation }) {
           const sessionId = sessionRes.data?.session?.id
 
           if (sessionId) {
-            for (const ex of exercises) {
-              await api.post(`/gyms/${gymId}/members/${member.id}/workout-sessions/${sessionId}/sets`, {
-                exercise_id: ex.exercise.id,
-                sets: ex.sets.map((s, i) => ({
-                  set_number: i + 1,
-                  weight_kg: parseFloat(s.weight) || 0,
-                  reps: parseInt(s.reps) || 0,
-                })),
-              })
+            try {
+              for (const ex of exercises) {
+                await api.post(`/gyms/${gymId}/members/${member.id}/workout-sessions/${sessionId}/sets`, {
+                  exercise_id: ex.exercise.id,
+                  sets: ex.sets.map((s, i) => ({
+                    set_number: i + 1,
+                    weight_kg: parseFloat(s.weight) || 0,
+                    reps: parseInt(s.reps) || 0,
+                  })),
+                })
+              }
+            } catch (setErr) {
+              // Partial failure — notify user but don't throw
+              premiumAlert('Workout Saved Partially', 'Some exercises may not have been recorded. Pull down to refresh and check.')
             }
             await api.put(`/gyms/${gymId}/members/${member.id}/workout-sessions/${sessionId}/complete`, {
               duration_minutes: duration,

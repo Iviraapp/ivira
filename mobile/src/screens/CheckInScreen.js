@@ -33,6 +33,7 @@ export default function CheckInScreen({ navigation }) {
   const { member, gymId, gymInfo: gym, refreshProfile, hasGym } = useAuth()
 
   const [qrData, setQrData]           = useState(null)
+  const [qrError, setQrError]         = useState(false)
   const [countdown, setCountdown]     = useState(REFRESH_SEC)
   const [nfcAvailable, setNfcAvailable] = useState(false)
   const [nfcScanning, setNfcScanning] = useState(false)
@@ -76,10 +77,11 @@ export default function CheckInScreen({ navigation }) {
     try {
       const res = await api.post(`/gyms/${gymId}/qr/generate`, { phone: member.phone })
       setQrData(res.data.token)
+      setQrError(false)
       setCountdown(REFRESH_SEC)
     } catch {
-      // Backend error — do NOT generate local fallback QR
-      // Just keep countdown running, will retry on next interval
+      setQrData(null) // Clear stale QR
+      setQrError(true)
     }
   }, [gymId, member?.id, member?.phone])
 
@@ -227,9 +229,14 @@ export default function CheckInScreen({ navigation }) {
                   <Text style={s.qrFallbackText}>QR ready</Text>
                 </View>
               )
+            ) : qrError ? (
+              <TouchableOpacity onPress={generateQR} style={{ alignItems: 'center', justifyContent: 'center', width: QR_SIZE, height: QR_SIZE }} activeOpacity={0.7}>
+                <Feather name="refresh-cw" size={24} color={colors.textTer} />
+                <Text style={{ color: colors.textSec, fontSize: 13, fontFamily: FONT.regular, marginTop: 8, textAlign: 'center' }}>Couldn't load check-in code.{'\n'}Tap to retry.</Text>
+              </TouchableOpacity>
             ) : (
               <View style={[s.qrPlaceholder, { width: QR_SIZE, height: QR_SIZE }]}>
-                <Feather name="loader" size={24} color="#ccc" />
+                <ActivityIndicator color={COLORS.accent} />
               </View>
             )}
           </View>
