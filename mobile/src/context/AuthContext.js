@@ -293,6 +293,13 @@ export function AuthProvider({ children }) {
   }, [])
 
   const hasGym = gymId !== null && gymId !== ''
+  // hasMembership: true only when user has an active gym membership (not just a gymId)
+  const hasMembership = hasGym && member && (
+    member.status === 'active' ||
+    member.membership_status === 'active' ||
+    member.active_membership?.status === 'active' ||
+    member.membership?.status === 'active'
+  )
   const isDemo = false // Demo mode removed — always real data
 
   const refreshProfile = useCallback(async () => {
@@ -331,6 +338,7 @@ export function AuthProvider({ children }) {
       setBiometricEnabled,
       isDemo,
       hasGym,
+      hasMembership,
       login,
       loginWithEmail,
       loginDirect,

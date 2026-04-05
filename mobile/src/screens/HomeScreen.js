@@ -23,7 +23,7 @@ const STEP_GOAL = 10000
 
 export default function HomeScreen({ navigation, route }) {
   const { colors, isDark, card } = useTheme()
-  const { member, gymId, gymInfo, hasGym, refreshProfile } = useAuth()
+  const { member, gymId, gymInfo, hasGym, hasMembership, refreshProfile } = useAuth()
   const { steps, activeMinutes, sleepData, fetchSteps, fetchSleep } = useHealth()
 
   const [profilePhoto, setProfilePhoto] = useState(null)
@@ -264,8 +264,8 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* ── Check-in hero card ── */}
-        {hasGym && (
+        {/* ── Check-in hero card — only shows with active membership ── */}
+        {hasMembership && (
         <TouchableOpacity
           style={[s.checkinCard, { backgroundColor: colors.bgTer, borderColor: COLORS.accent + '30' }]}
           onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); navigation.navigate('CheckIn') }}
@@ -296,7 +296,7 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         </TouchableOpacity>
         )}
-        {!hasGym && (
+        {!hasMembership && (
           <TouchableOpacity
             onPress={() => navigation.navigate('MembershipActivation')}
             activeOpacity={0.85}

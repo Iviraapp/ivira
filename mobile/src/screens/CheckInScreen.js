@@ -30,7 +30,7 @@ const REFRESH_SEC = 30
 
 export default function CheckInScreen({ navigation }) {
   const { colors, isDark } = useTheme()
-  const { member, gymId, gymInfo: gym, refreshProfile, hasGym } = useAuth()
+  const { member, gymId, gymInfo: gym, refreshProfile, hasMembership } = useAuth()
 
   const [qrData, setQrData]           = useState(null)
   const [qrError, setQrError]         = useState(false)
@@ -124,10 +124,10 @@ export default function CheckInScreen({ navigation }) {
   }, [gym?.latitude, gym?.longitude])
 
   useEffect(() => {
-    if (!hasGym) navigation.replace('MembershipActivation')
-  }, [hasGym])
+    if (!hasMembership) navigation.replace('MembershipActivation')
+  }, [hasMembership])
 
-  if (!hasGym) return null
+  if (!hasMembership) return null
 
   const handleSuccess = (message) => {
     setCheckedIn(true)
