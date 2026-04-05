@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import api from '../lib/api'
 import { premiumAlert } from '../components/PremiumAlert'
 import Haptics from '../lib/haptics'
+import { requestMicrophonePermission } from '../lib/permissionPrompts'
 import SleepEngine, {
   SleepStage, STAGE_COLORS, STAGE_LABELS, AudioEvent,
   startTracking, stopTracking, isTracking as checkIsTracking,
@@ -668,6 +669,9 @@ function LiveTrackingView({ colors, card, isDark, navigation, gymId, memberId, o
   }
 
   const handleStart = async () => {
+    // Show microphone explanation before starting sleep tracking
+    const micAllowed = await requestMicrophonePermission()
+    if (!micAllowed) return
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
     let alarmTime = null
     if (useSmartAlarm) {

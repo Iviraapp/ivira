@@ -21,6 +21,7 @@ import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { waterfallLookup, searchByText } from '../utils/foodApi'
 import { premiumAlert } from '../components/PremiumAlert'
+import { requestCameraPermission } from '../lib/permissionPrompts'
 
 const RECENT_FOODS_KEY = 'ivira_recent_foods'
 const MAX_RECENT_FOODS = 20
@@ -108,21 +109,18 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     }).catch(() => {})
   }, [])
 
-  // Request camera permission
+  // Request camera permission contextually
   useEffect(() => {
-    ;(async () => {
-      if (!CameraView) {
-        setHasPermission(false)
-        return
+    if (!CameraView) {
+      setHasPermission(false)
+      return
+    }
+    requestCameraPermission().then(granted => {
+      setHasPermission(granted)
+      if (!granted) {
+        premiumAlert('Camera Required', 'Barcode scanning needs camera access. Enable it in Settings.')
       }
-      try {
-        const cam = require('expo-camera')
-        const { status } = await (cam.requestCameraPermissionsAsync || cam.Camera?.requestCameraPermissionsAsync || (() => ({ status: 'granted' })))()
-        setHasPermission(status === 'granted')
-      } catch {
-        setHasPermission(false)
-      }
-    })()
+    })
   }, [])
 
   // Show a brief success toast

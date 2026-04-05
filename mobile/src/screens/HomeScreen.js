@@ -17,6 +17,7 @@ import api from '../lib/api'
 import { getItem, setItem, deleteItem } from '../lib/storage'
 import { getDailyInsight, getWorkoutSuggestion } from '../lib/aiCoach'
 import { premiumAlert } from '../components/PremiumAlert'
+import { requestNotificationPermission } from '../lib/permissionPrompts'
 import { HomeScreenSkeleton } from '../components/SkeletonLoader'
 
 const { width: W } = Dimensions.get('window')
@@ -245,6 +246,20 @@ export default function HomeScreen({ navigation, route }) {
         setItem('ivira_rating_prompted', 'true').catch(() => {})
       }, 3000)
     }).catch(() => {})
+  }, [member?.checkin_count])
+
+  // Contextual notification permission after first check-in
+  useEffect(() => {
+    if ((member?.checkin_count || 0) >= 1) {
+      getItem('ivira_notif_prompted').then(done => {
+        if (!done) {
+          setTimeout(() => {
+            requestNotificationPermission()
+            setItem('ivira_notif_prompted', 'true').catch(() => {})
+          }, 5000) // Delay 5s so it doesn't feel aggressive
+        }
+      }).catch(() => {})
+    }
   }, [member?.checkin_count])
 
   // Handle nutrition param from barcode scanner

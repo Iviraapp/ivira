@@ -6,7 +6,7 @@ import { COLORS } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import LoginScreen from '../screens/LoginScreen'
 import OnboardingScreen, { ONBOARDING_KEY } from '../screens/OnboardingScreen'
-import PermissionsScreen, { PERMISSIONS_KEY } from '../screens/PermissionsScreen'
+
 import ProfileSetupScreen, { PROFILE_SETUP_KEY } from '../screens/ProfileSetupScreen'
 import TabNavigator from './TabNavigator'
 import SplashScreen from '../components/SplashScreen'
@@ -190,19 +190,12 @@ export default function AppNavigator() {
 
   const [showSplash, setShowSplash] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(null) // null = loading, true/false
-  const [showPermissions, setShowPermissions] = useState(null)
   const [showProfileSetup, setShowProfileSetup] = useState(null) // null = loading, true/false
 
   useEffect(() => {
     getItem(ONBOARDING_KEY).then(val => {
       setShowOnboarding(val !== 'true')
     }).catch(() => setShowOnboarding(true))
-  }, [])
-
-  useEffect(() => {
-    getItem(PERMISSIONS_KEY).then(val => {
-      setShowPermissions(val !== 'true')
-    }).catch(() => setShowPermissions(true))
   }, [])
 
   // Check if profile setup is needed after login
@@ -226,10 +219,6 @@ export default function AppNavigator() {
 
   if (showOnboarding) {
     return <OnboardingScreen onComplete={() => setShowOnboarding(false)} />
-  }
-
-  if (showPermissions) {
-    return <PermissionsScreen onComplete={() => setShowPermissions(false)} />
   }
 
   if (token && showProfileSetup) {

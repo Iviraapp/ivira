@@ -12,6 +12,7 @@ import Haptics from '../lib/haptics'
 import api from '../lib/api'
 import { generateNonce, formatDate } from '../lib/utils'
 import { premiumAlert } from '../components/PremiumAlert'
+import { requestLocationPermission } from '../lib/permissionPrompts'
 import { recordWorkout } from '../lib/SmartNotificationEngine'
 import { canAddToWallet, addMembershipToWallet } from '../lib/wallet'
 
@@ -173,11 +174,11 @@ export default function CheckInScreen({ navigation }) {
   const handleGPS = async () => {
     if (!gymId) return
     if (!Location) { premiumAlert('Unavailable', 'Location services not available.'); return }
+    const hasLocation = await requestLocationPermission()
+    if (!hasLocation) return
     setGpsChecking(true)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync()
-      if (status !== 'granted') { premiumAlert('Permission', 'Location permission required.'); return }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
       const res = await api.post(`/gyms/${gymId}/checkins/gps`, {
         latitude: loc.coords.latitude,
