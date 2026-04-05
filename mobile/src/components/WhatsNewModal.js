@@ -18,15 +18,17 @@ const FEATURES = [
   { icon: 'zap', color: '#10B981', title: 'Vira AI Coach', desc: 'Context-aware coaching that reads your sleep, steps, and form scores' },
 ]
 
-export default function WhatsNewModal() {
+export default function WhatsNewModal({ isLoggedIn }) {
   const [visible, setVisible] = useState(false)
   const { colors } = useTheme()
 
   useEffect(() => {
+    // Only show after user is logged in — not during onboarding
+    if (!isLoggedIn) return
     getItem(WHATS_NEW_KEY).then(seen => {
       if (seen !== CURRENT_VERSION) setVisible(true)
-    }).catch(() => setVisible(true))
-  }, [])
+    }).catch(() => {})
+  }, [isLoggedIn])
 
   const handleDismiss = () => {
     setVisible(false)

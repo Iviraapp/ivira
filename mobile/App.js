@@ -52,6 +52,12 @@ function HealthProviderBridge({ children }) {
   )
 }
 
+/** WhatsNew only after login */
+function WhatsNewModalGated() {
+  const auth = useAuth()
+  return <WhatsNewModal isLoggedIn={!!auth?.token} />
+}
+
 /** Inner shell that has access to ThemeContext for dynamic StatusBar + background */
 function ThemedApp() {
   const { colors, isDark } = useTheme()
@@ -106,7 +112,7 @@ function ThemedApp() {
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <NotificationManager />
             <AppNavigator />
-            <WhatsNewModal />
+            <WhatsNewModalGated />
             <PremiumAlertOverlay />
           </HealthProviderBridge>
         </AuthProvider>

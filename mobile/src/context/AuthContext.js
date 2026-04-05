@@ -293,13 +293,18 @@ export function AuthProvider({ children }) {
   }, [])
 
   const hasGym = gymId !== null && gymId !== ''
-  // hasMembership: true ONLY when user has a paid gym membership with valid dates
-  // NOT just member.status === 'active' (all registered members are active)
+  // hasMembership: true when user has linked their gym membership details
+  // This means they went through MembershipActivation and added their gym info
   const hasMembership = hasGym && member && !!(
-    (member.active_membership?.id && member.active_membership?.end_date && new Date(member.active_membership.end_date) > new Date()) ||
-    (member.membership?.id && member.membership?.end_date && new Date(member.membership.end_date) > new Date()) ||
-    (member.membership_end && new Date(member.membership_end) > new Date()) ||
-    member.has_active_plan === true
+    member.gym_id && (
+      member.active_membership?.id ||
+      member.membership?.id ||
+      member.membership_end ||
+      member.membership_start ||
+      member.plan_name ||
+      member.has_active_plan === true ||
+      member.is_gym_linked === true
+    )
   )
   const isDemo = false // Demo mode removed — always real data
 
