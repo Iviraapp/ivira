@@ -17,6 +17,7 @@ import api from '../lib/api'
 import { getItem, setItem, deleteItem } from '../lib/storage'
 import { getDailyInsight, getWorkoutSuggestion } from '../lib/aiCoach'
 import { premiumAlert } from '../components/PremiumAlert'
+import { HomeScreenSkeleton } from '../components/SkeletonLoader'
 
 const { width: W } = Dimensions.get('window')
 const STEP_GOAL = 10000
@@ -25,6 +26,22 @@ export default function HomeScreen({ navigation, route }) {
   const { colors, isDark, card } = useTheme()
   const { member, gymId, gymInfo, hasGym, hasMembership, refreshProfile } = useAuth()
   const { steps, activeMinutes, sleepData, fetchSteps, fetchSleep } = useHealth()
+
+  // Skeleton loading on initial load
+  const [initialLoad, setInitialLoad] = useState(true)
+  useEffect(() => { setTimeout(() => setInitialLoad(false), 1500) }, [])
+
+  // Offline detection
+  const [isOffline, setIsOffline] = useState(false)
+  useEffect(() => {
+    let NetInfo
+    try { NetInfo = require('@react-native-community/netinfo').default } catch {}
+    if (!NetInfo) return
+    const unsub = NetInfo.addEventListener(state => {
+      setIsOffline(!state.isConnected)
+    })
+    return () => unsub()
+  }, [])
 
   const [profilePhoto, setProfilePhoto] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -35,6 +52,10 @@ export default function HomeScreen({ navigation, route }) {
   // Fitness score
   const [fitnessScore, setFitnessScore] = useState(null)
   const [cityRank, setCityRank] = useState(null)
+
+  // Streak celebration
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [celebrationText, setCelebrationText] = useState('')
 
   // Streak freeze
   const [showFreezeBanner, setShowFreezeBanner] = useState(false)
@@ -152,6 +173,29 @@ export default function HomeScreen({ navigation, route }) {
     }).catch(() => {})
   }, [member?.streak_freeze_available])
 
+  // Streak milestone celebration
+  useEffect(() => {
+    const milestones = [7, 14, 30, 50, 100, 200, 365]
+    if (milestones.includes(streak)) {
+      const lastCelebrated = async () => {
+        const key = `ivira_celebrated_${streak}`
+        const done = await getItem(key).catch(() => null)
+        if (!done) {
+          setCelebrationText(
+            streak >= 100 ? `\u{1F3C6} ${streak}-day streak! Legendary!` :
+            streak >= 30 ? `\u{1F525} ${streak} days! You're on fire!` :
+            `\u{1F4AA} ${streak}-day streak! Keep going!`
+          )
+          setShowCelebration(true)
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+          await setItem(key, 'true').catch(() => {})
+          setTimeout(() => setShowCelebration(false), 4000)
+        }
+      }
+      lastCelebrated()
+    }
+  }, [streak])
+
   const useStreakFreeze = async () => {
     if (!gymId || !member?.id) return
     try {
@@ -164,6 +208,33 @@ export default function HomeScreen({ navigation, route }) {
       premiumAlert('Error', err.response?.data?.message || 'Could not use freeze')
     }
   }
+
+  // App rating prompt after 7th check-in
+  useEffect(() => {
+    if (!member?.checkin_count || member.checkin_count < 7) return
+    getItem('ivira_rating_prompted').then(prompted => {
+      if (prompted) return
+      setTimeout(() => {
+        premiumAlert(
+          'Enjoying IVIRA?',
+          'You\'ve checked in 7 times! Would you mind rating us on the Play Store?',
+          [
+            { text: 'Not now' },
+            { text: 'Rate IVIRA \u2B50', onPress: async () => {
+              try {
+                const { Linking } = require('react-native')
+                await Linking.openURL('market://details?id=com.ivira.member')
+              } catch {
+                const { Linking } = require('react-native')
+                await Linking.openURL('https://play.google.com/store/apps/details?id=com.ivira.member')
+              }
+            }},
+          ]
+        )
+        setItem('ivira_rating_prompted', 'true').catch(() => {})
+      }, 3000)
+    }).catch(() => {})
+  }, [member?.checkin_count])
 
   // Handle nutrition param from barcode scanner
   useEffect(() => {
@@ -189,6 +260,9 @@ export default function HomeScreen({ navigation, route }) {
   const stepProgress = Math.min((steps || 0) / STEP_GOAL, 1)
   const sleepScore = sleepData?.score || sleepData?.quality || null
   const sleepHours = sleepData?.durationMinutes ? (sleepData.durationMinutes / 60).toFixed(1) : null
+
+  // Show skeleton while initial data is loading
+  if (initialLoad && !member) return <HomeScreenSkeleton />
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: colors.bg }]} edges={['top', 'bottom']}>
@@ -234,6 +308,28 @@ export default function HomeScreen({ navigation, route }) {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} colors={[COLORS.accent]} />}
       >
+
+        {/* ── Offline banner ── */}
+        {isOffline && (
+          <View style={{ backgroundColor: COLORS.warn + '15', borderWidth: 1, borderColor: COLORS.warn + '30',
+            borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.md }}>
+            <Feather name="wifi-off" size={16} color={COLORS.warn} />
+            <Text style={{ fontSize: 13, color: COLORS.warn, fontFamily: FONT.semibold }}>You're offline — some features may not work</Text>
+          </View>
+        )}
+
+        {/* ── Streak celebration banner ── */}
+        {showCelebration && (
+          <Animated.View style={{
+            backgroundColor: COLORS.accent + '15', borderWidth: 1, borderColor: COLORS.accent + '30',
+            borderRadius: 16, padding: 16, alignItems: 'center', marginBottom: SPACING.md,
+          }}>
+            <Text style={{ fontSize: 20, marginBottom: 4 }}>{celebrationText.split(' ')[0]}</Text>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.accent, fontFamily: FONT.bold, textAlign: 'center' }}>
+              {celebrationText}
+            </Text>
+          </Animated.View>
+        )}
 
         {/* ── Streak freeze banner ── */}
         {showFreezeBanner && (

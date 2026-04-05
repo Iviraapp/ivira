@@ -11,6 +11,7 @@ import { Feather } from '@expo/vector-icons'
 import { COLORS, FONT, RADIUS, SPACING } from '../lib/theme'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import Haptics from '../lib/haptics'
 import AIChatModal from '../components/AIChatModal'
 
 // Screens
@@ -235,6 +236,7 @@ function FloatingTabWrapper({ state, descriptors, navigation }) {
   const labels = ['Home', 'Circles', null, 'Health', 'Me']
 
   const handlePress = (route, isFocused, index) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     if (isFocused) {
       const nested = state.routes[index]?.state
       if (nested?.index > 0) {
@@ -246,6 +248,7 @@ function FloatingTabWrapper({ state, descriptors, navigation }) {
   }
 
   const handleQR = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     if (hasGym) {
       navigation.navigate('Home', { screen: 'CheckIn' })
     } else {

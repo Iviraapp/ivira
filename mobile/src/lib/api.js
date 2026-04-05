@@ -29,6 +29,14 @@ let refreshQueue = []
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
+    // If network error (no response), queue for offline retry
+    if (!err.response && err.message?.includes('Network')) {
+      const { enqueue } = await import('./offlineQueue')
+      if (err.config && err.config.method !== 'get') {
+        enqueue(err.config.method, err.config.url, err.config.data ? JSON.parse(err.config.data) : undefined)
+      }
+      return Promise.reject(new Error('You\'re offline. This action will be saved and retried when you reconnect.'))
+    }
     if (err.response?.status === 401) {
       const originalRequest = err.config
       if (originalRequest._retry) {

@@ -11,9 +11,12 @@ import Haptics from '../lib/haptics'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { safeApiCall } from '../lib/offlineQueue'
 import WorkoutSummaryModal from '../components/WorkoutSummaryModal'
 import { premiumAlert } from '../components/PremiumAlert'
+
+const DRAFT_KEY = 'ivira_workout_draft'
 
 // ── Default exercise library (used when API unavailable) ─────────
 const DEFAULT_EXERCISES = [
@@ -492,6 +495,44 @@ export default function WorkoutTrackerScreen({ navigation }) {
     return () => clearInterval(timer)
   }, [startTime])
 
+  // Auto-save workout draft to AsyncStorage on every change
+  useEffect(() => {
+    if (exercises.length > 0) {
+      AsyncStorage.setItem(DRAFT_KEY, JSON.stringify({
+        name: sessionName,
+        exercises,
+        startedAt: startTime,
+        savedAt: Date.now(),
+      })).catch(() => {})
+    }
+  }, [exercises, sessionName])
+
+  // On mount, check for unsaved workout draft
+  useEffect(() => {
+    AsyncStorage.getItem(DRAFT_KEY).then(data => {
+      if (data) {
+        const draft = JSON.parse(data)
+        // Only restore if less than 24 hours old
+        if (draft.savedAt && (Date.now() - draft.savedAt) < 86400000) {
+          premiumAlert(
+            'Resume Workout?',
+            `You have an unsaved "${draft.name || 'workout'}" from earlier. Resume it?`,
+            [
+              { text: 'Discard', onPress: () => AsyncStorage.removeItem(DRAFT_KEY).catch(() => {}) },
+              { text: 'Resume', onPress: () => {
+                setSessionName(draft.name || '')
+                setExercises(draft.exercises || [])
+                if (draft.startedAt) setStartTime(draft.startedAt)
+              }},
+            ]
+          )
+        } else {
+          AsyncStorage.removeItem(DRAFT_KEY).catch(() => {})
+        }
+      }
+    }).catch(() => {})
+  }, [])
+
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60)
     const s = secs % 60
@@ -661,6 +702,9 @@ export default function WorkoutTrackerScreen({ navigation }) {
           }
         })
       })
+
+      // Clear draft on successful finish
+      AsyncStorage.removeItem(DRAFT_KEY).catch(() => {})
 
       setSummaryData({
         name: sessionName || 'Workout',
@@ -977,6 +1021,7 @@ export default function WorkoutTrackerScreen({ navigation }) {
           setSummaryData(null)
           setExercises([])
           setSessionName('')
+          AsyncStorage.removeItem(DRAFT_KEY).catch(() => {})
           navigation.goBack()
         }}
         summary={summaryData}

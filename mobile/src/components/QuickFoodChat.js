@@ -32,6 +32,7 @@ export default function QuickFoodChat({ style, onLogged }) {
   const [result, setResult] = useState(null)
   const [mealType, setMealType] = useState(getDefaultMealType())
   const [expanded, setExpanded] = useState(false)
+  const [lastLogId, setLastLogId] = useState(null)
   const slideAnim = useRef(new Animated.Value(0)).current
 
   // Confirmation state
@@ -165,7 +166,7 @@ export default function QuickFoodChat({ style, onLogged }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
 
     try {
-      await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
+      const logRes = await api.post(`/gyms/${gymId}/members/${member.id}/nutrition/log`, {
         mealType,
         rawInput: pendingRawInput,
         items: pendingItems.map(i => ({
@@ -180,6 +181,7 @@ export default function QuickFoodChat({ style, onLogged }) {
         source: 'chat',
       })
 
+      setLastLogId(logRes.data?.id || null)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
       const totalCals = pendingItems.reduce((s, i) => s + (i.calories * i.quantity), 0)
@@ -209,6 +211,17 @@ export default function QuickFoodChat({ style, onLogged }) {
     setPendingRawInput('')
     Haptics.selectionAsync()
   }, [])
+
+  const handleUndo = async () => {
+    if (!lastLogId || !gymId || !member?.id) return
+    try {
+      await api.delete(`/gyms/${gymId}/members/${member.id}/nutrition/log/${lastLogId}`)
+      setResult(null)
+      setLastLogId(null)
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      onLogged?.() // refresh parent
+    } catch {}
+  }
 
   const removeItem = useCallback((key) => {
     setPendingItems(prev => {
@@ -409,6 +422,11 @@ export default function QuickFoodChat({ style, onLogged }) {
                   {result.total.calories} cal · {result.total.protein}g protein
                 </Text>
               </View>
+              {lastLogId && (
+                <TouchableOpacity onPress={handleUndo} style={{ padding: 4 }}>
+                  <Text style={{ fontSize: 11, color: colors.accent, fontWeight: '600', fontFamily: FONT.bold }}>Undo</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
