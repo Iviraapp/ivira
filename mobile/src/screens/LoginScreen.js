@@ -73,6 +73,8 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState({})
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [signupName, setSignupName] = useState('')
+  const [signupPassword, setSignupPassword] = useState('')
   const [hasPasswordSet, setHasPasswordSet] = useState(false)
   const [resendTimer, setResendTimer] = useState(30)
 
@@ -152,6 +154,8 @@ export default function LoginScreen() {
       setPassword('')
       if (resendIntervalRef.current) clearInterval(resendIntervalRef.current)
       animateTransition('email')
+    } else if (step === 'signup') {
+      animateTransition('welcome')
     } else if (step === 'email') {
       animateTransition('welcome')
     }
@@ -266,6 +270,37 @@ export default function LoginScreen() {
     }
   }, [authenticateWithBiometrics])
 
+  const handleSignup = async () => {
+    if (!signupName.trim()) return setErrors({ signup: 'Name is required' })
+    if (!email.trim() || !validateEmail(email)) return setErrors({ signup: 'Valid email required' })
+    if (signupPassword.length < 8) return setErrors({ signup: 'Password must be at least 8 characters' })
+
+    setErrors({})
+    setLoading(true)
+    try {
+      const res = await api.post('/auth/b2c/register', {
+        name: signupName.trim(),
+        email: email.trim().toLowerCase(),
+        password: signupPassword,
+      })
+      const data = res.data
+      if (data.token) {
+        if (auth?.loginDirect) {
+          await auth.loginDirect(data.token, data.member)
+        }
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      } else {
+        // Registration succeeded but needs OTP verification
+        animateTransition('otp')
+        startResendTimer()
+      }
+    } catch (err) {
+      setErrors({ signup: err.response?.data?.message || 'Registration failed' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // --- WELCOME SCREEN ---
   const renderWelcome = () => (
     <View style={styles.welcomeContainer}>
@@ -308,6 +343,14 @@ export default function LoginScreen() {
       >
         <Text style={[styles.primaryBtnText, { color: colors.bg }]}>Get Started</Text>
         <Feather name="arrow-right" size={18} color={colors.bg} />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.secondaryBtn, { borderColor: 'rgba(255,255,255,0.12)' }]}
+        onPress={() => animateTransition('signup')}
+        activeOpacity={0.85}
+      >
+        <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Create Account</Text>
       </TouchableOpacity>
 
       {biometricAvailable && biometricEnabled && hasStoredSession && (
@@ -548,6 +591,96 @@ export default function LoginScreen() {
                 <Text style={{ color: colors.textTer, fontSize: 13, fontFamily: FONT.regular }}>Different email</Text>
               </TouchableOpacity>
             </View>
+          </ScrollView>
+        )}
+        {step === 'signup' && (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.formContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.bgSec, borderColor: colors.border }]} onPress={goBack} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <Feather name="arrow-left" size={22} color={colors.text} />
+            </TouchableOpacity>
+
+            <View style={[styles.formIconWrap, { backgroundColor: colors.accentSoft }]}>
+              <Feather name="user-plus" size={24} color={COLORS.accent} />
+            </View>
+            <Text style={[styles.formTitle, { color: colors.text }]}>Create Account</Text>
+            <Text style={[styles.formSubtitle, { color: colors.textSec }]}>Start tracking your fitness journey</Text>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.label, { color: colors.textSec }]}>NAME</Text>
+              <View style={[styles.inputWrap, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
+                <Feather name="user" size={16} color={colors.textTer} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="Your name"
+                  placeholderTextColor={colors.textTer}
+                  value={signupName}
+                  onChangeText={setSignupName}
+                  autoFocus
+                />
+              </View>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.label, { color: colors.textSec }]}>EMAIL</Text>
+              <View style={[styles.inputWrap, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
+                <Feather name="mail" size={16} color={colors.textTer} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="you@example.com"
+                  placeholderTextColor={colors.textTer}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.label, { color: colors.textSec }]}>PASSWORD</Text>
+              <View style={[styles.inputWrap, { backgroundColor: colors.bgSec, borderColor: errors.signup ? COLORS.red : colors.border }]}>
+                <Feather name="lock" size={16} color={colors.textTer} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="At least 8 characters"
+                  placeholderTextColor={colors.textTer}
+                  value={signupPassword}
+                  onChangeText={t => { setSignupPassword(t); setErrors({}) }}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(p => !p)}
+                  style={{ paddingHorizontal: 14, paddingVertical: 14 }}
+                >
+                  <Feather name={showPassword ? 'eye-off' : 'eye'} size={18} color={colors.textTer} />
+                </TouchableOpacity>
+              </View>
+              {errors.signup && <Text style={styles.errorText}>{errors.signup}</Text>}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.primaryBtn, { backgroundColor: COLORS.accent }, loading && styles.primaryBtnDisabled]}
+              onPress={handleSignup}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={[styles.primaryBtnText, { color: '#FFFFFF' }]}>Create Account</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => animateTransition('email')} style={{ alignItems: 'center', marginTop: 16 }}>
+              <Text style={{ color: colors.textSec, fontSize: 13, fontFamily: FONT.regular }}>
+                Already have an account? <Text style={{ color: COLORS.accent, fontFamily: FONT.bold }}>Sign in</Text>
+              </Text>
+            </TouchableOpacity>
           </ScrollView>
         )}
       </Animated.View>

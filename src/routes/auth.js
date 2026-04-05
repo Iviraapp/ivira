@@ -166,29 +166,30 @@ export default async function authRoutes(fastify) {
     return { gymId: gym.id, gymName: gym.gym_name, city: gym.city, logoUrl: gym.logo_url };
   });
 
-  // B2C: Register new member with name/phone and optional gym invite code
+  // B2C: Register new member with name/email and optional password or invite code
   fastify.post('/auth/b2c/register', {
     ...otpRateLimit,
     schema: {
       body: {
         type: 'object',
-        required: ['name', 'email', 'phone'],
+        required: ['name', 'email'],
         properties: {
           name: { type: 'string', minLength: 2, maxLength: 100 },
           email: { type: 'string', format: 'email' },
-          phone: { type: 'string', minLength: 10, maxLength: 15 },
+          phone: { type: 'string' },
+          password: { type: 'string', minLength: 8 },
           inviteCode: { type: 'string' },
         },
       },
     },
   }, async (request, reply) => {
-    const { name, email, phone, inviteCode } = request.body;
+    const { name, email, phone, password, inviteCode } = request.body;
     const normalizedEmail = email.trim().toLowerCase();
 
     // Check if member already exists
     const existing = await db('members').where('email', normalizedEmail).first();
     if (existing) {
-      return reply.code(409).send({ error: 'ALREADY_EXISTS', message: 'An account with this email already exists. Please sign in instead.' });
+      return reply.code(409).send({ error: 'ALREADY_EXISTS', message: 'An account with this email already exists. Try signing in.' });
     }
 
     // Resolve invite code if provided
@@ -199,10 +200,35 @@ export default async function authRoutes(fastify) {
       gymId = gym.id;
     }
 
-    // Store registration data in Redis (pending OTP verification)
+    // If password provided, create member directly (no OTP needed)
+    if (password) {
+      const [member] = await db('members').insert({
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: (phone || '').trim(),
+        gym_id: gymId,
+        status: 'active',
+      }).returning('*');
+
+      // Set password hash
+      const bcrypt = await import('bcryptjs');
+      const hash = await bcrypt.default.hash(password, 12);
+      await db('members').where({ id: member.id }).update({ password_hash: hash });
+
+      // Issue JWT
+      const token = jwt.sign(
+        { memberId: member.id, gymId: gymId, email: normalizedEmail, role: 'member' },
+        config.jwt.secret,
+        { expiresIn: '30d' }
+      );
+
+      return reply.code(201).send({ token, memberId: member.id, member });
+    }
+
+    // No password — store registration data in Redis and send OTP
     await redis.set(`b2c_register:${normalizedEmail}`, JSON.stringify({
       name: name.trim(),
-      phone: phone.trim(),
+      phone: (phone || '').trim(),
       gymId,
     }), { EX: 600 }); // 10 minutes
 
@@ -392,13 +418,14 @@ export default async function authRoutes(fastify) {
       }).returning('*')
       member = newMember
     } else if (!member) {
-      // No gym specified — create unlinked member
-      return reply.code(404).send({
-        error: 'NO_GYM',
-        message: 'No account found. Please join a gym first or provide a gym code.',
-        email,
-        name,
-      })
+      // Auto-create member from Google account (no gym linked)
+      const [newMember] = await db('members').insert({
+        name, email, phone: '',
+        google_id: googleUser.sub,
+        photo_url: picture,
+        status: 'active',
+      }).returning('*')
+      member = newMember
     }
 
     const token = jwt.sign(

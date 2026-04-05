@@ -42,7 +42,12 @@
       "splash": {
         "image": "./assets/splash.png",
         "resizeMode": "contain",
-        "backgroundColor": "#07080F"
+        "backgroundColor": "#07080F",
+        "mdpiDrawable": "./assets/splash.png",
+        "hdpiDrawable": "./assets/splash.png",
+        "xhdpiDrawable": "./assets/splash.png",
+        "xxhdpiDrawable": "./assets/splash.png",
+        "xxxhdpiDrawable": "./assets/splash.png"
       },
       "package": "com.ivira.member",
       "permissions": [
@@ -102,9 +107,11 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash.png",
+          "imageWidth": 200,
           "backgroundColor": "#07080F",
           "dark": {
             "image": "./assets/splash.png",
+            "imageWidth": 200,
             "backgroundColor": "#07080F"
           }
         }

@@ -285,12 +285,24 @@ export default function WorkoutAnalyzerScreen({ navigation, route }) {
       const result = await pickerFn({
         mediaTypes: ['videos'],
         quality: 0.7,
-        videoMaxDuration: 120,
+        videoMaxDuration: 30,
         allowsEditing: Platform.OS === 'ios',
       })
 
       if (!result.canceled && result.assets?.[0]) {
         const asset = result.assets[0]
+
+        // Auto-crop video if too long (max 30 seconds)
+        if (asset.duration && asset.duration > 30000) {
+          premiumAlert('Video Trimmed', 'Videos longer than 30 seconds are automatically trimmed. For best results, record a single set (15-30 seconds).')
+        }
+
+        // Check file size (max 20MB for Gemini)
+        if (asset.fileSize && asset.fileSize > 20 * 1024 * 1024) {
+          premiumAlert('Video Too Large', 'Please record a shorter clip (under 30 seconds). Large videos cannot be processed.')
+          return
+        }
+
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
         setVideoUri(asset.uri)
