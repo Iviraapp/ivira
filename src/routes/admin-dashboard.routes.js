@@ -680,4 +680,220 @@ export default async function adminDashboardRoutes(fastify) {
       return reply.code(500).send({ error: err?.message || 'Failed to send digest' });
     }
   });
+
+  // ── SUPPORT TICKETS ──────────────────────────────────
+
+  // List all tickets
+  fastify.get('/api/v1/super/tickets', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const status = request.query.status || null;
+    const limit = Math.min(parseInt(request.query.limit) || 50, 200);
+    let query = db('support_tickets').orderBy('created_at', 'desc').limit(limit);
+    if (status) query = query.where('status', status);
+    const tickets = await query;
+    return { tickets };
+  });
+
+  // Update ticket (assign, resolve, add notes)
+  fastify.patch('/api/v1/super/tickets/:id', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { id } = request.params;
+    const { status, admin_notes, assigned_to, priority } = request.body || {};
+    const updates = { updated_at: new Date() };
+    if (status) updates.status = status;
+    if (admin_notes) updates.admin_notes = admin_notes;
+    if (assigned_to) updates.assigned_to = assigned_to;
+    if (priority) updates.priority = priority;
+    if (status === 'resolved') updates.resolved_at = new Date();
+    const [ticket] = await db('support_tickets').where({ id }).update(updates).returning('*');
+    if (!ticket) return reply.code(404).send({ error: 'Ticket not found' });
+    return { ticket };
+  });
+
+  // ── REFUNDS ──────────────────────────────────────────
+
+  // List payments (for refund management)
+  fastify.get('/api/v1/super/payments', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const limit = Math.min(parseInt(request.query.limit) || 50, 200);
+    const payments = await db('payments')
+      .leftJoin('gyms', 'payments.gym_id', 'gyms.id')
+      .leftJoin('members', 'payments.member_id', 'members.id')
+      .select('payments.*', 'gyms.gym_name', 'members.name as member_name', 'members.email as member_email')
+      .orderBy('payments.created_at', 'desc')
+      .limit(limit);
+    return { payments };
+  });
+
+  // Process refund
+  fastify.post('/api/v1/super/refund/:paymentId', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { paymentId } = request.params;
+    const { reason } = request.body || {};
+    const payment = await db('payments').where({ id: paymentId }).first();
+    if (!payment) return reply.code(404).send({ error: 'Payment not found' });
+    if (payment.status === 'refunded') return reply.code(400).send({ error: 'Already refunded' });
+
+    // Process via gateway
+    try {
+      if (payment.razorpay_payment_id) {
+        const Razorpay = (await import('razorpay')).default;
+        const rz = new Razorpay({ key_id: config.razorpay.keyId, key_secret: config.razorpay.keySecret });
+        await rz.payments.refund(payment.razorpay_payment_id, { amount: payment.amount_paise });
+      } else if (payment.stripe_payment_intent_id && config.stripe?.enabled) {
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(config.stripe.secretKey);
+        await stripe.refunds.create({ payment_intent: payment.stripe_payment_intent_id });
+      }
+    } catch (err) {
+      return reply.code(502).send({ error: `Refund failed: ${err.message}` });
+    }
+
+    await db('payments').where({ id: paymentId }).update({
+      status: 'refunded', refund_reason: reason || 'Admin refund', refunded_at: new Date(), updated_at: new Date(),
+    });
+    return { success: true, message: 'Refund processed' };
+  });
+
+  // ── GYM SUSPENSION ───────────────────────────────────
+
+  fastify.post('/api/v1/super/gyms/:gymId/suspend', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { gymId } = request.params;
+    const { reason } = request.body || {};
+    await db('gyms').where({ id: gymId }).update({ is_suspended: true, suspension_reason: reason || 'Terms violation', suspended_at: new Date() });
+    return { success: true, message: 'Gym suspended' };
+  });
+
+  fastify.post('/api/v1/super/gyms/:gymId/unsuspend', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { gymId } = request.params;
+    await db('gyms').where({ id: gymId }).update({ is_suspended: false, suspension_reason: null, suspended_at: null });
+    return { success: true, message: 'Gym unsuspended' };
+  });
+
+  // ── GYM VERIFICATION ─────────────────────────────────
+
+  fastify.post('/api/v1/super/gyms/:gymId/verify', { preHandler: [verifySuperAdmin] }, async (request) => {
+    await db('gyms').where({ id: request.params.gymId }).update({ is_verified: true, verified_at: new Date() });
+    return { success: true };
+  });
+
+  // ── MEMBER SUSPENSION ────────────────────────────────
+
+  fastify.post('/api/v1/super/members/:memberId/suspend', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { reason } = request.body || {};
+    await db('members').where({ id: request.params.memberId }).update({ is_suspended: true, suspension_reason: reason });
+    return { success: true };
+  });
+
+  fastify.post('/api/v1/super/members/:memberId/unsuspend', { preHandler: [verifySuperAdmin] }, async (request) => {
+    await db('members').where({ id: request.params.memberId }).update({ is_suspended: false, suspension_reason: null });
+    return { success: true };
+  });
+
+  // ── CONTENT MODERATION ───────────────────────────────
+
+  fastify.get('/api/v1/super/reports', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const reports = await db('content_reports')
+      .leftJoin('members', 'content_reports.reported_by', 'members.id')
+      .select('content_reports.*', 'members.name as reporter_name')
+      .orderBy('content_reports.created_at', 'desc')
+      .limit(100);
+    return { reports };
+  });
+
+  fastify.patch('/api/v1/super/reports/:id', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { status, admin_action } = request.body || {};
+    const [report] = await db('content_reports').where({ id: request.params.id })
+      .update({ status: status || 'reviewed', admin_action, reviewed_at: new Date() }).returning('*');
+    return { report };
+  });
+
+  // Delete reported content
+  fastify.delete('/api/v1/super/content/:type/:id', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { type, id } = request.params;
+    if (type === 'pod_feed') await db('pod_feed').where({ id }).delete();
+    else if (type === 'gym_feed') await db('gym_feed').where({ id }).update({ is_active: false });
+    return { success: true };
+  });
+
+  // ── FEATURE FLAGS ────────────────────────────────────
+
+  fastify.get('/api/v1/super/feature-flags/:gymId', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const flags = await db('gym_feature_flags').where({ gym_id: request.params.gymId });
+    return { flags };
+  });
+
+  fastify.post('/api/v1/super/feature-flags', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { gym_id, feature, enabled } = request.body;
+    const [flag] = await db('gym_feature_flags').insert({ gym_id, feature, enabled }).onConflict(['gym_id', 'feature']).merge({ enabled }).returning('*');
+    return { flag };
+  });
+
+  // ── PLATFORM BROADCAST ───────────────────────────────
+
+  fastify.post('/api/v1/super/broadcast', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { title, body, target } = request.body; // target: 'all', 'owners', 'members'
+    // This sends via Firebase push to all registered tokens
+    // For now, log the broadcast
+    const sent = await db('email_logs').insert({
+      to_email: `broadcast:${target}`,
+      subject: title,
+      type: 'broadcast',
+      status: 'sent',
+      metadata: JSON.stringify({ body, target }),
+    }).returning('*');
+    return { success: true, broadcast: sent[0] };
+  });
+
+  // ── APP VERSION / FORCE UPDATE ───────────────────────
+
+  fastify.get('/api/v1/app-version', async (request) => {
+    const platform = request.query.platform || 'android';
+    const latest = await db('app_versions').where({ platform }).orderBy('released_at', 'desc').first();
+    return { version: latest || null };
+  });
+
+  fastify.post('/api/v1/super/app-version', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const { platform, version, build_number, force_update, download_url, release_notes } = request.body;
+    const [entry] = await db('app_versions').insert({ platform, version, build_number, force_update, download_url, release_notes }).returning('*');
+    return { version: entry };
+  });
+
+  // ── PLATFORM ANALYTICS ───────────────────────────────
+
+  fastify.get('/api/v1/super/platform-analytics', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const today = new Date().toISOString().split('T')[0];
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+    const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+
+    const [
+      totalGyms, totalMembers, activeMembers,
+      weeklyCheckins, monthlyCheckins,
+      weeklyRevenue, monthlyRevenue,
+      newGymsThisWeek, newMembersThisWeek,
+      totalPods, dailyActiveMembers,
+    ] = await Promise.all([
+      db('gyms').count('* as c').first(),
+      db('members').count('* as c').first(),
+      db('members').where('status', 'active').count('* as c').first(),
+      db('checkins').where('checked_in_at', '>=', weekAgo).count('* as c').first(),
+      db('checkins').where('checked_in_at', '>=', monthAgo).count('* as c').first(),
+      db('payments').where('status', 'captured').where('paid_at', '>=', weekAgo).sum('amount_paise as total').first(),
+      db('payments').where('status', 'captured').where('paid_at', '>=', monthAgo).sum('amount_paise as total').first(),
+      db('gyms').where('created_at', '>=', weekAgo).count('* as c').first(),
+      db('members').where('created_at', '>=', weekAgo).count('* as c').first(),
+      db('pods').where('is_active', true).count('* as c').first(),
+      db('checkins').where('checked_in_at', '>=', today).countDistinct('member_id as c').first(),
+    ]);
+
+    return {
+      total_gyms: parseInt(totalGyms?.c || 0),
+      total_members: parseInt(totalMembers?.c || 0),
+      active_members: parseInt(activeMembers?.c || 0),
+      dau: parseInt(dailyActiveMembers?.c || 0),
+      weekly_checkins: parseInt(weeklyCheckins?.c || 0),
+      monthly_checkins: parseInt(monthlyCheckins?.c || 0),
+      weekly_revenue: parseInt(weeklyRevenue?.total || 0),
+      monthly_revenue: parseInt(monthlyRevenue?.total || 0),
+      new_gyms_this_week: parseInt(newGymsThisWeek?.c || 0),
+      new_members_this_week: parseInt(newMembersThisWeek?.c || 0),
+      active_circles: parseInt(totalPods?.c || 0),
+    };
+  });
 }

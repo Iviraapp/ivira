@@ -304,6 +304,20 @@ export default async function podRoutes(fastify) {
     }
   })
 
+  // POST /gyms/:gymId/pods/:podId/report — report a feed item
+  fastify.post('/gyms/:gymId/pods/:podId/report', memberAuth, async (request) => {
+    const { content_id, reason, description } = request.body
+    const memberId = request.member?.memberId || request.user?.memberId
+    await db('content_reports').insert({
+      reported_by: memberId,
+      content_type: 'pod_feed',
+      content_id,
+      reason: reason || 'inappropriate',
+      description,
+    })
+    return { success: true, message: 'Report submitted. Our team will review it.' }
+  })
+
   // ─── Open Squad routes ────────────────────────────────────────────────
   const openAuth = { preHandler: [fastify.verifyToken] }
 

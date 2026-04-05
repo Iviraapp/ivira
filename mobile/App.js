@@ -14,7 +14,7 @@ Sentry.init({
 import * as Notifications from 'expo-notifications'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { StyleSheet, View, ActivityIndicator } from 'react-native'
+import { StyleSheet, View, ActivityIndicator, Platform, Linking } from 'react-native'
 import { AuthProvider, useAuth } from './src/context/AuthContext'
 import { ThemeProvider, useTheme } from './src/context/ThemeContext'
 import { HealthProvider } from './src/context/HealthContext'
@@ -75,6 +75,27 @@ function ThemedApp() {
         { identifier: 'CHECK_IN', buttonTitle: 'Check In', options: { opensAppToForeground: true } },
       ])
     } catch {}
+  }, [])
+
+  useEffect(() => {
+    const checkVersion = async () => {
+      try {
+        const Constants = require('expo-constants')
+        const currentVersion = Constants.default?.expoConfig?.version || '1.0.0'
+        const res = await fetch(`https://api.ivira.app/api/v1/app-version?platform=${Platform.OS}`)
+        const data = await res.json()
+        if (data.version?.force_update && data.version.version !== currentVersion) {
+          // Show non-dismissable update alert
+          const { premiumAlert } = require('./src/components/PremiumAlert')
+          premiumAlert('Update Required', `A new version (${data.version.version}) is available. Please update to continue using IVIRA.`, [
+            { text: 'Update Now', onPress: () => {
+              Linking.openURL(data.version.download_url || 'https://api.ivira.app/downloads/ivira-latest.apk')
+            }},
+          ])
+        }
+      } catch {}
+    }
+    checkVersion()
   }, [])
 
   return (
