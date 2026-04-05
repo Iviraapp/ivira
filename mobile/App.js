@@ -19,6 +19,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext'
 import { ThemeProvider, useTheme } from './src/context/ThemeContext'
 import { HealthProvider } from './src/context/HealthContext'
 import AppNavigator from './src/navigation/AppNavigator'
+import WhatsNewModal from './src/components/WhatsNewModal'
 import NotificationManager from './src/components/NotificationManager'
 import { PremiumAlertOverlay } from './src/components/PremiumAlert'
 import ErrorBoundary from './src/components/ErrorBoundary'
@@ -84,6 +85,7 @@ function ThemedApp() {
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <NotificationManager />
             <AppNavigator />
+            <WhatsNewModal />
             <PremiumAlertOverlay />
           </HealthProviderBridge>
         </AuthProvider>

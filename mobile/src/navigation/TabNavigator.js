@@ -81,7 +81,7 @@ const ProfileStack = createNativeStackNavigator()
 function HomeStackNavigator() {
   const { colors } = useTheme()
   return (
-    <HomeStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+    <HomeStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'slide_from_right', animationDuration: 250 }}>
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
       <HomeStack.Screen name="CheckIn" component={CheckInScreen} />
       <HomeStack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
@@ -118,7 +118,7 @@ function HomeStackNavigator() {
 function HealthStackNavigator() {
   const { colors } = useTheme()
   return (
-    <HealthStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+    <HealthStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'slide_from_right', animationDuration: 250 }}>
       <HealthStack.Screen name="HealthMain" component={HealthScreen} />
       <HealthStack.Screen name="Nutrition" component={NutritionScreen} />
       <HealthStack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
@@ -137,7 +137,7 @@ function HealthStackNavigator() {
 function CirclesStackNavigator() {
   const { colors } = useTheme()
   return (
-    <CirclesStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+    <CirclesStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'slide_from_right', animationDuration: 250 }}>
       <CirclesStack.Screen name="CirclesMain" component={CirclesScreen} />
       <CirclesStack.Screen name="WorkoutAnalyzer" component={WorkoutAnalyzerScreen} />
       <CirclesStack.Screen name="PodFeed" component={PodFeedScreen} />
@@ -156,7 +156,7 @@ function CirclesStackNavigator() {
 function ProfileStackNavigator() {
   const { colors } = useTheme()
   return (
-    <ProfileStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+    <ProfileStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'slide_from_right', animationDuration: 250 }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="Invoices" component={InvoicesScreen} />
       <ProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />

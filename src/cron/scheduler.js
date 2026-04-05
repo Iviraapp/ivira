@@ -17,6 +17,7 @@ import { runCheckinStreakNudge } from './checkin-streak.js';
 import { getPodJobs } from './pod-jobs.js';
 import { runClassReminders } from './class-reminders.js';
 import { runOutcomeSnapshots } from './outcome-snapshots.js';
+import { sendWeeklyDigests } from './weekly-digest.js';
 
 /**
  * Cron Scheduler
@@ -55,6 +56,7 @@ const dailyJobs = [
   { name: 'checkin_streak_nudge', fn: runCheckinStreakNudge, hour: 20, minute: 0 }, // 8:00 PM IST
   ...getPodJobs().dailyJobs,
   { name: 'outcome_snapshots', fn: runOutcomeSnapshots, hour: 2, minute: 0 },  // 2:00 AM IST
+  { name: 'weekly_digest', fn: sendWeeklyDigests, hour: 9, minute: 0 },       // 9:00 AM IST (Monday only — day check inside fn)
 ];
 
 /**

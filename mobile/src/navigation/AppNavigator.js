@@ -243,7 +243,7 @@ export default function AppNavigator() {
 
   const content = (
     <NavigationContainer theme={navTheme}>
-      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'slide_from_right', animationDuration: 250 }}>
         {token ? (
           <Stack.Screen name="Main" component={TabNavigator} />
         ) : (
