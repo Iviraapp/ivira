@@ -77,6 +77,8 @@ export default function LoginScreen() {
   const [signupPassword, setSignupPassword] = useState('')
   const [hasPasswordSet, setHasPasswordSet] = useState(false)
   const [resendTimer, setResendTimer] = useState(30)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   const otpRefs = useRef([...Array(6)].map(() => React.createRef()))
   const resendIntervalRef = useRef(null)
@@ -149,6 +151,12 @@ export default function LoginScreen() {
   }, [fadeAnim, slideAnim])
 
   const goBack = useCallback(() => {
+    if (step === 'setPassword') {
+      // User is already logged in at this point — just dismiss
+      setNewPassword('')
+      setConfirmPassword('')
+      return
+    }
     if (step === 'otp' || step === 'password') {
       setOtpDigits(['', '', '', '', '', ''])
       setPassword('')
@@ -241,6 +249,20 @@ export default function LoginScreen() {
     try {
       await verifyOtp(email.trim().toLowerCase(), code)
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+      // Check if user has a password — if not, prompt to set one
+      if (!hasPasswordSet) {
+        setTimeout(() => {
+          premiumAlert(
+            'Set a Password?',
+            'Skip the OTP next time — set a password for instant sign-in.',
+            [
+              { text: 'Maybe Later' },
+              { text: 'Set Password', onPress: () => animateTransition('setPassword') },
+            ]
+          )
+        }, 1000)
+      }
     } catch (err) {
       const message = err.response?.data?.message || err.response?.data?.error || 'Invalid code. Please try again.'
       premiumAlert('Verification Failed', message)
@@ -249,7 +271,7 @@ export default function LoginScreen() {
     } finally {
       setLoading(false)
     }
-  }, [email, verifyOtp])
+  }, [email, verifyOtp, hasPasswordSet, animateTransition])
 
   const handleResendOtp = useCallback(async () => {
     if (resendTimer > 0) return
@@ -301,6 +323,29 @@ export default function LoginScreen() {
     }
   }
 
+  const handleSetPassword = async () => {
+    if (newPassword.length < 8) return setErrors({ setpwd: 'Password must be at least 8 characters' })
+    if (newPassword !== confirmPassword) return setErrors({ setpwd: 'Passwords do not match' })
+    setLoading(true)
+    try {
+      await api.post('/auth/set-password', { password: newPassword })
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      premiumAlert('Password Set!', 'You can now sign in with your password next time.')
+    } catch {}
+    setLoading(false)
+  }
+
+  const handleGoogleSignIn = useCallback(() => {
+    premiumAlert(
+      'Coming Soon',
+      'Google Sign-In for mobile is coming in the next update. Use email to sign in or create an account.',
+      [
+        { text: 'Sign In with Email', onPress: () => animateTransition('email') },
+        { text: 'Create Account', onPress: () => animateTransition('signup') },
+      ]
+    )
+  }, [animateTransition])
+
   // --- WELCOME SCREEN ---
   const renderWelcome = () => (
     <View style={styles.welcomeContainer}>
@@ -332,26 +377,42 @@ export default function LoginScreen() {
         ))}
       </View>
 
-      {/* CTA buttons */}
+      {/* Google Sign-In — primary CTA */}
       <TouchableOpacity
-        style={[styles.primaryBtn, { backgroundColor: colors.text }]}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-          animateTransition('email')
-        }}
+        style={[styles.googleBtn, { backgroundColor: colors.bgSec, borderColor: colors.border }]}
+        onPress={handleGoogleSignIn}
         activeOpacity={0.85}
       >
-        <Text style={[styles.primaryBtnText, { color: colors.bg }]}>Get Started</Text>
-        <Feather name="arrow-right" size={18} color={colors.bg} />
+        <View style={styles.googleIcon}>
+          <Text style={{ fontSize: 18 }}>G</Text>
+        </View>
+        <Text style={[styles.googleBtnText, { color: colors.text }]}>Continue with Google</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.secondaryBtn, { borderColor: 'rgba(255,255,255,0.12)' }]}
-        onPress={() => animateTransition('signup')}
-        activeOpacity={0.85}
-      >
-        <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Create Account</Text>
-      </TouchableOpacity>
+      {/* Divider */}
+      <View style={styles.dividerRow}>
+        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+        <Text style={[styles.dividerText, { color: colors.textTer }]}>or use email</Text>
+        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+      </View>
+
+      {/* Sign In + Create Account — equal weight */}
+      <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+        <TouchableOpacity
+          style={[styles.dualBtn, { backgroundColor: COLORS.accent }]}
+          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); animateTransition('email') }}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.dualBtnText, { color: '#07080F' }]}>Sign In</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.dualBtn, { backgroundColor: colors.bgSec, borderWidth: 1, borderColor: colors.border }]}
+          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); animateTransition('signup') }}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.dualBtnText, { color: colors.text }]}>Create Account</Text>
+        </TouchableOpacity>
+      </View>
 
       {biometricAvailable && biometricEnabled && hasStoredSession && (
         <TouchableOpacity style={styles.biometricBtn} onPress={handleBiometricLogin} activeOpacity={0.7}>
@@ -683,6 +744,46 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </ScrollView>
         )}
+        {step === 'setPassword' && (
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.formContainer} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <View style={[styles.formIconWrap, { backgroundColor: colors.accentSoft }]}>
+              <Feather name="lock" size={24} color={COLORS.accent} />
+            </View>
+            <Text style={[styles.formTitle, { color: colors.text }]}>Set a password</Text>
+            <Text style={[styles.formSubtitle, { color: colors.textSec }]}>Skip OTP next time — sign in instantly</Text>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.label, { color: colors.textSec }]}>NEW PASSWORD</Text>
+              <View style={[styles.inputWrap, { backgroundColor: colors.bgSec, borderColor: colors.border }]}>
+                <Feather name="lock" size={16} color={colors.textTer} style={styles.inputIcon} />
+                <TextInput style={[styles.input, { color: colors.text }]} placeholder="At least 8 characters" placeholderTextColor={colors.textTer}
+                  value={newPassword} onChangeText={t => { setNewPassword(t); setErrors({}) }} secureTextEntry={!showPassword} autoFocus />
+                <TouchableOpacity onPress={() => setShowPassword(p => !p)} style={{ paddingHorizontal: 14, paddingVertical: 14 }}>
+                  <Feather name={showPassword ? 'eye-off' : 'eye'} size={18} color={colors.textTer} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.label, { color: colors.textSec }]}>CONFIRM PASSWORD</Text>
+              <View style={[styles.inputWrap, { backgroundColor: colors.bgSec, borderColor: errors.setpwd ? COLORS.red : colors.border }]}>
+                <Feather name="lock" size={16} color={colors.textTer} style={styles.inputIcon} />
+                <TextInput style={[styles.input, { color: colors.text }]} placeholder="Same password again" placeholderTextColor={colors.textTer}
+                  value={confirmPassword} onChangeText={t => { setConfirmPassword(t); setErrors({}) }} secureTextEntry returnKeyType="go" onSubmitEditing={handleSetPassword} />
+              </View>
+              {errors.setpwd && <Text style={styles.errorText}>{errors.setpwd}</Text>}
+            </View>
+
+            <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: COLORS.accent }, loading && styles.primaryBtnDisabled]}
+              onPress={handleSetPassword} disabled={loading} activeOpacity={0.85}>
+              {loading ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={[styles.primaryBtnText, { color: '#FFFFFF' }]}>Set Password</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{ alignItems: 'center', marginTop: 16, padding: 8 }} onPress={goBack} activeOpacity={0.7}>
+              <Text style={{ color: colors.textTer, fontSize: 13, fontFamily: FONT.regular }}>Skip for now</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        )}
       </Animated.View>
     </KeyboardAvoidingView>
   )
@@ -987,4 +1088,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONT.semibold,
   },
+
+  // Google Sign-In & dual buttons
+  googleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', paddingVertical: 16, borderRadius: RADIUS.lg, borderWidth: 1, minHeight: 56 },
+  googleIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  googleBtnText: { fontSize: 16, fontWeight: '600', fontFamily: FONT.semibold },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', marginVertical: 20 },
+  dividerLine: { flex: 1, height: 0.5 },
+  dividerText: { fontSize: 12, fontFamily: FONT.regular },
+  dualBtn: { flex: 1, paddingVertical: 16, borderRadius: RADIUS.lg, alignItems: 'center', justifyContent: 'center', minHeight: 52 },
+  dualBtnText: { fontSize: 15, fontWeight: '700', fontFamily: FONT.bold },
 })
