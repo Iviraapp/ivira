@@ -10,77 +10,64 @@ import config from '../config/index.js';
  * at-risk members via the Resend API.
  */
 
-export async function sendWeeklyDigests() {
-  const dayOfWeek = new Date().getDay();
-  if (dayOfWeek !== 1) return; // Only run on Mondays (1 = Monday)
-
-  if (!config.email.resendApiKey && !config.email.enabled) {
-    console.log('[WeeklyDigest] Email not configured — skipping');
-    return;
-  }
-
-  const gyms = await db('gyms')
-    .whereNotNull('owner_email')
-    .where('owner_email', '!=', '')
-    .select('id', 'gym_name', 'owner_name', 'owner_email', 'city');
-
+export async function sendDigestForGym(gym) {
   const today = new Date();
   const weekAgo = new Date(today);
   weekAgo.setDate(today.getDate() - 7);
   const weekStart = weekAgo.toISOString().split('T')[0];
   const weekEnd = today.toISOString().split('T')[0];
 
-  for (const gym of gyms) {
-    try {
-      // Gather stats
-      const [
-        totalMembers,
-        newMembers,
-        weekCheckins,
-        checkinMethods,
-        revenue,
-        atRiskMembers,
-        topStreak,
-        activePods,
-      ] = await Promise.all([
-        db('members').where({ gym_id: gym.id, status: 'active' }).count('* as count').first(),
-        db('members').where({ gym_id: gym.id }).where('created_at', '>=', weekStart).count('* as count').first(),
-        db('checkins').where({ gym_id: gym.id }).whereBetween('checked_in_at', [weekStart, weekEnd]).count('* as count').first(),
-        db('checkins').where({ gym_id: gym.id }).whereBetween('checked_in_at', [weekStart, weekEnd])
-          .select('method').count('* as count').groupBy('method'),
-        db('payments').where({ gym_id: gym.id, status: 'captured' }).whereBetween('paid_at', [weekStart, weekEnd])
-          .sum('amount_paise as total').first(),
-        db('members').where({ gym_id: gym.id, status: 'active' })
-          .where('last_checkin_at', '<', weekStart)
-          .whereNotNull('last_checkin_at')
-          .count('* as count').first(),
-        db('members').where({ gym_id: gym.id }).orderBy('streak', 'desc').select('name', 'streak').first(),
-        db('pods').where({ gym_id: gym.id, is_active: true }).count('* as count').first(),
-      ]);
+  // Gather stats
+  const [
+    totalMembers,
+    newMembers,
+    weekCheckins,
+    checkinMethods,
+    revenue,
+    atRiskMembers,
+    topStreak,
+    activePods,
+  ] = await Promise.all([
+    db('members').where({ gym_id: gym.id, status: 'active' }).count('* as count').first(),
+    db('members').where({ gym_id: gym.id }).where('created_at', '>=', weekStart).count('* as count').first(),
+    db('checkins').where({ gym_id: gym.id }).whereBetween('checked_in_at', [weekStart, weekEnd]).count('* as count').first(),
+    db('checkins').where({ gym_id: gym.id }).whereBetween('checked_in_at', [weekStart, weekEnd])
+      .select('method').count('* as count').groupBy('method'),
+    db('payments').where({ gym_id: gym.id, status: 'captured' }).whereBetween('paid_at', [weekStart, weekEnd])
+      .sum('amount_paise as total').first(),
+    db('members').where({ gym_id: gym.id, status: 'active' })
+      .where('last_checkin_at', '<', weekStart)
+      .whereNotNull('last_checkin_at')
+      .count('* as count').first(),
+    db('members').where({ gym_id: gym.id }).orderBy('streak', 'desc').select('name', 'streak').first(),
+    db('pods').where({ gym_id: gym.id, is_active: true }).count('* as count').first(),
+  ]);
 
-      const stats = {
-        totalMembers: parseInt(totalMembers?.count || 0),
-        newMembers: parseInt(newMembers?.count || 0),
-        weekCheckins: parseInt(weekCheckins?.count || 0),
-        checkinBreakdown: checkinMethods.reduce((acc, m) => {
-          acc[m.method || 'unknown'] = parseInt(m.count);
-          return acc;
-        }, {}),
-        revenue: parseInt(revenue?.total || 0),
-        atRisk: parseInt(atRiskMembers?.count || 0),
-        topStreak: topStreak ? `${topStreak.name} (${topStreak.streak}d)` : 'None yet',
-        activePods: parseInt(activePods?.count || 0),
-      };
+  const stats = {
+    totalMembers: parseInt(totalMembers?.count || 0),
+    newMembers: parseInt(newMembers?.count || 0),
+    weekCheckins: parseInt(weekCheckins?.count || 0),
+    checkinBreakdown: checkinMethods.reduce((acc, m) => {
+      acc[m.method || 'unknown'] = parseInt(m.count);
+      return acc;
+    }, {}),
+    revenue: parseInt(revenue?.total || 0),
+    atRisk: parseInt(atRiskMembers?.count || 0),
+    topStreak: topStreak ? `${topStreak.name} (${topStreak.streak}d)` : 'None yet',
+    activePods: parseInt(activePods?.count || 0),
+  };
 
-      // Skip gyms with no activity
-      if (stats.weekCheckins === 0 && stats.newMembers === 0) continue;
+  // Skip gyms with no activity
+  if (stats.weekCheckins === 0 && stats.newMembers === 0) return;
 
-      const revenueFormatted = (stats.revenue / 100).toLocaleString();
-      const checkinBreakdown = Object.entries(stats.checkinBreakdown)
-        .map(([method, count]) => `${count} ${method.toUpperCase()}`)
-        .join(' · ') || 'None';
+  const revenueFormatted = (stats.revenue / 100).toLocaleString();
+  const checkinBreakdown = Object.entries(stats.checkinBreakdown)
+    .map(([method, count]) => `${count} ${method.toUpperCase()}`)
+    .join(' · ') || 'None';
 
-      const html = `
+  const subject = `📊 Your week at ${gym.gym_name} — ${stats.weekCheckins} check-ins`;
+
+  const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
@@ -126,26 +113,71 @@ export async function sendWeeklyDigests() {
 </body>
 </html>`;
 
-      // Send via Resend
-      if (config.email.resendApiKey) {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${config.email.resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'IVIRA <digest@ivira.app>',
-            to: gym.owner_email,
-            subject: `📊 Your week at ${gym.gym_name} — ${stats.weekCheckins} check-ins`,
-            html,
-          }),
-        });
-      }
+  // Send via Resend
+  if (config.email.resendApiKey) {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${config.email.resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'IVIRA <digest@ivira.app>',
+        to: gym.owner_email,
+        subject,
+        html,
+      }),
+    });
+  }
 
-      console.log(`[WeeklyDigest] Sent to ${gym.owner_email} (${gym.gym_name})`);
+  // Log successful send
+  await db('email_logs').insert({
+    gym_id: gym.id,
+    to_email: gym.owner_email,
+    subject,
+    type: 'weekly_digest',
+    status: 'sent',
+    metadata: JSON.stringify(stats),
+  }).catch(() => {})
+
+  await db('gyms').where({ id: gym.id }).update({ last_digest_sent_at: new Date() }).catch(() => {})
+
+  console.log(`[WeeklyDigest] Sent to ${gym.owner_email} (${gym.gym_name})`);
+}
+
+export async function sendWeeklyDigests() {
+  const dayOfWeek = new Date().getDay();
+  if (dayOfWeek !== 1) return; // Only run on Mondays (1 = Monday)
+
+  if (!config.email.resendApiKey && !config.email.enabled) {
+    console.log('[WeeklyDigest] Email not configured — skipping');
+    return;
+  }
+
+  const gyms = await db('gyms')
+    .whereNotNull('owner_email')
+    .where('owner_email', '!=', '')
+    .where('weekly_digest_enabled', true)
+    .select('id', 'gym_name', 'owner_name', 'owner_email', 'city');
+
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+
+  for (const gym of gyms) {
+    try {
+      await sendDigestForGym(gym);
     } catch (err) {
       console.warn(`[WeeklyDigest] Failed for gym ${gym.id}:`, err?.message);
+      // Log failure
+      await db('email_logs').insert({
+        gym_id: gym.id,
+        to_email: gym.owner_email,
+        subject: `Weekly digest`,
+        type: 'weekly_digest',
+        status: 'failed',
+        error_message: err?.message,
+      }).catch(() => {})
     }
   }
 }

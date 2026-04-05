@@ -519,9 +519,31 @@ function LanguageTab({ gymId, gym, updateGym, theme, sp }) {
 }
 
 /* ---- Notifications Tab ---- */
-function NotificationsTab({ gymId, theme, sp }) {
+function NotificationsTab({ gymId, gym, updateGym, theme, sp }) {
   const toast = useToast()
   const queryClient = useQueryClient()
+  const [digestEnabled, setDigestEnabled] = useState(gym?.weekly_digest_enabled !== false)
+  const [digestSaving, setDigestSaving] = useState(false)
+
+  useEffect(() => {
+    if (gym) setDigestEnabled(gym.weekly_digest_enabled !== false)
+  }, [gym?.weekly_digest_enabled])
+
+  const toggleDigest = async () => {
+    const newVal = !digestEnabled
+    setDigestEnabled(newVal)
+    setDigestSaving(true)
+    try {
+      const res = await api.patch(`/gyms/${gymId}`, { weekly_digest_enabled: newVal })
+      if (updateGym) updateGym(res.data)
+      toast.success(newVal ? 'Weekly digest enabled' : 'Weekly digest disabled')
+    } catch {
+      setDigestEnabled(!newVal)
+      toast.error('Failed to update digest preference')
+    } finally {
+      setDigestSaving(false)
+    }
+  }
 
   const { data: settingsData, isLoading } = useQuery({
     queryKey: ['notification-settings', gymId],
@@ -630,6 +652,33 @@ function NotificationsTab({ gymId, theme, sp }) {
       <h4 style={{ fontSize: 12, fontWeight: 600, color: theme.textTer, margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: "'Inter', -apple-system, sans-serif" }}>Notification Types</h4>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
         {typeSwitches.map(renderToggle)}
+      </div>
+
+      <div style={{ height: 1, background: theme.borderStrong, margin: `${sp(24)}px 0` }} />
+
+      <h4 style={{ fontSize: 12, fontWeight: 600, color: theme.textTer, margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: "'Inter', -apple-system, sans-serif" }}>Email Reports</h4>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: `${sp(16)}px 0`, borderBottom: `1px solid ${theme.borderStrong}`,
+      }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: theme.text, fontFamily: "'Inter', -apple-system, sans-serif" }}>Weekly Email Digest</div>
+          <div style={{ fontSize: 13, color: theme.textSec, marginTop: 3, fontFamily: "'Inter', -apple-system, sans-serif" }}>Receive a summary of your gym's performance every Monday</div>
+        </div>
+        <button onClick={toggleDigest} disabled={digestSaving} style={{
+          width: 48, height: 26, borderRadius: 13, border: 'none',
+          cursor: digestSaving ? 'wait' : 'pointer',
+          background: digestEnabled ? '#10B981' : theme.bgHover,
+          position: 'relative', transition: 'background 0.2s',
+          flexShrink: 0, marginLeft: 20, opacity: digestSaving ? 0.5 : 1,
+        }}>
+          <span style={{
+            position: 'absolute', top: 3, left: digestEnabled ? 24 : 3,
+            width: 20, height: 20, borderRadius: '50%',
+            background: digestEnabled ? '#fff' : theme.textTer,
+            transition: 'all 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+          }} />
+        </button>
       </div>
     </div>
   )
@@ -1264,7 +1313,7 @@ export default function Settings() {
           </div>
         )}
         {activeTab === 'language' && <LanguageTab gymId={gymId} gym={gym} updateGym={updateGym} theme={theme} sp={sp} />}
-        {activeTab === 'notifications' && <NotificationsTab gymId={gymId} theme={theme} sp={sp} />}
+        {activeTab === 'notifications' && <NotificationsTab gymId={gymId} gym={gym} updateGym={updateGym} theme={theme} sp={sp} />}
         {activeTab === 'display' && <DisplayTab theme={theme} sp={sp} density={density} setDensity={setDensity} />}
         {activeTab === 'support' && (
           <>

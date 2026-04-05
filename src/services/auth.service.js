@@ -319,7 +319,7 @@ export async function refreshToken(token) {
 }
 
 export async function updateGym(gymId, updates) {
-  const allowed = ['gym_name', 'address', 'latitude', 'longitude', 'logo_url', 'city', 'preferred_language', 'onboarding_step'];
+  const allowed = ['gym_name', 'address', 'latitude', 'longitude', 'logo_url', 'city', 'preferred_language', 'onboarding_step', 'weekly_digest_enabled'];
   const filtered = Object.fromEntries(
     Object.entries(updates).filter(([key]) => allowed.includes(key))
   );

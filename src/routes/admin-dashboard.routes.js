@@ -630,4 +630,54 @@ export default async function adminDashboardRoutes(fastify) {
       return reply.code(500).send({ error: 'Failed to log update' });
     }
   });
+
+  // ── 7. Email Logs & Digest Controls ─────────────────────────────────────────
+
+  // GET /api/v1/super/email-logs — view all sent emails
+  fastify.get('/api/v1/super/email-logs', { preHandler: [verifySuperAdmin] }, async (request) => {
+    const limit = Math.min(parseInt(request.query.limit) || 50, 200);
+    const offset = parseInt(request.query.offset) || 0;
+    const type = request.query.type || null;
+
+    try {
+      const exists = await db.schema.hasTable('email_logs');
+      if (!exists) return { logs: [], total: 0 };
+
+      let query = db('email_logs')
+        .leftJoin('gyms', 'email_logs.gym_id', 'gyms.id')
+        .select('email_logs.*', 'gyms.gym_name')
+        .orderBy('email_logs.created_at', 'desc')
+        .limit(limit)
+        .offset(offset);
+
+      if (type) query = query.where('email_logs.type', type);
+
+      const logs = await query;
+
+      let countQuery = db('email_logs').count('* as count');
+      if (type) countQuery = countQuery.where('type', type);
+      const total = await countQuery.first();
+
+      return { logs, total: parseInt(total?.count || 0) };
+    } catch (err) {
+      fastify.log.error(err);
+      return { logs: [], total: 0 };
+    }
+  });
+
+  // POST /api/v1/super/send-digest/:gymId — manually trigger digest for one gym
+  fastify.post('/api/v1/super/send-digest/:gymId', { preHandler: [verifySuperAdmin] }, async (request, reply) => {
+    const { gymId } = request.params;
+    const gym = await db('gyms').where({ id: gymId }).first();
+    if (!gym) return reply.code(404).send({ error: 'Gym not found' });
+
+    try {
+      const { sendDigestForGym } = await import('../cron/weekly-digest.js');
+      await sendDigestForGym(gym);
+      return { success: true, message: `Digest sent to ${gym.owner_email}` };
+    } catch (err) {
+      fastify.log.error(err);
+      return reply.code(500).send({ error: err?.message || 'Failed to send digest' });
+    }
+  });
 }

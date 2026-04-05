@@ -14,6 +14,7 @@ const updateSchema = {
       latitude: { type: 'number' },
       longitude: { type: 'number' },
       logo_url: { type: 'string' },
+      weekly_digest_enabled: { type: 'boolean' },
     },
   },
 };
