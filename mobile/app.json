@@ -109,7 +109,12 @@
           "image": "./assets/splash.png",
           "imageWidth": 200,
           "backgroundColor": "#07080F",
-          "dark": {
+          "android": {
+            "image": "./assets/splash.png",
+            "imageWidth": 200,
+            "backgroundColor": "#07080F"
+          },
+          "ios": {
             "image": "./assets/splash.png",
             "imageWidth": 200,
             "backgroundColor": "#07080F"

@@ -267,9 +267,14 @@ export default function WorkoutAnalyzerScreen({ navigation, route }) {
       if (fromCamera) {
         const { status } = await ImagePicker.requestCameraPermissionsAsync()
         if (status !== 'granted') {
-          premiumAlert('Permission Required', 'Camera access is needed to record workout videos.')
+          premiumAlert('Camera Required', 'Please enable camera access to record workout videos.')
           return
         }
+        // Video recording needs microphone permission too
+        try {
+          const { Audio } = require('expo-av')
+          await Audio.requestPermissionsAsync()
+        } catch {}
       } else {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
         if (status !== 'granted') {
@@ -283,25 +288,15 @@ export default function WorkoutAnalyzerScreen({ navigation, route }) {
         : ImagePicker.launchImageLibraryAsync
 
       const result = await pickerFn({
-        mediaTypes: ['videos'],
-        quality: 0.7,
+        mediaTypes: ImagePicker.MediaTypeOptions?.Videos || ['videos'],
         videoMaxDuration: 30,
-        allowsEditing: Platform.OS === 'ios',
+        quality: 0.7,
+        allowsEditing: false,
+        videoQuality: 1,
       })
 
       if (!result.canceled && result.assets?.[0]) {
         const asset = result.assets[0]
-
-        // Auto-crop video if too long (max 30 seconds)
-        if (asset.duration && asset.duration > 30000) {
-          premiumAlert('Video Trimmed', 'Videos longer than 30 seconds are automatically trimmed. For best results, record a single set (15-30 seconds).')
-        }
-
-        // Check file size (max 20MB for Gemini)
-        if (asset.fileSize && asset.fileSize > 20 * 1024 * 1024) {
-          premiumAlert('Video Too Large', 'Please record a shorter clip (under 30 seconds). Large videos cannot be processed.')
-          return
-        }
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
@@ -311,8 +306,8 @@ export default function WorkoutAnalyzerScreen({ navigation, route }) {
         setResult(null)
         setShared(false)
 
-        // Read base64 in background
-        readVideoBase64(asset.uri)
+        // Read base64 — auto-truncate if too large for Gemini (20MB limit)
+        readVideoBase64(asset.uri, asset.duration)
       }
     } catch (err) {
       console.warn('[WorkoutAnalyzer] picker error:', err?.message)
@@ -320,18 +315,28 @@ export default function WorkoutAnalyzerScreen({ navigation, route }) {
     }
   }, [])
 
-  const readVideoBase64 = async (uri) => {
+  const readVideoBase64 = async (uri, durationMs) => {
     try {
-      if (FileSystem) {
-        const b64 = await FileSystem.readAsStringAsync(uri, {
-          encoding: FileSystem.EncodingType.Base64,
-        })
-        setVideoBase64(b64)
+      if (!FileSystem) { setVideoBase64(null); return }
+
+      // Read full file
+      let b64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      })
+
+      // Gemini accepts max ~20MB base64 (~15MB binary). Auto-truncate if needed.
+      const MAX_B64_LENGTH = 20 * 1024 * 1024 // 20MB in base64 chars
+      if (b64.length > MAX_B64_LENGTH) {
+        // Truncate to fit — Gemini will analyze whatever portion it gets
+        b64 = b64.substring(0, MAX_B64_LENGTH)
+        if (__DEV__) console.log(`[WorkoutAnalyzer] Video truncated from ${(b64.length / 1024 / 1024).toFixed(1)}MB to 20MB`)
       }
+
+      setVideoBase64(b64)
     } catch (err) {
       console.warn('[WorkoutAnalyzer] base64 read error:', err?.message)
       setVideoBase64(null)
-      premiumAlert('Video Error', `Could not read video: ${err?.message || 'Unknown error'}`)
+      premiumAlert('Video Error', `Could not load video: ${err?.message || 'Try recording a shorter clip.'}`)
     }
   }
 
@@ -606,7 +611,7 @@ Analyze the video and return ONLY valid JSON with NO markdown, no code fences, n
         </TouchableOpacity>
       </View>
 
-      <Text style={[s.uploadHint, { color: colors.textTer }]}>MP4, MOV or WEBM \u00B7 max 2 min</Text>
+      <Text style={[s.uploadHint, { color: colors.textTer }]}>MP4, MOV or WEBM · max 30 seconds</Text>
     </View>
   )
 
