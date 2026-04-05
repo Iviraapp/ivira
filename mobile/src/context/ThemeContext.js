@@ -4,20 +4,32 @@ import { getItem, setItem } from '../lib/storage'
 import { COLORS, COLORS_LIGHT, ELITE_CARD, ELITE_CARD_LIGHT, ELITE_GLOW } from '../lib/theme'
 
 const STORAGE_KEY = 'ivira_theme_mode'
-const MODES = ['dark', 'light', 'system']
+const MODES = ['dark', 'light', 'auto'] // auto = time-based (dark at night, light during day)
+
+// Time-based theme: 6 AM - 6 PM = light, 6 PM - 6 AM = dark
+function getTimeBasedScheme() {
+  const hour = new Date().getHours()
+  return (hour >= 6 && hour < 18) ? 'light' : 'dark'
+}
 
 const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
-  const systemScheme = useColorScheme()
-  const [mode, setModeState] = useState('system')
-  const [loaded, setLoaded] = useState(false)
+  const [mode, setModeState] = useState('auto')
+  const [timeScheme, setTimeScheme] = useState(getTimeBasedScheme())
 
   useEffect(() => {
     getItem(STORAGE_KEY).then(stored => {
       if (stored && MODES.includes(stored)) setModeState(stored)
-      setLoaded(true)
-    }).catch(() => setLoaded(true))
+    }).catch(() => {})
+  }, [])
+
+  // Update time-based scheme every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeScheme(getTimeBasedScheme())
+    }, 60000)
+    return () => clearInterval(interval)
   }, [])
 
   const setMode = (newMode) => {
@@ -26,7 +38,7 @@ export function ThemeProvider({ children }) {
     setItem(STORAGE_KEY, newMode).catch(() => {})
   }
 
-  const resolvedScheme = mode === 'system' ? (systemScheme || 'dark') : mode
+  const resolvedScheme = mode === 'auto' ? timeScheme : mode
   const isDark = resolvedScheme === 'dark'
 
   const value = {

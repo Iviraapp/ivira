@@ -15,7 +15,7 @@ import Haptics from '../lib/haptics'
 
 const OPTIONS = [
   { id: 'light',  label: 'Light',  icon: 'sun'         },
-  { id: 'system', label: 'Auto',   icon: 'smartphone'  },
+  { id: 'auto',   label: 'Auto',   icon: 'clock'       },
   { id: 'dark',   label: 'Dark',   icon: 'moon'        },
 ]
 
